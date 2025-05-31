@@ -29,4 +29,17 @@ public class BusinessAuthController {
                 ApiResponse.success("업체 회원가입이 완료되었습니다", response)
         );
     }
+
+    @PostMapping("/signin")
+    public ResponseEntity<ApiResponse<BusinessAuthDto.AuthResponse>> signIn(
+            @Valid @RequestBody BusinessAuthDto.SignInRequest request) {
+
+        log.info("업체 로그인 요청: email={}", request.getEmail());
+
+        BusinessAuthDto.AuthResponse response = businessAuthService.signIn(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("로그인이 완료되었습니다", response)
+        );
+    }
 }
