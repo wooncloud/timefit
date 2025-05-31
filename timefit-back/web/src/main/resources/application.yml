@@ -11,9 +11,6 @@ spring:
 
 server:
   port: 8080
-  servlet:
-    context-path: /api
-
 
 logging:
   level:
@@ -22,18 +19,14 @@ logging:
     org.hibernate: INFO
     org.example.timefit: DEBUG
     org.springframework.security: DEBUG
-
     me.paulschwarz.springdotenv: DEBUG
 
 jwt:
   secret: ${JWT_SECRET}
   expiration: 86400000
 
-timefit:
-  storage:
-    type: local
-    path: ./uploads
 
+#actuator 설정
 management:
   endpoints:
     web:
@@ -42,7 +35,6 @@ management:
   endpoint:
     health:
       show-details: always
-
 
 ---
 
@@ -66,26 +58,6 @@ spring:
 
 ---
 
-# 테스트 환경
-spring:
-  config:
-    activate:
-      on-profile: test
-  datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password: ""
-    driver-class-name: org.h2.Driver
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-  h2:
-    console:
-      enabled: true
-
----
-
 ## 운영 환경
 #spring:
 #  config:
@@ -100,3 +72,5 @@ spring:
 #    hibernate:
 #      ddl-auto: validate
 #    show-sql: false
+
+---
