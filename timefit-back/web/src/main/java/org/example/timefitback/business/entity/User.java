@@ -85,5 +85,37 @@ public class User {
         }
     }
 
+    public static User createBusinessUser(String email, String passwordHash, String name, String phoneNumber) {
+        User user = new User();
+        user.email = email;
+        user.passwordHash = passwordHash;
+        user.name = name;
+        user.phoneNumber = phoneNumber;
+        user.role = UserRole.BUSINESS;
+        return user;
+    }
 
+    public void updateLastLoginAt() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
+
+    public boolean isOAuthUser() {
+        return oauthProvider != null && oauthId != null;
+    }
+
+    public boolean isRegularUser() {
+        return passwordHash != null && !isOAuthUser();
+    }
+
+    public void updateProfile(String name, String phoneNumber, String profileImageUrl) {
+        if (name != null && !name.trim().isEmpty()) {
+            this.name = name;
+        }
+        if (phoneNumber != null) {
+            this.phoneNumber = phoneNumber;
+        }
+        if (profileImageUrl != null) {
+            this.profileImageUrl = profileImageUrl;
+        }
+    }
 }

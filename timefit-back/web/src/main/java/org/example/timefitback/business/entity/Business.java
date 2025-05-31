@@ -69,5 +69,50 @@ public class Business {
     private Integer version = 0;
 
 
+    public static Business createBusiness(UUID userId, String businessName, String businessType,
+                                            String businessNumber, String address, String contactPhone, String description) {
+        Business business = new Business();
+        business.userId = userId;
+        business.businessName = businessName;
+        business.businessType = businessType;
+        business.businessNumber = businessNumber;
+        business.address = address;
+        business.contactPhone = contactPhone;
+        business.description = description;
+        return business;
+    }
 
+    public void updateBusinessInfo(String businessName, String businessType, String address,
+                                    String contactPhone, String description, String logoUrl) {
+        if (businessName != null && !businessName.trim().isEmpty()) {
+            this.businessName = businessName;
+        }
+        if (businessType != null) {
+            this.businessType = businessType;
+        }
+        if (address != null) {
+            this.address = address;
+        }
+        if (contactPhone != null) {
+            this.contactPhone = contactPhone;
+        }
+        if (description != null) {
+            this.description = description;
+        }
+        if (logoUrl != null) {
+            this.logoUrl = logoUrl;
+        }
+    }
+
+    // 사업자번호 검증 (정규식 체크)
+    public boolean isValidBusinessNumber() {
+        if (businessNumber == null) return false;
+        return businessNumber.matches("^[0-9]{3}-[0-9]{2}-[0-9]{5}$");
+    }
+
+    // 필수 정보 완성도 체크
+    public boolean isBasicInfoComplete() {
+        return businessName != null && !businessName.trim().isEmpty() &&
+                businessNumber != null && isValidBusinessNumber();
+    }
 }
