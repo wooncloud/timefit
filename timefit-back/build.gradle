@@ -1,66 +1,49 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.5'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.4.5' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
-group = 'org.example'
-version = '0.0.1-SNAPSHOT'
+allprojects {
+    group = 'org.example'
+    version = '0.0.1-SNAPSHOT'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+    repositories {
+        mavenCentral()
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
     }
-}
 
-repositories {
-    mavenCentral()
-}
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
 
-dependencies {
-    // Core Spring Boot
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    dependencies {
+        // 모든 서브모듈에서 공통으로 사용할 의존성
+        implementation 'org.springframework.boot:spring-boot-starter'
 
-    // Database
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
-    runtimeOnly 'org.postgresql:postgresql'
+        // Utilities
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
 
-    // Security
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'com.auth0:java-jwt:4.0.0'
+        // Testing
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
 
-    // Monitoring & Management
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    // Utilities
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    implementation 'org.springframework.boot:spring-boot-starter-aop'
-    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
-
-
-    // Documentation
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
-
-    // Optional (필요 시 주석 해제)
-    // implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    // implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-    // Testing
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
 }

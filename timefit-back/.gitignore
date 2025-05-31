@@ -36,7 +36,7 @@ out/
 .vscode/
 
 ### Environment Variables & Local Config ###
-.env
+web/.env
 /uploads/
 
 ### Docker ###
