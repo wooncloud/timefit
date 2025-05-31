@@ -23,7 +23,10 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-
+                        .requestMatchers("/api/business/auth/**").permitAll() // 인증 관련 API
+                        .requestMatchers("/actuator/**").permitAll() // Actuator
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Swagger
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll() // 정적 리소스
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
