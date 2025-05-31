@@ -37,6 +37,7 @@
 	"dependencies": {
 		"@schedule-x/svelte": "^2.3.0",
 		"@schedule-x/theme-default": "^2.31.0",
+		"@supabase/supabase-js": "^2.49.8",
 		"daisyui": "^5.0.35"
 	}
 }

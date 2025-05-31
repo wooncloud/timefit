@@ -13,7 +13,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		url.pathname.startsWith('/pc') ||
 		url.pathname.startsWith('/m') ||
 		url.pathname.startsWith('/api') ||
-		url.pathname.includes('.')
+		url.pathname.includes('.') ||
+		url.pathname.startsWith('/_app')
 	) {
 		return resolve(event);
 	}
