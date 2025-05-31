@@ -42,4 +42,11 @@ public class BusinessAuthController {
                 ApiResponse.success("로그인이 완료되었습니다", response)
         );
     }
+
+    @GetMapping("/health")
+    public ResponseEntity<ApiResponse<String>> healthCheck() {
+        return ResponseEntity.ok(
+                ApiResponse.success("서비스가 정상 작동 중입니다", "OK")
+        );
+    }
 }
