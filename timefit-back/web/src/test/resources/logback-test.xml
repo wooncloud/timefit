@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 콘솔 출력용 Appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!-- 개발자 작성 코드 로그 -->
+    <logger name="org.example.timefitback" level="DEBUG"/>
+
+    <!-- 테스트 프레임워크 로그 -->
+    <logger name="org.springframework.test" level="INFO"/>
+    <logger name="org.springframework.boot.test" level="INFO"/>
+
+    <!-- Spring Security 로그 (필요시 DEBUG로 변경) -->
+    <logger name="org.springframework.security" level="WARN"/>
+
+<!--    &lt;!&ndash; SQL 로그 (필요시 DEBUG로 변경) &ndash;&gt;-->
+<!--    <logger name="org.hibernate.SQL" level="WARN"/>-->
+<!--    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN"/>-->
+
+<!--    &lt;!&ndash; HTTP 로그 (MockMvc 테스트 디버깅용) &ndash;&gt;-->
+<!--    <logger name="org.springframework.web" level="WARN"/>-->
+<!--    <logger name="org.springframework.test.web.servlet" level="INFO"/>-->
+
+<!--    &lt;!&ndash; H2 Database 로그 &ndash;&gt;-->
+<!--    <logger name="org.h2" level="WARN"/>-->
+
+    <!-- Root 레벨 설정 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
