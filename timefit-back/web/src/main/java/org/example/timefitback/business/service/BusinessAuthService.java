@@ -62,6 +62,42 @@ public class BusinessAuthService {
         }
     }
 
+    @Transactional
+    public BusinessAuthDto.AuthResponse signIn(BusinessAuthDto.SignInRequest request) {
+        log.info("업체 로그인 시도: email={}", request.getEmail());
+
+        try {
+            // 사용자 검증
+            User user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new BusinessException(BusinessException.BusinessErrorCode.INVALID_CREDENTIALS));
+
+            // 비밀번호 검증
+            if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+                log.warn("로그인 실패 - 잘못된 비밀번호: email={}", request.getEmail());
+                throw new BusinessException(BusinessException.BusinessErrorCode.INVALID_CREDENTIALS);
+            }
+
+            // 업체 정보 조회
+            Business business = businessRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new BusinessException(BusinessException.BusinessErrorCode.BUSINESS_NOT_FOUND));
+
+            // 마지막 로그인 시간 업데이트
+            user.updateLastLoginAt();
+            userRepository.save(user);
+
+            log.info("업체 로그인 성공: userId={}, businessId={}", user.getId(), business.getId());
+
+            return createAuthResponse(user, business);
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("업체 로그인 실패: email={}, error={}", request.getEmail(), e.getMessage());
+            throw new BusinessException(BusinessException.BusinessErrorCode.INTERNAL_SERVER_ERROR,
+                    "로그인 처리 중 오류가 발생했습니다");
+        }
+    }
+
     private void validateDuplicateData(BusinessAuthDto.SignUpRequest request) {
         // 이메일 중복 검사
         if (userRepository.existsByEmail(request.getEmail())) {
