@@ -1,10 +1,21 @@
 <script lang="ts">
+    import { goto } from '$app/navigation';
+    
     export let href: string;
     export let iconPath: string;
     export let label: string;
+    export let requiresAuth: boolean = false;
+    export let isLoggedIn: boolean = false;
+
+    function handleClick(event: Event) {
+        if (requiresAuth && !isLoggedIn) {
+            event.preventDefault();
+            goto('/m/v1/signin');
+        }
+    }
 </script>
 
-<a {href} class="">
+<a {href} class="" on:click={handleClick}>
     <svg
         xmlns="http://www.w3.org/2000/svg"
         class="h-5 w-5"

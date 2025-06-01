@@ -9,6 +9,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
 	const isMobile = /mobile|iphone|ipad|android|windows phone/g.test(userAgent);
 
+	// Chrome DevTools나 기타 .well-known 요청 처리
+	if (url.pathname.startsWith('/.well-known/')) {
+		return new Response('{}', {
+			status: 200,
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+	}
+
 	if (
 		url.pathname.startsWith('/pc') ||
 		url.pathname.startsWith('/m') ||
