@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import { navLeft, navCenter } from '$lib/stores/navbar';
+    import { navLeft, navCenter, navVisible } from '$lib/stores/navbar';
     import { supabase } from '$lib/supabase/supabaseClient';
     import ProfileCard from '$lib/pages/profile/ProfileCard.svelte';
     import OAuthSection from '$lib/pages/profile/OAuthSection.svelte';
@@ -40,8 +40,9 @@
     };
 
     onMount(() => {
-        navLeft.set('Profile');
-        navCenter.set('');
+        navVisible.set(true);
+        navLeft.set('');
+        navCenter.set('내 정보');
     });
 </script>
 
@@ -64,7 +65,7 @@
 
         <div class="space-y-3">
             <button class="btn btn-primary w-full" on:click={handleProfileEdit}> 
-                프로필 변경
+                내 정보 변경
             </button>
             
             <button class="btn btn-outline btn-error w-full" on:click={handleLogout}>

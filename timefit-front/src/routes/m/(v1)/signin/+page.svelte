@@ -4,9 +4,10 @@
     import OAuthProviders from '$lib/pages/signin/OAuthProviders.svelte';
     import EmailSigninButton from '$lib/pages/signin/EmailSigninButton.svelte';
     import TermsAgreement from '$lib/pages/signin/TermsAgreement.svelte';
+    import { navVisible } from '$lib/stores/navbar';
 
     onMount(() => {
-        console.log('Mobile OAuth signin page loaded');
+        navVisible.set(false);
     });
 
     const handleOAuthLogin = async (event: CustomEvent<{ provider: string }>) => {

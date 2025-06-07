@@ -23,7 +23,7 @@
 </script>
 
 <div class="mb-8">
-	<h3 class="text-base-content mb-4 text-lg font-semibold">OAuth login</h3>
+	<h3 class="text-base-content mb-4 text-lg font-semibold">로그인 연동</h3>
 
 	<div class="space-y-3">
 		<OAuthProviderCard

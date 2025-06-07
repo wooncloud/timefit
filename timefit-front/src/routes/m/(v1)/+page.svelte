@@ -1,5 +1,7 @@
 <script lang="ts">
+    import { navVisible } from '$lib/stores/navbar';
 
+    navVisible.set(false);
 </script>
 
 <div class="hero">

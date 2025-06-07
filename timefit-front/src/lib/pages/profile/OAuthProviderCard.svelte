@@ -21,17 +21,17 @@
 		switch (provider) {
 			case 'google':
 				return {
-					name: 'Google',
+					name: '구글',
 					iconComponent: 'google'
 				};
 			case 'kakao':
 				return {
-					name: 'Kakao',
+					name: '카카오',
 					iconComponent: 'kakao'
 				};
 			case 'apple':
 				return {
-					name: 'Apple',
+					name: '애플',
 					iconComponent: 'apple'
 				};
 			default:

@@ -1,3 +1,11 @@
+<script lang="ts">
+    import { navVisible, navLeft, navCenter } from '$lib/stores/navbar';
+
+    navVisible.set(true);
+    navLeft.set('');
+    navCenter.set('검색');
+</script>
+
 <div class="hero bg-base-200">
     <div class="hero-content text-center">
         <div class="max-w-md">

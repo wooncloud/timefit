@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { navLeft, navCenter } from '$lib/stores/navbar';
+	import { navLeft, navCenter, navVisible } from '$lib/stores/navbar';
 
 	let formData = {
 		name: '김시간',
@@ -11,10 +11,6 @@
 
 	let nameInput = '';
 	let phoneInput = '';
-
-	const handleBack = () => {
-		goto('/m/mypage');
-	};
 
 	const handleSave = () => {
 		console.log('Save profile:', { name: nameInput, phone: phoneInput });
@@ -26,9 +22,9 @@
 	};
 
 	onMount(() => {
-		navLeft.set('');
-		navCenter.set('프로필 변경');
-		
+		navLeft.set('/m/mypage');
+		navCenter.set('내 정보 변경');
+		navVisible.set(true);
 		nameInput = formData.name;
 		phoneInput = formData.phone;
 	});
