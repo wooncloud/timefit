@@ -1,6 +1,8 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
     import { navLeft, navCenter } from '$lib/stores/navbar';
+    import { supabase } from '$lib/supabase/supabaseClient';
     import ProfileCard from '$lib/pages/profile/ProfileCard.svelte';
     import OAuthSection from '$lib/pages/profile/OAuthSection.svelte';
 
@@ -28,6 +30,15 @@
         console.log(`Disconnect ${event.detail}`);
     };
 
+    const handleLogout = async () => {
+        try {
+            await supabase.auth.signOut();
+            goto('/m', { replaceState: true });
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
+
     onMount(() => {
         navLeft.set('Profile');
         navCenter.set('');
@@ -51,6 +62,14 @@
             on:disconnect={handleOAuthDisconnect}
         />
 
-        <button class="btn btn-primary w-full" on:click={handleProfileEdit}> Profile Edit </button>
+        <div class="space-y-3">
+            <button class="btn btn-primary w-full" on:click={handleProfileEdit}> 
+                프로필 변경
+            </button>
+            
+            <button class="btn btn-outline btn-error w-full" on:click={handleLogout}>
+                로그아웃
+            </button>
+        </div>
     </div>
 </div>
