@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { supabase } from '$lib/supabase/supabaseClient';
-    import OAuthProviders from '$lib/auth/signin/OAuthProviders.svelte';
-    import EmailSigninButton from '$lib/auth/signin/EmailSigninButton.svelte';
-    import TermsAgreement from '$lib/auth/signin/TermsAgreement.svelte';
+    import OAuthProviders from '$lib/pages/signin/OAuthProviders.svelte';
+    import EmailSigninButton from '$lib/pages/signin/EmailSigninButton.svelte';
+    import TermsAgreement from '$lib/pages/signin/TermsAgreement.svelte';
 
     onMount(() => {
         console.log('Mobile OAuth signin page loaded');
