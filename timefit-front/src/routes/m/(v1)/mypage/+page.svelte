@@ -19,7 +19,7 @@
     };
 
     const handleProfileEdit = () => {
-        console.log('Profile edit clicked');
+        goto('/m/mypage/edit');
     };
 
     const handleOAuthConnect = (event: CustomEvent<string>) => {
