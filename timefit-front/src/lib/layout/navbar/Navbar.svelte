@@ -1,7 +1,7 @@
 <script lang="ts">
     import BrandLogo from './BrandLogo.svelte';
     
-    export let brandHref: string = "/m/v1";
+    export let brandHref: string = "/m";
     export let brandTitle: string = "Timefit";
 </script>
 

@@ -10,7 +10,7 @@
     function handleClick(event: Event) {
         if (requiresAuth && !isLoggedIn) {
             event.preventDefault();
-            goto('/m/v1/signin');
+            goto('/m/signin');
         }
     }
 </script>

@@ -11,7 +11,7 @@
     let isLoggedIn = false;
 
     // 로그인 없이도 접근 가능한 페이지들
-    const publicPages = ['/m/v1', '/m/v1/search', '/m/v1/signin'];
+    const publicPages = ['/m', '/m/search', '/m/signin'];
 
     onMount(async () => {
         try {
@@ -24,13 +24,13 @@
                 console.log('User is not logged in');
                 // 로그인이 필요한 페이지에만 리다이렉트
                 if (!publicPages.includes($page.url.pathname)) {
-                    goto('/m/v1/signin', { replaceState: true });
+                    goto('/m/signin', { replaceState: true });
                 }
             }
         } catch (error) {
             console.error('Error checking auth status:', error);
             if (!publicPages.includes($page.url.pathname)) {
-                goto('/m/v1/signin', { replaceState: true });
+                goto('/m/signin', { replaceState: true });
             }
         } finally {
             isLoading = false;

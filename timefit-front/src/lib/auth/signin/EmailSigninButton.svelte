@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let href: string = '/m/v1/signin/email';
+    export let href: string = '/m/signin/email';
     export let text: string = '이메일로 로그인';
 </script>
 

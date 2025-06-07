@@ -1,8 +1,5 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 
-const PC_VERSION = 'v1';
-const MOBILE_VERSION = 'v1';
-
 /** @type {import('@sveltejs/kit').Handle} */
 export const handle: Handle = async ({ event, resolve }) => {
 	const { url, request } = event;
@@ -29,7 +26,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	const basePath = isMobile ? `/m/${MOBILE_VERSION}` : `/pc/${PC_VERSION}`;
+	const basePath = isMobile ? `/m/` : `/`;
 	const redirectPath = `${basePath}${url.pathname === '/' ? '' : url.pathname}${url.search}`;
 	throw redirect(307, redirectPath);
 }

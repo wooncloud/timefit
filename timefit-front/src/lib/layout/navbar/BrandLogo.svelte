@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let href: string = "/m/v1";
+    export let href: string = "/m";
     export let title: string = "Timefit";
 </script>
 
