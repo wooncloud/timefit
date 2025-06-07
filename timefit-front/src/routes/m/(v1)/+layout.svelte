@@ -15,8 +15,10 @@
 
     onMount(async () => {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            
+            const {
+                data: { session }
+            } = await supabase.auth.getSession();
+
             if (session && session.user) {
                 isLoggedIn = true;
                 console.log('User is logged in:', session.user.email);
@@ -53,7 +55,7 @@
         <div class="drawer-content flex h-screen flex-col">
             <Navbar />
 
-            <main class="flex-grow overflow-y-auto mb-16">
+            <main class="mb-16 flex-grow overflow-y-auto">
                 <slot></slot>
             </main>
 

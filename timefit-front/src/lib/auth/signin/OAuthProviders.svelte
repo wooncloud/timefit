@@ -1,9 +1,9 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
     import OAuthButton from './OAuthButton.svelte';
-    
+
     const dispatch = createEventDispatcher();
-    
+
     const providers = [
         {
             provider: 'google',
@@ -30,7 +30,7 @@
             `
         }
     ];
-    
+
     const handleOAuthLogin = (event: CustomEvent<{ provider: string }>) => {
         dispatch('oauth-login', event.detail);
     };
@@ -38,11 +38,11 @@
 
 <div class="space-y-3">
     {#each providers as provider}
-        <OAuthButton 
+        <OAuthButton
             provider={provider.provider}
             text={provider.text}
             iconSvg={provider.iconSvg}
             on:login={handleOAuthLogin}
         />
     {/each}
-</div> 
+</div>

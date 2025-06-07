@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    
+
     export let href: string;
     export let iconPath: string;
     export let label: string;
@@ -22,12 +22,7 @@
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
-        ><path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d={iconPath}
-        /></svg
+        ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={iconPath} /></svg
     >
     <span class="btm-nav-label">{label}</span>
-</a> 
+</a>
