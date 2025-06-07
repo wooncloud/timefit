@@ -12,9 +12,18 @@
     <div class="navbar bg-base-100 px-4 shadow-sm">
         <div class="navbar-start">
             {#if showBackButton}
-                <button class="btn btn-ghost btn-sm p-2" on:click={handleBackClick} aria-label="back">
+                <button
+                    class="btn btn-ghost btn-sm p-2"
+                    on:click={handleBackClick}
+                    aria-label="back"
+                >
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 19l-7-7 7-7"
+                        />
                     </svg>
                 </button>
             {:else}

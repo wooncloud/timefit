@@ -64,10 +64,10 @@
         />
 
         <div class="space-y-3">
-            <button class="btn btn-primary w-full" on:click={handleProfileEdit}> 
+            <button class="btn btn-primary w-full" on:click={handleProfileEdit}>
                 내 정보 변경
             </button>
-            
+
             <button class="btn btn-outline btn-error w-full" on:click={handleLogout}>
                 로그아웃
             </button>
