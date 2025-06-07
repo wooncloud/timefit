@@ -27,16 +27,14 @@
 	};
 
 	onMount(() => {
-		navLeft.set('Settings');
-		navCenter.set('Profile');
+		navLeft.set('Profile');
+		navCenter.set('');
 	});
 </script>
 
-<div class="min-h-screen bg-base-100 p-4 pb-24">
+<div class=" bg-base-100 p-4">
 	<div class="max-w-md mx-auto">
 		<div class="mb-8">
-			<h1 class="text-3xl font-bold text-base-content mb-8">Profile</h1>
-			
 			<div class="card bg-base-100 shadow-lg border border-base-200">
 				<div class="card-body p-6">
 					<div class="flex items-start justify-between mb-6">

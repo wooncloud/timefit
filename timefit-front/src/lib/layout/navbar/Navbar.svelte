@@ -1,16 +1,17 @@
 <script lang="ts">
-    import BrandLogo from './BrandLogo.svelte';
+    import { navLeft, navCenter } from '$lib/stores/navbar';
     
-    export let brandHref: string = "/m";
     export let brandTitle: string = "Timefit";
 </script>
 
-<div class="navbar bg-base-100 shadow-sm">
+<div class="navbar px-4 bg-base-100 shadow-sm">
     <div class="navbar-start">
-        <BrandLogo href={brandHref} title={brandTitle} />
+        <span class="text-xl font-bold">{$navLeft}</span>
     </div>
-    <div class="navbar-center"></div>
+    <div class="navbar-center">
+        <span class="text-xl font-bold">{$navCenter}</span>
+    </div>
     <div class="navbar-end">
-        <!-- MenuButton을 사용하지 않으므로 제거됨 -->
+        <!-- Right 영역 - 필요시 컨텐츠 추가 -->
     </div>
 </div> 

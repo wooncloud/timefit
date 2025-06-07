@@ -2,7 +2,7 @@
 	import { supabase } from '$lib/supabase/supabaseClient';
 </script>
 
-<div class="hero min-h-screen">
+<div class="hero">
 	<div class="hero-content text-center">
 		<div class="max-w-md">
 			<h1 class="text-5xl font-bold">환영합니다!</h1>

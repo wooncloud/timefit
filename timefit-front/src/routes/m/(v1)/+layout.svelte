@@ -39,7 +39,7 @@
 </script>
 
 {#if isLoading}
-    <div class="hero min-h-screen">
+    <div class="hero">
         <div class="hero-content text-center">
             <div class="max-w-md">
                 <span class="loading loading-spinner loading-lg"></span>
@@ -53,7 +53,7 @@
         <div class="drawer-content flex h-screen flex-col">
             <Navbar />
 
-            <main class="flex-grow overflow-y-auto">
+            <main class="flex-grow overflow-y-auto mb-16">
                 <slot></slot>
             </main>
 
