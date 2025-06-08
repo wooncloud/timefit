@@ -3,7 +3,7 @@
 
     export let provider: string;
     export let text: string;
-    export let iconSvg: string;
+    export let iconSrc: string;
 
     const dispatch = createEventDispatcher();
 
@@ -13,8 +13,6 @@
 </script>
 
 <button class="btn btn-primary btn-block btn-lg" on:click={handleClick}>
-    <svg class="mr-2 h-5 w-5" viewBox="0 0 24 24">
-        {@html iconSvg}
-    </svg>
+    <img src={iconSrc} alt={`${provider} logo`} class="mr-2 h-5 w-5" />
     {text}
 </button>
