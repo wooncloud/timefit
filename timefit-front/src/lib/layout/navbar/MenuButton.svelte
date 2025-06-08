@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let drawerId: string = "my-drawer";
+    export let drawerId: string = 'my-drawer';
 </script>
 
 <label for={drawerId} class="btn btn-square btn-ghost drawer-button">
@@ -15,4 +15,4 @@
             d="M4 6h16M4 12h16M4 18h16"
         ></path></svg
     >
-</label> 
+</label>

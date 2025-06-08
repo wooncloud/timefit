@@ -1,25 +1,43 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 
-const PC_VERSION = 'v1';
-const MOBILE_VERSION = 'v1';
-
 /** @type {import('@sveltejs/kit').Handle} */
 export const handle: Handle = async ({ event, resolve }) => {
-	const { url, request } = event;
-	const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
-	const isMobile = /mobile|iphone|ipad|android|windows phone/g.test(userAgent);
+    const { url, request } = event;
+    const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
+    const isMobile = /mobile|iphone|ipad|android|windows phone/g.test(userAgent);
 
-	if (
-		url.pathname.startsWith('/pc') ||
-		url.pathname.startsWith('/m') ||
-		url.pathname.startsWith('/api') ||
-		url.pathname.includes('.') ||
-		url.pathname.startsWith('/_app')
-	) {
-		return resolve(event);
-	}
+    // Chrome DevTools나 기타 .well-known 요청 처리
+    if (url.pathname.startsWith('/.well-known/')) {
+        return new Response('{}', {
+            status: 200,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+    }
 
-	const basePath = isMobile ? `/m/${MOBILE_VERSION}` : `/pc/${PC_VERSION}`;
-	const redirectPath = `${basePath}${url.pathname === '/' ? '' : url.pathname}${url.search}`;
-	throw redirect(307, redirectPath);
-}
+    if (
+        url.pathname.startsWith('/m') ||
+        url.pathname.startsWith('/api') ||
+        url.pathname.includes('.') ||
+        url.pathname.startsWith('/_app')
+    ) {
+        return resolve(event);
+    }
+
+    // 루트 경로 처리
+    if (url.pathname === '/') {
+        if (isMobile) {
+            throw redirect(307, `/m${url.search}`);
+        }
+        // PC의 경우 그대로 진행 (/(pc) 그룹이 처리)
+        return resolve(event);
+    }
+
+    // 다른 경로들의 경우 모바일/PC에 따라 리다이렉트
+    if (isMobile && !url.pathname.startsWith('/m')) {
+        throw redirect(307, `/m${url.pathname}${url.search}`);
+    }
+
+    return resolve(event);
+};

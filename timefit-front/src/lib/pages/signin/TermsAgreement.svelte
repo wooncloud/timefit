@@ -7,8 +7,8 @@
     export let agreementText: string = '에 동의한 것으로 간주됩니다.';
 </script>
 
-<div class="text-xs text-base-content/60 mt-6 leading-relaxed">
+<div class="text-base-content/60 mt-6 text-xs leading-relaxed">
     {text}
-    <a href={termsUrl} class="link link-primary">{termsText}</a>과 
+    <a href={termsUrl} class="link link-primary">{termsText}</a>과
     <a href={privacyUrl} class="link link-primary">{privacyText}</a>{agreementText}
-</div> 
+</div>
