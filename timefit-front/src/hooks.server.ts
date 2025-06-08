@@ -17,7 +17,6 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     if (
-        url.pathname.startsWith('/pc') ||
         url.pathname.startsWith('/m') ||
         url.pathname.startsWith('/api') ||
         url.pathname.includes('.') ||
@@ -26,7 +25,19 @@ export const handle: Handle = async ({ event, resolve }) => {
         return resolve(event);
     }
 
-    const basePath = isMobile ? `/m/` : `/`;
-    const redirectPath = `${basePath}${url.pathname === '/' ? '' : url.pathname}${url.search}`;
-    throw redirect(307, redirectPath);
+    // 루트 경로 처리
+    if (url.pathname === '/') {
+        if (isMobile) {
+            throw redirect(307, `/m${url.search}`);
+        }
+        // PC의 경우 그대로 진행 (/(pc) 그룹이 처리)
+        return resolve(event);
+    }
+
+    // 다른 경로들의 경우 모바일/PC에 따라 리다이렉트
+    if (isMobile && !url.pathname.startsWith('/m')) {
+        throw redirect(307, `/m${url.pathname}${url.search}`);
+    }
+
+    return resolve(event);
 };
