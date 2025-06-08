@@ -51,6 +51,7 @@
     </div>
 {:else}
     <div class="drawer drawer-end">
+        <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
         <input id="my-drawer" type="checkbox" class="drawer-toggle" />
         <div class="drawer-content flex h-screen flex-col">
             <Navbar />
@@ -63,10 +64,9 @@
         </div>
 
         <!-- 안써서 주석 -->
-        <!-- <div class="drawer-side">
-            <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+        <div class="drawer-side">
             <ul class="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
             </ul>
-        </div> -->
+        </div>
     </div>
 {/if}

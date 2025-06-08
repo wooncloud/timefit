@@ -57,9 +57,9 @@
         <div class="card-body">
             <OAuthProviders on:oauth-login={handleOAuthLogin} />
 
-            <div class="divider my-6">또는</div>
+            <!-- <div class="divider my-6">또는</div> -->
 
-            <EmailSigninButton />
+            <!-- <EmailSigninButton /> -->
 
             <TermsAgreement />
         </div>
