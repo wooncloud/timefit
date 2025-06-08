@@ -59,7 +59,9 @@
                         <img src="/kakao.svg" alt="Kakao" class="h-6 w-6" />
                     </div>
                 {:else if config.iconComponent === 'apple'}
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg">
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg"
+                    >
                         <img src="/apple.svg" alt="Apple" class="h-6 w-6" />
                     </div>
                 {/if}

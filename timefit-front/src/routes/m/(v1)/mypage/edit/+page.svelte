@@ -11,14 +11,32 @@
 
     let nameInput = '';
     let phoneInput = '';
+    let fileInput: HTMLInputElement;
 
     const handleSave = () => {
-        console.log('Save profile:', { name: nameInput, phone: phoneInput });
+        console.log('Save profile:', {
+            name: nameInput,
+            phone: phoneInput,
+            profileImage: formData.profileImage
+        });
         goto('/m/mypage');
     };
 
     const handleProfileImageClick = () => {
-        console.log('Profile image click - open image picker');
+        fileInput?.click();
+    };
+
+    const handleFileChange = (event: Event) => {
+        const target = event.target as HTMLInputElement;
+        const file = target.files?.[0];
+
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                formData.profileImage = e.target?.result as string;
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     onMount(() => {
@@ -32,10 +50,20 @@
 
 <div class="bg-base-100">
     <div class="mx-auto max-w-md px-4 py-6">
+        <!-- 숨겨진 파일 input -->
+        <input
+            bind:this={fileInput}
+            type="file"
+            accept="image/*"
+            on:change={handleFileChange}
+            class="hidden"
+            aria-label="프로필 이미지 선택"
+        />
+
         <div class="my-8 flex flex-col items-center">
             <button class="avatar mb-8" on:click={handleProfileImageClick}>
                 <div
-                    class="bg-base-200 hover:bg-base-300 flex h-32 w-32 items-center justify-center rounded-full transition-colors"
+                    class="bg-base-200 hover:bg-base-300 border-base-300 hover:border-primary flex h-32 w-32 items-center justify-center rounded-full border-2 border-dashed transition-colors"
                 >
                     {#if formData.profileImage}
                         <img
@@ -44,7 +72,10 @@
                             class="h-full w-full rounded-full object-cover"
                         />
                     {:else}
-                        <img src="/profile.svg" alt="Profile" class="h-full w-full" />
+                        <div class="text-base-content/60 flex flex-col items-center">
+                            <img src="/profile.svg" alt="Profile" class="mb-2 h-16 w-16" />
+                            <span class="text-center text-xs">이미지 선택</span>
+                        </div>
                     {/if}
                 </div>
             </button>
