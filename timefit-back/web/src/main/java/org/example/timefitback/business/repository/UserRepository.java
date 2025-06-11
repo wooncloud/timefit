@@ -30,4 +30,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // 이메일로 사용자 역할 확인
     @Query("SELECT u.role FROM User u WHERE u.email = :email")
     Optional<User.UserRole> findRoleByEmail(@Param("email") String email);
+
+    // 비즈니스 사용자 조회
+    @Query("SELECT u FROM User u WHERE u.id = :userId AND u.role = 'BUSINESS'")
+    Optional<User> findBusinessUserById(@Param("userId") UUID userId);
 }
