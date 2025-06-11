@@ -22,6 +22,7 @@ This document provides a comprehensive overview of the "timefit" project, design
         *   Caching frequently accessed data.
 *   **Frontend:**
     *   **SvelteKit:** A modern Svelte framework for building fast and interactive user interfaces.
+    *   **DaisyUI:** A Tailwind CSS component framework used for styling. It is preferred over custom CSS where possible. AI assistants should prioritize using DaisyUI components and utility classes. For usage and component information, refer to the official documentation: https://daisyui.com/llms.txt
 *   **DevOps & Infrastructure:**
     *   **Docker:** For containerizing applications, ensuring consistent development and deployment environments.
     *   **Nginx:** Web server used for:
@@ -196,7 +197,7 @@ The frontend is built using SvelteKit, a framework based on Svelte.
                 *   `src/routes/(pc)/dashboard/+page.svelte`
                 *   `src/routes/m/profile/+page.svelte`
                 *   `src/routes/api/auth/login/+server.ts`
-        *   **`style.css`**: Global CSS styles for the application.
+        *   **`style.css`**: Global CSS styles. While available for base styling or overrides, the project prefers leveraging **DaisyUI** (a Tailwind CSS component framework) for styling and UI components. AI assistants should maximize the use of DaisyUI's classes and components. Consult the DaisyUI documentation for best practices: https://daisyui.com/llms.txt.
     *   **`static/`**: Contains static assets that are served as-is (e.g., `favicon.png`, `robots.txt`, images, fonts). These are directly accessible via the root path.
     *   **`.gitignore`**: Specifies intentionally untracked files that Git should ignore.
     *   **`.npmrc`**: Configuration file for npm.
