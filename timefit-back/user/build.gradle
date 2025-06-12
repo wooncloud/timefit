@@ -1,0 +1,12 @@
+dependencies {
+    implementation project(':jpa-common')
+}
+
+jar {
+    enabled = true
+    archiveClassifier = ''
+}
+
+bootJar {
+    enabled = false
+}

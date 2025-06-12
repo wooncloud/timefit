@@ -2,12 +2,10 @@ rootProject.name = 'timefit-back'
 
 // 현재 포함된 모듈
 include 'web'
+include 'user'
+include 'domain'
+include 'jpa-common'
 
 // 향후 추가될 모듈들 (확정X)
-// include 'domain'
-// include 'jpa'
-// include 'user'
-// include 'business'
-// include 'reservation'
 // include 'chat'
 // include 'notification'
