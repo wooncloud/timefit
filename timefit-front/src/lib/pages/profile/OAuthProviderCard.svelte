@@ -50,19 +50,19 @@
                     <div
                         class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg"
                     >
-                        <img src="/google.svg" alt="Google" class="h-6 w-6" />
+                        <img src="/imgs/logo/google.svg" alt="Google" class="h-6 w-6" />
                     </div>
                 {:else if config.iconComponent === 'kakao'}
                     <div
                         class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg"
                     >
-                        <img src="/kakao.svg" alt="Kakao" class="h-6 w-6" />
+                        <img src="/imgs/logo/kakao.svg" alt="Kakao" class="h-6 w-6" />
                     </div>
                 {:else if config.iconComponent === 'apple'}
                     <div
                         class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg"
                     >
-                        <img src="/apple.svg" alt="Apple" class="h-6 w-6" />
+                        <img src="/imgs/logo/apple.svg" alt="Apple" class="h-6 w-6" />
                     </div>
                 {/if}
                 <span class="text-base-content font-medium">{config.name}</span>

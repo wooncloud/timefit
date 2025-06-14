@@ -8,17 +8,17 @@
         {
             provider: 'google',
             text: 'Google로 계속하기',
-            iconSrc: '/google.svg'
+            iconSrc: '/imgs/logo/google.svg'
         },
         {
             provider: 'kakao',
             text: '카카오로 계속하기',
-            iconSrc: '/kakao.svg'
+            iconSrc: '/imgs/logo/kakao.svg'
         },
         {
             provider: 'apple',
             text: 'Apple로 계속하기',
-            iconSrc: '/apple.svg'
+            iconSrc: '/imgs/logo/apple.svg'
         }
     ];
 

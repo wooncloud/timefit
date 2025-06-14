@@ -150,21 +150,25 @@
 </div>
 
 <!-- Signup Type Tabs -->
-<div class="tabs tabs-boxed mb-6">
-	<button
+<div role="tablist" class="tabs tabs-box mb-6">
+	<input
+		type="radio"
+		name="signup_type"
+		role="tab"
 		class="tab flex-1"
-		class:tab-active={signupType === 'existing'}
-		on:click={() => (signupType = 'existing')}
-	>
-		기존 회사 가입
-	</button>
-	<button
+		aria-label="기존 회사 가입"
+		value="existing"
+		bind:group={signupType}
+	/>
+	<input
+		type="radio"
+		name="signup_type"
+		role="tab"
 		class="tab flex-1"
-		class:tab-active={signupType === 'new'}
-		on:click={() => (signupType = 'new')}
-	>
-		새 회사 등록
-	</button>
+		aria-label="새 회사 등록"
+		value="new"
+		bind:group={signupType}
+	/>
 </div>
 
 <!-- Common Fields -->

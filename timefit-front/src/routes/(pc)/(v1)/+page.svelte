@@ -103,11 +103,11 @@
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <div class="btn btn-outline btn-lg">
-                    <img src="/apple.svg" alt="App Store" class="w-6 h-6 mr-2" />
+                    <img src="/imgs/logo/apple.svg" alt="App Store" class="w-6 h-6 mr-2" />
                     App Store
                 </div>
                 <div class="btn btn-outline btn-lg">
-                    <img src="/google_play.svg" alt="Google Play" class="w-6 h-6 mr-2" />
+                    <img src="/imgs/logo/google.svg" alt="Google Play" class="w-6 h-6 mr-2" />
                     Google Play
                 </div>
             </div>
