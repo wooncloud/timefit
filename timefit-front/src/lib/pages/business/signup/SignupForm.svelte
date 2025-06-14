@@ -5,6 +5,7 @@
 	import UserAccountFields from '$lib/components/auth/UserAccountFields.svelte';
 	import ExistingCompanySignupTab from './ExistingCompanySignupTab.svelte';
 	import NewCompanySignupTab from './NewCompanySignupTab.svelte';
+	import AuthFooter from '$lib/components/auth/AuthFooter.svelte';
 
 	let signupType: 'existing' | 'new' = 'existing';
 	let loading = false;
@@ -198,14 +199,4 @@
 	/>
 {/if}
 
-<div class="text-center mt-6">
-	<p class="text-base-content/70 text-sm">
-		이미 사업자 계정이 있으신가요?
-		<a href="/business/signin" class="link link-primary font-medium">사업자 로그인</a>
-	</p>
-</div>
-
-<div class="text-center mt-4">
-	<div class="divider">개인 계정으로 가입</div>
-	<a href="/signup" class="link link-secondary text-sm">개인 사용자 회원가입 ></a>
-</div> 
+<AuthFooter pageType="signup" userType="business" /> 
