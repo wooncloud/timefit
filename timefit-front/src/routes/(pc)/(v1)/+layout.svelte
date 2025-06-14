@@ -16,7 +16,6 @@
                     <li><a href="#">문의</a></li>
                     <li class="divider"></li>
                     <li><a href="/signin">로그인</a></li>
-                    <li><a href="/signup">회원가입</a></li>
                     <li><a href="/business/signin">사업자 로그인</a></li>
                 </ul>
             </div>
@@ -32,7 +31,6 @@
         </div>
         <div class="navbar-end hidden md:flex">
             <a href="/signin" class="btn btn-primary btn-sm lg:btn-md mr-1 lg:mr-2">로그인</a>
-            <a href="/signup" class="btn btn-outline btn-primary btn-sm lg:btn-md mr-1 lg:mr-2">회원가입</a>
             <a href="/business/signin" class="btn btn-secondary btn-sm lg:btn-md">사업자 로그인</a>
         </div>
         
