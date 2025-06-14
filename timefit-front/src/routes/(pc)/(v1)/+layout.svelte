@@ -10,10 +10,10 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" /></svg>
                 </div>
                 <ul class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                    <li><a href="#">홈</a></li>
-                    <li><a href="#">기능</a></li>
-                    <li><a href="#">서비스</a></li>
-                    <li><a href="#">문의</a></li>
+                    <li><a href="/">홈</a></li>
+                    <li><a href="/features">기능</a></li>
+                    <li><a href="/services">서비스</a></li>
+                    <li><a href="/contact">문의</a></li>
                     <li class="divider"></li>
                     <li><a href="/signin">로그인</a></li>
                     <li><a href="/business/signin">사업자 로그인</a></li>
@@ -23,10 +23,10 @@
         </div>
         <div class="navbar-center hidden lg:flex">
             <ul class="menu menu-horizontal px-1">
-                <li><a href="#" class="hover:text-primary">홈</a></li>
-                <li><a href="#" class="hover:text-primary">기능</a></li>
-                <li><a href="#" class="hover:text-primary">서비스</a></li>
-                <li><a href="#" class="hover:text-primary">문의</a></li>
+                <li><a href="/" class="hover:text-primary">홈</a></li>
+                <li><a href="/features" class="hover:text-primary">기능</a></li>
+                <li><a href="/services" class="hover:text-primary">서비스</a></li>
+                <li><a href="/contact" class="hover:text-primary">문의</a></li>
             </ul>
         </div>
         <div class="navbar-end hidden md:flex">
@@ -47,10 +47,10 @@
     <footer class="p-6 lg:p-10 bg-base-200 text-base-content">
         <div class="flex flex-col items-center space-y-4 md:space-y-6">
             <nav class="flex flex-col md:flex-row md:space-x-6 space-y-2 md:space-y-0 text-center">
-                <a href="#" class="link link-hover text-sm">회사 소개</a>
-                <a href="#" class="link link-hover text-sm">문의하기</a>
-                <a href="#" class="link link-hover text-sm">채용</a>
-                <a href="#" class="link link-hover text-sm">보도자료</a>
+                <a href="/about" class="link link-hover text-sm">회사 소개</a>
+                <a href="/contact" class="link link-hover text-sm">문의하기</a>
+                <a href="/careers" class="link link-hover text-sm">채용</a>
+                <a href="/press" class="link link-hover text-sm">보도자료</a>
             </nav>
             <nav>
                 <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
