@@ -3,6 +3,7 @@
 	import EmailPasswordForm from '$lib/components/auth/EmailPasswordForm.svelte';
 	import GoogleLoginButton from '$lib/components/auth/GoogleLoginButton.svelte';
 	import AuthFooter from '$lib/components/auth/AuthFooter.svelte';
+	import { showToast } from '$lib/utils';
 
 	let email = '';
 	let password = '';
@@ -11,7 +12,7 @@
 
 	async function handleBusinessSignin() {
 		if (!email || !password) {
-			alert('이메일과 비밀번호를 입력해주세요.');
+			showToast('이메일과 비밀번호를 입력해주세요.', 'warning');
 			return;
 		}
 
@@ -22,7 +23,7 @@
 			goto('/business/dashboard');
 		} catch (error) {
 			console.error('Business login error:', error);
-			alert('사업자 로그인에 실패했습니다.');
+			showToast('사업자 로그인에 실패했습니다.', 'error');
 		} finally {
 			loading = false;
 		}
@@ -36,7 +37,7 @@
 			goto('/business/dashboard');
 		} catch (error) {
 			console.error('Google business login error:', error);
-			alert('Google 사업자 로그인에 실패했습니다.');
+			showToast('Google 사업자 로그인에 실패했습니다.', 'error');
 		} finally {
 			googleLoading = false;
 		}

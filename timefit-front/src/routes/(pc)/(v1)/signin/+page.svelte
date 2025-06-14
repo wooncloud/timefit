@@ -2,6 +2,7 @@
     import { supabase } from '$lib/supabase/supabaseClient';
     import OAuthProviders from '$lib/pages/signin/OAuthProviders.svelte';
     import TermsAgreement from '$lib/pages/signin/TermsAgreement.svelte';
+    import { showToast } from '$lib/utils';
 
     const handleOAuthLogin = async (event: CustomEvent<{ provider: string }>) => {
         const { provider } = event.detail;
@@ -17,7 +18,7 @@
 
                 if (error) {
                     console.error('Google OAuth error:', error);
-                    alert('Google 로그인 중 오류가 발생했습니다.');
+                    showToast('Google 로그인 중 오류가 발생했습니다.', 'error');
                 }
             } else if (provider === 'kakao') {
                 const { data, error } = await supabase.auth.signInWithOAuth({
@@ -29,18 +30,18 @@
 
                 if (error) {
                     console.error('Kakao OAuth error:', error);
-                    alert('카카오 로그인 중 오류가 발생했습니다.');
+                    showToast('카카오 로그인 중 오류가 발생했습니다.', 'error');
                 }
             } else if (provider === 'apple') {
                 console.log('Apple OAuth not implemented yet');
-                alert('Apple 로그인은 준비 중입니다.');
+                showToast('Apple 로그인은 준비 중입니다.', 'info');
             } else {
                 console.log(`${provider} OAuth not implemented yet`);
-                alert(`${provider} 로그인은 준비 중입니다.`);
+                showToast(`${provider} 로그인은 준비 중입니다.`, 'info');
             }
         } catch (error) {
             console.error('OAuth error:', error);
-            alert('로그인 중 오류가 발생했습니다.');
+            showToast('로그인 중 오류가 발생했습니다.', 'error');
         }
     };
 </script>

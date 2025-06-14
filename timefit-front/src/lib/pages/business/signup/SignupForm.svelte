@@ -6,6 +6,7 @@
 	import ExistingCompanySignupTab from './ExistingCompanySignupTab.svelte';
 	import NewCompanySignupTab from './NewCompanySignupTab.svelte';
 	import AuthFooter from '$lib/components/auth/AuthFooter.svelte';
+	import { showToast } from '$lib/utils';
 
 	let signupType: 'existing' | 'new' = 'existing';
 	let loading = false;
@@ -73,17 +74,17 @@
 			!businessAddress ||
 			!companyPhone
 		) {
-			alert('모든 필드를 입력해주세요.');
+			showToast('모든 필드를 입력해주세요.', 'warning');
 			return;
 		}
 
 		if (password !== confirmPassword) {
-			alert('비밀번호가 일치하지 않습니다.');
+			showToast('비밀번호가 일치하지 않습니다.', 'warning');
 			return;
 		}
 
 		if (!agreeTerms) {
-			alert('이용약관에 동의해주세요.');
+			showToast('이용약관에 동의해주세요.', 'warning');
 			return;
 		}
 
@@ -104,7 +105,7 @@
 			goto('/business/signin?message=회원가입이 완료되었습니다');
 		} catch (error) {
 			console.error('New company signup error:', error);
-			alert('회원가입에 실패했습니다.');
+			showToast('회원가입에 실패했습니다.', 'error');
 		} finally {
 			loading = false;
 		}
@@ -112,17 +113,17 @@
 
 	async function handleExistingCompanySignup() {
 		if (!email || !password || !confirmPassword || !name || !selectedCompany) {
-			alert('모든 필드를 입력하고 회사를 선택해주세요.');
+			showToast('모든 필드를 입력하고 회사를 선택해주세요.', 'warning');
 			return;
 		}
 
 		if (password !== confirmPassword) {
-			alert('비밀번호가 일치하지 않습니다.');
+			showToast('비밀번호가 일치하지 않습니다.', 'warning');
 			return;
 		}
 
 		if (!agreeTerms) {
-			alert('이용약관에 동의해주세요.');
+			showToast('이용약관에 동의해주세요.', 'warning');
 			return;
 		}
 
@@ -137,7 +138,7 @@
 			goto('/business/signin?message=회원가입이 완료되었습니다');
 		} catch (error) {
 			console.error('Existing company signup error:', error);
-			alert('회원가입에 실패했습니다.');
+			showToast('회원가입에 실패했습니다.', 'error');
 		} finally {
 			loading = false;
 		}
