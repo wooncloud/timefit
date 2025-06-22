@@ -1,4 +1,4 @@
-package org.example.timefitback.common.config;
+package timefit.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
