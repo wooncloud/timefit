@@ -46,4 +46,89 @@ public class UserBusinessRole extends BaseEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+
+
+    /**
+     * OWNER 권한으로 UserBusinessRole 생성
+     */
+    public static UserBusinessRole createOwner(User user, Business business) {
+        UserBusinessRole userBusinessRole = new UserBusinessRole();
+        userBusinessRole.user = user;
+        userBusinessRole.business = business;
+        userBusinessRole.role = BusinessRole.OWNER;
+        userBusinessRole.joinedAt = LocalDateTime.now();
+        userBusinessRole.isActive = true;
+        return userBusinessRole;
+    }
+
+    /**
+     * MANAGER 권한으로 UserBusinessRole 생성
+     */
+    public static UserBusinessRole createManager(User user, Business business, User invitedBy) {
+        UserBusinessRole userBusinessRole = new UserBusinessRole();
+        userBusinessRole.user = user;
+        userBusinessRole.business = business;
+        userBusinessRole.role = BusinessRole.MANAGER;
+        userBusinessRole.invitedBy = invitedBy;
+        userBusinessRole.joinedAt = LocalDateTime.now();
+        userBusinessRole.isActive = true;
+        return userBusinessRole;
+    }
+
+    /**
+     * MEMBER 권한으로 UserBusinessRole 생성
+     */
+    public static UserBusinessRole createMember(User user, Business business, User invitedBy) {
+        UserBusinessRole userBusinessRole = new UserBusinessRole();
+        userBusinessRole.user = user;
+        userBusinessRole.business = business;
+        userBusinessRole.role = BusinessRole.MEMBER;
+        userBusinessRole.invitedBy = invitedBy;
+        userBusinessRole.joinedAt = LocalDateTime.now();
+        userBusinessRole.isActive = true;
+        return userBusinessRole;
+    }
+
+    /**
+     * 특정 역할로 권한 생성 (범용)
+     */
+    public static UserBusinessRole createWithRole(User user, Business business, BusinessRole role, User invitedBy) {
+        UserBusinessRole userBusinessRole = new UserBusinessRole();
+        userBusinessRole.user = user;
+        userBusinessRole.business = business;
+        userBusinessRole.role = role;
+        userBusinessRole.invitedBy = invitedBy;
+        userBusinessRole.joinedAt = LocalDateTime.now();
+        userBusinessRole.isActive = true;
+        return userBusinessRole;
+    }
+
+    /**
+     * 역할 변경
+     */
+    public void changeRole(BusinessRole newRole) {
+        this.role = newRole;
+    }
+
+    /**
+     * 권한 비활성화
+     */
+    public void deactivate() {
+        this.isActive = false;
+    }
+
+    /**
+     * 권한 활성화
+     */
+    public void activate() {
+        this.isActive = true;
+    }
+
+    /**
+     * 초대자 변경 (권한 이관 시 사용)
+     */
+    public void changeInviter(User newInviter) {
+        this.invitedBy = newInviter;
+    }
 }

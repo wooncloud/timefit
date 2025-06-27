@@ -51,4 +51,59 @@ public class User extends BaseEntity {
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+
+
+
+    /**
+     * 업체 사용자 생성 (이메일 회원가입)
+     */
+    public static User createBusinessUser(String email, String password, String name, String phoneNumber) {
+        User user = new User();
+        user.email = email;
+        user.passwordHash = password; // 실제로는 암호화 필요
+        user.name = name;
+        user.phoneNumber = phoneNumber;
+        user.role = UserRole.BUSINESS;
+        user.lastLoginAt = LocalDateTime.now();
+        return user;
+    }
+
+    /**
+     * OAuth 고객 사용자 생성
+     */
+    public static User createOAuthUser(String email, String name, String profileImageUrl,
+                                       String oauthProvider, String oauthId) {
+        User user = new User();
+        user.email = email;
+        user.name = name;
+        user.profileImageUrl = profileImageUrl;
+        user.role = UserRole.USER;
+        user.oauthProvider = oauthProvider;
+        user.oauthId = oauthId;
+        user.lastLoginAt = LocalDateTime.now();
+        return user;
+    }
+
+    /**
+     * 마지막 로그인 시간 업데이트
+     */
+    public void updateLastLogin() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
+
+    /**
+     * 사용자 정보 업데이트
+     */
+    public void updateUserInfo(String name, String phoneNumber, String profileImageUrl) {
+        if (name != null) {
+            this.name = name;
+        }
+        if (phoneNumber != null) {
+            this.phoneNumber = phoneNumber;
+        }
+        if (profileImageUrl != null) {
+            this.profileImageUrl = profileImageUrl;
+        }
+    }
 }
+
