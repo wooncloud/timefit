@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: prod
   application:
     name: timefit-back
 
@@ -49,7 +49,7 @@ spring:
     password: ${POSTGRES_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
@@ -58,19 +58,19 @@ spring:
 
 ---
 
-## 운영 환경
-#spring:
-#  config:
-#    activate:
-#      on-profile: prod
-#  datasource:
-#    url: ${SUPABASE_DB_URL}
-#    username: ${SUPABASE_DB_USERNAME}
-#    password: ${SUPABASE_DB_PASSWORD}
-#    driver-class-name: org.postgresql.Driver
-#  jpa:
-#    hibernate:
-#      ddl-auto: validate
-#    show-sql: false
+# 운영 환경
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:postgresql://${SUPABASE_HOST}:${SUPABASE_PORT}/${SUPABASE_DB}
+    username: ${SUPABASE_USER}
+    password: ${SUPABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 임시: 초기 배포용
+    show-sql: false
 
 ---

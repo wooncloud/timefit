@@ -1,208 +1,115 @@
-### 업체 인증 API 테스트 파일
+### 1. 헬스체크 - 서버 동작 확인
+GET http://localhost:8080/api/health
 
-### 설정
-# @host = localhost:8080
-# @baseUrl = http://{{host}}/api/business/auth
-
-### 테스트 시나리오:
-### [기본 플로우]
-### 1. 헬스체크로 서버 상태 확인
-### 2-3. 서로 다른 업체 2개 회원가입
-### 4-5. 각 업체로 로그인 테스트
-
-### [실패 케이스 검증]
-### 6-8. 유효성 검증 실패 (이메일, 비밀번호, 사업자번호)
-### 9-10. 중복 데이터 검증 (이메일, 사업자번호)
-### 11-14. 로그인 실패 케이스들
-### 15. 404 에러 확인
-
-### [응답 확인 포인트]
-### - 성공: success=true, data 객체 존재
-### - 실패: success=false, error 객체 존재
-### - 유효성 검증 실패: error.code="VALIDATION_ERROR"
-### - 중복 데이터: error.code="EMAIL_ALREADY_EXISTS" 등
-
-
-### 1. 헬스체크 - 서버 상태 확인
-GET http://localhost:8080/api/business/auth/health
-Accept: application/json
-
-### 2. 업체 회원가입 - 성공 케이스
+### 2. 업체 회원가입
 POST http://localhost:8080/api/business/auth/signup
 Content-Type: application/json
 
 {
-  "email": "kimceo@example.com",
-  "password": "SecurePass123!",
-  "name": "김대표",
-  "phoneNumber": "010-1234-5678",
-  "businessName": "김대표네 헤어샵",
-  "businessType": "미용실",
-  "businessNumber": "123-45-67890",
-  "address": "서울시 강남구 테스트로 123번길 45",
-  "contactPhone": "02-1234-5678",
-  "description": "20년 경력의 전문 헤어디자이너가 운영하는 미용실입니다. 고객 만족을 최우선으로 합니다."
-}
-
-### 3. 업체 회원가입 - 다른 업체 (테스트용)
-POST http://localhost:8080/api/business/auth/signup
-Content-Type: application/json
-
-{
-  "email": "parkcafe@example.com",
-  "password": "CafePass456!",
-  "name": "박사장",
-  "phoneNumber": "010-9876-5432",
-  "businessName": "박사장네 원두카페",
+  "email": "fresh@example.com",
+  "password": "Password123!",
+  "name": "신규사장",
+  "phoneNumber": "010-1111-2222",
+  "businessName": "신규카페",
   "businessType": "카페",
-  "businessNumber": "987-65-43210",
-  "address": "서울시 서초구 카페로 789",
-  "contactPhone": "02-9876-5432",
-  "description": "신선한 원두로 내린 커피를 제공하는 카페입니다."
+  "businessNumber": "111-22-33333",
+  "address": "서울시 강남구 테헤란로 111",
+  "contactPhone": "02-1111-2222",
+  "description": "새로 오픈한 카페입니다"
 }
 
-### 4. 업체 로그인 - 성공 (위 2번 회원가입 후 실행)
+> {%
+    client.test("업체 회원가입 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.headers.valueOf("x-client-token"), "x-client-token 헤더가 있어야 함");
+    });
+    client.global.set("businessToken", response.headers.valueOf("x-client-token"));
+    console.log("업체 토큰:", client.global.get("businessToken"));
+%}
+
+### 3. 업체 로그인 - (2. 업체 회원가입) 데이터로 로그인
 POST http://localhost:8080/api/business/auth/signin
 Content-Type: application/json
 
 {
-  "email": "kimceo@example.com",
-  "password": "SecurePass123!"
+  "email": "fresh@example.com",
+  "password": "Password123!"
 }
 
-### 5. 업체 로그인 - 두 번째 업체 (위 3번 회원가입 후 실행)
-POST http://localhost:8080/api/business/auth/signin
+> {%
+    client.test("업체 로그인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.headers.valueOf("x-client-token"), "x-client-token 헤더가 있어야 함");
+    });
+    client.global.set("businessToken", response.headers.valueOf("x-client-token"));
+    console.log("업체 로그인 토큰:", client.global.get("businessToken"));
+%}
+
+### 4. 고객 OAuth 로그인 (Google 가정)
+POST http://localhost:8080/api/customer/auth/oauth
 Content-Type: application/json
 
 {
-  "email": "parkcafe@example.com",
-  "password": "CafePass456!"
+  "provider": "GOOGLE",
+  "accessToken": "ya29.test_token",
+  "oauthId": "1234567890"
 }
 
-### === 실패 케이스 테스트 ===
+> {%
+    client.test("고객 OAuth 로그인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.headers.valueOf("x-client-token"), "x-client-token 헤더가 있어야 함");
+    });
+    client.global.set("customerToken", response.headers.valueOf("x-client-token"));
+    console.log("고객 토큰:", client.global.get("customerToken"));
+%}
 
-### 6. 회원가입 실패 - 유효성 검증 (잘못된 이메일)
-POST http://localhost:8080/api/business/auth/signup
-Content-Type: application/json
+### 5. 사업자 로그인 상태 확인 (토큰 유효성 검증)
+GET http://localhost:8080/api/auth/token/status
+x-client-token: {{businessToken}}
 
-{
-  "email": "invalid-email-format",
-  "password": "SecurePass123!",
-  "name": "테스트",
-  "phoneNumber": "010-1234-5678",
-  "businessName": "테스트 업체",
-  "businessType": "기타",
-  "businessNumber": "111-11-11111",
-  "address": "테스트 주소",
-  "contactPhone": "02-1111-1111",
-  "description": "테스트 설명"
-}
+> {%
+    client.test("업체 토큰 유효성 검증", function() {
+        client.assert(response.status === 200, "토큰이 유효해야 함");
+    });
+%}
 
-### 7. 회원가입 실패 - 약한 비밀번호
-POST http://localhost:8080/api/business/auth/signup
-Content-Type: application/json
+### 6. 고객 로그인 상태 확인 (토큰 유효성 검증)
+GET http://localhost:8080/api/auth/token/status
+x-client-token: {{customerToken}}
 
-{
-  "email": "weak@example.com",
-  "password": "123",
-  "name": "테스트",
-  "phoneNumber": "010-1234-5678",
-  "businessName": "테스트 업체",
-  "businessType": "기타",
-  "businessNumber": "222-22-22222",
-  "address": "테스트 주소",
-  "contactPhone": "02-2222-2222",
-  "description": "테스트 설명"
-}
+> {%
+    client.test("고객 토큰 유효성 검증", function() {
+        client.assert(response.status === 200, "토큰이 유효해야 함");
+    });
+%}
 
-### 8. 회원가입 실패 - 잘못된 사업자번호 형식
-POST http://localhost:8080/api/business/auth/signup
-Content-Type: application/json
+### 7. 업체 로그아웃 (사업자 세션 종료)
+POST http://localhost:8080/api/auth/logout
+x-client-token: {{businessToken}}
 
-{
-  "email": "invalid@example.com",
-  "password": "ValidPass123!",
-  "name": "테스트",
-  "phoneNumber": "010-1234-5678",
-  "businessName": "테스트 업체",
-  "businessType": "기타",
-  "businessNumber": "invalid-format",
-  "address": "테스트 주소",
-  "contactPhone": "02-3333-3333",
-  "description": "테스트 설명"
-}
+> {%
+    client.test("업체 로그아웃 성공", function() {
+        client.assert(response.status === 200, "로그아웃이 성공해야 함");
+    });
+%}
 
-### 9. 회원가입 실패 - 이메일 중복 (위 2번 테스트 후 실행)
-POST http://localhost:8080/api/business/auth/signup
-Content-Type: application/json
+### 8. 로그아웃 후 토큰 검증 (무효화 확인) + Error 잘못 지정해서 이메일 나옴 fix 해둘것
+GET http://localhost:8080/api/auth/token/status
+x-client-token: {{businessToken}}
 
-{
-  "email": "kimceo@example.com",
-  "password": "AnotherPass123!",
-  "name": "다른사람",
-  "phoneNumber": "010-5555-6666",
-  "businessName": "다른 업체",
-  "businessType": "식당",
-  "businessNumber": "333-33-33333",
-  "address": "다른 주소",
-  "contactPhone": "02-5555-6666",
-  "description": "다른 설명"
-}
+> {%
+    client.test("로그아웃 후 토큰 무효화 확인", function() {
+        client.assert(response.status === 401 || response.status === 403, "토큰이 무효화되어야 함");
+    });
+%}
 
-### 10. 회원가입 실패 - 사업자번호 중복 (위 2번 테스트 후 실행)
-POST http://localhost:8080/api/business/auth/signup
-Content-Type: application/json
+### 9. 고객 로그아웃 (고객 세션 종료)
+POST http://localhost:8080/api/auth/logout
+x-client-token: {{customerToken}}
 
-{
-  "email": "duplicate@example.com",
-  "password": "AnotherPass123!",
-  "name": "중복테스트",
-  "phoneNumber": "010-7777-8888",
-  "businessName": "중복 테스트 업체",
-  "businessType": "기타",
-  "businessNumber": "123-45-67890",
-  "address": "중복 테스트 주소",
-  "contactPhone": "02-7777-8888",
-  "description": "중복 테스트 설명"
-}
-
-### 11. 로그인 실패 - 존재하지 않는 이메일
-POST http://localhost:8080/api/business/auth/signin
-Content-Type: application/json
-
-{
-  "email": "notexist@example.com",
-  "password": "SomePassword123!"
-}
-
-### 12. 로그인 실패 - 잘못된 비밀번호
-POST http://localhost:8080/api/business/auth/signin
-Content-Type: application/json
-
-{
-  "email": "kimceo@example.com",
-  "password": "WrongPassword123!"
-}
-
-### 13. 로그인 실패 - 유효성 검증 (이메일 형식 오류)
-POST http://localhost:8080/api/business/auth/signin
-Content-Type: application/json
-
-{
-  "email": "invalid-email",
-  "password": "SomePassword123!"
-}
-
-### 14. 로그인 실패 - 유효성 검증 (빈 비밀번호)
-POST http://localhost:8080/api/business/auth/signin
-Content-Type: application/json
-
-{
-  "email": "kimceo@example.com",
-  "password": ""
-}
-
-### 15. 존재하지 않는 엔드포인트 테스트
-GET http://localhost:8080/api/business/auth/nonexistent
-Accept: application/json
-
+> {%
+    client.test("고객 로그아웃 성공", function() {
+        client.assert(response.status === 200, "로그아웃이 성공해야 함");
+    });
+%}
