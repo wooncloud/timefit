@@ -14,7 +14,7 @@ import timefit.common.ResponseData;
 
 @Slf4j
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -26,7 +26,7 @@ public class AuthController {
     /**
      * 업체 회원가입
      */
-    @PostMapping("/business/auth/signup")
+    @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseData<AuthResponseDto.BusinessSignUp> businessSignUp(
             @Valid @RequestBody AuthRequestDto.BusinessSignUp request,
@@ -49,7 +49,7 @@ public class AuthController {
     /**
      * 업체 로그인
      */
-    @PostMapping("/business/auth/signin")
+    @PostMapping("/signin")
     public ResponseData<AuthResponseDto.BusinessSignIn> businessSignIn(
             @Valid @RequestBody AuthRequestDto.BusinessSignIn request,
             HttpServletResponse response) {
@@ -71,7 +71,7 @@ public class AuthController {
     /**
      * 고객 OAuth 로그인
      */
-    @PostMapping("/customer/auth/oauth")
+    @PostMapping("/oauth")
     public ResponseData<AuthResponseDto.CustomerOAuth> customerOAuthLogin(
             @Valid @RequestBody AuthRequestDto.CustomerOAuth request,
             HttpServletResponse response) {
@@ -96,7 +96,7 @@ public class AuthController {
     /**
      * 로그아웃
      */
-    @PostMapping("/auth/logout")
+    @PostMapping("/logout")
     public ResponseData<Void> logout(
             @RequestHeader(value = TEMP_TOKEN_HEADER, required = false) String token) {
 
@@ -122,7 +122,7 @@ public class AuthController {
     /**
      * 토큰 상태 확인 (개발/테스트용)
      */
-    @GetMapping("/auth/token/status")
+    @GetMapping("/status-test")
     public ResponseData<String> tokenStatus(
             @RequestHeader(value = TEMP_TOKEN_HEADER, required = false) String token) {
 
