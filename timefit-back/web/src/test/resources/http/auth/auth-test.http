@@ -1,8 +1,8 @@
 ### 1. 헬스체크 - 서버 동작 확인
-GET http://localhost:8080/api/health
+GET http://localhost:8080/api/auth/health
 
 ### 2. 업체 회원가입
-POST http://localhost:8080/api/business/auth/signup
+POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
@@ -28,7 +28,7 @@ Content-Type: application/json
 %}
 
 ### 3. 업체 로그인 - (2. 업체 회원가입) 데이터로 로그인
-POST http://localhost:8080/api/business/auth/signin
+POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
@@ -46,7 +46,7 @@ Content-Type: application/json
 %}
 
 ### 4. 고객 OAuth 로그인 (Google 가정)
-POST http://localhost:8080/api/customer/auth/oauth
+POST http://localhost:8080/api/auth/oauth
 Content-Type: application/json
 
 {
@@ -65,7 +65,7 @@ Content-Type: application/json
 %}
 
 ### 5. 사업자 로그인 상태 확인 (토큰 유효성 검증)
-GET http://localhost:8080/api/auth/token/status
+GET http://localhost:8080/api/auth/status-test
 x-client-token: {{businessToken}}
 
 > {%
