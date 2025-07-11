@@ -1,0 +1,68 @@
+### 1. 업체 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "홍길동",
+  "phoneNumber": "010-1234-5678",
+  "businessName": "테스트 미용실",
+  "businessType": "미용실",
+  "businessNumber": "123-45-67890",
+  "address": "서울시 강남구 테헤란로 123",
+  "contactPhone": "02-1234-5678",
+  "description": "깔끔한 미용실입니다"
+}
+
+
+### 2. 로그인 (토큰 획득)
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "test@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const token = response.headers.valueOf("x-client-token");
+    console.log("생성된 토큰 전체:", token);
+    client.global.set("businessToken", token);
+%}
+
+
+### 3. 토큰 유효성
+GET http://localhost:8080/api/auth/status-test
+x-client-token: {{businessToken}}
+
+> {%
+    client.test("토큰 유효성 검증", function() {
+        client.assert(response.status === 200, "토큰이 유효해야 함");
+    });
+%}
+
+
+### 4. 내 업체 목록 조회
+GET http://localhost:8080/api/business
+x-client-token: {{businessToken}}
+
+> {%
+    client.test("내 업체 목록 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(Array.isArray(response.body.data), "data가 배열이어야 함");
+        client.assert(response.body.data.length > 0, "최소 1개 업체가 있어야 함");
+    });
+    console.log("내 업체 목록:", response.body.data);
+%}
+
+### 응답 전체 디버깅
+GET http://localhost:8080/api/business
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("=== 응답 전체 분석 ===");
+    console.log("Status Code:", response.status);
+    console.log("Response Body:", JSON.stringify(response.body, null, 2));
+    console.log("Error Message:", response.body.message || "없음");
+    console.log("Error Code:", response.body.error?.code || "없음");
+%}
