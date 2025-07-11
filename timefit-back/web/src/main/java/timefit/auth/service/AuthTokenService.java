@@ -43,10 +43,17 @@ public class AuthTokenService {
      * 토큰에서 사용자 ID 추출
      */
     public UUID getUserIdFromToken(String token) {
+        log.info("토큰 조회 요청: token={}", token);
+        log.info("현재 저장된 토큰 수: {}", tokenToUserMap.size());
+        log.info("저장된 토큰들: {}", tokenToUserMap.keySet());
+
         UUID userId = tokenToUserMap.get(token);
         if (userId == null) {
+            log.warn("토큰에 해당하는 userId 없음: token={}", token);
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
+
+        log.info("토큰에서 userId 추출 성공: userId={}", userId);
         return userId;
     }
 
