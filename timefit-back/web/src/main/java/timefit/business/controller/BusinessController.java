@@ -30,6 +30,7 @@ public class BusinessController {
     /**
      * 내가 속한 업체 목록 조회
      * 권한: 로그인한 사용자 본인 (모든 권한)
+     * + 근데 "나" 의 비즈니스 리스트를 보여주는거라 추가 url을 달아야될 것 같기도?
      */
     @GetMapping
     public ResponseData<List<BusinessResponseDto.BusinessSummary>> getMyBusinesses(HttpServletRequest request) {
@@ -44,6 +45,14 @@ public class BusinessController {
      * 업체 상세 정보 조회
      * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
      */
+    @GetMapping("/{businessId}")
+    public ResponseData<BusinessResponseDto.BusinessDetail> getBusinessDetail (
+            @PathVariable UUID businessId,  HttpServletRequest request) {
+
+        UUID currentUserId = getCurrentUserId(request);
+        log.info("업체 상세 조회 요청: businessId={}, userId={}", businessId, currentUserId);
+        return businessService.getBusinessDetail(businessId, currentUserId);
+    }
 
     /**
      * 업체 정보 수정

@@ -80,6 +80,18 @@ public class BusinessService {
      * 업체 상세 정보 조회
      * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
      */
+    public ResponseData<BusinessResponseDto.BusinessDetail> getBusinessDetail(UUID businessId, UUID userId) {
+        Business business = validateBusinessExists(businessId);
+        UserBusinessRole userRole = validateUserBusinessAccess(userId, businessId);
+        Integer totalMembers = getTotalMembersCount(businessId);
+
+        BusinessResponseDto.BusinessDetail businessDetail =
+                businessResponseFactory.createBusinessDetailResponse(business, userRole, totalMembers);
+        log.info("업체 상세 조회 완료: businessId={}, userId={}, role={}",
+                businessId, userId, userRole.getRole());
+        return ResponseData.of(businessDetail);
+    }
+
 
     /**
      * 업체 정보 수정
