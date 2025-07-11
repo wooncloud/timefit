@@ -18,7 +18,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 /**
- * 임시 토큰 검증 필터 (JWT 구현 전까지 사용)
+ * 임시 토큰 검증 필터
+ * 역할: x-client-token 헤더 검증 및 userId 추출
  */
 @Slf4j
 @Component
@@ -26,7 +27,6 @@ import java.util.UUID;
 public class AuthFilter extends OncePerRequestFilter {
 
     private final AuthTokenService authTokenService;
-
     private static final String TEMP_TOKEN_HEADER = "x-client-token";
 
     @Override
@@ -36,12 +36,12 @@ public class AuthFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         String method = request.getMethod();
 
-        log.debug("요청 처리: {} {}", method, requestURI);
+        log.debug("AuthFilter 처리: {} {}", method, requestURI);
 
         try {
-            // 인증이 필요한 경로인지 확인
+            // 토큰 검증이 필요한 경로인지 확인
             if (requiresAuth(requestURI)) {
-                validateToken(request);
+                validateTokenAndSetUserId(request);
             }
 
         } catch (AuthException e) {
@@ -50,7 +50,7 @@ public class AuthFilter extends OncePerRequestFilter {
             return;
         } catch (Exception e) {
             log.error("예상치 못한 인증 오류", e);
-            handleAuthError(response, new AuthException(AuthErrorCode.TOKEN_INVALID)); // AUTHENTICATION_FAILED 대신 기존 코드 사용
+            handleAuthError(response, new AuthException(AuthErrorCode.TOKEN_INVALID));
             return;
         }
 
@@ -58,31 +58,31 @@ public class AuthFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 인증이 필요한 경로인지 확인
+     * 토큰 검증이 필요한 경로인지 확인
+     * 단순화: 공개 API만 제외, 나머지는 모두 토큰 검증
      */
     private boolean requiresAuth(String requestURI) {
-        // 인증이 필요하지 않은 경로들
-        if (requestURI.startsWith("/api/business/auth/") ||
-                requestURI.startsWith("/api/customer/auth/") ||
-                requestURI.equals("/api/health") ||
-                requestURI.equals("/api/auth/logout") ||
-                requestURI.equals("/api/auth/token/status") ||
-                requestURI.startsWith("/api/validation/")) {
+        // 공개 API (토큰 검증 불필요)
+        if (requestURI.startsWith("/api/auth/") ||
+                requestURI.startsWith("/api/validation/") ||
+                requestURI.startsWith("/actuator/") ||
+                requestURI.startsWith("/swagger-ui/") ||
+                requestURI.startsWith("/v3/api-docs/")) {
             return false;
         }
 
-        // 그 외 모든 /api/ 경로는 인증 필요
+        // 나머지 모든 /api/ 경로는 토큰 검증 필요
         return requestURI.startsWith("/api/");
     }
 
     /**
-     * 토큰 검증
+     * 토큰 검증 및 userId 설정
      */
-    private void validateToken(HttpServletRequest request) {
+    private void validateTokenAndSetUserId(HttpServletRequest request) {
         String token = extractToken(request);
 
         if (!StringUtils.hasText(token)) {
-            throw new AuthException(AuthErrorCode.TOKEN_INVALID); // TOKEN_NOT_PROVIDED 대신 기존 코드 사용
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
 
         if (!authTokenService.isValidToken(token)) {
