@@ -139,11 +139,45 @@ public class BusinessService {
      * 업체 정보 수정
      * 권한: OWNER, MANAGER만 가능
      */
+    @Transactional
+    public ResponseData<BusinessResponseDto.BusinessProfile> updateBusiness(
+            UUID businessId, BusinessRequestDto.UpdateBusiness request, UUID currentUserId) {
 
-    /**
-     * 업체 삭제 (비활성화)
-     * 권한: OWNER만 가능
-     */
+        Business business = validateBusinessExists(businessId);
+        UserBusinessRole userRole = validateManagerOrOwnerRole(currentUserId, businessId);
+
+        if (request.getBusinessNumber() != null &&
+                !request.getBusinessNumber().equals(business.getBusinessNumber())) {
+            if (businessRepository.existsByBusinessNumber(request.getBusinessNumber())) {
+                throw new BusinessException(BusinessErrorCode.BUSINESS_ALREADY_EXISTS);
+            }
+        }
+
+        business.updateBusinessInfo(
+                request.getBusinessName(),
+                request.getBusinessType(),
+                request.getAddress(),
+                request.getContactPhone(),
+                request.getDescription(),
+                request.getLogoUrl()
+        );
+        Business updatedBusiness = businessRepository.save(business);
+        BusinessResponseDto.BusinessProfile response =
+                businessResponseFactory.createBusinessProfileResponse(updatedBusiness, userRole);
+
+        log.info("업체 정보 수정 완료: businessId={}, userId={}, role={}",
+                businessId, currentUserId, userRole.getRole());
+
+
+
+        return ResponseData.of(response);
+    }
+
+
+        /**
+         * 업체 삭제 (비활성화)
+         * 권한: OWNER만 가능
+         */
 
 
     /**

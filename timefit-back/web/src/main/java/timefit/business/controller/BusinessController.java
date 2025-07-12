@@ -74,6 +74,18 @@ public class BusinessController {
      * 업체 정보 수정
      * 권한: OWNER, MANAGER만 가능
      */
+    @PutMapping("/{businessId}")
+    public ResponseData<BusinessResponseDto.BusinessProfile> updateBusiness (
+            @PathVariable UUID businessId,
+            @Valid @RequestBody BusinessRequestDto.UpdateBusiness request,
+            HttpServletRequest httpRequest) {
+        UUID currentUserId = getCurrentUserId(httpRequest);
+
+        log.info("업체 정보 수정 요청: businessId={}, userId={}", businessId, currentUserId);
+
+        return businessService.updateBusiness(businessId, request, currentUserId);
+    }
+
 
     /**
      * 업체 삭제 (비활성화)
