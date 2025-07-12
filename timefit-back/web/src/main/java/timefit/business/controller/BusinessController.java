@@ -42,6 +42,22 @@ public class BusinessController {
     }
 
     /**
+     * 업체 생성
+     * 권한: 로그인한 사용자 누구나 (생성자는 자동으로 OWNER가 됨)
+     */
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseData<BusinessResponseDto.BusinessDetail> createBusiness(
+            @Valid @RequestBody BusinessRequestDto.CreateBusiness request,
+            HttpServletRequest httpRequest) {
+        UUID currentUserId = getCurrentUserId(httpRequest);
+
+        log.info("업체 생성 요청: userId={}, businessName={}", currentUserId, request.getBusinessName());
+
+        return businessService.createBusiness(request, currentUserId);
+    }
+
+    /**
      * 업체 상세 정보 조회
      * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
      */

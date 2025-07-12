@@ -77,6 +77,48 @@ public class BusinessService {
     }
 
     /**
+     * 업체 생성
+     * 권한: 로그인한 사용자 누구나 (생성자는 자동으로 OWNER가 됨)
+     */
+    @Transactional
+    public ResponseData<BusinessResponseDto.BusinessDetail> createBusiness(
+            BusinessRequestDto.CreateBusiness request, UUID ownerId ) {
+
+        log.info("업체 생성 시작: ownerId={}, businessName={}", ownerId, request.getBusinessName());
+        // 1. 사업자번호 중복 체크
+        if (businessRepository.existsByBusinessNumber(request.getBusinessNumber())) {
+            throw new BusinessException(BusinessErrorCode.BUSINESS_ALREADY_EXISTS);
+        }
+
+        // 2. 소유자 사용자 존재 확인
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.USER_NOT_FOUND));
+        // 3. 업체 생성
+        Business business = Business.createBusiness(
+                request.getBusinessName(),
+                request.getBusinessType(),
+                request.getBusinessNumber(),
+                request.getAddress(),
+                request.getContactPhone(),
+                request.getDescription()
+        );
+        Business savedBusiness = businessRepository.save(business);
+        // 4. 소유자 권한 부여
+        UserBusinessRole ownerRole = UserBusinessRole.createOwner(owner, savedBusiness);
+        userBusinessRoleRepository.save(ownerRole);
+
+        // 5. 응답 생성
+        BusinessResponseDto.BusinessDetail response =
+                businessResponseFactory.createBusinessDetailResponse(savedBusiness, ownerRole, 1);
+
+        log.info("업체 생성 완료: businessId={}, ownerId={}", savedBusiness.getId(), ownerId);
+
+
+        return ResponseData.of(response);
+    }
+
+
+    /**
      * 업체 상세 정보 조회
      * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
      */
