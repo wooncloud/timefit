@@ -25,6 +25,24 @@ public class BusinessResponseFactory {
     /**
      * 업체 상세 정보 응답 생성
      */
+    public BusinessResponseDto.BusinessProfile createBusinessProfileResponse(
+            Business business, UserBusinessRole currentUserRole) {
+
+        return BusinessResponseDto.BusinessProfile.of(
+                business.getId(),
+                business.getBusinessName(),
+                business.getBusinessType(),
+                business.getBusinessNumber(),
+                business.getAddress(),
+                business.getContactPhone(),
+                business.getDescription(),
+                business.getLogoUrl(),
+                currentUserRole.getRole().name(),
+                business.getCreatedAt(),
+                business.getUpdatedAt()
+        );
+    }
+
     public BusinessResponseDto.BusinessDetail createBusinessDetailResponse(
             Business business, UserBusinessRole currentUserRole, Integer totalMembers) {
 

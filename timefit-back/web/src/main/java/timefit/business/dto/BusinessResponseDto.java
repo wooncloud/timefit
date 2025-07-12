@@ -12,6 +12,44 @@ public class BusinessResponseDto {
      * 업체 상세 정보 응답
      */
     @Getter
+    public static class BusinessProfile {
+        private final UUID businessId;
+        private final String businessName;
+        private final String businessType;
+        private final String businessNumber;
+        private final String address;
+        private final String contactPhone;
+        private final String description;
+        private final String logoUrl;
+        private final String myRole;
+        private final LocalDateTime createdAt;
+        private final LocalDateTime updatedAt;
+
+        private BusinessProfile(UUID businessId, String businessName, String businessType, String businessNumber,
+                                String address, String contactPhone, String description, String logoUrl,
+                                String myRole, LocalDateTime createdAt, LocalDateTime updatedAt) {
+            this.businessId = businessId;
+            this.businessName = businessName;
+            this.businessType = businessType;
+            this.businessNumber = businessNumber;
+            this.address = address;
+            this.contactPhone = contactPhone;
+            this.description = description;
+            this.logoUrl = logoUrl;
+            this.myRole = myRole;
+            this.createdAt = createdAt;
+            this.updatedAt = updatedAt;
+        }
+
+        public static BusinessProfile of(UUID businessId, String businessName, String businessType, String businessNumber,
+                                            String address, String contactPhone, String description, String logoUrl,
+                                            String myRole, LocalDateTime createdAt, LocalDateTime updatedAt) {
+            return new BusinessProfile(businessId, businessName, businessType, businessNumber, address, contactPhone,
+                    description, logoUrl, myRole, createdAt, updatedAt);
+        }
+    }
+
+    @Getter
     public static class BusinessDetail {
         private final UUID businessId;
         private final String businessName;

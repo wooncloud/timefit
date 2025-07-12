@@ -64,24 +64,27 @@ public class BusinessRequestDto {
     public static class UpdateBusiness {
         private final String businessName;
         private final String businessType;
+        private final String businessNumber;
         private final String address;
         private final String contactPhone;
         private final String description;
         private final String logoUrl;
 
-        private UpdateBusiness(String businessName, String businessType, String address,
+        private UpdateBusiness(String businessName, String businessType,  String businessNumber,
+                                String address,
                                 String contactPhone, String description, String logoUrl) {
             this.businessName = businessName;
             this.businessType = businessType;
+            this.businessNumber = businessNumber;
             this.address = address;
             this.contactPhone = contactPhone;
             this.description = description;
             this.logoUrl = logoUrl;
         }
 
-        public static UpdateBusiness of(String businessName, String businessType, String address,
-                                        String contactPhone, String description, String logoUrl) {
-            return new UpdateBusiness(businessName, businessType, address, contactPhone, description, logoUrl);
+        public static UpdateBusiness of(String businessName, String businessType, String businessNumber,
+                                        String address, String contactPhone, String description, String logoUrl) {
+            return new UpdateBusiness(businessName, businessType, businessNumber, address, contactPhone, description, logoUrl);
         }
 
         @Override
@@ -93,6 +96,7 @@ public class BusinessRequestDto {
 
             return Objects.equals(businessName, that.businessName) &&
                     Objects.equals(businessType, that.businessType) &&
+                    Objects.equals(businessNumber, that.businessNumber) &&
                     Objects.equals(address, that.address) &&
                     Objects.equals(contactPhone, that.contactPhone) &&
                     Objects.equals(description, that.description) &&
@@ -101,8 +105,16 @@ public class BusinessRequestDto {
 
         @Override
         public int hashCode() {
-            return Objects.hash(businessName, businessType, address, contactPhone, description, logoUrl);
+            return Objects.hash(businessName, businessType, businessNumber , address, contactPhone, description, logoUrl);
         }
+    }
+
+    /**
+     * 업체 정보 조회
+     */
+    @Getter
+    public static class GetBusiness {
+
     }
 
     /**
