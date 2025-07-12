@@ -6,9 +6,59 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class BusinessRequestDto {
+    /**
+     * 업체 정보 생성
+     */
+    @Getter
+    public static class CreateBusiness {
+        private final String businessName;
+        private final String businessType;
+        private final String businessNumber;
+        private final String address;
+        private final String contactPhone;
+        private final String description;
+        private final UUID ownerUserId;
+
+        private CreateBusiness(String businessName, String businessType, String businessNumber,
+                                String address, String contactPhone, String description, UUID ownerUserId) {
+            this.businessName = businessName;
+            this.businessType = businessType;
+            this.businessNumber = businessNumber;
+            this.address = address;
+            this.contactPhone = contactPhone;
+            this.description = description;
+            this.ownerUserId = ownerUserId;
+        }
+
+        public static CreateBusiness of(String businessName, String businessType, String businessNumber,
+                                        String address, String contactPhone, String description, UUID ownerUserId) {
+            return new CreateBusiness(businessName, businessType, businessNumber, address, contactPhone, description, ownerUserId);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (other == null || getClass() != other.getClass()) return false;
+
+            CreateBusiness that = (CreateBusiness) other;
+
+            return Objects.equals(businessName, that.businessName) &&
+                    Objects.equals(businessType, that.businessType) &&
+                    Objects.equals(businessNumber, that.businessNumber) &&
+                    Objects.equals(address, that.address) &&
+                    Objects.equals(contactPhone, that.contactPhone) &&
+                    Objects.equals(description, that.description) &&
+                    Objects.equals(ownerUserId, that.ownerUserId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(businessName, businessType, businessNumber, address, contactPhone, description, ownerUserId);
+        }
+    }
 
     /**
-     * 업체 정보 수정 요청
+     * 업체 정보 수정
      */
     @Getter
     public static class UpdateBusiness {
@@ -20,7 +70,7 @@ public class BusinessRequestDto {
         private final String logoUrl;
 
         private UpdateBusiness(String businessName, String businessType, String address,
-                               String contactPhone, String description, String logoUrl) {
+                                String contactPhone, String description, String logoUrl) {
             this.businessName = businessName;
             this.businessType = businessType;
             this.address = address;
@@ -52,74 +102,6 @@ public class BusinessRequestDto {
         @Override
         public int hashCode() {
             return Objects.hash(businessName, businessType, address, contactPhone, description, logoUrl);
-        }
-    }
-
-    /**
-     * 구성원 권한 변경 요청
-     */
-    @Getter
-    public static class ChangeRole {
-        private final BusinessRole newRole;
-
-        private ChangeRole(BusinessRole newRole) {
-            this.newRole = newRole;
-        }
-
-        public static ChangeRole of(BusinessRole newRole) {
-            return new ChangeRole(newRole);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-
-            ChangeRole that = (ChangeRole) other;
-
-            return Objects.equals(newRole, that.newRole);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(newRole);
-        }
-    }
-
-    /**
-     * 사용자 초대 요청
-     */
-    @Getter
-    public static class InviteUser {
-        private final String email;
-        private final BusinessRole role;
-        private final String invitationMessage;
-
-        private InviteUser(String email, BusinessRole role, String invitationMessage) {
-            this.email = email;
-            this.role = role;
-            this.invitationMessage = invitationMessage;
-        }
-
-        public static InviteUser of(String email, BusinessRole role, String invitationMessage) {
-            return new InviteUser(email, role, invitationMessage);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-
-            InviteUser that = (InviteUser) other;
-
-            return Objects.equals(email, that.email) &&
-                    Objects.equals(role, that.role) &&
-                    Objects.equals(invitationMessage, that.invitationMessage);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(email, role, invitationMessage);
         }
     }
 
@@ -201,75 +183,24 @@ public class BusinessRequestDto {
     }
 
     /**
-     * 업체 생성 커맨드 (내부 서비스 전용)
+     * 구성원 권한 변경 요청
      */
     @Getter
-    public static class CreateBusinessCommand {
-        private final String businessName;
-        private final String businessType;
-        private final String businessNumber;
-        private final String address;
-        private final String contactPhone;
-        private final String description;
-        private final UUID ownerUserId;
-
-        private CreateBusinessCommand(String businessName, String businessType, String businessNumber,
-                                      String address, String contactPhone, String description, UUID ownerUserId) {
-            this.businessName = businessName;
-            this.businessType = businessType;
-            this.businessNumber = businessNumber;
-            this.address = address;
-            this.contactPhone = contactPhone;
-            this.description = description;
-            this.ownerUserId = ownerUserId;
-        }
-
-        public static CreateBusinessCommand of(String businessName, String businessType, String businessNumber,
-                                               String address, String contactPhone, String description, UUID ownerUserId) {
-            return new CreateBusinessCommand(businessName, businessType, businessNumber, address, contactPhone, description, ownerUserId);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-
-            CreateBusinessCommand that = (CreateBusinessCommand) other;
-
-            return Objects.equals(businessName, that.businessName) &&
-                    Objects.equals(businessType, that.businessType) &&
-                    Objects.equals(businessNumber, that.businessNumber) &&
-                    Objects.equals(address, that.address) &&
-                    Objects.equals(contactPhone, that.contactPhone) &&
-                    Objects.equals(description, that.description) &&
-                    Objects.equals(ownerUserId, that.ownerUserId);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(businessName, businessType, businessNumber, address, contactPhone, description, ownerUserId);
-        }
-    }
-
-    /**
-     * 권한 변경 커맨드 (내부 서비스 전용)
-     */
-    @Getter
-    public static class ChangeRoleCommand {
+    public static class ChangeRole {
         private final UUID businessId;
         private final UUID targetUserId;
         private final BusinessRole newRole;
         private final UUID requesterUserId;
 
-        private ChangeRoleCommand(UUID businessId, UUID targetUserId, BusinessRole newRole, UUID requesterUserId) {
+        private ChangeRole(UUID businessId, UUID targetUserId, BusinessRole newRole, UUID requesterUserId) {
             this.businessId = businessId;
             this.targetUserId = targetUserId;
             this.newRole = newRole;
             this.requesterUserId = requesterUserId;
         }
 
-        public static ChangeRoleCommand of(UUID businessId, UUID targetUserId, BusinessRole newRole, UUID requesterUserId) {
-            return new ChangeRoleCommand(businessId, targetUserId, newRole, requesterUserId);
+        public static ChangeRole of(UUID businessId, UUID targetUserId, BusinessRole newRole, UUID requesterUserId) {
+            return new ChangeRole(businessId, targetUserId, newRole, requesterUserId);
         }
 
         @Override
@@ -277,7 +208,7 @@ public class BusinessRequestDto {
             if (this == other) return true;
             if (other == null || getClass() != other.getClass()) return false;
 
-            ChangeRoleCommand that = (ChangeRoleCommand) other;
+            ChangeRole that = (ChangeRole) other;
 
             return Objects.equals(businessId, that.businessId) &&
                     Objects.equals(targetUserId, that.targetUserId) &&
@@ -288,6 +219,43 @@ public class BusinessRequestDto {
         @Override
         public int hashCode() {
             return Objects.hash(businessId, targetUserId, newRole, requesterUserId);
+        }
+    }
+
+    /**
+     * 사용자 초대 요청
+     */
+    @Getter
+    public static class InviteUser {
+        private final String email;
+        private final BusinessRole role;
+        private final String invitationMessage;
+
+        private InviteUser(String email, BusinessRole role, String invitationMessage) {
+            this.email = email;
+            this.role = role;
+            this.invitationMessage = invitationMessage;
+        }
+
+        public static InviteUser of(String email, BusinessRole role, String invitationMessage) {
+            return new InviteUser(email, role, invitationMessage);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (other == null || getClass() != other.getClass()) return false;
+
+            InviteUser that = (InviteUser) other;
+
+            return Objects.equals(email, that.email) &&
+                    Objects.equals(role, that.role) &&
+                    Objects.equals(invitationMessage, that.invitationMessage);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(email, role, invitationMessage);
         }
     }
 }
