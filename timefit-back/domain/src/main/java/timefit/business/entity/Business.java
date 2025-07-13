@@ -39,7 +39,8 @@ public class Business extends BaseEntity {
     @Column(name = "logo_url")
     private String logoUrl;
 
-
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
 
     /**
      * 비즈니스 생성
@@ -53,6 +54,7 @@ public class Business extends BaseEntity {
         business.address = address;
         business.contactPhone = contactPhone;
         business.description = description;
+        business.isActive = true;
         return business;
     }
 
@@ -115,4 +117,24 @@ public class Business extends BaseEntity {
         }
     }
 
+    /**
+     * 비즈니스 논리삭제 (비활성화)
+     */
+    public void deactivate() {
+        this.isActive = false;
+    }
+
+    /**
+     * 비즈니스 활성화 (복구)
+     */
+    public void activate() {
+        this.isActive = true;
+    }
+
+    /**
+     * 비즈니스 활성 상태 확인
+     */
+    public boolean isActiveBusiness() {
+        return Boolean.TRUE.equals(this.isActive);
+    }
 }
