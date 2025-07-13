@@ -23,6 +23,7 @@ public enum BusinessErrorCode {
 
     // 삭제 관련
     DELETE_CONFIRMATION_REQUIRED("삭제 확인이 필요합니다", HttpStatus.BAD_REQUEST),
+    BUSINESS_ALREADY_DELETED("이미 삭제된 업체입니다", HttpStatus.BAD_REQUEST),
 
     // 예약 가능 시간 관련
     AVAILABLE_SLOT_CONFLICT("예약 가능 시간이 중복됩니다", HttpStatus.CONFLICT);
