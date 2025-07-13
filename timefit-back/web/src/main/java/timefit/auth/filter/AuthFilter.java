@@ -63,7 +63,9 @@ public class AuthFilter extends OncePerRequestFilter {
      */
     private boolean requiresAuth(String requestURI) {
         // 공개 API (토큰 검증 불필요)
-        if (requestURI.startsWith("/api/auth/") ||
+        if (
+                requestURI.startsWith("/api/auth/") ||
+                requestURI.startsWith("/api/business/search") ||
                 requestURI.startsWith("/api/validation/") ||
                 requestURI.startsWith("/actuator/") ||
                 requestURI.startsWith("/swagger-ui/") ||
