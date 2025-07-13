@@ -24,6 +24,7 @@ import timefit.user.entity.User;
 import timefit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -275,6 +276,58 @@ public class BusinessService {
      * 구성원 초대
      * 권한: OWNER, MANAGER만 가능
      */
+    @Transactional
+    public ResponseData<BusinessResponseDto.InvitationResult> inviteUser(
+            UUID businessId, BusinessRequestDto.InviteUser request, UUID inviterUserId) {
+
+        log.info("구성원 초대 시작: businessId={}, inviterUserId={}, inviteeEmail={}",
+                businessId, inviterUserId, request.getEmail());
+
+        Business business = validateBusinessExists(businessId);
+        if (!business.isActiveBusiness()) {
+            throw new BusinessException(BusinessErrorCode.BUSINESS_NOT_ACTIVE);
+        }
+
+        UserBusinessRole inviterRole = validateManagerOrOwnerRole(inviterUserId, businessId);
+        User inviteeUser = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.USER_NOT_FOUND));
+
+        // 이미 업체 구성원인지 확인
+        boolean alreadyActiveMember = userBusinessRoleRepository
+                .existsByUserIdAndBusinessIdAndIsActive(inviteeUser.getId(), businessId, true);
+        if (alreadyActiveMember) {
+            throw new BusinessException(BusinessErrorCode.USER_ALREADY_MEMBER);
+        }
+
+        // 기존에 비활성화된 역할이 있는지 확인 (재활성 , 새 멤버)
+        Optional<UserBusinessRole> existingRole = userBusinessRoleRepository
+                .findByUserIdAndBusinessIdAndIsActive(inviteeUser.getId(), businessId, false);
+
+        UserBusinessRole userRole;
+        if (existingRole.isPresent()) {
+            // 1. 기존 멤버 재활성
+            userRole = existingRole.get();
+            userRole.activate();
+            log.info("기존 구성원 재활성화: userId={}, businessId={}", inviteeUser.getId(), businessId);
+        } else {
+            // 2. 새 멤버 생성
+            userRole = UserBusinessRole.createWithRole(
+                    inviteeUser, business, request.getRole(), inviterRole.getUser());
+            log.info("새 구성원 생성: userId={}, businessId={}, role={}",
+                    inviteeUser.getId(), businessId, request.getRole());
+        }
+        UserBusinessRole savedRole = userBusinessRoleRepository.save(userRole);
+
+        String inviterName = inviterRole.getUser().getName();
+        BusinessResponseDto.InvitationResult response = businessResponseFactory
+                .createInvitationResultResponse(savedRole, inviterName,
+                        request.getInvitationMessage(), "INVITED! 이것도 클라이언트에서 받아야할텐데");
+
+        log.info("구성원 초대 완료: businessId={}, inviterUserId={}, inviteeUserId={}, role={}",
+                businessId, inviterUserId, inviteeUser.getId(), request.getRole());
+
+        return ResponseData.of(response);
+    }
 
     /**
      * 구성원 권한 변경

@@ -138,6 +138,19 @@ public class BusinessController {
      * 구성원 초대
      * 권한: OWNER, MANAGER만 가능
      */
+    @PostMapping("/{businessId}/members/invite")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseData<BusinessResponseDto.InvitationResult> inviteUser(
+            @PathVariable UUID businessId,
+            @Valid @RequestBody BusinessRequestDto.InviteUser request,
+            HttpServletRequest httpRequest) {
+        UUID currentUserId = getCurrentUserId(httpRequest);
+
+        log.info("구성원 초대 요청: businessId={}, inviterUserId={}, inviteeEmail={}",
+                businessId, currentUserId, request.getEmail());
+
+        return businessService.inviteUser(businessId, request, currentUserId);
+    }
 
     /**
      * 구성원 권한 변경
