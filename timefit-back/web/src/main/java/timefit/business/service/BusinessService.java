@@ -370,6 +370,38 @@ public class BusinessService {
      * 구성원 제거
      * 권한: OWNER만 가능 (본인 제거 불가)
      */
+    @Transactional
+    public ResponseData<Void> removeBusinessMember(
+            UUID businessId, UUID targetUserId, UUID currentUserId) {
+
+        log.info("구성원 제거 시작: businessId={}, targetUserId={}, requesterUserId={}",
+                businessId, targetUserId, currentUserId);
+
+        Business business = validateBusinessExists(businessId);
+        if (!business.isActiveBusiness()) {
+            throw new BusinessException(BusinessErrorCode.BUSINESS_NOT_ACTIVE);
+        }
+
+        // 2. 요청자 OWNER 권한 확인
+        UserBusinessRole requesterRole = validateOwnerRole(currentUserId, businessId);
+
+        // 3. 대상자가 해당 업체의 활성 구성원인지 확인
+        UserBusinessRole targetRole = userBusinessRoleRepository
+                .findByUserIdAndBusinessIdAndIsActive(targetUserId, businessId, true)
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.USER_NOT_BUSINESS_MEMBER));
+
+        // 4. 비즈니스 규칙 검증
+        validateMemberRemovalRules(currentUserId, targetUserId, targetRole);
+
+        // 5. 구성원 제거 (비활성화)
+        targetRole.deactivate();
+        userBusinessRoleRepository.save(targetRole);
+
+        log.info("구성원 제거 완료: businessId={}, targetUserId={}, requesterUserId={}",
+                businessId, targetUserId, currentUserId);
+
+        return ResponseData.of(null);
+    }
 
 
     /**
@@ -435,5 +467,18 @@ public class BusinessService {
                 .filter(role -> role.getBusiness().getId().equals(business.getId()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("비즈니스에 해당하는 권한을 찾을 수 없습니다: " + business.getId()));
+    }
+
+    // 구성원 제거 비즈니스 규칙 검증
+    private void validateMemberRemovalRules(UUID currentUserId, UUID targetUserId, UserBusinessRole targetRole) {
+        // 1. 본인 제거 시도 방지
+        if (currentUserId.equals(targetUserId)) {
+            throw new BusinessException(BusinessErrorCode.CANNOT_REMOVE_SELF);
+        }
+
+        // 2. OWNER 제거 시도 방지
+        if (targetRole.getRole() == BusinessRole.OWNER) {
+            throw new BusinessException(BusinessErrorCode.CANNOT_REMOVE_OWNER);
+        }
     }
 }

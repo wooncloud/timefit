@@ -174,7 +174,18 @@ public class BusinessController {
      * 구성원 제거
      * 권한: OWNER만 가능
      */
+    @DeleteMapping("/{businessId}/members/{targetUserId}")
+    public ResponseData<Void> removeBusinessMember(
+            @PathVariable UUID businessId,
+            @PathVariable UUID targetUserId,
+            HttpServletRequest httpRequest) {
+        UUID currentUserId = getCurrentUserId(httpRequest);
 
+        log.info("구성원 제거 요청: businessId={}, targetUserId={}, requesterUserId={}",
+                businessId, targetUserId, currentUserId);
+
+        return businessService.removeBusinessMember(businessId, targetUserId, currentUserId);
+    }
 
     /**
      * 업체 검색 (공개 API - 인증 불필요)
