@@ -1,0 +1,240 @@
+### 업체 상태 토글 API 테스트
+
+### 1. 업체 회원가입 (토큰 및 업체 생성)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "toggle-test@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "최토글",
+  "phoneNumber": "010-7777-8888",
+  "businessName": "토글 테스트 식당",
+  "businessType": "식당",
+  "businessNumber": "777-77-77777",
+  "address": "서울시 강남구 토글로 777",
+  "contactPhone": "02-7777-7777",
+  "description": "상태 토글 테스트용 식당입니다"
+}
+
+### 2. 로그인 (토큰 획득)
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "toggle-test@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const token = response.headers.valueOf("x-client-token");
+    console.log("생성된 토큰:", token);
+    client.global.set("businessToken", token);
+
+    // 응답에서 businessId 추출
+    if (response.body.data && response.body.data.businesses && response.body.data.businesses.length > 0) {
+        const businessId = response.body.data.businesses[0].businessId;
+        console.log("업체 ID:", businessId);
+        client.global.set("businessId", businessId);
+    }
+%}
+
+### 3. 토글 전 업체 상태 확인
+GET http://localhost:8080/api/business/{{businessId}}
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("토글 전 업체 정보:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("토글 전 업체명:", response.body.data.businessName);
+        console.log("토글 전 권한:", response.body.data.myRole);
+
+        // 현재 상태를 저장 (만약 isActive 필드가 있다면)
+        if (response.body.data.isActive !== undefined) {
+            console.log("토글 전 활성 상태:", response.body.data.isActive);
+            client.global.set("initialStatus", response.body.data.isActive);
+        }
+    }
+%}
+
+### 4. 첫 번째 상태 토글 - 성공 케이스 (OWNER 권한)
+POST http://localhost:8080/api/business/{{businessId}}/toggle-status
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("첫 번째 토글 응답 상태:", response.status);
+    console.log("첫 번째 토글 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("첫 번째 토글 결과 메시지:", response.body.data);
+
+        // 활성화/비활성화 메시지 확인
+        if (response.body.data.includes("활성화")) {
+            console.log("업체가 활성화됨");
+        } else if (response.body.data.includes("비활성화")) {
+            console.log("업체가 비활성화됨");
+        }
+    }
+%}
+
+### 5. 토글 후 업체 상태 확인
+GET http://localhost:8080/api/business/{{businessId}}
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("첫 번째 토글 후 업체 정보:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        if (response.body.data.isActive !== undefined) {
+            console.log("첫 번째 토글 후 활성 상태:", response.body.data.isActive);
+
+            const initialStatus = client.global.get("initialStatus");
+            if (initialStatus !== undefined) {
+                if (response.body.data.isActive !== initialStatus) {
+                    console.log("상태가 성공적으로 변경됨");
+                } else {
+                    console.log("상태가 변경되지 않음");
+                }
+            }
+        }
+    }
+%}
+
+### 6. 두 번째 상태 토글 - 원래 상태로 복원
+POST http://localhost:8080/api/business/{{businessId}}/toggle-status
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("두 번째 토글 응답 상태:", response.status);
+    console.log("두 번째 토글 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("두 번째 토글 결과 메시지:", response.body.data);
+
+        // 활성화/비활성화 메시지 확인
+        if (response.body.data.includes("활성화")) {
+            console.log("업체가 다시 활성화됨");
+        } else if (response.body.data.includes("비활성화")) {
+            console.log("업체가 다시 비활성화됨");
+        }
+    }
+%}
+
+### 7. 두 번째 토글 후 업체 상태 확인
+GET http://localhost:8080/api/business/{{businessId}}
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("두 번째 토글 후 업체 정보:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        if (response.body.data.isActive !== undefined) {
+            console.log("두 번째 토글 후 활성 상태:", response.body.data.isActive);
+
+            const initialStatus = client.global.get("initialStatus");
+            if (initialStatus !== undefined) {
+                if (response.body.data.isActive === initialStatus) {
+                    console.log("상태가 원래대로 복원됨");
+                } else {
+                    console.log("상태가 원래대로 복원되지 않음");
+                }
+            }
+        }
+    }
+%}
+
+### 8. 세 번째 상태 토글 - 연속 토글 테스트
+POST http://localhost:8080/api/business/{{businessId}}/toggle-status
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("세 번째 토글 응답 상태:", response.status);
+    console.log("세 번째 토글 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("세 번째 토글 결과 메시지:", response.body.data);
+    }
+%}
+
+### 9. 실패 케이스 - 토큰 없이 토글 시도
+POST http://localhost:8080/api/business/{{businessId}}/toggle-status
+
+> {%
+    console.log("토큰 없는 토글 응답 상태:", response.status);
+    console.log("토큰 없는 토글 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 10. 실패 케이스 - 존재하지 않는 업체 토글
+POST http://localhost:8080/api/business/00000000-0000-0000-0000-000000000000/toggle-status
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("존재하지 않는 업체 토글 응답 상태:", response.status);
+    console.log("존재하지 않는 업체 토글 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 11. 실패 케이스 - 잘못된 UUID 형식
+POST http://localhost:8080/api/business/invalid-uuid-format/toggle-status
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("잘못된 UUID 토글 응답 상태:", response.status);
+    console.log("잘못된 UUID 토글 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 12. 실패 케이스 - 권한 없는 업체 토글 (다른 업체 ID)
+POST http://localhost:8080/api/business/11111111-1111-1111-1111-111111111111/toggle-status
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("권한 없는 업체 토글 응답 상태:", response.status);
+    console.log("권한 없는 업체 토글 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 13. 최종 업체 상태 확인
+GET http://localhost:8080/api/business/{{businessId}}
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("최종 업체 정보:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("최종 업체명:", response.body.data.businessName);
+
+        if (response.body.data.isActive !== undefined) {
+            console.log("최종 활성 상태:", response.body.data.isActive);
+
+            const initialStatus = client.global.get("initialStatus");
+            if (initialStatus !== undefined) {
+                console.log("초기 상태:", initialStatus);
+                console.log("최종 상태:", response.body.data.isActive);
+
+                // 홀수 번의 토글이므로 초기 상태와 달라야 함
+                if (response.body.data.isActive !== initialStatus) {
+                    console.log("홀수 번 토글로 상태가 올바르게 변경됨");
+                } else {
+                    console.log("토글 결과가 예상과 다름");
+                }
+            }
+        }
+    }
+%}
+
+### 14. 업체 목록에서 상태 확인
+GET http://localhost:8080/api/business/my
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("업체 목록에서 상태 확인:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        const targetBusiness = response.body.data.find(b => b.businessId === client.global.get("businessId"));
+
+        if (targetBusiness) {
+            console.log("목록에서 확인된 업체명:", targetBusiness.businessName);
+            if (targetBusiness.isActive !== undefined) {
+                console.log("목록에서 확인된 활성 상태:", targetBusiness.isActive);
+            }
+        }
+    }
+%}

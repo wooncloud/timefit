@@ -1,0 +1,215 @@
+### 업체 삭제 API 테스트
+
+### 1. 업체 회원가입 (토큰 및 업체 생성)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "delete-test@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "박삭제",
+  "phoneNumber": "010-3333-4444",
+  "businessName": "삭제 테스트 카페",
+  "businessType": "카페",
+  "businessNumber": "666-66-66666",
+  "address": "서울시 강남구 삭제로 666",
+  "contactPhone": "02-6666-6666",
+  "description": "삭제될 예정인 카페입니다"
+}
+
+### 2. 로그인 (토큰 획득)
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "delete-test@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const token = response.headers.valueOf("x-client-token");
+    console.log("생성된 토큰:", token);
+    client.global.set("businessToken", token);
+
+    // 응답에서 businessId 추출
+    if (response.body.data && response.body.data.businesses && response.body.data.businesses.length > 0) {
+        const businessId = response.body.data.businesses[0].businessId;
+        console.log("업체 ID:", businessId);
+        client.global.set("businessId", businessId);
+    }
+%}
+
+### 3. 삭제 전 업체 정보 확인
+GET http://localhost:8080/api/business/{{businessId}}
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("삭제 전 업체 정보:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("삭제 전 업체명:", response.body.data.businessName);
+        console.log("삭제 전 권한:", response.body.data.myRole);
+        console.log("삭제 전 상태 확인 완료");
+    }
+%}
+
+### 4. 실패 케이스 - 삭제 확인 없이 시도 (confirmDelete: false)
+DELETE http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "confirmDelete": false,
+  "deleteReason": "삭제 확인하지 않음"
+}
+
+> {%
+    console.log("삭제 확인 없는 요청 응답 상태:", response.status);
+    console.log("삭제 확인 없는 요청 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 5. 실패 케이스 - 삭제 확인 필드 누락
+DELETE http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "deleteReason": "확인 필드 누락"
+}
+
+> {%
+    console.log("확인 필드 누락 응답 상태:", response.status);
+    console.log("확인 필드 누락 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 6. 업체 삭제 - 성공 케이스 (OWNER 권한)
+DELETE http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "confirmDelete": true,
+  "deleteReason": "사업 정리로 인한 업체 폐업"
+}
+
+> {%
+    console.log("업체 삭제 응답 상태:", response.status);
+    console.log("업체 삭제 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("삭제된 업체 ID:", response.body.data.businessId);
+        console.log("삭제된 업체명:", response.body.data.businessName);
+        console.log("삭제 시간:", response.body.data.deletedAt);
+        console.log("삭제 사유:", response.body.data.deleteReason);
+        console.log("삭제 메시지:", response.body.data.message);
+    }
+%}
+
+### 7. 삭제 후 업체 정보 조회 시도
+GET http://localhost:8080/api/business/{{businessId}}
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("삭제 후 조회 응답 상태:", response.status);
+    console.log("삭제 후 조회 응답:", JSON.stringify(response.body, null, 2));
+
+    // 삭제된 업체는 조회되지 않거나 비활성 상태로 표시되어야 함
+    if (response.status === 404) {
+        console.log("✅ 삭제된 업체는 조회되지 않음");
+    } else if (response.body.data && response.body.data.isActive === false) {
+        console.log("✅ 삭제된 업체는 비활성 상태로 표시됨");
+    }
+%}
+
+### 8. 삭제 후 업체 목록에서 확인
+GET http://localhost:8080/api/business/my
+x-client-token: {{businessToken}}
+
+> {%
+    console.log("삭제 후 업체 목록:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        const deletedBusiness = response.body.data.find(b => b.businessId === client.global.get("businessId"));
+
+        if (!deletedBusiness) {
+            console.log("✅ 삭제된 업체가 목록에서 제외됨");
+        } else if (deletedBusiness.isActive === false) {
+            console.log("✅ 삭제된 업체가 비활성 상태로 표시됨");
+        } else {
+            console.log("⚠️ 삭제된 업체가 여전히 활성 상태로 표시됨");
+        }
+    }
+%}
+
+### 9. 실패 케이스 - 이미 삭제된 업체 재삭제 시도
+DELETE http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "confirmDelete": true,
+  "deleteReason": "이미 삭제된 업체 재삭제 시도"
+}
+
+> {%
+    console.log("재삭제 시도 응답 상태:", response.status);
+    console.log("재삭제 시도 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 10. 실패 케이스 - 토큰 없이 삭제 시도
+DELETE http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+
+{
+  "confirmDelete": true,
+  "deleteReason": "토큰 없이 삭제 시도"
+}
+
+> {%
+    console.log("토큰 없는 삭제 응답 상태:", response.status);
+    console.log("토큰 없는 삭제 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 11. 실패 케이스 - 존재하지 않는 업체 삭제
+DELETE http://localhost:8080/api/business/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "confirmDelete": true,
+  "deleteReason": "존재하지 않는 업체 삭제 시도"
+}
+
+> {%
+    console.log("존재하지 않는 업체 삭제 응답 상태:", response.status);
+    console.log("존재하지 않는 업체 삭제 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 12. 실패 케이스 - 잘못된 UUID 형식
+DELETE http://localhost:8080/api/business/invalid-uuid-format
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "confirmDelete": true,
+  "deleteReason": "잘못된 UUID 형식으로 삭제 시도"
+}
+
+> {%
+    console.log("잘못된 UUID 삭제 응답 상태:", response.status);
+    console.log("잘못된 UUID 삭제 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 13. 실패 케이스 - 권한 없는 업체 삭제 (다른 업체 ID)
+DELETE http://localhost:8080/api/business/11111111-1111-1111-1111-111111111111
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "confirmDelete": true,
+  "deleteReason": "권한 없는 업체 삭제 시도"
+}
+
+> {%
+    console.log("권한 없는 업체 삭제 응답 상태:", response.status);
+    console.log("권한 없는 업체 삭제 응답:", JSON.stringify(response.body, null, 2));
+%}
