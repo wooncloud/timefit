@@ -123,6 +123,16 @@ public class BusinessController {
      * 업체 구성원 목록 조회
      * 권한: OWNER, MANAGER만 가능
      */
+    @GetMapping("/{businessId}/members")
+    public ResponseData<List<BusinessResponseDto.BusinessMember>> getBusinessMembers(
+            @PathVariable UUID businessId,
+            HttpServletRequest request) {
+        UUID currentUserId = getCurrentUserId(request);
+
+        log.info("업체 구성원 목록 조회 요청: businessId={}, userId={}", businessId, currentUserId);
+
+        return businessService.getBusinessMembers(businessId, currentUserId);
+    }
 
     /**
      * 구성원 초대

@@ -245,6 +245,31 @@ public class BusinessService {
      * 업체 구성원 목록 조회
      * 권한: OWNER, MANAGER만 가능
      */
+    public ResponseData<List<BusinessResponseDto.BusinessMember>> getBusinessMembers(
+            UUID businessId, UUID currentUserId) {
+
+        log.info("업체 구성원 목록 조회 시작: businessId={}, userId={}", businessId, currentUserId);
+
+        Business business = validateBusinessExists(businessId);
+        if (!business.isActiveBusiness()) {
+            throw new BusinessException(BusinessErrorCode.BUSINESS_NOT_ACTIVE);
+        }
+
+        UserBusinessRole currentUserRole = validateManagerOrOwnerRole(currentUserId, businessId);
+
+        List<UserBusinessRole> userBusinessRoles = userBusinessRoleRepository
+                .findByBusinessIdAndIsActive(businessId, true);
+        if (userBusinessRoles.isEmpty()) {
+            log.warn("활성화된 구성원이 없음: businessId={}", businessId);
+            throw new BusinessException(BusinessErrorCode.NO_ACTIVE_MEMBERS);
+        }
+
+        List<BusinessResponseDto.BusinessMember> members =
+                businessResponseFactory.createBusinessMembersResponse(userBusinessRoles);
+        log.info("업체 구성원 목록 조회 완료: businessId={}, userId={}, memberCount={}",
+                businessId, currentUserId, members.size());
+        return ResponseData.of(members);
+    }
 
     /**
      * 구성원 초대
