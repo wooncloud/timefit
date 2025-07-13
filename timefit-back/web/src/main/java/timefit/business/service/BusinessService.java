@@ -207,6 +207,41 @@ public class BusinessService {
     }
 
     /**
+     * 업체 활성화/비활성화 토글
+     * 권한: OWNER만 가능
+     * 특징: 단순 상태 변경 (성공/실패만 반환)
+     */
+    @Transactional
+    public ResponseData<String> toggleBusinessStatus(UUID businessId, UUID currentUserId) {
+
+        log.info("업체 상태 토글 시작: businessId={}, userId={}", businessId, currentUserId);
+
+        Business business = validateBusinessExists(businessId);
+        UserBusinessRole userRole = validateOwnerRole(currentUserId, businessId);
+
+        // 현재 상태 확인 및 토글
+        boolean wasActive = business.isActiveBusiness();
+        String resultMessage;
+
+        if (wasActive) {
+            // 활성 → 비활성
+            business.deactivate();
+            resultMessage = "업체가 비활성화되었습니다";
+            log.info("업체 비활성화: businessId={}", businessId);
+        } else {
+            // 비활성 → 활성
+            business.activate();
+            resultMessage = "업체가 활성화되었습니다";
+            log.info("업체 활성화: businessId={}", businessId);
+        }
+
+        businessRepository.save(business);
+        log.info("업체 상태 토글 완료: businessId={}, userId={}, {} → {}",
+                businessId, currentUserId, wasActive ? "활성" : "비활성", !wasActive ? "활성" : "비활성");
+        return ResponseData.of(resultMessage);
+    }
+
+    /**
      * 업체 구성원 목록 조회
      * 권한: OWNER, MANAGER만 가능
      */
@@ -232,12 +267,6 @@ public class BusinessService {
      * 권한: 모든 사용자 (로그인 불필요)
      */
 
-
-    /**
-     * 업체 활성화/비활성화 토글
-     * 권한: OWNER만 가능
-     * 특징: 단순 상태 변경 (성공/실패만 반환)
-     */
 
 
     /**

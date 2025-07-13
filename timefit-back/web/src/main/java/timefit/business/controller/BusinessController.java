@@ -104,6 +104,22 @@ public class BusinessController {
     }
 
     /**
+     * 업체 활성화/비활성화 토글
+     * 권한: OWNER만 가능
+     * 특징: 단순 상태 변경 (성공/실패만 반환)
+     */
+    @PostMapping("/{businessId}/toggle-status")
+    public ResponseData<String> toggleBusinessStatus(
+            @PathVariable UUID businessId,
+            HttpServletRequest httpRequest) {
+        UUID currentUserId = getCurrentUserId(httpRequest);
+
+        log.info("업체 상태 토글 요청: businessId={}, userId={}", businessId, currentUserId);
+
+        return businessService.toggleBusinessStatus(businessId, currentUserId);
+    }
+
+    /**
      * 업체 구성원 목록 조회
      * 권한: OWNER, MANAGER만 가능
      */
@@ -129,11 +145,7 @@ public class BusinessController {
      * 권한: 모든 사용자 (로그인 불필요)
      */
 
-    /**
-     * 업체 활성화/비활성화 토글
-     * 권한: OWNER만 가능
-     * 특징: 단순 상태 변경 (성공/실패만 반환)
-     */
+
 
 
 
