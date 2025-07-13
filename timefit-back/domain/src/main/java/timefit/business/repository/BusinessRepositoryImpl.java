@@ -181,6 +181,9 @@ public class BusinessRepositoryImpl implements BusinessRepositoryCustom {
     public Page<Business> searchBusinesses(String keyword, String businessType, String region, Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
+        // 활성화된 업체만 조회 (공개 검색용 - 추가된 조건)
+        builder.and(business.isActive.eq(true));
+
         // 키워드 검색 (업체명, 업종, 주소)
         if (StringUtils.hasText(keyword)) {
             BooleanBuilder keywordBuilder = new BooleanBuilder();
