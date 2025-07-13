@@ -174,11 +174,37 @@ public class BusinessService {
     }
 
 
-        /**
-         * 업체 삭제 (비활성화)
-         * 권한: OWNER만 가능
-         */
+    /**
+     * 업체 삭제 (비활성화)
+     * 권한: OWNER만 가능
+     */
+    @Transactional
+    public ResponseData<BusinessResponseDto.DeleteResult> deleteBusiness(
+            UUID businessId, BusinessRequestDto.DeleteBusiness request, UUID currentUserId) {
 
+        log.info("업체 삭제 시작: businessId={}, userId={}", businessId, currentUserId);
+
+        // 업체 존재 확인
+        Business business = validateBusinessExists(businessId);
+        if (!business.isActiveBusiness()) {
+            throw new BusinessException(BusinessErrorCode.BUSINESS_ALREADY_DELETED);
+        }
+
+        // OWNER 권한 확인 (OWNER만 삭제 가능)
+        UserBusinessRole userRole = validateOwnerRole(currentUserId, businessId);
+        if (!Boolean.TRUE.equals(request.getConfirmDelete())) {
+            throw new BusinessException(BusinessErrorCode.DELETE_CONFIRMATION_REQUIRED);
+        }
+
+        business.deactivate();
+        Business deactivatedBusiness = businessRepository.save(business);
+
+        BusinessResponseDto.DeleteResult response =
+                businessResponseFactory.createDeleteResultResponse(deactivatedBusiness, request.getDeleteReason());
+        log.info("업체 삭제 완료: businessId={}, userId={}, reason={}",
+                businessId, currentUserId, request.getDeleteReason());
+        return ResponseData.of(response);
+    }
 
     /**
      * 업체 구성원 목록 조회

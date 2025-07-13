@@ -91,7 +91,17 @@ public class BusinessController {
      * 업체 삭제 (비활성화)
      * 권한: OWNER만 가능
      */
+    @DeleteMapping("/{businessId}")
+    public ResponseData<BusinessResponseDto.DeleteResult> deleteBusiness(
+            @PathVariable UUID businessId,
+            @Valid @RequestBody BusinessRequestDto.DeleteBusiness request,
+            HttpServletRequest httpRequest) {
+        UUID currentUserId = getCurrentUserId(httpRequest);
 
+        log.info("업체 삭제 요청: businessId={}, userId={}", businessId, currentUserId);
+
+        return businessService.deleteBusiness(businessId, request, currentUserId);
+    }
 
     /**
      * 업체 구성원 목록 조회
