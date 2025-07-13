@@ -1,0 +1,279 @@
+### 구성원 권한 변경 API 테스트
+
+### 1. OWNER 사용자 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "role-owner@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "권사장",
+  "phoneNumber": "010-1111-2222",
+  "businessName": "권한 테스트 회사",
+  "businessType": "IT",
+  "businessNumber": "500-50-50505",
+  "address": "서울시 강남구 권한로 500",
+  "contactPhone": "02-5050-5050",
+  "description": "구성원 권한 변경 테스트용 회사입니다"
+}
+
+### 2. OWNER 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "role-owner@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const token = response.headers.valueOf("x-client-token");
+    console.log("OWNER 토큰:", token);
+    client.global.set("ownerToken", token);
+
+    if (response.body.data && response.body.data.businesses && response.body.data.businesses.length > 0) {
+        const businessId = response.body.data.businesses[0].businessId;
+        console.log("업체 ID:", businessId);
+        client.global.set("businessId", businessId);
+    }
+%}
+
+### 3. MANAGER 사용자 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "role-manager@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "매니저권한",
+  "phoneNumber": "010-2222-3333",
+  "businessName": "매니저 개인업체",
+  "businessType": "개인",
+  "businessNumber": "600-60-60606",
+  "address": "서울시 강남구 매니저로 600",
+  "contactPhone": "02-6060-6060",
+  "description": "매니저용 개인 업체"
+}
+
+### 4. MEMBER 사용자 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "role-member@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "멤버권한",
+  "phoneNumber": "010-3333-4444",
+  "businessName": "멤버 개인업체",
+  "businessType": "개인",
+  "businessNumber": "700-70-70707",
+  "address": "서울시 강남구 멤버로 700",
+  "contactPhone": "02-7070-7070",
+  "description": "멤버용 개인 업체"
+}
+
+### 5. MANAGER 초대
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "email": "role-manager@timefit.com",
+  "role": "MANAGER",
+  "invitationMessage": "매니저로 초대합니다"
+}
+> {%
+    if (response.body.data) {
+        client.global.set("managerUserId", response.body.data.userId);
+        console.log("MANAGER 사용자 ID:", response.body.data.userId);
+    }
+%}
+
+### 6. MEMBER 초대
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "email": "role-member@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "멤버로 초대합니다"
+}
+> {%
+    if (response.body.data) {
+        client.global.set("memberUserId", response.body.data.userId);
+        console.log("MEMBER 사용자 ID:", response.body.data.userId);
+    }
+%}
+
+### 7. 초대 후 구성원 목록 확인
+GET http://localhost:8080/api/business/{{businessId}}/members
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("권한 변경 전 구성원 목록:", JSON.stringify(response.body, null, 2));
+%}
+
+### 8. 권한 변경 - MEMBER → MANAGER 성공 케이스
+PATCH http://localhost:8080/api/business/{{businessId}}/members/{{memberUserId}}/role
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "newRole": "MANAGER"
+}
+> {%
+    console.log("MEMBER → MANAGER 변경 응답 상태:", response.status);
+    console.log("MEMBER → MANAGER 변경 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 9. 권한 변경 후 구성원 목록 확인
+GET http://localhost:8080/api/business/{{businessId}}/members
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("MEMBER → MANAGER 변경 후 구성원 목록:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        const changedMember = response.body.data.find(m => m.userId === client.global.get("memberUserId"));
+        if (changedMember && changedMember.role === "MANAGER") {
+            console.log("✅ MEMBER → MANAGER 권한 변경 성공");
+        }
+    }
+%}
+
+### 10. 권한 변경 - MANAGER → MEMBER 성공 케이스
+PATCH http://localhost:8080/api/business/{{businessId}}/members/{{managerUserId}}/role
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "newRole": "MEMBER"
+}
+> {%
+    console.log("MANAGER → MEMBER 변경 응답 상태:", response.status);
+    console.log("MANAGER → MEMBER 변경 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 11. 실패 케이스 - OWNER 권한으로 변경 시도
+PATCH http://localhost:8080/api/business/{{businessId}}/members/{{memberUserId}}/role
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "newRole": "OWNER"
+}
+> {%
+    console.log("OWNER 권한 변경 시도 응답 상태:", response.status);
+    console.log("OWNER 권한 변경 시도 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 12. MANAGER 로그인 (권한 테스트용)
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "role-manager@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const managerToken = response.headers.valueOf("x-client-token");
+    client.global.set("managerToken", managerToken);
+%}
+
+### 13. 실패 케이스 - MANAGER가 권한 변경 시도 (권한 부족)
+PATCH http://localhost:8080/api/business/{{businessId}}/members/{{memberUserId}}/role
+Content-Type: application/json
+x-client-token: {{managerToken}}
+
+{
+  "newRole": "MANAGER"
+}
+> {%
+    console.log("MANAGER 권한 변경 시도 응답 상태:", response.status);
+    console.log("MANAGER 권한 변경 시도 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 14. 실패 케이스 - 본인 권한 변경 시도
+PATCH http://localhost:8080/api/business/{{businessId}}/members/{{ownerToken}}/role
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "newRole": "MANAGER"
+}
+> {%
+    console.log("본인 권한 변경 시도 응답 상태:", response.status);
+    console.log("본인 권한 변경 시도 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 15. 실패 케이스 - 존재하지 않는 사용자 권한 변경
+PATCH http://localhost:8080/api/business/{{businessId}}/members/00000000-0000-0000-0000-000000000000/role
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "newRole": "MANAGER"
+}
+> {%
+    console.log("존재하지 않는 사용자 권한 변경 응답 상태:", response.status);
+    console.log("존재하지 않는 사용자 권한 변경 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 16. 실패 케이스 - 토큰 없이 권한 변경
+PATCH http://localhost:8080/api/business/{{businessId}}/members/{{memberUserId}}/role
+Content-Type: application/json
+
+{
+  "newRole": "MANAGER"
+}
+> {%
+    console.log("토큰 없는 권한 변경 응답 상태:", response.status);
+    console.log("토큰 없는 권한 변경 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 17. 업체 비활성화 후 권한 변경 테스트
+POST http://localhost:8080/api/business/{{businessId}}/toggle-status
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("업체 비활성화 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 18. 실패 케이스 - 비활성화된 업체에서 권한 변경
+PATCH http://localhost:8080/api/business/{{businessId}}/members/{{memberUserId}}/role
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "newRole": "MANAGER"
+}
+> {%
+    console.log("비활성화된 업체 권한 변경 응답 상태:", response.status);
+    console.log("비활성화된 업체 권한 변경 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 19. 업체 재활성화
+POST http://localhost:8080/api/business/{{businessId}}/toggle-status
+x-client-token: {{ownerToken}}
+
+### 20. 최종 구성원 목록 및 권한 확인
+GET http://localhost:8080/api/business/{{businessId}}/members
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("최종 구성원 목록:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("\n=== 최종 권한 현황 ===");
+        response.body.data.forEach((member, index) => {
+            console.log(`${index + 1}. ${member.name} - ${member.role}`);
+        });
+
+        const roleCount = response.body.data.reduce((acc, member) => {
+            acc[member.role] = (acc[member.role] || 0) + 1;
+            return acc;
+        }, {});
+
+        console.log("권한별 구성원 수:", roleCount);
+    }
+%}
