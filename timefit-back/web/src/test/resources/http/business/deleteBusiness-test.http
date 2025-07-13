@@ -114,9 +114,9 @@ x-client-token: {{businessToken}}
 
     // 삭제된 업체는 조회되지 않거나 비활성 상태로 표시되어야 함
     if (response.status === 404) {
-        console.log("✅ 삭제된 업체는 조회되지 않음");
+        console.log("삭제된 업체는 조회되지 않음");
     } else if (response.body.data && response.body.data.isActive === false) {
-        console.log("✅ 삭제된 업체는 비활성 상태로 표시됨");
+        console.log("삭제된 업체는 비활성 상태로 표시됨");
     }
 %}
 
@@ -131,11 +131,11 @@ x-client-token: {{businessToken}}
         const deletedBusiness = response.body.data.find(b => b.businessId === client.global.get("businessId"));
 
         if (!deletedBusiness) {
-            console.log("✅ 삭제된 업체가 목록에서 제외됨");
+            console.log("삭제된 업체가 목록에서 제외됨");
         } else if (deletedBusiness.isActive === false) {
-            console.log("✅ 삭제된 업체가 비활성 상태로 표시됨");
+            console.log("삭제된 업체가 비활성 상태로 표시됨");
         } else {
-            console.log("⚠️ 삭제된 업체가 여전히 활성 상태로 표시됨");
+            console.log("삭제된 업체가 여전히 활성 상태로 표시됨");
         }
     }
 %}
