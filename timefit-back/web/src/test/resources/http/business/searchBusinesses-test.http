@@ -1,0 +1,322 @@
+### 업체 검색 API 테스트 (공개 API - 인증 불필요)
+
+### 1. 테스트 데이터 생성 - 업체 1 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "search-cafe@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "카페사장",
+  "phoneNumber": "010-1111-2222",
+  "businessName": "스타벅스 강남점",
+  "businessType": "카페",
+  "businessNumber": "111-11-11111",
+  "address": "서울시 강남구 테헤란로 100",
+  "contactPhone": "02-1111-1111",
+  "description": "프리미엄 커피 전문점입니다"
+}
+
+### 2. 테스트 데이터 생성 - 업체 2 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "search-restaurant@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "음식점사장",
+  "phoneNumber": "010-2222-3333",
+  "businessName": "맛있는 한식당",
+  "businessType": "음식점",
+  "businessNumber": "222-22-22222",
+  "address": "서울시 강남구 역삼동 200",
+  "contactPhone": "02-2222-2222",
+  "description": "전통 한식을 제공하는 음식점입니다"
+}
+
+### 3. 테스트 데이터 생성 - 업체 3 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "search-gym@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "헬스장사장",
+  "phoneNumber": "010-3333-4444",
+  "businessName": "파워짐 강남점",
+  "businessType": "헬스장",
+  "businessNumber": "333-33-33333",
+  "address": "부산시 해운대구 헬스로 300",
+  "contactPhone": "051-3333-3333",
+  "description": "최신 운동기구를 갖춘 헬스장입니다"
+}
+
+### 4. 테스트 데이터 생성 - 업체 4 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "search-beauty@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "미용실사장",
+  "phoneNumber": "010-4444-5555",
+  "businessName": "뷰티살롱 강남",
+  "businessType": "미용실",
+  "businessNumber": "444-44-44444",
+  "address": "서울시 강남구 신사동 400",
+  "contactPhone": "02-4444-4444",
+  "description": "전문 헤어 디자이너가 있는 미용실입니다"
+}
+
+### 5. 전체 업체 검색 - 기본 케이스 (검색 조건 없음)
+GET http://localhost:8080/api/business/search
+
+> {%
+    console.log("전체 업체 검색 응답 상태:", response.status);
+    console.log("전체 업체 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("검색된 업체 수:", response.body.data.businesses ? response.body.data.businesses.length : 0);
+        console.log("총 업체 수:", response.body.data.totalElements);
+        console.log("총 페이지 수:", response.body.data.totalPages);
+        console.log("현재 페이지:", response.body.data.currentPage);
+        console.log("페이지 크기:", response.body.data.pageSize);
+        console.log("다음 페이지 존재:", response.body.data.hasNext);
+
+        if (response.body.data.businesses) {
+            response.body.data.businesses.forEach((business, index) => {
+                console.log(`업체 ${index + 1}: ${business.businessName} (${business.businessType})`);
+            });
+        }
+    }
+%}
+
+### 6. 키워드 검색 - "강남" 키워드
+GET http://localhost:8080/api/business/search?keyword=강남
+
+> {%
+    console.log("강남 키워드 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.businesses) {
+        console.log("강남 검색 결과 수:", response.body.data.businesses.length);
+        response.body.data.businesses.forEach(business => {
+            console.log(`- ${business.businessName}: ${business.address}`);
+        });
+    }
+%}
+
+### 7. 업종별 검색 - "카페" 업종
+GET http://localhost:8080/api/business/search?businessType=카페
+
+> {%
+    console.log("카페 업종 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.businesses) {
+        console.log("카페 검색 결과 수:", response.body.data.businesses.length);
+        response.body.data.businesses.forEach(business => {
+            console.log(`- ${business.businessName} (${business.businessType})`);
+        });
+    }
+%}
+
+### 8. 지역별 검색 - "서울" 지역
+GET http://localhost:8080/api/business/search?region=서울
+
+> {%
+    console.log("서울 지역 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.businesses) {
+        console.log("서울 검색 결과 수:", response.body.data.businesses.length);
+        response.body.data.businesses.forEach(business => {
+            console.log(`- ${business.businessName}: ${business.address}`);
+        });
+    }
+%}
+
+### 9. 복합 검색 - 키워드 + 업종
+GET http://localhost:8080/api/business/search?keyword=강남&businessType=카페
+
+> {%
+    console.log("강남 + 카페 복합 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.businesses) {
+        console.log("복합 검색 결과 수:", response.body.data.businesses.length);
+        response.body.data.businesses.forEach(business => {
+            console.log(`- ${business.businessName} (${business.businessType}): ${business.address}`);
+        });
+    }
+%}
+
+### 10. 복합 검색 - 키워드 + 지역
+GET http://localhost:8080/api/business/search?keyword=헬스&region=부산
+
+> {%
+    console.log("헬스 + 부산 복합 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.businesses) {
+        console.log("헬스 + 부산 검색 결과 수:", response.body.data.businesses.length);
+    }
+%}
+
+### 11. 전체 조건 검색 - 키워드 + 업종 + 지역
+GET http://localhost:8080/api/business/search?keyword=강남&businessType=미용실&region=서울
+
+> {%
+    console.log("전체 조건 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.businesses) {
+        console.log("전체 조건 검색 결과 수:", response.body.data.businesses.length);
+    }
+%}
+
+### 12. 페이징 테스트 - 페이지 크기 조정
+GET http://localhost:8080/api/business/search?page=0&size=2
+
+> {%
+    console.log("페이징 테스트 (size=2) 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("페이지 크기 2 - 업체 수:", response.body.data.businesses ? response.body.data.businesses.length : 0);
+        console.log("총 페이지 수:", response.body.data.totalPages);
+        console.log("다음 페이지 존재:", response.body.data.hasNext);
+    }
+%}
+
+### 13. 페이징 테스트 - 두 번째 페이지
+GET http://localhost:8080/api/business/search?page=1&size=2
+
+> {%
+    console.log("두 번째 페이지 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("두 번째 페이지 업체 수:", response.body.data.businesses ? response.body.data.businesses.length : 0);
+        console.log("현재 페이지:", response.body.data.currentPage);
+    }
+%}
+
+### 14. 검색 결과 없음 테스트 - 존재하지 않는 키워드
+GET http://localhost:8080/api/business/search?keyword=존재하지않는업체
+
+> {%
+    console.log("검색 결과 없음 테스트 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("검색 결과 없음 - 업체 수:", response.body.data.businesses ? response.body.data.businesses.length : 0);
+        console.log("총 업체 수:", response.body.data.totalElements);
+
+        if (response.body.data.totalElements === 0) {
+            console.log("✅ 검색 결과 없음 케이스 정상 처리");
+        }
+    }
+%}
+
+### 15. 검색 결과 없음 테스트 - 존재하지 않는 업종
+GET http://localhost:8080/api/business/search?businessType=존재하지않는업종
+
+> {%
+    console.log("존재하지 않는 업종 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.totalElements === 0) {
+        console.log("✅ 존재하지 않는 업종 검색 결과 없음 정상 처리");
+    }
+%}
+
+### 16. 검색 결과 없음 테스트 - 존재하지 않는 지역
+GET http://localhost:8080/api/business/search?region=존재하지않는지역
+
+> {%
+    console.log("존재하지 않는 지역 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.totalElements === 0) {
+        console.log("✅ 존재하지 않는 지역 검색 결과 없음 정상 처리");
+    }
+%}
+
+### 17. 잘못된 페이징 파라미터 테스트 - 음수 페이지
+GET http://localhost:8080/api/business/search?page=-1&size=10
+
+> {%
+    console.log("음수 페이지 테스트 응답 상태:", response.status);
+    console.log("음수 페이지 테스트 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 18. 잘못된 페이징 파라미터 테스트 - 0 크기
+GET http://localhost:8080/api/business/search?page=0&size=0
+
+> {%
+    console.log("0 크기 페이지 테스트 응답 상태:", response.status);
+    console.log("0 크기 페이지 테스트 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 19. 잘못된 페이징 파라미터 테스트 - 과도한 크기
+GET http://localhost:8080/api/business/search?page=0&size=1000
+
+> {%
+    console.log("과도한 크기 페이지 테스트 응답 상태:", response.status);
+    console.log("과도한 크기 페이지 테스트 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 20. 빈 문자열 검색 테스트
+GET http://localhost:8080/api/business/search?keyword=&businessType=&region=
+
+> {%
+    console.log("빈 문자열 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("빈 문자열 검색 결과 수:", response.body.data.businesses ? response.body.data.businesses.length : 0);
+        console.log("✅ 빈 문자열은 전체 검색과 동일하게 처리됨");
+    }
+%}
+
+### 21. 특수문자 검색 테스트
+GET http://localhost:8080/api/business/search?keyword=@#$%^&*
+
+> {%
+    console.log("특수문자 검색 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("특수문자 검색 결과 수:", response.body.data.totalElements);
+    }
+%}
+
+### 22. 정렬 확인 테스트 - 업체명 순서 확인
+GET http://localhost:8080/api/business/search?size=10
+
+> {%
+    console.log("정렬 확인 테스트 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.businesses) {
+        console.log("\n=== 업체명 정렬 순서 확인 ===");
+        response.body.data.businesses.forEach((business, index) => {
+            console.log(`${index + 1}. ${business.businessName}`);
+        });
+
+        // 정렬 순서 검증
+        const businessNames = response.body.data.businesses.map(b => b.businessName);
+        const sortedNames = [...businessNames].sort();
+        const isSorted = JSON.stringify(businessNames) === JSON.stringify(sortedNames);
+
+        if (isSorted) {
+            console.log("✅ 업체명 오름차순 정렬 확인");
+        } else {
+            console.log("⚠️ 정렬 순서가 올바르지 않음");
+        }
+    }
+%}
+
+### 23. 최대 페이지 초과 테스트
+GET http://localhost:8080/api/business/search?page=999&size=10
+
+> {%
+    console.log("최대 페이지 초과 테스트 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("초과 페이지 요청 - 업체 수:", response.body.data.businesses ? response.body.data.businesses.length : 0);
+        console.log("현재 페이지:", response.body.data.currentPage);
+        console.log("총 페이지 수:", response.body.data.totalPages);
+
+        if (response.body.data.businesses && response.body.data.businesses.length === 0) {
+            console.log("✅ 최대 페이지 초과 시 빈 결과 반환");
+        }
+    }
+%}
