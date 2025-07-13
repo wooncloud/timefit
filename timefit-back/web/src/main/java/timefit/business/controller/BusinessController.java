@@ -156,6 +156,19 @@ public class BusinessController {
      * 구성원 권한 변경
      * 권한: OWNER만 가능
      */
+    @PatchMapping("/{businessId}/members/{targetUserId}/role")
+    public ResponseData<Void> changeUserRole(
+            @PathVariable UUID businessId,
+            @PathVariable UUID targetUserId,
+            @Valid @RequestBody BusinessRequestDto.ChangeRole request,
+            HttpServletRequest httpRequest) {
+        UUID currentUserId = getCurrentUserId(httpRequest);
+
+        log.info("구성원 권한 변경 요청: businessId={}, targetUserId={}, newRole={}, requesterUserId={}",
+                businessId, targetUserId, request.getNewRole(), currentUserId);
+
+        return businessService.changeUserRole(businessId, targetUserId, request, currentUserId);
+    }
 
     /**
      * 구성원 제거

@@ -333,6 +333,38 @@ public class BusinessService {
      * 구성원 권한 변경
      * 권한: OWNER만 가능
      */
+    @Transactional
+    public ResponseData<Void> changeUserRole(
+            UUID businessId, UUID targetUserId, BusinessRequestDto.ChangeRole request, UUID currentUserId) {
+
+        log.info("구성원 권한 변경 요청: businessId={}, targetUserId={}, newRole={}, requesterUserId={}",
+                businessId, targetUserId, request.getNewRole(), currentUserId);
+
+        Business business = validateBusinessExists(businessId);
+        if (!business.isActiveBusiness()) {
+            throw new BusinessException(BusinessErrorCode.BUSINESS_NOT_ACTIVE);
+        }
+
+        UserBusinessRole requesterRole = validateOwnerRole(currentUserId, businessId);
+        // 대상자 해당 업체의 활성 구성원인지 확인
+        UserBusinessRole targetRole = userBusinessRoleRepository
+                .findByUserIdAndBusinessIdAndIsActive(targetUserId, businessId, true)
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.USER_NOT_BUSINESS_MEMBER));
+
+        // 권한 변경
+        if (currentUserId.equals(targetUserId)) {
+            throw new BusinessException(BusinessErrorCode.CANNOT_CHANGE_OWN_ROLE); // 본인 권한 변경 시도
+        }
+        if (request.getNewRole() == BusinessRole.OWNER) {
+            throw new BusinessException(BusinessErrorCode.CANNOT_CHANGE_TO_OWNER); // OWNER 권한으로 변경 시도
+        }
+        targetRole.changeRole(request.getNewRole());
+        userBusinessRoleRepository.save(targetRole);
+
+        log.info("구성원 권한 변경 완료: businessId={}, targetUserId={}, oldRole={} → newRole={}",
+                businessId, targetUserId, targetRole.getRole(), request.getNewRole());
+        return ResponseData.of(null);
+    }
 
     /**
      * 구성원 제거
