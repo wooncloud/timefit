@@ -23,9 +23,11 @@ import timefit.exception.business.BusinessErrorCode;
 import timefit.user.entity.User;
 import timefit.user.repository.UserRepository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * - OWNER: 모든 권한
@@ -408,8 +410,31 @@ public class BusinessService {
      * 업체 검색 (공개 API - 인증 불필요)
      * 권한: 모든 사용자 (로그인 불필요)
      */
+    public ResponseData<BusinessResponseDto.BusinessSearchResult> searchBusinesses(
+            String keyword, String businessType, String region, int page, int size) {
 
+        log.info("업체 검색 시작: keyword={}, businessType={}, region={}, page={}, size={}",
+                keyword, businessType, region, page, size);
 
+        // 페이징 검증
+        validateSearchParameters(page, size);
+
+        // 검색
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("businessName").ascending());
+        Page<Business> businessPage = businessRepositoryCustom.searchBusinesses(
+                keyword, businessType, region, pageRequest);
+        if (businessPage.isEmpty()) {
+            log.info("검색 결과 없음: keyword={}, businessType={}, region={}", keyword, businessType, region);
+            BusinessResponseDto.BusinessSearchResult emptyResult = createEmptySearchResult(page, size);
+            return ResponseData.of(emptyResult);
+        }
+
+        BusinessResponseDto.BusinessSearchResult searchResult = createSearchResult(businessPage);
+        log.info("업체 검색 완료: totalElements={}, totalPages={}, currentPage={}",
+                businessPage.getTotalElements(), businessPage.getTotalPages(), page);
+
+        return ResponseData.of(searchResult);
+    }
 
     /**
      * 업체 통계 조회
@@ -480,5 +505,63 @@ public class BusinessService {
         if (targetRole.getRole() == BusinessRole.OWNER) {
             throw new BusinessException(BusinessErrorCode.CANNOT_REMOVE_OWNER);
         }
+    }
+
+    // 검색 파라미터 검증
+    private void validateSearchParameters(int page, int size) {
+        if (page < 0) {
+            throw new BusinessException(BusinessErrorCode.INVALID_PAGE_NUMBER);
+        }
+        if (size <= 0 || size > 100) {
+            throw new BusinessException(BusinessErrorCode.INVALID_PAGE_SIZE);
+        }
+    }
+
+    // 검색 결과 응답 생성
+    private BusinessResponseDto.BusinessSearchResult createSearchResult(Page<Business> businessPage) {
+        List<BusinessResponseDto.BusinessSearchItem> searchItems = businessPage.getContent().stream()
+                .map(this::convertToSearchItem)
+                .collect(Collectors.toList());
+
+        return BusinessResponseDto.BusinessSearchResult.of(
+                searchItems,
+                (int) businessPage.getTotalElements(),
+                businessPage.getTotalPages(),
+                businessPage.getNumber(),
+                businessPage.getSize(),
+                businessPage.hasNext()
+        );
+    }
+
+    //Business Entity를 BusinessSearchItem 으로 변환
+    private BusinessResponseDto.BusinessSearchItem convertToSearchItem(Business business) {
+        // 총 구성원 수 조회 (필요시)
+        Integer totalMembers = getTotalMembersCount(business.getId());
+
+        return BusinessResponseDto.BusinessSearchItem.of(
+                business.getId(),
+                business.getBusinessName(),
+                business.getBusinessType(),
+                business.getAddress(),
+                business.getContactPhone(),
+                business.getDescription(),
+                business.getLogoUrl(),
+                totalMembers,
+                null, // rating - 향후 확장용
+                null, // reviewCount - 향후 확장용
+                null  // distance - 향후 확장용
+        );
+    }
+
+    // 빈 검색 결과 생성
+    private BusinessResponseDto.BusinessSearchResult createEmptySearchResult(int page, int size) {
+        return BusinessResponseDto.BusinessSearchResult.of(
+                Collections.emptyList(),
+                0,
+                0,
+                page,
+                size,
+                false
+        );
     }
 }

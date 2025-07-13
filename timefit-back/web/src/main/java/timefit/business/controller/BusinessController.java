@@ -191,7 +191,19 @@ public class BusinessController {
      * 업체 검색 (공개 API - 인증 불필요)
      * 권한: 모든 사용자 (로그인 불필요)
      */
+    @GetMapping("/search")
+    public ResponseData<BusinessResponseDto.BusinessSearchResult> searchBusinesses(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String businessType,
+            @RequestParam(required = false) String region,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
 
+        log.info("업체 검색 요청: keyword={}, businessType={}, region={}, page={}, size={}",
+                keyword, businessType, region, page, size);
+
+        return businessService.searchBusinesses(keyword, businessType, region, page, size);
+    }
 
 
 
