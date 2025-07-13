@@ -1,0 +1,353 @@
+### 구성원 초대 API 테스트
+
+### 1. OWNER 사용자 회원가입 (초대권한 보유)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "invite-owner@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "김사장",
+  "phoneNumber": "010-1111-2222",
+  "businessName": "초대 테스트 병원",
+  "businessType": "병원",
+  "businessNumber": "100-10-10101",
+  "address": "서울시 강남구 초대로 100",
+  "contactPhone": "02-1010-1010",
+  "description": "구성원 초대 테스트용 병원입니다"
+}
+
+### 2. OWNER 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "invite-owner@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const token = response.headers.valueOf("x-client-token");
+    console.log("OWNER 토큰:", token);
+    client.global.set("ownerToken", token);
+
+    // 응답에서 businessId 추출
+    if (response.body.data && response.body.data.businesses && response.body.data.businesses.length > 0) {
+        const businessId = response.body.data.businesses[0].businessId;
+        console.log("업체 ID:", businessId);
+        client.global.set("businessId", businessId);
+    }
+%}
+
+### 3. 초대받을 사용자 1 회원가입 (MANAGER로 초대할 예정)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "invitee-manager@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "이매니저",
+  "phoneNumber": "010-2222-3333",
+  "businessName": "매니저 개인업체",
+  "businessType": "개인",
+  "businessNumber": "200-20-20202",
+  "address": "서울시 강남구 매니저로 200",
+  "contactPhone": "02-2020-2020",
+  "description": "매니저용 개인 업체"
+}
+
+### 4. 초대받을 사용자 2 회원가입 (MEMBER로 초대할 예정)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "invitee-member@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "박직원",
+  "phoneNumber": "010-3333-4444",
+  "businessName": "직원 개인업체",
+  "businessType": "개인",
+  "businessNumber": "300-30-30303",
+  "address": "서울시 강남구 직원로 300",
+  "contactPhone": "02-3030-3030",
+  "description": "직원용 개인 업체"
+}
+
+### 5. 구성원 초대 - MANAGER 역할로 성공 케이스
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "email": "invitee-manager@timefit.com",
+  "role": "MANAGER",
+  "invitationMessage": "병원 매니저로 초대합니다. 함께 일해요!"
+}
+
+> {%
+    console.log("MANAGER 초대 응답 상태:", response.status);
+    console.log("MANAGER 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("초대된 사용자 ID:", response.body.data.userId);
+        console.log("초대된 사용자 이메일:", response.body.data.email);
+        console.log("초대된 사용자 이름:", response.body.data.name);
+        console.log("부여된 권한:", response.body.data.assignedRole);
+        console.log("초대자 이름:", response.body.data.invitedByName);
+        console.log("초대 시간:", response.body.data.invitedAt);
+        console.log("초대 메시지:", response.body.data.invitationMessage);
+        console.log("초대 상태:", response.body.data.status);
+
+        client.global.set("managerUserId", response.body.data.userId);
+    }
+%}
+
+### 6. 구성원 초대 - MEMBER 역할로 성공 케이스
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "email": "invitee-member@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "병원 직원으로 초대합니다. 환영합니다!"
+}
+
+> {%
+    console.log("MEMBER 초대 응답 상태:", response.status);
+    console.log("MEMBER 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("초대된 사용자 ID:", response.body.data.userId);
+        console.log("초대된 사용자 이름:", response.body.data.name);
+        console.log("부여된 권한:", response.body.data.assignedRole);
+
+        client.global.set("memberUserId", response.body.data.userId);
+    }
+%}
+
+### 7. 초대 후 구성원 목록 확인
+GET http://localhost:8080/api/business/{{businessId}}/members
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("초대 후 구성원 목록:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && Array.isArray(response.body.data)) {
+        console.log("총 구성원 수:", response.body.data.length);
+
+        const managerMember = response.body.data.find(m => m.role === "MANAGER");
+        const memberMember = response.body.data.find(m => m.role === "MEMBER");
+        const ownerMember = response.body.data.find(m => m.role === "OWNER");
+
+        if (ownerMember) console.log("✅ OWNER 확인됨:", ownerMember.name);
+        if (managerMember) console.log("✅ MANAGER 초대 확인됨:", managerMember.name);
+        if (memberMember) console.log("✅ MEMBER 초대 확인됨:", memberMember.name);
+    }
+%}
+
+### 8. 실패 케이스 - 이미 초대된 사용자 재초대
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "email": "invitee-manager@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "이미 초대된 사용자 재초대 시도"
+}
+
+> {%
+    console.log("재초대 시도 응답 상태:", response.status);
+    console.log("재초대 시도 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 9. 실패 케이스 - 존재하지 않는 사용자 초대
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "email": "nonexistent@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "존재하지 않는 사용자 초대 시도"
+}
+
+> {%
+    console.log("존재하지 않는 사용자 초대 응답 상태:", response.status);
+    console.log("존재하지 않는 사용자 초대 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 10. MANAGER 로그인 (초대받은 사용자)
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "invitee-manager@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const managerToken = response.headers.valueOf("x-client-token");
+    console.log("MANAGER 토큰:", managerToken);
+    client.global.set("managerToken", managerToken);
+%}
+
+### 11. MANAGER가 다른 사용자 초대 (성공 케이스)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "invitee-member2@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "최직원2",
+  "phoneNumber": "010-4444-5555",
+  "businessName": "직원2 개인업체",
+  "businessType": "개인",
+  "businessNumber": "400-40-40404",
+  "address": "서울시 강남구 직원2로 400",
+  "contactPhone": "02-4040-4040",
+  "description": "직원2용 개인 업체"
+}
+
+### 12. MANAGER가 구성원 초대 - 성공 케이스
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{managerToken}}
+
+{
+  "email": "invitee-member2@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "매니저가 직원을 초대합니다"
+}
+
+> {%
+    console.log("MANAGER의 초대 응답 상태:", response.status);
+    console.log("MANAGER의 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("MANAGER가 초대한 사용자:", response.body.data.name);
+        console.log("초대자명:", response.body.data.invitedByName);
+    }
+%}
+
+### 13. MEMBER 로그인 (권한 테스트용)
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "invitee-member@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const memberToken = response.headers.valueOf("x-client-token");
+    console.log("MEMBER 토큰:", memberToken);
+    client.global.set("memberToken", memberToken);
+%}
+
+### 14. 실패 케이스 - MEMBER가 구성원 초대 시도 (권한 부족)
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{memberToken}}
+
+{
+  "email": "invitee-member2@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "MEMBER가 권한 없이 초대 시도"
+}
+
+> {%
+    console.log("MEMBER 초대 시도 응답 상태:", response.status);
+    console.log("MEMBER 초대 시도 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 15. 실패 케이스 - 토큰 없이 초대
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+
+{
+  "email": "invitee-member@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "토큰 없이 초대 시도"
+}
+
+> {%
+    console.log("토큰 없는 초대 응답 상태:", response.status);
+    console.log("토큰 없는 초대 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 16. 실패 케이스 - 존재하지 않는 업체에 초대
+POST http://localhost:8080/api/business/00000000-0000-0000-0000-000000000000/members/invite
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "email": "invitee-member@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "존재하지 않는 업체에 초대 시도"
+}
+
+> {%
+    console.log("존재하지 않는 업체 초대 응답 상태:", response.status);
+    console.log("존재하지 않는 업체 초대 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 17. 업체 비활성화 후 초대 테스트
+POST http://localhost:8080/api/business/{{businessId}}/toggle-status
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("업체 비활성화 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 18. 실패 케이스 - 비활성화된 업체에 초대 시도
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "email": "invitee-member2@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "비활성화된 업체에 초대 시도"
+}
+
+> {%
+    console.log("비활성화된 업체 초대 응답 상태:", response.status);
+    console.log("비활성화된 업체 초대 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 19. 업체 재활성화
+POST http://localhost:8080/api/business/{{businessId}}/toggle-status
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("업체 재활성화 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 20. 최종 구성원 목록 확인
+GET http://localhost:8080/api/business/{{businessId}}/members
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("최종 구성원 목록:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && Array.isArray(response.body.data)) {
+        console.log("최종 총 구성원 수:", response.body.data.length);
+
+        console.log("\n=== 최종 구성원 현황 ===");
+        response.body.data.forEach((member, index) => {
+            console.log(`${index + 1}. ${member.name} (${member.email})`);
+            console.log(`   - 권한: ${member.role}`);
+            console.log(`   - 가입일: ${member.joinedAt}`);
+            console.log(`   - 초대자: ${member.invitedByName || 'N/A'}`);
+            console.log(`   - 활성상태: ${member.isActive}`);
+            console.log("");
+        });
+
+        // 권한별 집계
+        const roleCount = response.body.data.reduce((acc, member) => {
+            acc[member.role] = (acc[member.role] || 0) + 1;
+            return acc;
+        }, {});
+
+        console.log("권한별 구성원 수:", roleCount);
+    }
+%}
