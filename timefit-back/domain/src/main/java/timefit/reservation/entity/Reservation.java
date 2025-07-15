@@ -49,6 +49,9 @@ public class Reservation extends BaseEntity {
     @Column(name = "reservation_time", nullable = false)
     private LocalTime reservationTime;
 
+    @Column(name = "reservation_number", length = 50)
+    private String reservationNumber;
+
     @NotNull(message = "소요 시간은 필수입니다")
     @Min(value = 1, message = "소요 시간은 1분 이상이어야 합니다")
     @Column(name = "duration_minutes", nullable = false)
@@ -78,4 +81,27 @@ public class Reservation extends BaseEntity {
 
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
+
+    public static Reservation createReservation(User customer, Business business, ReservationTimeSlot slot,
+                                                LocalDate reservationDate, LocalTime reservationTime,
+                                                Integer durationMinutes, Integer totalPrice,
+                                                String customerName, String customerPhone, String notes) {
+        Reservation reservation = new Reservation();
+        reservation.customer = customer;
+        reservation.business = business;
+        reservation.slot = slot;
+        reservation.reservationDate = reservationDate;
+        reservation.reservationTime = reservationTime;
+        reservation.durationMinutes = durationMinutes;
+        reservation.totalPrice = totalPrice;
+        reservation.customerName = customerName;
+        reservation.customerPhone = customerPhone;
+        reservation.notes = notes;
+        reservation.status = ReservationStatus.PENDING;
+        return reservation;
+    }
+
+    public void updateReservationNumber(String reservationNumber) {
+        this.reservationNumber = reservationNumber;
+    }
 }
