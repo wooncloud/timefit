@@ -1,5 +1,7 @@
 package timefit.reservation.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
 
@@ -28,4 +30,9 @@ public interface ReservationRepositoryCustom {
     int countActiveReservationsBySlot(UUID slotId);
 
     List<Reservation> findTodayReservationsByBusiness(UUID businessId, LocalDate today, ReservationStatus status);
+
+    // 필터 조건으로 내 예약 조회 (페이징)
+    Page<Reservation> findMyReservationsWithFilters(UUID customerId, ReservationStatus status,
+                                                    LocalDate startDate, LocalDate endDate, UUID businessId,
+                                                    Pageable pageable);
 }
