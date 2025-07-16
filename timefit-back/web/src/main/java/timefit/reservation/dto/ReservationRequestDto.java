@@ -113,4 +113,48 @@ public class ReservationRequestDto {
             return Objects.hash(optionId, optionName, price);
         }
     }
+
+    /**
+     * 내 예약 목록 조회 요청
+     */
+    @Getter
+    public static class GetMyReservations {
+        private final String status;
+        private final String startDate;
+        private final String endDate;
+        private final UUID businessId;
+        private final Integer page;
+        private final Integer size;
+
+        private GetMyReservations(String status, String startDate, String endDate, UUID businessId, Integer page, Integer size) {
+            this.status = status;
+            this.startDate = startDate;
+            this.endDate = endDate;
+            this.businessId = businessId;
+            this.page = page != null ? page : 0;
+            this.size = size != null ? size : 20;
+        }
+
+        public static GetMyReservations of(String status, String startDate, String endDate, UUID businessId, Integer page, Integer size) {
+            return new GetMyReservations(status, startDate, endDate, businessId, page, size);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (other == null || getClass() != other.getClass()) return false;
+            GetMyReservations that = (GetMyReservations) other;
+            return Objects.equals(status, that.status) &&
+                    Objects.equals(startDate, that.startDate) &&
+                    Objects.equals(endDate, that.endDate) &&
+                    Objects.equals(businessId, that.businessId) &&
+                    Objects.equals(page, that.page) &&
+                    Objects.equals(size, that.size);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(status, startDate, endDate, businessId, page, size);
+        }
+    }
 }
