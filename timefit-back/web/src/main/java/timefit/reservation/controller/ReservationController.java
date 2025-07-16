@@ -42,6 +42,27 @@ public class ReservationController {
         return reservationService.createReservation(request, currentUserId);
     }
 
+    /**
+     * 내 예약 목록 조회
+     * 권한: 인증된 고객 본인
+     */
+    @GetMapping
+    public ResponseData<ReservationResponseDto.ReservationListResult> getMyReservations(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) UUID businessId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest request) {
+        UUID currentUserId = getCurrentUserId(request);
+
+        log.info("내 예약 목록 조회 요청: userId={}, status={}, startDate={}, endDate={}",
+                currentUserId, status, startDate, endDate);
+
+        return reservationService.getMyReservations(currentUserId, status, startDate, endDate, businessId, page, size);
+    }
+
 
 
     //    --- util

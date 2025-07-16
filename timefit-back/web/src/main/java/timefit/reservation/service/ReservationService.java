@@ -2,6 +2,9 @@ package timefit.reservation.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.business.entity.Business;
@@ -26,6 +29,8 @@ import timefit.user.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.UUID;
 
 @Slf4j
@@ -89,6 +94,47 @@ public class ReservationService {
         return ResponseData.of(response);
     }
 
+    /**
+     * 내 예약 목록 조회
+     */
+    public ResponseData<ReservationResponseDto.ReservationListResult> getMyReservations(
+            UUID customerId, String status, String startDate, String endDate, UUID businessId, int page, int size) {
+
+        log.info("내 예약 목록 조회 시작: customerId={}, status={}", customerId, status);
+
+        // 1. 페이징 검증
+        validatePagingParameters(page, size);
+
+        // 2. 날짜 필터 파싱
+        LocalDate startLocalDate = parseDate(startDate);
+        LocalDate endLocalDate = parseDate(endDate);
+
+        // 3. 상태 필터 파싱
+        ReservationStatus statusFilter = parseStatus(status);
+
+        // 4. 페이징 및 정렬 설정
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("reservationDate").descending()
+                .and(Sort.by("reservationTime").descending()));
+
+        // 5. 필터 조건으로 예약 조회
+        Page<Reservation> reservationPage = findMyReservationsWithFilters(
+                customerId, statusFilter, startLocalDate, endLocalDate, businessId, pageRequest);
+
+        // 6. 빈 결과 처리
+        if (reservationPage.isEmpty()) {
+            log.info("내 예약 목록 조회 결과 없음: customerId={}", customerId);
+            ReservationResponseDto.ReservationListResult emptyResult = createEmptyReservationListResult(page, size);
+            return ResponseData.of(emptyResult);
+        }
+
+        // 7. 응답 생성
+        ReservationResponseDto.ReservationListResult response =
+                reservationResponseFactory.createReservationListResponse(reservationPage);
+
+        log.info("내 예약 목록 조회 완료: customerId={}, totalElements={}", customerId, reservationPage.getTotalElements());
+
+        return ResponseData.of(response);
+    }
 
 
     //    --- util
@@ -183,5 +229,55 @@ public class ReservationService {
         String dateStr = reservation.getReservationDate().toString().replace("-", "");
         long sequence = reservationRepository.countByReservationDate(reservation.getReservationDate()) + 1;
         return String.format("RES-%s-%03d", dateStr, sequence);
+    }
+
+    //  ---  page util
+
+    /**
+     * 필터 조건으로 내 예약 조회
+     */
+    private Page<Reservation> findMyReservationsWithFilters(UUID customerId, ReservationStatus status,
+                                                            LocalDate startDate, LocalDate endDate, UUID businessId,
+                                                            PageRequest pageRequest) {
+        // Custom Repository 메서드 호출
+        return reservationRepositoryCustom.findMyReservationsWithFilters(
+                customerId, status, startDate, endDate, businessId, pageRequest);
+    }
+
+    /**
+     * 날짜 문자열 파싱
+     */
+    private LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(dateStr);
+        } catch (DateTimeParseException e) {
+            throw new ReservationException(ReservationErrorCode.INVALID_DATE_FORMAT);
+        }
+    }
+
+    /**
+     * 상태 문자열 파싱
+     */
+    private ReservationStatus parseStatus(String statusStr) {
+        if (statusStr == null || statusStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return ReservationStatus.valueOf(statusStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ReservationException(ReservationErrorCode.INVALID_STATUS);
+        }
+    }
+
+    /**
+     * 빈 예약 목록 결과 생성
+     */
+    private ReservationResponseDto.ReservationListResult createEmptyReservationListResult(int page, int size) {
+        ReservationResponseDto.PaginationInfo pagination = ReservationResponseDto.PaginationInfo.of(
+                page, 0, 0L, size, false, false);
+        return ReservationResponseDto.ReservationListResult.of(Collections.emptyList(), pagination);
     }
 }
