@@ -187,6 +187,49 @@ public class ReservationResponseDto {
     }
 
     /**
+     * 예약 세부 정보
+     */
+    @Getter
+    public static class ReservationDetailWithHistory {
+        private final UUID reservationId;
+        private final String reservationNumber;
+        private final ReservationStatus status;
+        private final BusinessInfo businessInfo;
+        private final ReservationDetails reservationDetails;
+        private final CustomerInfo customerInfo;
+        private final Boolean canModify;
+        private final Boolean canCancel;
+        private final LocalDateTime cancelDeadline;
+        private final LocalDateTime createdAt;
+        private final LocalDateTime updatedAt;
+
+        private ReservationDetailWithHistory(UUID reservationId, String reservationNumber, ReservationStatus status,
+                                                BusinessInfo businessInfo, ReservationDetails reservationDetails,
+                                                CustomerInfo customerInfo, Boolean canModify, Boolean canCancel,
+                                                LocalDateTime cancelDeadline, LocalDateTime createdAt, LocalDateTime updatedAt) {
+            this.reservationId = reservationId;
+            this.reservationNumber = reservationNumber;
+            this.status = status;
+            this.businessInfo = businessInfo;
+            this.reservationDetails = reservationDetails;
+            this.customerInfo = customerInfo;
+            this.canModify = canModify;
+            this.canCancel = canCancel;
+            this.cancelDeadline = cancelDeadline;
+            this.createdAt = createdAt;
+            this.updatedAt = updatedAt;
+        }
+
+        public static ReservationDetailWithHistory of(UUID reservationId, String reservationNumber, ReservationStatus status,
+                                                        BusinessInfo businessInfo, ReservationDetails reservationDetails,
+                                                        CustomerInfo customerInfo, Boolean canModify, Boolean canCancel,
+                                                        LocalDateTime cancelDeadline, LocalDateTime createdAt, LocalDateTime updatedAt) {
+            return new ReservationDetailWithHistory(reservationId, reservationNumber, status, businessInfo,
+                    reservationDetails, customerInfo, canModify, canCancel, cancelDeadline, createdAt, updatedAt);
+        }
+    }
+
+    /**
      * 업체 요약 정보
      */
     @Getter
