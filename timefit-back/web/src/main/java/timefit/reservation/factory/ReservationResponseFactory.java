@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import timefit.reservation.dto.ReservationResponseDto;
 import timefit.reservation.entity.Reservation;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -109,6 +110,56 @@ public class ReservationResponseFactory {
                 reservation.getStatus(),
                 businessInfo,
                 reservationDetails,
+                reservation.getCreatedAt(),
+                reservation.getUpdatedAt()
+        );
+    }
+
+    /**
+     * 예약 상세 정보 응답 생성
+     */
+    public ReservationResponseDto.ReservationDetailWithHistory createReservationDetailWithHistoryResponse(
+            Reservation reservation, boolean canModify, boolean canCancel, LocalDateTime cancelDeadline) {
+
+        // 업체 정보 생성 (상세 조회에서는 더 많은 정보 포함)
+        ReservationResponseDto.BusinessInfo businessInfo = ReservationResponseDto.BusinessInfo.of(
+                reservation.getBusiness().getId(),
+                reservation.getBusiness().getBusinessName(),
+                reservation.getBusiness().getAddress(),
+                reservation.getBusiness().getContactPhone()
+        );
+
+        // 선택된 옵션 정보 생성 (향후 확장용)
+        List<ReservationResponseDto.SelectedOptionInfo> selectedOptions = List.of();
+        // TODO: 실제 선택된 옵션 정보를 reservation에서 조회하여 변환
+
+        // 예약 세부 정보 생성
+        ReservationResponseDto.ReservationDetails reservationDetails = ReservationResponseDto.ReservationDetails.of(
+                reservation.getReservationDate(),
+                reservation.getReservationTime(),
+                reservation.getDurationMinutes(),
+                selectedOptions,
+                reservation.getTotalPrice(),
+                reservation.getNotes()
+        );
+
+        // 고객 정보 생성
+        ReservationResponseDto.CustomerInfo customerInfo = ReservationResponseDto.CustomerInfo.of(
+                reservation.getCustomer().getId(),
+                reservation.getCustomerName(),
+                reservation.getCustomerPhone()
+        );
+
+        return ReservationResponseDto.ReservationDetailWithHistory.of(
+                reservation.getId(),
+                reservation.getReservationNumber(),
+                reservation.getStatus(),
+                businessInfo,
+                reservationDetails,
+                customerInfo,
+                canModify,
+                canCancel,
+                cancelDeadline,
                 reservation.getCreatedAt(),
                 reservation.getUpdatedAt()
         );
