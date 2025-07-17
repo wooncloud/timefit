@@ -63,6 +63,20 @@ public class ReservationController {
         return reservationService.getMyReservations(currentUserId, status, startDate, endDate, businessId, page, size);
     }
 
+    /**
+     * 예약 상세 조회
+     * 권한: 예약 소유자 본인
+     */
+    @GetMapping("/{reservationId}")
+    public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> getReservationDetail(
+            @PathVariable UUID reservationId,
+            HttpServletRequest request) {
+        UUID currentUserId = getCurrentUserId(request);
+
+        log.info("예약 상세 조회 요청: reservationId={}, userId={}", reservationId, currentUserId);
+
+        return reservationService.getReservationDetail(reservationId, currentUserId);
+    }
 
 
     //    --- util

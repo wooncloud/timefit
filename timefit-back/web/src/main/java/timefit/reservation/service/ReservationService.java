@@ -137,6 +137,33 @@ public class ReservationService {
     }
 
 
+    /**
+     * 예약 상세 조회
+     */
+    public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> getReservationDetail(
+            UUID reservationId, UUID customerId) {
+
+        log.info("예약 상세 조회 시작: reservationId={}, customerId={}", reservationId, customerId);
+
+        // 1. 예약 존재 및 소유권 확인
+        Reservation reservation = validateReservationOwnership(reservationId, customerId);
+
+        // 2. 예약 수정/취소 가능성 체크
+        boolean canModify = checkCanModify(reservation);
+        boolean canCancel = checkCanCancel(reservation);
+        LocalDateTime cancelDeadline = calculateCancelDeadline(reservation);
+
+        // 3. 응답 생성
+        ReservationResponseDto.ReservationDetailWithHistory response =
+                reservationResponseFactory.createReservationDetailWithHistoryResponse(
+                        reservation, canModify, canCancel, cancelDeadline);
+
+        log.info("예약 상세 조회 완료: reservationId={}, status={}", reservationId, reservation.getStatus());
+
+        return ResponseData.of(response);
+    }
+
+
     //    --- util
 
 
@@ -151,20 +178,20 @@ public class ReservationService {
     }
 
     private ReservationTimeSlot validateSlotAvailability(UUID slotId) {
-        ReservationTimeSlot slot = reservationTimeSlotRepository.findById(slotId)
-                .orElseThrow(() -> new ReservationException(ReservationErrorCode.SLOT_NOT_FOUND));
+//        ReservationTimeSlot slot = reservationTimeSlotRepository.findById(slotId)
+//                .orElseThrow(() -> new ReservationException(ReservationErrorCode.SLOT_NOT_FOUND));
 
-        if (!slot.getIsAvailable()) {
-            throw new ReservationException(ReservationErrorCode.SLOT_NOT_AVAILABLE);
-        }
+//        if (!slot.getIsAvailable()) {
+//            throw new ReservationException(ReservationErrorCode.SLOT_NOT_AVAILABLE);
+//        }
 
-        // 슬롯 용량 확인
-        int activeReservations = reservationRepositoryCustom.countActiveReservationsBySlot(slotId);
-        if (activeReservations >= slot.getCapacity()) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_ALREADY_EXISTS);
-        }
+//        // 슬롯 용량 확인
+//        int activeReservations = reservationRepositoryCustom.countActiveReservationsBySlot(slotId);
+//        if (activeReservations >= slot.getCapacity()) {
+//            throw new ReservationException(ReservationErrorCode.RESERVATION_ALREADY_EXISTS);
+//        }
 
-        return slot;
+        return null;
     }
 
     private void validateReservationPolicies(ReservationRequestDto.CreateReservation request, Business business) {
@@ -279,5 +306,51 @@ public class ReservationService {
         ReservationResponseDto.PaginationInfo pagination = ReservationResponseDto.PaginationInfo.of(
                 page, 0, 0L, size, false, false);
         return ReservationResponseDto.ReservationListResult.of(Collections.emptyList(), pagination);
+    }
+
+    /**
+     * 예약 수정 가능 여부 체크
+     */
+    private boolean checkCanModify(Reservation reservation) {
+        // 1. 상태 체크
+        if (reservation.getStatus() != ReservationStatus.PENDING &&
+                reservation.getStatus() != ReservationStatus.CONFIRMED) {
+            return false;
+        }
+
+        // 2. 데드라인 체크 (24시간 전)
+        LocalDateTime deadline = reservation.getReservationDate()
+                .atTime(reservation.getReservationTime())
+                .minusHours(24);
+
+        return LocalDateTime.now().isBefore(deadline);
+    }
+
+    /**
+     * 예약 취소 가능 여부 체크
+     */
+    private boolean checkCanCancel(Reservation reservation) {
+        // 1. 상태 체크
+        if (reservation.getStatus() == ReservationStatus.CANCELLED ||
+                reservation.getStatus() == ReservationStatus.COMPLETED ||
+                reservation.getStatus() == ReservationStatus.NO_SHOW) {
+            return false;
+        }
+
+        // 2. 데드라인 체크 (24시간 전)
+        LocalDateTime deadline = reservation.getReservationDate()
+                .atTime(reservation.getReservationTime())
+                .minusHours(24);
+
+        return LocalDateTime.now().isBefore(deadline);
+    }
+
+    /**
+     * 취소 데드라인 계산
+     */
+    private LocalDateTime calculateCancelDeadline(Reservation reservation) {
+        return reservation.getReservationDate()
+                .atTime(reservation.getReservationTime())
+                .minusHours(24);
     }
 }
