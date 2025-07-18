@@ -18,6 +18,10 @@ public enum DayOfWeek {
         this.value = value;
     }
 
+    public boolean matches(java.time.DayOfWeek standardDay) {
+        return this.value == standardDay.getValue() - 1;
+    }
+
     public static DayOfWeek fromValue(int value) {
         for (DayOfWeek day : values()) {
             if (day.value == value) {

@@ -15,18 +15,14 @@ public enum ReservationErrorCode {
     RESERVATION_NOT_CANCELLABLE("현재 예약 상태에서는 취소할 수 없습니다", HttpStatus.BAD_REQUEST),
 
     // 예약 시간/조건 관련
-    RESERVATION_SLOT_UNAVAILABLE("선택한 시간대는 예약할 수 없습니다", HttpStatus.BAD_REQUEST),
-    RESERVATION_CAPACITY_EXCEEDED("예약 가능 인원을 초과했습니다", HttpStatus.BAD_REQUEST),
+    RESERVATION_TIME_UNAVAILABLE("선택한 시간대는 예약할 수 없습니다", HttpStatus.BAD_REQUEST),
+    RESERVATION_SLOT_UNAVAILABLE("영업 시간 내에서만 예약할 수 있습니다",  HttpStatus.BAD_REQUEST),
+    RESERVATION_CAPACITY_EXCEEDED("예약 인원을 다시 확인해주세요", HttpStatus.BAD_REQUEST),
     RESERVATION_DEADLINE_PASSED("예약 변경/취소 기한이 지났습니다", HttpStatus.BAD_REQUEST),
     RESERVATION_PAST_DATE("과거 날짜는 예약할 수 없습니다", HttpStatus.BAD_REQUEST),
 
     MODIFICATION_DEADLINE_PASSED("예약 수정 가능 시간이 지났습니다", HttpStatus.BAD_REQUEST),
     CANCELLATION_DEADLINE_PASSED("예약 취소 가능 시간이 지났습니다", HttpStatus.BAD_REQUEST),
-
-    // 슬롯 관련
-    SLOT_NOT_FOUND("예약 슬롯을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
-    SLOT_NOT_AVAILABLE("해당 시간대는 예약할 수 없습니다", HttpStatus.BAD_REQUEST),
-    SLOT_ALREADY_BOOKED("이미 예약된 시간대입니다", HttpStatus.CONFLICT),
 
     // 권한 관련
     NOT_BUSINESS_MEMBER("업체 구성원만 접근할 수 있습니다", HttpStatus.FORBIDDEN),

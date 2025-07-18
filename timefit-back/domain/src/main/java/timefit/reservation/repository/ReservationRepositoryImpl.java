@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Repository;
 import timefit.reservation.entity.QReservation;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Repository
 @RequiredArgsConstructor
 public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
 

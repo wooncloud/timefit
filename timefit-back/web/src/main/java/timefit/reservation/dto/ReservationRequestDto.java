@@ -1,7 +1,7 @@
 package timefit.reservation.dto;
 
 import lombok.Getter;
-import timefit.reservation.entity.ReservationStatus;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -16,7 +16,7 @@ public class ReservationRequestDto {
     @Getter
     public static class CreateReservation {
         private final UUID businessId;
-        private final UUID availableSlotId;
+        private final UUID customerId;
         private final LocalDate reservationDate;
         private final LocalTime reservationTime;
         private final Integer durationMinutes;
@@ -25,11 +25,11 @@ public class ReservationRequestDto {
         private final String customerName;
         private final String customerPhone;
 
-        private CreateReservation(UUID businessId, UUID availableSlotId, LocalDate reservationDate,
+        private CreateReservation(UUID businessId, UUID customerId, LocalDate reservationDate,
                                     LocalTime reservationTime, Integer durationMinutes, List<SelectedOption> selectedOptions,
                                     String notes, String customerName, String customerPhone) {
             this.businessId = businessId;
-            this.availableSlotId = availableSlotId;
+            this.customerId = customerId;
             this.reservationDate = reservationDate;
             this.reservationTime = reservationTime;
             this.durationMinutes = durationMinutes;
@@ -39,10 +39,10 @@ public class ReservationRequestDto {
             this.customerPhone = customerPhone;
         }
 
-        public static CreateReservation of(UUID businessId, UUID availableSlotId, LocalDate reservationDate,
+        public static CreateReservation of(UUID businessId, UUID customerId, LocalDate reservationDate,
                                             LocalTime reservationTime, Integer durationMinutes, List<SelectedOption> selectedOptions,
                                             String notes, String customerName, String customerPhone) {
-            return new CreateReservation(businessId, availableSlotId, reservationDate, reservationTime,
+            return new CreateReservation(businessId, customerId, reservationDate, reservationTime,
                     durationMinutes, selectedOptions, notes, customerName, customerPhone);
         }
 
@@ -62,7 +62,7 @@ public class ReservationRequestDto {
             if (other == null || getClass() != other.getClass()) return false;
             CreateReservation that = (CreateReservation) other;
             return Objects.equals(businessId, that.businessId) &&
-                    Objects.equals(availableSlotId, that.availableSlotId) &&
+                    Objects.equals(customerId, that.customerId) &&
                     Objects.equals(reservationDate, that.reservationDate) &&
                     Objects.equals(reservationTime, that.reservationTime) &&
                     Objects.equals(durationMinutes, that.durationMinutes) &&
@@ -74,7 +74,7 @@ public class ReservationRequestDto {
 
         @Override
         public int hashCode() {
-            return Objects.hash(businessId, availableSlotId, reservationDate, reservationTime,
+            return Objects.hash(businessId, customerId, reservationDate, reservationTime,
                     durationMinutes, selectedOptions, notes, customerName, customerPhone);
         }
     }

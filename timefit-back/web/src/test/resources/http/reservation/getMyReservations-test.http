@@ -139,7 +139,7 @@ x-client-token: {{customerToken}}
 {
   "businessId": "{{businessId1}}",
   "availableSlotId": "11111111-1111-1111-1111-111111111111",
-  "reservationDate": "2025-01-15",
+  "reservationDate": "2025-08-15",
   "reservationTime": "14:00",
   "durationMinutes": 60,
   "totalPrice": 50000,
@@ -156,7 +156,7 @@ x-client-token: {{customerToken}}
 {
   "businessId": "{{businessId1}}",
   "availableSlotId": "22222222-2222-2222-2222-222222222222",
-  "reservationDate": "2025-02-10",
+  "reservationDate": "2025-09-10",
   "reservationTime": "10:00",
   "durationMinutes": 90,
   "totalPrice": 70000,
@@ -173,7 +173,7 @@ x-client-token: {{customerToken}}
 {
   "businessId": "{{businessId2}}",
   "availableSlotId": "33333333-3333-3333-3333-333333333333",
-  "reservationDate": "2025-01-20",
+  "reservationDate": "2025-10-20",
   "reservationTime": "16:00",
   "durationMinutes": 120,
   "totalPrice": 30000,
@@ -190,7 +190,7 @@ x-client-token: {{customerToken}}
 {
   "businessId": "{{businessId2}}",
   "availableSlotId": "44444444-4444-4444-4444-444444444444",
-  "reservationDate": "2025-03-05",
+  "reservationDate": "2025-10-05",
   "reservationTime": "18:00",
   "durationMinutes": 60,
   "totalPrice": 25000,
@@ -207,7 +207,7 @@ x-client-token: {{customerToken}}
 {
   "businessId": "{{businessId3}}",
   "availableSlotId": "55555555-5555-5555-5555-555555555555",
-  "reservationDate": "2025-02-15",
+  "reservationDate": "2025-10-15",
   "reservationTime": "11:00",
   "durationMinutes": 150,
   "totalPrice": 80000,
@@ -224,7 +224,7 @@ x-client-token: {{customerToken}}
 {
   "businessId": "{{businessId3}}",
   "availableSlotId": "66666666-6666-6666-6666-666666666666",
-  "reservationDate": "2025-04-10",
+  "reservationDate": "2025-11-10",
   "reservationTime": "13:00",
   "durationMinutes": 180,
   "totalPrice": 120000,
@@ -559,7 +559,7 @@ x-client-token: {{customerToken}}
 
 > {%
     console.log("정렬 확인 테스트 응답:", JSON.stringify(response.body, null, 2));
-
+    console.log(response.body.data.reservations);
     if (response.body.data && response.body.data.reservations) {
         console.log("\n=== 예약 날짜 정렬 순서 확인 ===");
         response.body.data.reservations.forEach((reservation, index) => {

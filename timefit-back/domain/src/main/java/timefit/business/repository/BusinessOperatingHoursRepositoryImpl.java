@@ -2,6 +2,7 @@ package timefit.business.repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 import timefit.business.entity.BusinessOperatingHours;
 import timefit.business.entity.DayOfWeek;
 import timefit.business.entity.QBusinessOperatingHours;
@@ -9,6 +10,7 @@ import timefit.business.entity.QBusinessOperatingHours;
 import java.util.List;
 import java.util.UUID;
 
+@Repository
 @RequiredArgsConstructor
 public class BusinessOperatingHoursRepositoryImpl implements BusinessOperatingHoursRepositoryCustom {
 
