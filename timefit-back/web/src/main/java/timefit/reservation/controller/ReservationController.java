@@ -95,6 +95,26 @@ public class ReservationController {
         return reservationService.updateReservation(reservationId, currentUserId, request);
     }
 
+    /**
+     * 예약 취소
+     * 권한: 예약 소유자 본인
+     */
+    @DeleteMapping("/{reservationId}")
+    public ResponseData<ReservationResponseDto.ReservationCancelResult> cancelReservation(
+            @PathVariable UUID reservationId,
+            @Valid @RequestBody ReservationRequestDto.CancelReservation request,
+            HttpServletRequest httpRequest) {
+
+        UUID currentUserId = getCurrentUserId(httpRequest);
+
+        log.info("예약 취소 요청: userId={}, reservationId={}, reason={}",
+                currentUserId, reservationId, request.getReason());
+
+        return reservationService.cancelReservation(reservationId, currentUserId, request);
+    }
+
+
+
 
     //    --- util
 

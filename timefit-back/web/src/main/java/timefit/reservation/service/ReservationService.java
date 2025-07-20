@@ -20,6 +20,7 @@ public class ReservationService {
     private final ReservationQueryService queryService;
     private final ReservationDetailService detailService;
     private final ReservationUpdateService updateService;
+    private final ReservationCancelService reservationCancelService;
 
 
     /**
@@ -55,4 +56,14 @@ public class ReservationService {
             UUID reservationId, UUID customerId, ReservationRequestDto.UpdateReservation request) {
         return updateService.updateReservation(reservationId, customerId, request);
     }
+
+    /**
+     * 예약 취소
+     */
+    public ResponseData<ReservationResponseDto.ReservationCancelResult> cancelReservation(
+            UUID reservationId, UUID customerId, ReservationRequestDto.CancelReservation request) {
+
+        return reservationCancelService.cancelReservation(reservationId, customerId, request);
+    }
+
 }
