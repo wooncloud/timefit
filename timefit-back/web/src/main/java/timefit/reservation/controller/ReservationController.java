@@ -36,8 +36,8 @@ public class ReservationController {
             HttpServletRequest httpRequest) {
         UUID currentUserId = getCurrentUserId(httpRequest);
 
-        log.info("예약 신청 요청: userId={}, businessId={}, date={}, time={}",
-                currentUserId, request.getBusinessId(), request.getReservationDate(), request.getReservationTime());
+        log.info("예약 신청 요청: userId={}, businessId={}, availableSlotId={}",
+                currentUserId, request.getBusinessId(), request.getAvailableSlotId());
 
         return reservationService.createReservation(request, currentUserId);
     }
@@ -76,6 +76,23 @@ public class ReservationController {
         log.info("예약 상세 조회 요청: reservationId={}, userId={}", reservationId, currentUserId);
 
         return reservationService.getReservationDetail(reservationId, currentUserId);
+    }
+
+    /**
+     * 예약 수정
+     * 권한: 예약 소유자 본인
+     */
+    @PutMapping("/{reservationId}")
+    public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> updateReservation(
+            @PathVariable UUID reservationId,
+            @Valid @RequestBody ReservationRequestDto.UpdateReservation request,
+            HttpServletRequest httpRequest) {
+        UUID currentUserId = getCurrentUserId(httpRequest);
+
+        log.info("예약 수정 요청: reservationId={}, userId={}, newDate={}, newTime={}",
+                reservationId, currentUserId, request.getReservationDate(), request.getReservationTime());
+
+        return reservationService.updateReservation(reservationId, currentUserId, request);
     }
 
 

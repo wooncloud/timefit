@@ -19,6 +19,8 @@ public class ReservationService {
     private final ReservationCreateService createService;
     private final ReservationQueryService queryService;
     private final ReservationDetailService detailService;
+    private final ReservationUpdateService updateService;
+
 
     /**
      * 예약 신청
@@ -43,5 +45,14 @@ public class ReservationService {
     public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> getReservationDetail(
             UUID reservationId, UUID customerId) {
         return detailService.getReservationDetail(reservationId, customerId);
+    }
+
+    /**
+     * 예약 수정
+     */
+    @Transactional
+    public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> updateReservation(
+            UUID reservationId, UUID customerId, ReservationRequestDto.UpdateReservation request) {
+        return updateService.updateReservation(reservationId, customerId, request);
     }
 }
