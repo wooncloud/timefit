@@ -3,11 +3,14 @@ package timefit.reservation.repository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import timefit.reservation.entity.QReservationTimeSlot;
+import timefit.reservation.entity.ReservationStatus;
 import timefit.reservation.entity.ReservationTimeSlot;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+
+import static timefit.reservation.entity.QReservation.reservation;
 
 @RequiredArgsConstructor
 public class ReservationTimeSlotRepositoryImpl implements ReservationTimeSlotRepositoryCustom {
@@ -70,4 +73,34 @@ public class ReservationTimeSlotRepositoryImpl implements ReservationTimeSlotRep
                 )
                 .fetch();
     }
+
+    @Override
+    public Integer countActiveReservationsBySlot(UUID slotId) {
+        return Math.toIntExact(queryFactory
+                .select(reservation.count())
+                .from(reservation)
+                .where(
+                        reservation.slot.id.eq(slotId)
+                                .and(reservation.status.notIn(
+                                        ReservationStatus.CANCELLED,
+                                        ReservationStatus.NO_SHOW
+                                ))
+                )
+                .fetchOne());
+    }
+
+    @Override
+    public List<ReservationTimeSlot> findSlotsWithBookingCountByBusinessAndDate(UUID businessId, LocalDate date) {
+        return queryFactory
+                .selectFrom(reservationTimeSlot)
+                .leftJoin(reservationTimeSlot.business).fetchJoin()
+                .where(
+                        reservationTimeSlot.business.id.eq(businessId)
+                                .and(reservationTimeSlot.slotDate.eq(date))
+                )
+                .orderBy(reservationTimeSlot.startTime.asc())
+                .fetch();
+    }
+
+
 }
