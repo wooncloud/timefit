@@ -82,6 +82,7 @@ public class Reservation extends BaseEntity {
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
 
+    // 정적 팩토리 메써드
     public static Reservation createReservation(User customer, Business business, ReservationTimeSlot slot,
                                                 LocalDate reservationDate, LocalTime reservationTime,
                                                 Integer durationMinutes, Integer totalPrice,
@@ -94,14 +95,26 @@ public class Reservation extends BaseEntity {
         reservation.reservationTime = reservationTime;
         reservation.durationMinutes = durationMinutes;
         reservation.totalPrice = totalPrice;
+        reservation.status = ReservationStatus.PENDING;
         reservation.customerName = customerName;
         reservation.customerPhone = customerPhone;
         reservation.notes = notes;
-        reservation.status = ReservationStatus.PENDING;
         return reservation;
     }
 
     public void updateReservationNumber(String reservationNumber) {
         this.reservationNumber = reservationNumber;
     }
+
+    // 예약 날짜/시간 수정
+    public void updateReservationDateTime(LocalDate newDate, LocalTime newTime) {
+        this.reservationDate = newDate;
+        this.reservationTime = newTime;
+    }
+
+    // 예약 메모 수정
+    public void updateNotes(String newNotes) {
+        this.notes = newNotes;
+    }
+
 }

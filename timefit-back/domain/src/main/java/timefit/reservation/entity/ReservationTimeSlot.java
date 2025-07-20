@@ -42,4 +42,57 @@ public class ReservationTimeSlot extends BaseEntity {
 
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable = true;
+
+
+    // 예약 슬롯 생성 (정적 팩터리 메서드)
+    public static ReservationTimeSlot createSlot(Business business, LocalDate slotDate,
+                                                    LocalTime startTime, LocalTime endTime, Integer capacity) {
+        ReservationTimeSlot slot = new ReservationTimeSlot();
+        slot.business = business;
+        slot.slotDate = slotDate;
+        slot.startTime = startTime;
+        slot.endTime = endTime;
+        slot.capacity = capacity != null ? capacity : 1;
+        slot.isAvailable = true;
+        return slot;
+    }
+
+    // 슬롯 시간 수정
+    public void updateTime(LocalTime startTime, LocalTime endTime) {
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
+    // 슬롯 수용 인원 수정
+    public void updateCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
+
+    // 슬롯 예약 가능 여부 수정
+    public void updateAvailability(Boolean isAvailable) {
+        this.isAvailable = isAvailable;
+    }
+
+    // 슬롯 마감 처리 (예약이 다 찬 경우)
+    public void markAsFull() {
+        this.isAvailable = false;
+    }
+
+    // 슬롯 재개방 (예약 취소로 인한 자리 생김)
+    public void reopenIfNeeded(Integer currentBookings) {
+        if (currentBookings < this.capacity) {
+            this.isAvailable = true;
+        }
+    }
+
+    // 슬롯이 예약 가능한지 확인
+    public boolean canAcceptReservation(Integer currentBookings) {
+        return this.isAvailable && currentBookings < this.capacity;
+    }
+
+    // 슬롯 시간이 유효한지 확인
+    public boolean hasValidTime() {
+        return this.startTime != null && this.endTime != null && this.startTime.isBefore(this.endTime);
+    }
+
 }
