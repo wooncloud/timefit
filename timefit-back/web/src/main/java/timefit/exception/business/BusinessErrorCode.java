@@ -11,6 +11,7 @@ public enum BusinessErrorCode {
     BUSINESS_INFO_INCOMPLETE("업체 기본 정보가 완성되지 않았습니다", HttpStatus.BAD_REQUEST),
     BUSINESS_HOURS_INVALID("영업시간 설정이 올바르지 않습니다", HttpStatus.BAD_REQUEST),
     BUSINESS_NOT_ACTIVE("비활성화된 업체입니다", HttpStatus.BAD_REQUEST),
+    BUSINESS_CLOSED("해당 날짜는 영업일이 아닙니다", HttpStatus.BAD_REQUEST),
 
     // 권한 관련
     INSUFFICIENT_PERMISSION("해당 작업을 수행할 권한이 없습니다", HttpStatus.FORBIDDEN),

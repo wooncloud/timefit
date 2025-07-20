@@ -17,21 +17,19 @@ public class ReservationRequestDto {
     public static class CreateReservation {
         private final UUID businessId;
         private final UUID customerId;
-        private final LocalDate reservationDate;
-        private final LocalTime reservationTime;
+        private final UUID availableSlotId;
         private final Integer durationMinutes;
         private final List<SelectedOption> selectedOptions;
         private final String notes;
         private final String customerName;
         private final String customerPhone;
 
-        private CreateReservation(UUID businessId, UUID customerId, LocalDate reservationDate,
-                                    LocalTime reservationTime, Integer durationMinutes, List<SelectedOption> selectedOptions,
+        private CreateReservation(UUID businessId, UUID customerId, UUID availableSlotId,
+                                    Integer durationMinutes, List<SelectedOption> selectedOptions,
                                     String notes, String customerName, String customerPhone) {
             this.businessId = businessId;
             this.customerId = customerId;
-            this.reservationDate = reservationDate;
-            this.reservationTime = reservationTime;
+            this.availableSlotId = availableSlotId;
             this.durationMinutes = durationMinutes;
             this.selectedOptions = selectedOptions;
             this.notes = notes;
@@ -39,11 +37,11 @@ public class ReservationRequestDto {
             this.customerPhone = customerPhone;
         }
 
-        public static CreateReservation of(UUID businessId, UUID customerId, LocalDate reservationDate,
-                                            LocalTime reservationTime, Integer durationMinutes, List<SelectedOption> selectedOptions,
+        public static CreateReservation of(UUID businessId, UUID customerId, UUID availableSlotId,
+                                            Integer durationMinutes, List<SelectedOption> selectedOptions,
                                             String notes, String customerName, String customerPhone) {
-            return new CreateReservation(businessId, customerId, reservationDate, reservationTime,
-                    durationMinutes, selectedOptions, notes, customerName, customerPhone);
+            return new CreateReservation(businessId, customerId, availableSlotId, durationMinutes,
+                    selectedOptions, notes, customerName, customerPhone);
         }
 
         // 총 금액 계산
@@ -63,8 +61,7 @@ public class ReservationRequestDto {
             CreateReservation that = (CreateReservation) other;
             return Objects.equals(businessId, that.businessId) &&
                     Objects.equals(customerId, that.customerId) &&
-                    Objects.equals(reservationDate, that.reservationDate) &&
-                    Objects.equals(reservationTime, that.reservationTime) &&
+                    Objects.equals(availableSlotId, that.availableSlotId) &&
                     Objects.equals(durationMinutes, that.durationMinutes) &&
                     Objects.equals(selectedOptions, that.selectedOptions) &&
                     Objects.equals(notes, that.notes) &&
@@ -74,8 +71,8 @@ public class ReservationRequestDto {
 
         @Override
         public int hashCode() {
-            return Objects.hash(businessId, customerId, reservationDate, reservationTime,
-                    durationMinutes, selectedOptions, notes, customerName, customerPhone);
+            return Objects.hash(businessId, customerId, availableSlotId, durationMinutes,
+                    selectedOptions, notes, customerName, customerPhone);
         }
     }
 
@@ -155,6 +152,44 @@ public class ReservationRequestDto {
         @Override
         public int hashCode() {
             return Objects.hash(status, startDate, endDate, businessId, page, size);
+        }
+    }
+
+    /**
+     * 예약 수정 요청
+     */
+    @Getter
+    public static class UpdateReservation {
+        private final LocalDate reservationDate;
+        private final LocalTime reservationTime;
+        private final String notes;
+        private final String reason;
+
+        private UpdateReservation(LocalDate reservationDate, LocalTime reservationTime, String notes, String reason) {
+            this.reservationDate = reservationDate;
+            this.reservationTime = reservationTime;
+            this.notes = notes;
+            this.reason = reason;
+        }
+
+        public static UpdateReservation of(LocalDate reservationDate, LocalTime reservationTime, String notes, String reason) {
+            return new UpdateReservation(reservationDate, reservationTime, notes, reason);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (other == null || getClass() != other.getClass()) return false;
+            UpdateReservation that = (UpdateReservation) other;
+            return Objects.equals(reservationDate, that.reservationDate) &&
+                    Objects.equals(reservationTime, that.reservationTime) &&
+                    Objects.equals(notes, that.notes) &&
+                    Objects.equals(reason, that.reason);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(reservationDate, reservationTime, notes, reason);
         }
     }
 }

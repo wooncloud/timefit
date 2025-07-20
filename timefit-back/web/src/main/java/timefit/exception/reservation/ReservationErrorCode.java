@@ -17,10 +17,12 @@ public enum ReservationErrorCode {
     // 예약 시간/조건 관련
     RESERVATION_TIME_UNAVAILABLE("선택한 시간대는 예약할 수 없습니다", HttpStatus.BAD_REQUEST),
     RESERVATION_SLOT_UNAVAILABLE("영업 시간 내에서만 예약할 수 있습니다",  HttpStatus.BAD_REQUEST),
+    RESERVATION_BUSINESS_CLOSED("해당 날짜는 영업하지 않습니다", HttpStatus.BAD_REQUEST),
     RESERVATION_CAPACITY_EXCEEDED("예약 인원을 다시 확인해주세요", HttpStatus.BAD_REQUEST),
     RESERVATION_DEADLINE_PASSED("예약 변경/취소 기한이 지났습니다", HttpStatus.BAD_REQUEST),
     RESERVATION_PAST_DATE("과거 날짜는 예약할 수 없습니다", HttpStatus.BAD_REQUEST),
 
+    MODIFICATION_REASON_REQUIRED("예약 수정 사유는 필수입니다", HttpStatus.BAD_REQUEST),
     MODIFICATION_DEADLINE_PASSED("예약 수정 가능 시간이 지났습니다", HttpStatus.BAD_REQUEST),
     CANCELLATION_DEADLINE_PASSED("예약 취소 가능 시간이 지났습니다", HttpStatus.BAD_REQUEST),
 

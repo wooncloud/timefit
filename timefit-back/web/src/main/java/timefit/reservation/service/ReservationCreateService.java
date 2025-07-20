@@ -5,32 +5,29 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.business.entity.Business;
-import timefit.business.entity.BusinessOperatingHours;
-import timefit.business.repository.BusinessOperatingHoursRepository;
 import timefit.business.repository.BusinessRepository;
 import timefit.common.ResponseData;
 import timefit.exception.business.BusinessErrorCode;
 import timefit.exception.business.BusinessException;
 import timefit.exception.reservation.ReservationErrorCode;
 import timefit.exception.reservation.ReservationException;
+import timefit.exception.schedule.ScheduleErrorCode;
+import timefit.exception.schedule.ScheduleException;
 import timefit.reservation.dto.ReservationRequestDto;
 import timefit.reservation.dto.ReservationResponseDto;
 import timefit.reservation.entity.Reservation;
+import timefit.reservation.entity.ReservationTimeSlot;
 import timefit.reservation.factory.ReservationResponseFactory;
 import timefit.reservation.repository.ReservationRepository;
-import timefit.reservation.repository.ReservationRepositoryCustom;
+import timefit.reservation.repository.ReservationTimeSlotRepository;
 import timefit.reservation.service.util.ReservationNumberUtil;
 import timefit.user.entity.User;
 import timefit.user.repository.UserRepository;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.List;
 import java.util.UUID;
 
 /**
- * 예약 생성 전담 서비스 (단순화)
+ * 예약 생성 전담 서비스 (슬롯 기반)
  */
 @Slf4j
 @Service
@@ -40,38 +37,44 @@ public class ReservationCreateService {
 
     private final UserRepository userRepository;
     private final BusinessRepository businessRepository;
-    private final BusinessOperatingHoursRepository businessOperatingHoursRepository;
+    private final ReservationTimeSlotRepository reservationTimeSlotRepository;
     private final ReservationRepository reservationRepository;
-    private final ReservationRepositoryCustom reservationRepositoryCustom;
     private final ReservationResponseFactory reservationResponseFactory;
     private final ReservationNumberUtil numberUtil;
 
     /**
-     * 예약 생성
+     * 예약 생성 (슬롯 기반)
      */
     @Transactional
     public ResponseData<ReservationResponseDto.ReservationDetail> createReservation(
             ReservationRequestDto.CreateReservation request, UUID customerId) {
 
-        log.info("예약 신청 시작: customerId={}, businessId={}, date={}, time={}",
-                customerId, request.getBusinessId(), request.getReservationDate(), request.getReservationTime());
+        log.info("예약 신청 시작: customerId={}, businessId={}, slotId={}",
+                customerId, request.getBusinessId(), request.getAvailableSlotId());
 
         // 1. 기본 존재 검증
-        User customer = this.validateCustomerExists(customerId);
-        Business business = this.validateBusinessExists(request.getBusinessId());
+        User customer = validateCustomerExists(customerId);
+        Business business = validateBusinessExists(request.getBusinessId());
+        ReservationTimeSlot slot = validateAvailableSlotExists(request.getAvailableSlotId());
 
-        // 2. 예약 가능성 검증 (핵심만)
-        this.validateReservationAvailability(request, business.getId());
+        // 2. 슬롯과 업체 매칭 검증
+        validateSlotBelongsToBusiness(slot, business.getId());
 
-        // 3. 예약 생성
-        Reservation reservation = this.createNewReservation(request, customer, business);
+        // 3. 예약 가능성 검증
+        validateReservationAvailability(slot);
+
+        // 4. 예약 생성
+        Reservation reservation = createNewReservation(request, customer, business, slot);
         Reservation savedReservation = reservationRepository.save(reservation);
 
-        // 4. 예약 번호 생성 및 할당
+        // 5. 예약 번호 생성 및 할당
         String reservationNumber = numberUtil.generateReservationNumber(savedReservation);
         savedReservation.updateReservationNumber(reservationNumber);
 
-        // 5. 응답 생성
+        // 6. 슬롯 상태 업데이트 (용량 확인)
+        updateSlotAvailabilityIfNeeded(slot);
+
+        // 7. 응답 생성
         ReservationResponseDto.ReservationDetail response =
                 reservationResponseFactory.createReservationDetailResponse(savedReservation);
 
@@ -80,6 +83,8 @@ public class ReservationCreateService {
 
         return ResponseData.of(response);
     }
+
+    // ===== Private =====
 
     /**
      * 고객 존재 검증
@@ -98,74 +103,79 @@ public class ReservationCreateService {
     }
 
     /**
-     * 예약 가능성 검증
+     * 예약 슬롯 존재 검증
      */
-    private void validateReservationAvailability(ReservationRequestDto.CreateReservation request, UUID businessId) {
-        // 1. 과거 날짜 예약 방지
-        if (request.getReservationDate().isBefore(LocalDate.now())) {
+    private ReservationTimeSlot validateAvailableSlotExists(UUID slotId) {
+        return reservationTimeSlotRepository.findById(slotId)
+                .orElseThrow(() -> new ScheduleException(ScheduleErrorCode.AVAILABLE_SLOT_NOT_FOUND));
+    }
+
+    /**
+     * 슬롯이 해당 업체에 속하는지 검증
+     */
+    private void validateSlotBelongsToBusiness(ReservationTimeSlot slot, UUID businessId) {
+        if (!slot.getBusiness().getId().equals(businessId)) {
+            throw new ScheduleException(ScheduleErrorCode.AVAILABLE_SLOT_NOT_FOUND);
+        }
+    }
+
+    /**
+     * 예약 가능성 검증 (슬롯 기반)
+     */
+    private void validateReservationAvailability(ReservationTimeSlot slot) {
+        // 1. 슬롯이 예약 가능한 상태인지 확인
+        if (!slot.getIsAvailable()) {
+            throw new ScheduleException(ScheduleErrorCode.AVAILABLE_SLOT_NOT_AVAILABLE);
+        }
+
+        // 2. 과거 날짜 슬롯인지 확인
+        if (slot.getSlotDate().isBefore(java.time.LocalDate.now())) {
             throw new ReservationException(ReservationErrorCode.RESERVATION_PAST_DATE);
         }
 
-        // 2. 영업시간 확인
-        this.validateBusinessOperatingHours(businessId, request.getReservationDate(), request.getReservationTime());
-
-        // 3. 중복 예약 방지 (기존 repository 활용)
-        this.validateNoDuplicateReservation(request, businessId);
-    }
-
-    /**
-     * 영업시간 확인
-     */
-    private void validateBusinessOperatingHours(UUID businessId, LocalDate reservationDate, LocalTime reservationTime) {
-        DayOfWeek dayOfWeek = reservationDate.getDayOfWeek();
-
-        List<BusinessOperatingHours> operatingHours = businessOperatingHoursRepository
-                .findByBusinessIdOrderByDayOfWeek(businessId);
-
-        BusinessOperatingHours todayHours = operatingHours.stream()
-                .filter(hours -> hours.getDayOfWeek().matches(dayOfWeek))
-                .findFirst()
-                .orElseThrow(() -> new ReservationException(ReservationErrorCode.RESERVATION_TIME_UNAVAILABLE));
-
-        if (todayHours.getIsClosed()) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_TIME_UNAVAILABLE);
+        // 3. 슬롯 용량 확인
+        Integer currentBookings = reservationTimeSlotRepository.countActiveReservationsBySlot(slot.getId());
+        if (!slot.canAcceptReservation(currentBookings)) {
+            throw new ScheduleException(ScheduleErrorCode.AVAILABLE_SLOT_CAPACITY_EXCEEDED);
         }
 
-        if (reservationTime.isBefore(todayHours.getOpenTime()) ||
-                reservationTime.isAfter(todayHours.getCloseTime())) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_SLOT_UNAVAILABLE);
+        // 4. 슬롯 시간 유효성 확인
+        if (!slot.hasValidTime()) {
+            throw new ScheduleException(ScheduleErrorCode.AVAILABLE_SLOT_TIME_FORMAT_INVALID);
         }
     }
 
     /**
-     * 중복 예약 검증
+     * 새 예약 생성
      */
-    private void validateNoDuplicateReservation(ReservationRequestDto.CreateReservation request, UUID businessId) {
-        // 기존 ReservationRepositoryCustom의 메서드 활용
-        List<Reservation> existingReservations = reservationRepositoryCustom
-                .findReservationsByBusinessAndDate(businessId, request.getReservationDate());
-
-        boolean hasConflict = existingReservations.stream()
-                .anyMatch(existing ->
-                        existing.getReservationTime().equals(request.getReservationTime()) &&
-                                existing.getCustomer().getId().equals(request.getCustomerId()) &&
-                                (existing.getStatus() != timefit.reservation.entity.ReservationStatus.CANCELLED)
-                );
-
-        if (hasConflict) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_ALREADY_EXISTS);
-        }
-    }
-
-    // 새 예약 생성
     private Reservation createNewReservation(ReservationRequestDto.CreateReservation request,
-                                                User customer, Business business) {
+                                                User customer, Business business, ReservationTimeSlot slot) {
         return Reservation.createReservation(
-                customer, business, null,
-                request.getReservationDate(), request.getReservationTime(),
-                request.getDurationMinutes(), request.getTotalPrice(),
-                request.getCustomerName(), request.getCustomerPhone(),
+                customer,
+                business,
+                slot,
+                slot.getSlotDate(),
+                slot.getStartTime(),
+                request.getDurationMinutes(),
+                request.getTotalPrice(),
+                request.getCustomerName(),
+                request.getCustomerPhone(),
                 request.getNotes()
         );
+    }
+
+    /**
+     * 슬롯 용량이 다 찬 경우 비활성화
+     */
+    private void updateSlotAvailabilityIfNeeded(ReservationTimeSlot slot) {
+        Integer currentBookings = reservationTimeSlotRepository.countActiveReservationsBySlot(slot.getId());
+
+        // 용량이 다 찬 경우 슬롯을 비활성화
+        if (currentBookings >= slot.getCapacity()) {
+            slot.markAsFull();
+            reservationTimeSlotRepository.save(slot);
+            log.info("슬롯 용량 충족으로 비활성화: slotId={}, capacity={}, currentBookings={}",
+                    slot.getId(), slot.getCapacity(), currentBookings);
+        }
     }
 }
