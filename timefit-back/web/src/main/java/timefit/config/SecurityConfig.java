@@ -43,25 +43,31 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // 경로별 접근 권한 설정 (AuthFilter에 실제 검증 위임)
+
                 .authorizeHttpRequests(auth -> auth
-                        // 공개 API - 인증 불필요
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/validation/**").permitAll()
-
-                        // AuthFilter가 토큰 검증할 API - permitAll (실제 검증은 AuthFilter)
-                        .requestMatchers("/api/business/**").permitAll()
-                        .requestMatchers("/api/reservations/**").permitAll()
-                        .requestMatchers("/api/services/**").permitAll()
-                        .requestMatchers("/api/customers/**").permitAll()
-
-                        // 시스템 API
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-
-                        // 나머지 요청은 인증 필요 (실제로는 AuthFilter 에서 처리)
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll() // 모든 요청 허용
                 )
+
+
+//                .authorizeHttpRequests(auth -> auth
+//                        // 공개 API - 인증 불필요
+//                        .requestMatchers("/api/auth/**").permitAll()
+//                        .requestMatchers("/api/validation/**").permitAll()
+//
+//                        // AuthFilter가 토큰 검증할 API - permitAll (실제 검증은 AuthFilter)
+//                        .requestMatchers("/api/business/**").permitAll()
+//                        .requestMatchers("/api/reservations/**").permitAll()
+//                        .requestMatchers("/api/services/**").permitAll()
+//                        .requestMatchers("/api/customers/**").permitAll()
+//
+//                        // 시스템 API
+//                        .requestMatchers("/actuator/**").permitAll()
+//                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+//                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+//
+//                        // 나머지 요청은 인증 필요 (실제로는 AuthFilter 에서 처리)
+//                        .anyRequest().authenticated()
+//                )
 
                 // AuthFilter를 UsernamePasswordAuthenticationFilter 이전에 추가
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);

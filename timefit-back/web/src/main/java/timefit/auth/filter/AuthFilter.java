@@ -39,10 +39,35 @@ public class AuthFilter extends OncePerRequestFilter {
         log.debug("AuthFilter 처리: {} {}", method, requestURI);
 
         try {
-            // 토큰 검증이 필요한 경로인지 확인
-            if (requiresAuth(requestURI)) {
-                validateTokenAndSetUserId(request);
+
+//            ---------------------
+
+            // ========== 개발용 임시 설정: 모든 요청 허용 ==========
+            // 개발 단계에서는 인증 때문에 막히는 것보다 기능 개발에 집중하기 위해
+            // 모든 API 요청을 허용하도록 설정
+            // 배포 전에 아래 주석을 해제하고 이 부분은 주석 처리할 것
+
+            // 헤더에서 토큰 추출해서 있으면 사용, 없으면 더미 사용자 설정
+            String token = extractToken(request);
+            if (StringUtils.hasText(token) && authTokenService.isValidToken(token)) {
+                UUID userId = authTokenService.getUserIdFromToken(token);
+                request.setAttribute("userId", userId);
+                request.setAttribute("token", token);
+                log.debug("토큰 사용: userId={}", userId);
+            } else {
+                // 더미 사용자 ID 설정 (개발용)
+                UUID dummyUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                request.setAttribute("userId", dummyUserId);
+                request.setAttribute("token", "dev-dummy-token");
+                log.debug("더미 사용자 설정: userId={}", dummyUserId);
             }
+
+//            ---------------------
+
+            // 토큰 검증이 필요한 경로인지 확인
+            // if (requiresAuth(requestURI)) {
+            //     validateTokenAndSetUserId(request);
+            // }
 
         } catch (AuthException e) {
             log.warn("인증 실패: {}, URI: {}", e.getMessage(), requestURI);
