@@ -117,4 +117,18 @@ public class Reservation extends BaseEntity {
         this.notes = newNotes;
     }
 
+    // 예약 취소
+    public void cancelReservation(String reason) {
+        if (this.status == ReservationStatus.CANCELLED) {
+            throw new IllegalStateException("이미 취소된 예약입니다");
+        }
+
+        if (this.status == ReservationStatus.COMPLETED || this.status == ReservationStatus.NO_SHOW) {
+            throw new IllegalStateException("완료되거나 노쇼 처리된 예약은 취소할 수 없습니다");
+        }
+
+        this.status = ReservationStatus.CANCELLED;
+        this.notes = (this.notes != null ? this.notes + "\n" : "") + "[취소사유] " + reason;
+    }
+
 }
