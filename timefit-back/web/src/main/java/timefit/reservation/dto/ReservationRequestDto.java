@@ -192,4 +192,34 @@ public class ReservationRequestDto {
             return Objects.hash(reservationDate, reservationTime, notes, reason);
         }
     }
+
+    /**
+     * 예약 취소 요청
+     */
+    @Getter
+    public static class CancelReservation {
+        private final String reason;
+
+        private CancelReservation(String reason) {
+            this.reason = reason;
+        }
+
+        public static CancelReservation of(String reason) {
+            return new CancelReservation(reason);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (other == null || getClass() != other.getClass()) return false;
+            CancelReservation that = (CancelReservation) other;
+            return Objects.equals(reason, that.reason);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(reason);
+        }
+    }
+
 }

@@ -302,4 +302,31 @@ public class ReservationResponseDto {
             return new PaginationInfo(currentPage, totalPages, totalElements, size, hasNext, hasPrevious);
         }
     }
+
+    /**
+     * 예약 취소 응답
+     */
+    @Getter
+    public static class ReservationCancelResult {
+        private final UUID reservationId;
+        private final ReservationStatus previousStatus;
+        private final ReservationStatus currentStatus;
+        private final String reason;
+        private final LocalDateTime cancelledAt;
+
+        private ReservationCancelResult(UUID reservationId, ReservationStatus previousStatus,
+                                        ReservationStatus currentStatus, String reason, LocalDateTime cancelledAt) {
+            this.reservationId = reservationId;
+            this.previousStatus = previousStatus;
+            this.currentStatus = currentStatus;
+            this.reason = reason;
+            this.cancelledAt = cancelledAt;
+        }
+
+        public static ReservationCancelResult of(UUID reservationId, ReservationStatus previousStatus,
+                                                    ReservationStatus currentStatus, String reason, LocalDateTime cancelledAt) {
+            return new ReservationCancelResult(reservationId, previousStatus, currentStatus, reason, cancelledAt);
+        }
+    }
+
 }
