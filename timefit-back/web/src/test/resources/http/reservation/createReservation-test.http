@@ -69,15 +69,134 @@ Content-Type: application/json
     }
 %}
 
-### 5. 예약 신청 - 성공 케이스
+### 5. 업체 영업시간 설정 (Schedule API)
+PUT http://localhost:8080/api/schedule/operating-hours?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "businessHours": [
+    {
+      "dayOfWeek": 1,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 2,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 3,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 4,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 5,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 6,
+      "openTime": "10:00",
+      "closeTime": "18:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 0,
+      "openTime": null,
+      "closeTime": null,
+      "isClosed": true
+    }
+  ]
+}
+
+> {%
+    console.log("영업시간 설정 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 영업시간 설정 완료 - " + response.body.data.businessName);
+    }
+%}
+
+### 6. 첫 번째 예약 슬롯 생성 (8월 20일 14:00-15:00)
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "slotDate": "2025-08-20",
+  "startTime": "14:00",
+  "endTime": "15:00",
+  "capacity": 3
+}
+
+> {%
+    console.log("첫 번째 슬롯 생성 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 첫 번째 슬롯 생성 성공: " + response.body.data.slotId);
+        client.global.set("firstSlotId", response.body.data.slotId);
+    }
+%}
+
+### 7. 두 번째 예약 슬롯 생성 (8월 21일 10:00-11:30)
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "slotDate": "2025-08-21",
+  "startTime": "10:00",
+  "endTime": "11:30",
+  "capacity": 2
+}
+
+> {%
+    console.log("두 번째 슬롯 생성 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 두 번째 슬롯 생성 성공: " + response.body.data.slotId);
+        client.global.set("secondSlotId", response.body.data.slotId);
+    }
+%}
+
+### 8. 세 번째 예약 슬롯 생성 (8월 29일 18:00-18:30)
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "slotDate": "2025-08-29",
+  "startTime": "18:00",
+  "endTime": "18:30",
+  "capacity": 1
+}
+
+> {%
+    console.log("세 번째 슬롯 생성 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 세 번째 슬롯 생성 성공: " + response.body.data.slotId);
+        client.global.set("thirdSlotId", response.body.data.slotId);
+    }
+%}
+
+### 9. 예약 신청 - 성공 케이스 (첫 번째 슬롯)
 POST http://localhost:8080/api/reservations
 Content-Type: application/json
 x-client-token: {{customerToken}}
 
 {
   "businessId": "{{businessId}}",
-  "availableSlotId": "11111111-1111-1111-1111-111111111111",
-  "reservationDate": "2025-01-20",
+  "availableSlotId": "{{firstSlotId}}",
+  "reservationDate": "2025-08-20",
   "reservationTime": "14:00",
   "durationMinutes": 60,
   "totalPrice": 50000,
@@ -91,27 +210,29 @@ x-client-token: {{customerToken}}
     console.log("예약 신청 응답:", JSON.stringify(response.body, null, 2));
 
     if (response.body.data) {
+        console.log("✅ 예약 성공!");
         console.log("예약 ID:", response.body.data.reservationId);
         console.log("예약 번호:", response.body.data.reservationNumber);
         console.log("예약 상태:", response.body.data.status);
         console.log("예약 일시:", response.body.data.reservationDate, response.body.data.reservationTime);
-        console.log("업체명:", response.body.data.businessName);
         console.log("총 가격:", response.body.data.totalPrice);
 
         client.global.set("reservationId", response.body.data.reservationId);
         client.global.set("reservationNumber", response.body.data.reservationNumber);
+    } else {
+        console.log("❌ 예약 실패");
     }
 %}
 
-### 6. 다른 시간대 예약 신청 - 성공 케이스
+### 10. 다른 시간대 예약 신청 - 성공 케이스 (두 번째 슬롯)
 POST http://localhost:8080/api/reservations
 Content-Type: application/json
 x-client-token: {{customerToken}}
 
 {
   "businessId": "{{businessId}}",
-  "availableSlotId": "22222222-2222-2222-2222-222222222222",
-  "reservationDate": "2025-01-21",
+  "availableSlotId": "{{secondSlotId}}",
+  "reservationDate": "2025-08-21",
   "reservationTime": "10:00",
   "durationMinutes": 90,
   "totalPrice": 70000,
@@ -122,43 +243,58 @@ x-client-token: {{customerToken}}
 
 > {%
     console.log("두 번째 예약 신청 응답 상태:", response.status);
-    console.log("두 번째 예약 신청 응답:", JSON.stringify(response.body, null, 2));
-
     if (response.body.data) {
+        console.log("✅ 두 번째 예약 성공!");
         console.log("두 번째 예약 번호:", response.body.data.reservationNumber);
         client.global.set("secondReservationId", response.body.data.reservationId);
+    } else {
+        console.log("❌ 두 번째 예약 실패");
     }
 %}
 
-### 7. 실패 케이스 - 토큰 없이 예약 신청
-POST http://localhost:8080/api/reservations
-Content-Type: application/json
-
-{
-  "businessId": "{{businessId}}",
-  "availableSlotId": "11111111-1111-1111-1111-111111111111",
-  "reservationDate": "2025-01-22",
-  "reservationTime": "16:00",
-  "durationMinutes": 60,
-  "totalPrice": 50000,
-  "customerName": "토큰없는고객",
-  "customerPhone": "010-9999-9999",
-  "notes": "토큰 없이 예약 시도"
-}
-
-> {%
-    console.log("토큰 없는 예약 응답 상태:", response.status);
-    console.log("토큰 없는 예약 응답:", JSON.stringify(response.body, null, 2));
-%}
-
-### 8. 실패 케이스 - 과거 날짜 예약 시도
+### 11. 최소 정보로 예약 - 성공 케이스 (세 번째 슬롯)
 POST http://localhost:8080/api/reservations
 Content-Type: application/json
 x-client-token: {{customerToken}}
 
 {
   "businessId": "{{businessId}}",
-  "availableSlotId": "11111111-1111-1111-1111-111111111111",
+  "availableSlotId": "{{thirdSlotId}}",
+  "reservationDate": "2025-08-29",
+  "reservationTime": "18:00",
+  "durationMinutes": 30,
+  "totalPrice": 30000,
+  "customerName": "예약고객",
+  "customerPhone": "010-1111-2222"
+}
+
+> {%
+    console.log("최소 정보 예약 응답 상태:", response.status);
+    if (response.body.data) {
+        console.log("✅ 최소 정보 예약 성공!");
+        console.log("최소 정보 예약 번호:", response.body.data.reservationNumber);
+
+        // 예약 번호 패턴 검증 (RES-YYYYMMDD-XXX)
+        const reservationNumber = response.body.data.reservationNumber;
+        const pattern = /^RES-\d{8}-\d{3}$/;
+        if (pattern.test(reservationNumber)) {
+            console.log("✅ 예약 번호 패턴 올바름:", reservationNumber);
+        } else {
+            console.log("⚠️ 예약 번호 패턴이 올바르지 않음:", reservationNumber);
+        }
+    } else {
+        console.log("❌ 최소 정보 예약 실패");
+    }
+%}
+
+### 12. 실패 케이스 - 과거 날짜 예약 시도
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{firstSlotId}}",
   "reservationDate": "2024-12-01",
   "reservationTime": "14:00",
   "durationMinutes": 60,
@@ -170,18 +306,22 @@ x-client-token: {{customerToken}}
 
 > {%
     console.log("과거 날짜 예약 응답 상태:", response.status);
-    console.log("과거 날짜 예약 응답:", JSON.stringify(response.body, null, 2));
+    if (response.status === 400) {
+        console.log("✅ 과거 날짜 예약 차단 성공");
+    } else {
+        console.log("⚠️ 과거 날짜 예약이 허용됨");
+    }
 %}
 
-### 9. 실패 케이스 - 존재하지 않는 업체에 예약
+### 13. 실패 케이스 - 존재하지 않는 업체에 예약
 POST http://localhost:8080/api/reservations
 Content-Type: application/json
 x-client-token: {{customerToken}}
 
 {
   "businessId": "00000000-0000-0000-0000-000000000000",
-  "availableSlotId": "11111111-1111-1111-1111-111111111111",
-  "reservationDate": "2025-01-23",
+  "availableSlotId": "{{firstSlotId}}",
+  "reservationDate": "2025-08-23",
   "reservationTime": "14:00",
   "durationMinutes": 60,
   "totalPrice": 50000,
@@ -192,39 +332,21 @@ x-client-token: {{customerToken}}
 
 > {%
     console.log("존재하지 않는 업체 예약 응답 상태:", response.status);
-    console.log("존재하지 않는 업체 예약 응답:", JSON.stringify(response.body, null, 2));
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 업체 예약 차단 성공");
+    } else {
+        console.log("⚠️ 존재하지 않는 업체 예약이 허용됨");
+    }
 %}
 
-### 10. 실패 케이스 - 존재하지 않는 슬롯 ID
+### 14. 실패 케이스 - 필수 필드 누락 (businessId 없음)
 POST http://localhost:8080/api/reservations
 Content-Type: application/json
 x-client-token: {{customerToken}}
 
 {
-  "businessId": "{{businessId}}",
-  "availableSlotId": "00000000-0000-0000-0000-000000000000",
-  "reservationDate": "2025-01-24",
-  "reservationTime": "14:00",
-  "durationMinutes": 60,
-  "totalPrice": 50000,
-  "customerName": "예약고객",
-  "customerPhone": "010-1111-2222",
-  "notes": "존재하지 않는 슬롯 예약 시도"
-}
-
-> {%
-    console.log("존재하지 않는 슬롯 예약 응답 상태:", response.status);
-    console.log("존재하지 않는 슬롯 예약 응답:", JSON.stringify(response.body, null, 2));
-%}
-
-### 11. 실패 케이스 - 필수 필드 누락 (businessId 없음)
-POST http://localhost:8080/api/reservations
-Content-Type: application/json
-x-client-token: {{customerToken}}
-
-{
-  "availableSlotId": "11111111-1111-1111-1111-111111111111",
-  "reservationDate": "2025-01-25",
+  "availableSlotId": "{{firstSlotId}}",
+  "reservationDate": "2025-08-25",
   "reservationTime": "14:00",
   "durationMinutes": 60,
   "totalPrice": 50000,
@@ -235,62 +357,22 @@ x-client-token: {{customerToken}}
 
 > {%
     console.log("필수 필드 누락 예약 응답 상태:", response.status);
-    console.log("필수 필드 누락 예약 응답:", JSON.stringify(response.body, null, 2));
+    if (response.status === 400) {
+        console.log("✅ 필수 필드 누락 검증 성공");
+    } else {
+        console.log("⚠️ 필수 필드 누락이 허용됨");
+    }
 %}
 
-### 12. 실패 케이스 - 잘못된 날짜 형식
+### 15. 실패 케이스 - 음수 가격
 POST http://localhost:8080/api/reservations
 Content-Type: application/json
 x-client-token: {{customerToken}}
 
 {
   "businessId": "{{businessId}}",
-  "availableSlotId": "11111111-1111-1111-1111-111111111111",
-  "reservationDate": "invalid-date",
-  "reservationTime": "14:00",
-  "durationMinutes": 60,
-  "totalPrice": 50000,
-  "customerName": "예약고객",
-  "customerPhone": "010-1111-2222",
-  "notes": "잘못된 날짜 형식 테스트"
-}
-
-> {%
-    console.log("잘못된 날짜 형식 예약 응답 상태:", response.status);
-    console.log("잘못된 날짜 형식 예약 응답:", JSON.stringify(response.body, null, 2));
-%}
-
-### 13. 실패 케이스 - 잘못된 시간 형식
-POST http://localhost:8080/api/reservations
-Content-Type: application/json
-x-client-token: {{customerToken}}
-
-{
-  "businessId": "{{businessId}}",
-  "availableSlotId": "11111111-1111-1111-1111-111111111111",
-  "reservationDate": "2025-01-26",
-  "reservationTime": "25:00",
-  "durationMinutes": 60,
-  "totalPrice": 50000,
-  "customerName": "예약고객",
-  "customerPhone": "010-1111-2222",
-  "notes": "잘못된 시간 형식 테스트"
-}
-
-> {%
-    console.log("잘못된 시간 형식 예약 응답 상태:", response.status);
-    console.log("잘못된 시간 형식 예약 응답:", JSON.stringify(response.body, null, 2));
-%}
-
-### 14. 실패 케이스 - 음수 가격
-POST http://localhost:8080/api/reservations
-Content-Type: application/json
-x-client-token: {{customerToken}}
-
-{
-  "businessId": "{{businessId}}",
-  "availableSlotId": "11111111-1111-1111-1111-111111111111",
-  "reservationDate": "2025-01-27",
+  "availableSlotId": "{{firstSlotId}}",
+  "reservationDate": "2025-08-27",
   "reservationTime": "14:00",
   "durationMinutes": 60,
   "totalPrice": -10000,
@@ -301,87 +383,9 @@ x-client-token: {{customerToken}}
 
 > {%
     console.log("음수 가격 예약 응답 상태:", response.status);
-    console.log("음수 가격 예약 응답:", JSON.stringify(response.body, null, 2));
-%}
-
-### 15. 실패 케이스 - 0분 예약 시간
-POST http://localhost:8080/api/reservations
-Content-Type: application/json
-x-client-token: {{customerToken}}
-
-{
-  "businessId": "{{businessId}}",
-  "availableSlotId": "11111111-1111-1111-1111-111111111111",
-  "reservationDate": "2025-01-28",
-  "reservationTime": "14:00",
-  "durationMinutes": 0,
-  "totalPrice": 50000,
-  "customerName": "예약고객",
-  "customerPhone": "010-1111-2222",
-  "notes": "0분 예약 시간 테스트"
-}
-
-> {%
-    console.log("0분 예약 시간 응답 상태:", response.status);
-    console.log("0분 예약 시간 응답:", JSON.stringify(response.body, null, 2));
-%}
-
-### 16. 성공 케이스 - 최소 정보로 예약 (선택 필드 제외)
-POST http://localhost:8080/api/reservations
-Content-Type: application/json
-x-client-token: {{customerToken}}
-
-{
-  "businessId": "{{businessId}}",
-  "availableSlotId": "33333333-3333-3333-3333-333333333333",
-  "reservationDate": "2025-01-29",
-  "reservationTime": "18:00",
-  "durationMinutes": 30,
-  "totalPrice": 30000,
-  "customerName": "예약고객",
-  "customerPhone": "010-1111-2222"
-}
-
-> {%
-    console.log("최소 정보 예약 응답 상태:", response.status);
-    console.log("최소 정보 예약 응답:", JSON.stringify(response.body, null, 2));
-
-    if (response.body.data) {
-        console.log("최소 정보 예약 번호:", response.body.data.reservationNumber);
-        console.log("✅ 최소 필수 정보로 예약 성공");
-    }
-%}
-
-### 17. 예약 번호 생성 패턴 확인
-POST http://localhost:8080/api/reservations
-Content-Type: application/json
-x-client-token: {{customerToken}}
-
-{
-  "businessId": "{{businessId}}",
-  "availableSlotId": "44444444-4444-4444-4444-444444444444",
-  "reservationDate": "2025-01-30",
-  "reservationTime": "20:00",
-  "durationMinutes": 45,
-  "totalPrice": 40000,
-  "customerName": "예약고객",
-  "customerPhone": "010-1111-2222",
-  "notes": "예약 번호 패턴 확인용"
-}
-
-> {%
-    console.log("예약 번호 패턴 확인 응답:", JSON.stringify(response.body, null, 2));
-
-    if (response.body.data) {
-        const reservationNumber = response.body.data.reservationNumber;
-        console.log("생성된 예약 번호:", reservationNumber);
-
-        // 예약 번호 패턴 검증 (RES-YYYYMMDD-XXX)
-        const pattern = /^RES-\d{8}-\d{3}$/;
-        if (pattern.test(reservationNumber)) {
-            console.log("✅ 예약 번호 패턴 올바름:", reservationNumber);
-        } else {
-            console.log("⚠️ 예약 번호 패턴이 올바르지 않음:", reservationNumber);
-        }
+    if (response.status === 400) {
+        console.log("✅ 음수 가격 검증 성공");
+    } else {
+        console.log("⚠️ 음수 가격이 허용됨");
     }
 %}

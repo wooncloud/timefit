@@ -1,0 +1,469 @@
+### 예약 수정 API 테스트
+
+### 1. 고객 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "update-customer@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "예약수정고객",
+  "phoneNumber": "010-1111-2222",
+  "businessName": "고객 개인업체",
+  "businessType": "개인",
+  "businessNumber": "111-11-11111",
+  "address": "서울시 강남구 고객로 111",
+  "contactPhone": "02-1111-1111",
+  "description": "예약 수정 테스트용 고객 개인업체"
+}
+
+### 2. 고객 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "update-customer@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const token = response.headers.valueOf("x-client-token");
+    console.log("고객 토큰:", token);
+    client.global.set("customerToken", token);
+%}
+
+### 3. 업체 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "update-business@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "예약수정업체",
+  "phoneNumber": "010-2222-3333",
+  "businessName": "수정 테스트 헬스장",
+  "businessType": "헬스장",
+  "businessNumber": "222-22-22222",
+  "address": "서울시 강남구 헬스로 222",
+  "contactPhone": "02-2222-2222",
+  "description": "예약 수정 테스트용 헬스장"
+}
+
+### 4. 업체 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "update-business@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const businessToken = response.headers.valueOf("x-client-token");
+    console.log("업체 토큰:", businessToken);
+    client.global.set("businessToken", businessToken);
+
+    if (response.body.data && response.body.data.businesses && response.body.data.businesses.length > 0) {
+        const businessId = response.body.data.businesses[0].businessId;
+        console.log("업체 ID:", businessId);
+        client.global.set("businessId", businessId);
+    }
+%}
+
+### 5. 업체 영업시간 설정
+PUT http://localhost:8080/api/schedule/operating-hours?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "businessHours": [
+    {
+      "dayOfWeek": 1,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 2,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 3,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 4,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 5,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 6,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 0,
+      "openTime": null,
+      "closeTime": null,
+      "isClosed": true
+    }
+  ]
+}
+
+> {%
+    console.log("영업시간 설정 완료");
+%}
+
+### 6. 첫 번째 예약 슬롯 생성 (8월 15일 14:00-15:00)
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "slotDate": "2025-08-15",
+  "startTime": "14:00",
+  "endTime": "15:00",
+  "capacity": 3
+}
+
+> {%
+    if (response.body.data) {
+        console.log("첫 번째 슬롯 생성:", response.body.data.slotId);
+        client.global.set("firstSlotId", response.body.data.slotId);
+    }
+%}
+
+### 7. 두 번째 예약 슬롯 생성 (8월 16일 10:00-11:30)
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "slotDate": "2025-08-16",
+  "startTime": "10:00",
+  "endTime": "11:30",
+  "capacity": 2
+}
+
+> {%
+    if (response.body.data) {
+        console.log("두 번째 슬롯 생성:", response.body.data.slotId);
+        client.global.set("secondSlotId", response.body.data.slotId);
+    }
+%}
+
+### 8. 첫 번째 예약 생성
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{firstSlotId}}",
+  "reservationDate": "2025-08-15",
+  "reservationTime": "14:00",
+  "durationMinutes": 60,
+  "totalPrice": 50000,
+  "customerName": "예약수정고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "첫 번째 예약 - 수정 테스트용"
+}
+
+> {%
+    console.log("첫 번째 예약 생성 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 첫 번째 예약 생성 성공");
+        console.log("예약 ID:", response.body.data.reservationId);
+        console.log("예약 번호:", response.body.data.reservationNumber);
+        client.global.set("firstReservationId", response.body.data.reservationId);
+        client.global.set("firstReservationNumber", response.body.data.reservationNumber);
+    }
+%}
+
+### 9. 두 번째 예약 생성
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{secondSlotId}}",
+  "reservationDate": "2025-08-16",
+  "reservationTime": "10:00",
+  "durationMinutes": 90,
+  "totalPrice": 70000,
+  "customerName": "예약수정고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "두 번째 예약 - 수정 테스트용"
+}
+
+> {%
+    if (response.body.data) {
+        console.log("✅ 두 번째 예약 생성 성공");
+        console.log("예약 ID:", response.body.data.reservationId);
+        client.global.set("secondReservationId", response.body.data.reservationId);
+    }
+%}
+
+### 10. 예약 상세 조회 - 수정 전 상태 확인
+GET http://localhost:8080/api/reservations/{{firstReservationId}}
+x-client-token: {{customerToken}}
+
+> {%
+    console.log("수정 전 예약 상세:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 수정 전 상태 확인");
+        console.log("예약 번호:", response.body.data.reservationNumber);
+        console.log("현재 상태:", response.body.data.status);
+        console.log("현재 날짜:", response.body.data.reservationDate);
+        console.log("현재 시간:", response.body.data.reservationTime);
+        console.log("현재 가격:", response.body.data.totalPrice);
+        console.log("현재 메모:", response.body.data.notes);
+    }
+%}
+
+### 11. 예약 수정 - 메모만 변경
+PUT http://localhost:8080/api/reservations/{{firstReservationId}}
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "notes": "메모를 수정했습니다. 늦을 수 있어요.",
+  "customerPhone": "010-1111-2222"
+}
+
+> {%
+    console.log("메모 수정 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 메모 수정 성공");
+        console.log("수정된 메모:", response.body.data.notes);
+    } else {
+        console.log("❌ 메모 수정 실패");
+    }
+%}
+
+### 12. 예약 수정 - 연락처 변경
+PUT http://localhost:8080/api/reservations/{{firstReservationId}}
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "customerPhone": "010-9999-8888",
+  "notes": "연락처를 변경했습니다."
+}
+
+> {%
+    console.log("연락처 수정 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 연락처 수정 성공");
+        console.log("수정된 연락처:", response.body.data.customerPhone);
+    }
+%}
+
+### 13. 예약 수정 - 다른 슬롯으로 변경 (날짜/시간 변경)
+PUT http://localhost:8080/api/reservations/{{firstReservationId}}
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "availableSlotId": "{{secondSlotId}}",
+  "reservationDate": "2025-08-16",
+  "reservationTime": "10:00",
+  "durationMinutes": 90,
+  "notes": "다른 날짜로 예약을 변경했습니다."
+}
+
+> {%
+    console.log("슬롯 변경 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 슬롯 변경 성공");
+        console.log("변경된 날짜:", response.body.data.reservationDate);
+        console.log("변경된 시간:", response.body.data.reservationTime);
+        console.log("변경된 소요시간:", response.body.data.durationMinutes);
+    } else {
+        console.log("❌ 슬롯 변경 실패");
+    }
+%}
+
+### 14. 예약 수정 - 가격 변경
+PUT http://localhost:8080/api/reservations/{{firstReservationId}}
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "totalPrice": 80000,
+  "notes": "가격을 인상했습니다."
+}
+
+> {%
+    console.log("가격 변경 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 가격 변경 성공");
+        console.log("변경된 가격:", response.body.data.totalPrice);
+    }
+%}
+
+### 15. 예약 상세 조회 - 수정 후 상태 확인
+GET http://localhost:8080/api/reservations/{{firstReservationId}}
+x-client-token: {{customerToken}}
+
+> {%
+    console.log("수정 후 예약 상세:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 수정 후 상태 확인");
+        console.log("예약 번호:", response.body.data.reservationNumber);
+        console.log("현재 상태:", response.body.data.status);
+        console.log("현재 날짜:", response.body.data.reservationDate);
+        console.log("현재 시간:", response.body.data.reservationTime);
+        console.log("현재 가격:", response.body.data.totalPrice);
+        console.log("현재 연락처:", response.body.data.customerPhone);
+        console.log("현재 메모:", response.body.data.notes);
+    }
+%}
+
+### 16. 실패 케이스 - 존재하지 않는 예약 수정
+PUT http://localhost:8080/api/reservations/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "notes": "존재하지 않는 예약 수정 시도"
+}
+
+> {%
+    console.log("존재하지 않는 예약 수정 응답 상태:", response.status);
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 예약 수정 차단 성공");
+    }
+%}
+
+### 17. 실패 케이스 - 다른 사용자 예약 수정 시도 (권한 없음)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "another-customer@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "다른고객",
+  "phoneNumber": "010-3333-4444",
+  "businessName": "다른 고객업체",
+  "businessType": "개인",
+  "businessNumber": "333-33-33333",
+  "address": "서울시 강남구 다른로 333",
+  "contactPhone": "02-3333-3333",
+  "description": "다른 고객 업체"
+}
+
+### 18. 다른 고객 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "another-customer@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const anotherToken = response.headers.valueOf("x-client-token");
+    console.log("다른 고객 토큰:", anotherToken);
+    client.global.set("anotherCustomerToken", anotherToken);
+%}
+
+### 19. 다른 고객이 첫 번째 고객의 예약 수정 시도
+PUT http://localhost:8080/api/reservations/{{firstReservationId}}
+Content-Type: application/json
+x-client-token: {{anotherCustomerToken}}
+
+{
+  "notes": "다른 고객이 수정을 시도합니다."
+}
+
+> {%
+    console.log("다른 고객의 예약 수정 시도 응답 상태:", response.status);
+    if (response.status === 403 || response.status === 404) {
+        console.log("✅ 다른 고객의 예약 수정 차단 성공");
+    } else {
+        console.log("⚠️ 다른 고객의 예약 수정이 허용됨 - 보안 문제");
+    }
+%}
+
+### 20. 실패 케이스 - 잘못된 날짜 형식
+PUT http://localhost:8080/api/reservations/{{firstReservationId}}
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "reservationDate": "invalid-date",
+  "notes": "잘못된 날짜 형식 테스트"
+}
+
+> {%
+    console.log("잘못된 날짜 형식 수정 응답 상태:", response.status);
+    if (response.status === 400) {
+        console.log("✅ 잘못된 날짜 형식 검증 성공");
+    }
+%}
+
+### 21. 실패 케이스 - 음수 가격
+PUT http://localhost:8080/api/reservations/{{firstReservationId}}
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "totalPrice": -50000,
+  "notes": "음수 가격 테스트"
+}
+
+> {%
+    console.log("음수 가격 수정 응답 상태:", response.status);
+    if (response.status === 400) {
+        console.log("✅ 음수 가격 검증 성공");
+    }
+%}
+
+### 22. 실패 케이스 - 과거 날짜로 변경
+PUT http://localhost:8080/api/reservations/{{firstReservationId}}
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "reservationDate": "2024-12-01",
+  "reservationTime": "14:00",
+  "notes": "과거 날짜로 변경 시도"
+}
+
+> {%
+    console.log("과거 날짜 수정 응답 상태:", response.status);
+    if (response.status === 400) {
+        console.log("✅ 과거 날짜 변경 차단 성공");
+    }
+%}
+
+### 23. 예약 목록에서 수정된 예약 확인
+GET http://localhost:8080/api/reservations
+x-client-token: {{customerToken}}
+
+> {%
+    console.log("수정된 예약 목록:", JSON.stringify(response.body, null, 2));
+    if (response.body.data && response.body.data.reservations) {
+        console.log("✅ 예약 목록에서 수정 내용 확인");
+        const modifiedReservation = response.body.data.reservations.find(r => r.reservationId === client.global.get("firstReservationId"));
+        if (modifiedReservation) {
+            console.log("수정된 예약 찾음:");
+            console.log("- 예약 번호:", modifiedReservation.reservationNumber);
+            console.log("- 날짜:", modifiedReservation.reservationDate);
+            console.log("- 시간:", modifiedReservation.reservationTime);
+            console.log("- 가격:", modifiedReservation.totalPrice);
+            console.log("- 메모:", modifiedReservation.notes);
+        }
+    }
+%}
