@@ -31,8 +31,13 @@ public interface ReservationRepositoryCustom {
 
     List<Reservation> findTodayReservationsByBusiness(UUID businessId, LocalDate today, ReservationStatus status);
 
-    // 필터 조건으로 내 예약 조회 (페이징)
+    // 필터 조건으로 신청자 고객 예약 조회 (페이징)
     Page<Reservation> findMyReservationsWithFilters(UUID customerId, ReservationStatus status,
                                                     LocalDate startDate, LocalDate endDate, UUID businessId,
                                                     Pageable pageable);
+
+    // 필터 조건으로 업체 예약 조회 (페이징)
+    Page<Reservation> findBusinessReservationsWithFilters(UUID businessId, ReservationStatus status,
+                                                            LocalDate startDate, LocalDate endDate,
+                                                            Pageable pageable);
 }

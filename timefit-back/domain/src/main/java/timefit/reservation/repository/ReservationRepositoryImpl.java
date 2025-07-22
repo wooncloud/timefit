@@ -215,6 +215,80 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
         return new PageImpl<>(reservations, pageable, total != null ? total : 0);
     }
 
+    @Override
+    public Page<Reservation> findBusinessReservationsWithFilters(
+            UUID businessId, ReservationStatus status, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+
+        BooleanBuilder builder = new BooleanBuilder();
+
+        // 필수 조건: 해당 업체의 예약
+        builder.and(reservation.business.id.eq(businessId));
+
+        // 상태 필터
+        if (status != null) {
+            builder.and(reservation.status.eq(status));
+        }
+
+        // 날짜 범위 필터
+        if (startDate != null) {
+            builder.and(reservation.reservationDate.goe(startDate));
+        }
+        if (endDate != null) {
+            builder.and(reservation.reservationDate.loe(endDate));
+        }
+
+        // 정렬 조건 생성
+        List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
+
+        if (pageable.getSort().isSorted()) {
+            for (Sort.Order order : pageable.getSort()) {
+                Order direction = order.getDirection().isAscending() ? Order.ASC : Order.DESC;
+
+                switch (order.getProperty()) {
+                    case "reservationDate":
+                        orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.reservationDate));
+                        break;
+                    case "reservationTime":
+                        orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.reservationTime));
+                        break;
+                    case "createdAt":
+                        orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.createdAt));
+                        break;
+                    case "status":
+                        orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.status));
+                        break;
+                    default:
+                        orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.createdAt));
+                }
+            }
+        } else {
+            // 기본 정렬: 예약일 내림차순, 예약시간 내림차순
+            orderSpecifiers.add(new OrderSpecifier<>(Order.DESC, reservation.reservationDate));
+            orderSpecifiers.add(new OrderSpecifier<>(Order.DESC, reservation.reservationTime));
+        }
+
+        // 쿼리 실행
+        List<Reservation> results = queryFactory
+                .selectFrom(reservation)
+                .leftJoin(reservation.customer).fetchJoin()
+                .leftJoin(reservation.business).fetchJoin()
+                .where(builder)
+                .orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        // 전체 개수 조회
+        Long total = queryFactory
+                .select(reservation.count())
+                .from(reservation)
+                .where(builder)
+                .fetchOne();
+
+        return new PageImpl<>(results, pageable, total != null ? total : 0L);
+    }
+
+
     /**
      * 정렬 조건 변환
      */
