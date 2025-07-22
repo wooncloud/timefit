@@ -8,6 +8,7 @@ import timefit.common.ResponseData;
 import timefit.reservation.dto.ReservationRequestDto;
 import timefit.reservation.dto.ReservationResponseDto;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Slf4j
@@ -21,6 +22,7 @@ public class ReservationService {
     private final ReservationDetailService detailService;
     private final ReservationUpdateService updateService;
     private final ReservationCancelService reservationCancelService;
+    private final BusinessReservationService businessReservationService;
 
 
     /**
@@ -64,6 +66,17 @@ public class ReservationService {
             UUID reservationId, UUID customerId, ReservationRequestDto.CancelReservation request) {
 
         return reservationCancelService.cancelReservation(reservationId, customerId, request);
+    }
+
+    /**
+     * 업체의 받은 예약 신청 조회
+     */
+    public ResponseData<ReservationResponseDto.BusinessReservationListResult> getBusinessReservations(
+            UUID businessId, UUID currentUserId, String status, LocalDate date,
+            LocalDate startDate, LocalDate endDate, int page, int size) {
+
+        return businessReservationService.getBusinessReservations(
+                businessId, currentUserId, status, date, startDate, endDate, page, size);
     }
 
 }
