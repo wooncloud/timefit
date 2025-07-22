@@ -329,4 +329,83 @@ public class ReservationResponseDto {
         }
     }
 
+    /**
+     * 업체용 예약 목록 조회 결과
+     */
+    @Getter
+    public static class BusinessReservationListResult {
+        private final BusinessInfo businessInfo;
+        private final List<BusinessReservationSummary> reservations;
+        private final PaginationInfo pagination;
+
+        private BusinessReservationListResult(BusinessInfo businessInfo,
+                                                List<BusinessReservationSummary> reservations,
+                                                PaginationInfo pagination) {
+            this.businessInfo = businessInfo;
+            this.reservations = reservations;
+            this.pagination = pagination;
+        }
+
+        public static BusinessReservationListResult of(BusinessInfo businessInfo,
+                                                        List<BusinessReservationSummary> reservations,
+                                                        PaginationInfo pagination) {
+            return new BusinessReservationListResult(businessInfo, reservations, pagination);
+        }
+    }
+
+    /**
+     * 업체용 예약 요약 정보
+     */
+    @Getter
+    public static class BusinessReservationSummary {
+        private final UUID reservationId;
+        private final String reservationNumber;
+        private final ReservationStatus status;
+        private final CustomerSummaryInfo customerInfo;
+        private final ReservationDetails reservationDetails;
+        private final LocalDateTime createdAt;
+        private final Boolean requiresAction;
+
+        private BusinessReservationSummary(UUID reservationId, String reservationNumber,
+                                            ReservationStatus status, CustomerSummaryInfo customerInfo,
+                                            ReservationDetails reservationDetails, LocalDateTime createdAt,
+                                            Boolean requiresAction) {
+            this.reservationId = reservationId;
+            this.reservationNumber = reservationNumber;
+            this.status = status;
+            this.customerInfo = customerInfo;
+            this.reservationDetails = reservationDetails;
+            this.createdAt = createdAt;
+            this.requiresAction = requiresAction;
+        }
+
+        public static BusinessReservationSummary of(UUID reservationId, String reservationNumber,
+                                                    ReservationStatus status, CustomerSummaryInfo customerInfo,
+                                                    ReservationDetails reservationDetails, LocalDateTime createdAt,
+                                                    Boolean requiresAction) {
+            return new BusinessReservationSummary(reservationId, reservationNumber, status,
+                    customerInfo, reservationDetails, createdAt, requiresAction);
+        }
+    }
+
+    /**
+     * 고객 요약 정보 (업체용)
+     */
+    @Getter
+    public static class CustomerSummaryInfo {
+        private final UUID customerId;
+        private final String customerName;
+        private final String customerPhone;
+
+        private CustomerSummaryInfo(UUID customerId, String customerName, String customerPhone) {
+            this.customerId = customerId;
+            this.customerName = customerName;
+            this.customerPhone = customerPhone;
+        }
+
+        public static CustomerSummaryInfo of(UUID customerId, String customerName, String customerPhone) {
+            return new CustomerSummaryInfo(customerId, customerName, customerPhone);
+        }
+    }
+
 }
