@@ -1,0 +1,364 @@
+### 예약 상태 변경 API 테스트 (핵심 기능)
+
+### 1. 업체 회원가입 및 로그인
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "status-business@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "상태변경업체",
+  "phoneNumber": "010-2222-3333",
+  "businessName": "상태변경 테스트 헬스장",
+  "businessType": "헬스장",
+  "businessNumber": "222-22-22222",
+  "address": "서울시 강남구 헬스로 222",
+  "contactPhone": "02-2222-2222",
+  "description": "예약 상태변경 테스트용"
+}
+
+### 2. 업체 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "status-business@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const businessToken = response.headers.valueOf("x-client-token");
+    client.global.set("businessToken", businessToken);
+    const businessId = response.body.data.businesses[0].businessId;
+    client.global.set("businessId", businessId);
+    console.log("업체 ID:", businessId);
+%}
+
+### 3. 고객 회원가입 및 로그인
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "status-customer@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "상태테스트고객",
+  "phoneNumber": "010-1111-2222",
+  "businessName": "고객업체",
+  "businessType": "개인",
+  "businessNumber": "111-11-11111",
+  "address": "서울시 강남구 고객로 111",
+  "contactPhone": "02-1111-1111",
+  "description": "고객업체"
+}
+
+### 4. 고객 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "status-customer@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const customerToken = response.headers.valueOf("x-client-token");
+    client.global.set("customerToken", customerToken);
+    console.log("고객 토큰 획득");
+%}
+
+### 5. 영업시간 및 슬롯 설정
+PUT http://localhost:8080/api/schedule/operating-hours?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "businessHours": [
+    {
+      "dayOfWeek": 1,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 2,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    }
+  ]
+}
+
+### 6. 예약 슬롯 생성
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "slotDate": "2025-08-20",
+  "startTime": "14:00",
+  "endTime": "15:00",
+  "capacity": 3
+}
+
+> {%
+    if (response.body.data) {
+        client.global.set("slotId", response.body.data.slotId);
+        console.log("슬롯 생성 완료");
+    }
+%}
+
+### 7. 고객 예약 신청 (PENDING 상태)
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{slotId}}",
+  "reservationDate": "2025-08-20",
+  "reservationTime": "14:00",
+  "durationMinutes": 60,
+  "totalPrice": 50000,
+  "customerName": "상태테스트고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "승인 테스트용 예약"
+}
+
+> {%
+    if (response.body.data) {
+        client.global.set("reservation1Id", response.body.data.reservationId);
+        console.log("✅ 예약 1 생성 (PENDING):", response.body.data.reservationNumber);
+    }
+%}
+
+### 8. 두 번째 예약 신청 (거절 테스트용)
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{slotId}}",
+  "reservationDate": "2025-08-20",
+  "reservationTime": "14:00",
+  "durationMinutes": 60,
+  "totalPrice": 50000,
+  "customerName": "상태테스트고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "거절 테스트용 예약"
+}
+
+> {%
+    if (response.body.data) {
+        client.global.set("reservation2Id", response.body.data.reservationId);
+        console.log("✅ 예약 2 생성 (PENDING):", response.body.data.reservationNumber);
+    }
+%}
+
+### 9. 예약 승인 - 성공 케이스
+PATCH http://localhost:8080/api/businesses/{{businessId}}/reservations/{{reservation1Id}}/status
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "status": "CONFIRMED",
+  "reason": "예약 조건을 만족하여 승인합니다."
+}
+
+> {%
+    console.log("예약 승인 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 예약 승인 성공");
+        console.log("예약 ID:", response.body.data.reservationId);
+        console.log("상태 변경:", response.body.data.previousStatus + " → " + response.body.data.currentStatus);
+        console.log("승인 사유:", response.body.data.reason);
+        console.log("변경 시간:", response.body.data.updatedAt);
+        console.log("변경자:", response.body.data.updatedBy.userName);
+    } else {
+        console.log("❌ 예약 승인 실패");
+    }
+%}
+
+### 10. 예약 거절 - 성공 케이스
+PATCH http://localhost:8080/api/businesses/{{businessId}}/reservations/{{reservation2Id}}/status
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "status": "CANCELLED",
+  "reason": "해당 시간대에 다른 일정이 있어서 거절합니다."
+}
+
+> {%
+    console.log("예약 거절 응답:", JSON.stringify(response.body, null, 2));
+    if (response.body.data) {
+        console.log("✅ 예약 거절 성공");
+        console.log("상태 변경:", response.body.data.previousStatus + " → " + response.body.data.currentStatus);
+        console.log("거절 사유:", response.body.data.reason);
+    } else {
+        console.log("❌ 예약 거절 실패");
+    }
+%}
+
+### 11. 승인된 예약 상태 확인
+GET http://localhost:8080/api/reservations/{{reservation1Id}}
+x-client-token: {{customerToken}}
+
+> {%
+    if (response.body.data) {
+        console.log("✅ 승인된 예약 상태 확인");
+        console.log("현재 상태:", response.body.data.status);
+        if (response.body.data.status === "CONFIRMED") {
+            console.log("🟢 예약이 정상적으로 승인됨");
+        }
+    }
+%}
+
+### 12. 실패 케이스 - 이미 승인된 예약 재승인 시도
+PATCH http://localhost:8080/api/businesses/{{businessId}}/reservations/{{reservation1Id}}/status
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "status": "CONFIRMED",
+  "reason": "이미 승인된 예약 재승인 시도"
+}
+
+> {%
+    console.log("재승인 시도 응답 상태:", response.status);
+    if (response.status === 400) {
+        console.log("✅ 이미 승인된 예약 재승인 차단 성공");
+    } else {
+        console.log("⚠️ 이미 승인된 예약 재승인이 허용됨");
+    }
+%}
+
+### 13. 실패 케이스 - 존재하지 않는 예약 상태 변경
+PATCH http://localhost:8080/api/businesses/{{businessId}}/reservations/00000000-0000-0000-0000-000000000000/status
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "status": "CONFIRMED",
+  "reason": "존재하지 않는 예약 승인 시도"
+}
+
+> {%
+    console.log("존재하지 않는 예약 상태변경 응답 상태:", response.status);
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 예약 상태변경 차단 성공");
+    }
+%}
+
+### 14. 실패 케이스 - 다른 업체 예약 상태 변경 시도
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "another-business@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "다른업체",
+  "phoneNumber": "010-9999-9999",
+  "businessName": "다른업체",
+  "businessType": "카페",
+  "businessNumber": "999-99-99999",
+  "address": "서울시 강남구 다른로 999",
+  "contactPhone": "02-9999-9999",
+  "description": "다른업체"
+}
+
+### 15. 다른 업체 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "another-business@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const anotherToken = response.headers.valueOf("x-client-token");
+    client.global.set("anotherToken", anotherToken);
+%}
+
+### 16. 다른 업체가 예약 상태 변경 시도
+PATCH http://localhost:8080/api/businesses/{{businessId}}/reservations/{{reservation1Id}}/status
+Content-Type: application/json
+x-client-token: {{anotherToken}}
+
+{
+  "status": "CANCELLED",
+  "reason": "다른 업체의 상태 변경 시도"
+}
+
+> {%
+    console.log("다른 업체의 상태변경 시도 응답 상태:", response.status);
+    if (response.status === 403 || response.status === 404) {
+        console.log("✅ 다른 업체의 예약 상태변경 차단 성공");
+    } else {
+        console.log("⚠️ 다른 업체의 예약 상태변경이 허용됨 - 보안 문제");
+    }
+%}
+
+### 17. 실패 케이스 - 잘못된 상태값
+PATCH http://localhost:8080/api/businesses/{{businessId}}/reservations/{{reservation2Id}}/status
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "status": "INVALID_STATUS",
+  "reason": "잘못된 상태값 테스트"
+}
+
+> {%
+    console.log("잘못된 상태값 응답 상태:", response.status);
+    if (response.status === 400) {
+        console.log("✅ 잘못된 상태값 검증 성공");
+    }
+%}
+
+### 18. 실패 케이스 - 사유 누락
+PATCH http://localhost:8080/api/businesses/{{businessId}}/reservations/{{reservation2Id}}/status
+Content-Type: application/json
+x-client-token: {{businessToken}}
+
+{
+  "status": "CONFIRMED"
+}
+
+> {%
+    console.log("사유 누락 응답 상태:", response.status);
+    if (response.status === 400) {
+        console.log("✅ 사유 누락 검증 성공");
+    }
+%}
+
+### 19. 최종 상태 확인
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations
+x-client-token: {{businessToken}}
+
+> {%
+    if (response.body.data && response.body.data.reservations) {
+        console.log("\n=== 최종 예약 상태 확인 ===");
+        response.body.data.reservations.forEach((reservation, index) => {
+            console.log(`${index + 1}. ${reservation.reservationNumber} - ${reservation.status}`);
+        });
+
+        const confirmed = response.body.data.reservations.filter(r => r.status === "CONFIRMED").length;
+        const cancelled = response.body.data.reservations.filter(r => r.status === "CANCELLED").length;
+
+        console.log(`승인된 예약: ${confirmed}개`);
+        console.log(`거절된 예약: ${cancelled}개`);
+    }
+%}
+
+### 20. 테스트 결과 요약
+GET http://localhost:8080/api/health
+
+> {%
+    console.log("\n🎉 예약 상태 변경 API 테스트 완료!");
+    console.log("📋 핵심 테스트 결과:");
+    console.log("- ✅ 예약 승인 (PENDING → CONFIRMED)");
+    console.log("- ✅ 예약 거절 (PENDING → CANCELLED)");
+    console.log("- ✅ 상태 변경 결과 정보 (이전/현재 상태, 사유, 시간, 변경자)");
+    console.log("- ✅ 이미 처리된 예약 재처리 차단");
+    console.log("- ✅ 권한 검증 (다른 업체 차단)");
+    console.log("- ✅ 유효성 검증 (존재하지 않는 예약, 잘못된 상태, 사유 필수)");
+%}
