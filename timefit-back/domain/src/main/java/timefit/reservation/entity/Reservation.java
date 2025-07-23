@@ -131,4 +131,47 @@ public class Reservation extends BaseEntity {
         this.notes = (this.notes != null ? this.notes + "\n" : "") + "[취소사유] " + reason;
     }
 
+    /**
+     * 예약 상태 변경 (승인/거절)
+     */
+    public void updateStatus(ReservationStatus newStatus, String reason) {
+        // 상태 변경 검증
+        if (newStatus == null) {
+            throw new IllegalArgumentException("변경할 상태는 필수입니다");
+        }
+
+        // 동일한 상태로 변경 방지
+        if (this.status == newStatus) {
+            throw new IllegalStateException("이미 " + newStatus + " 상태입니다");
+        }
+
+        // 상태 변경
+        this.status = newStatus;
+
+        // 사유가 있으면 메모에 추가
+        if (reason != null && !reason.trim().isEmpty()) {
+            String statusMessage = getStatusMessage(newStatus);
+            this.notes = (this.notes != null ? this.notes + "\n" : "") +
+                    "[" + statusMessage + "] " + reason;
+        }
+    }
+
+    /**
+     * 상태별 메시지 생성
+     */
+    private String getStatusMessage(ReservationStatus status) {
+        switch (status) {
+            case CONFIRMED:
+                return "승인";
+            case CANCELLED:
+                return "거절";
+            case COMPLETED:
+                return "완료";
+            case NO_SHOW:
+                return "노쇼";
+            default:
+                return "상태변경";
+        }
+    }
+
 }
