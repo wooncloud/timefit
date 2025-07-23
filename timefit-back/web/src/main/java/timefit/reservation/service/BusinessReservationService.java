@@ -17,6 +17,7 @@ import timefit.exception.business.BusinessErrorCode;
 import timefit.exception.business.BusinessException;
 import timefit.exception.reservation.ReservationErrorCode;
 import timefit.exception.reservation.ReservationException;
+import timefit.reservation.dto.ReservationRequestDto;
 import timefit.reservation.dto.ReservationResponseDto;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
@@ -38,6 +39,8 @@ public class BusinessReservationService {
     private final UserBusinessRoleRepository userBusinessRoleRepository;
     private final ReservationRepositoryCustom reservationRepositoryCustom;
     private final ReservationValidationUtil validationUtil;
+    private final ReservationApprovalService reservationApprovalService;
+
 
     /**
      * 업체의 받은 예약 신청 조회
@@ -76,6 +79,17 @@ public class BusinessReservationService {
                 businessId, reservationPage.getTotalElements(), page);
 
         return ResponseData.of(result);
+    }
+
+    /**
+     * 예약 상태 변경 (승인/거절)
+     */
+    public ResponseData<ReservationResponseDto.ReservationStatusChangeResult> changeReservationStatus(
+            UUID businessId, UUID reservationId, UUID currentUserId,
+            ReservationRequestDto.ChangeReservationStatus request) {
+
+        return reservationApprovalService.changeReservationStatus(
+                businessId, reservationId, currentUserId, request);
     }
 
     // Private

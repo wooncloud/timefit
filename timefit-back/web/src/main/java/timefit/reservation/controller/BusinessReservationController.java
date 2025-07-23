@@ -1,10 +1,12 @@
 package timefit.reservation.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import timefit.common.ResponseData;
+import timefit.reservation.dto.ReservationRequestDto;
 import timefit.reservation.dto.ReservationResponseDto;
 import timefit.reservation.service.BusinessReservationService;
 
@@ -47,6 +49,28 @@ public class BusinessReservationController {
         return businessReservationService.getBusinessReservations(
                 businessId, currentUserId, status, date, startDate, endDate, page, size);
     }
+
+    /**
+     * 예약 승인/거절
+     * 권한: OWNER, MANAGER만 가능
+     */
+    @PatchMapping("/{reservationId}/status")
+    public ResponseData<ReservationResponseDto.ReservationStatusChangeResult> changeReservationStatus(
+            @PathVariable UUID businessId,
+            @PathVariable UUID reservationId,
+            @Valid @RequestBody ReservationRequestDto.ChangeReservationStatus request,
+            HttpServletRequest httpRequest) {
+
+        UUID currentUserId = getCurrentUserId(httpRequest);
+
+        log.info("예약 상태 변경 요청: businessId={}, reservationId={}, userId={}, newStatus={}",
+                businessId, reservationId, currentUserId, request.getStatus());
+
+        return businessReservationService.changeReservationStatus(
+                businessId, reservationId, currentUserId, request);
+    }
+
+
 
     // 현재 사용자 ID 추출
     private UUID getCurrentUserId(HttpServletRequest request) {
