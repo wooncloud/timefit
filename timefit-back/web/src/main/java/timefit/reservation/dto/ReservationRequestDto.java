@@ -1,6 +1,7 @@
 package timefit.reservation.dto;
 
 import lombok.Getter;
+import timefit.reservation.entity.ReservationStatus;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -219,6 +220,37 @@ public class ReservationRequestDto {
         @Override
         public int hashCode() {
             return Objects.hash(reason);
+        }
+    }
+
+    /**
+     * 예약 상태 변경 요청 (승인/거절)
+     */
+    @Getter
+    public static class ChangeReservationStatus {
+        private final ReservationStatus status;
+        private final String reason;
+
+        private ChangeReservationStatus(ReservationStatus status, String reason) {
+            this.status = status;
+            this.reason = reason;
+        }
+
+        public static ChangeReservationStatus of(ReservationStatus status, String reason) {
+            return new ChangeReservationStatus(status, reason);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (other == null || getClass() != other.getClass()) return false;
+            ChangeReservationStatus that = (ChangeReservationStatus) other;
+            return Objects.equals(status, that.status) && Objects.equals(reason, that.reason);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(status, reason);
         }
     }
 

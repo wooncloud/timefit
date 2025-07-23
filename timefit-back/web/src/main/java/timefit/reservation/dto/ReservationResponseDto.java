@@ -1,6 +1,7 @@
 package timefit.reservation.dto;
 
 import lombok.Getter;
+import timefit.common.entity.BusinessRole;
 import timefit.reservation.entity.ReservationStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -405,6 +406,57 @@ public class ReservationResponseDto {
 
         public static CustomerSummaryInfo of(UUID customerId, String customerName, String customerPhone) {
             return new CustomerSummaryInfo(customerId, customerName, customerPhone);
+        }
+    }
+
+    /**
+     * 예약 상태 변경 결과
+     */
+    @Getter
+    public static class ReservationStatusChangeResult {
+        private final UUID reservationId;
+        private final ReservationStatus previousStatus;
+        private final ReservationStatus currentStatus;
+        private final String reason;
+        private final LocalDateTime updatedAt;
+        private final UpdatedByInfo updatedBy;
+
+        private ReservationStatusChangeResult(UUID reservationId, ReservationStatus previousStatus,
+                                                ReservationStatus currentStatus, String reason,
+                                                LocalDateTime updatedAt, UpdatedByInfo updatedBy) {
+            this.reservationId = reservationId;
+            this.previousStatus = previousStatus;
+            this.currentStatus = currentStatus;
+            this.reason = reason;
+            this.updatedAt = updatedAt;
+            this.updatedBy = updatedBy;
+        }
+
+        public static ReservationStatusChangeResult of(UUID reservationId, ReservationStatus previousStatus,
+                                                        ReservationStatus currentStatus, String reason,
+                                                        LocalDateTime updatedAt, UpdatedByInfo updatedBy) {
+            return new ReservationStatusChangeResult(reservationId, previousStatus, currentStatus,
+                    reason, updatedAt, updatedBy);
+        }
+    }
+
+    /**
+     * 상태 변경자 정보
+     */
+    @Getter
+    public static class UpdatedByInfo {
+        private final UUID userId;
+        private final String name;
+        private final BusinessRole role;
+
+        private UpdatedByInfo(UUID userId, String name, BusinessRole role) {
+            this.userId = userId;
+            this.name = name;
+            this.role = role;
+        }
+
+        public static UpdatedByInfo of(UUID userId, String name, BusinessRole role) {
+            return new UpdatedByInfo(userId, name, role);
         }
     }
 
