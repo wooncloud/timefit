@@ -254,4 +254,32 @@ public class ReservationRequestDto {
         }
     }
 
+    @Getter
+    public static class CompleteReservation {
+        private final ReservationStatus status;
+        private final String notes;
+
+        private CompleteReservation(ReservationStatus status, String notes) {
+            this.status = status;
+            this.notes = notes;
+        }
+
+        public static CompleteReservation of(ReservationStatus status, String notes) {
+            return new CompleteReservation(status, notes);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (other == null || getClass() != other.getClass()) return false;
+            CompleteReservation that = (CompleteReservation) other;
+            return Objects.equals(status, that.status) && Objects.equals(notes, that.notes);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(status, notes);
+        }
+    }
+
 }
