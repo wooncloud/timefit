@@ -157,6 +157,32 @@ public class Reservation extends BaseEntity {
     }
 
     /**
+     * 예약 완료/노쇼 처리
+     */
+    public void completeReservation(ReservationStatus completionStatus, String completionNotes) {
+        // 완료 상태 검증
+        if (completionStatus != ReservationStatus.COMPLETED &&
+                completionStatus != ReservationStatus.NO_SHOW) {
+            throw new IllegalArgumentException("완료 상태는 COMPLETED 또는 NO_SHOW만 가능합니다");
+        }
+
+        // 현재 상태 검증
+        if (this.status != ReservationStatus.CONFIRMED) {
+            throw new IllegalStateException("확정된 예약만 완료 처리할 수 있습니다");
+        }
+
+        // 상태 변경
+        this.status = completionStatus;
+
+        // 완료 메모 추가 (기존 getStatusMessage 메서드 재사용)
+        if (completionNotes != null && !completionNotes.trim().isEmpty()) {
+            String statusMessage = getStatusMessage(completionStatus);
+            this.notes = (this.notes != null ? this.notes + "\n" : "") +
+                    "[" + statusMessage + "] " + completionNotes;
+        }
+    }
+
+    /**
      * 상태별 메시지 생성
      */
     private String getStatusMessage(ReservationStatus status) {
