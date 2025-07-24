@@ -70,6 +70,26 @@ public class BusinessReservationController {
                 businessId, reservationId, currentUserId, request);
     }
 
+    /**
+     * 예약 완료/노쇼 처리
+     * 권한: OWNER, MANAGER만 가능
+     */
+    @PatchMapping("/{reservationId}/complete")
+    public ResponseData<ReservationResponseDto.ReservationStatusChangeResult> completeReservation(
+            @PathVariable UUID businessId,
+            @PathVariable UUID reservationId,
+            @Valid @RequestBody ReservationRequestDto.CompleteReservation request,
+            HttpServletRequest httpRequest) {
+
+        UUID currentUserId = getCurrentUserId(httpRequest);
+
+        log.info("예약 완료/노쇼 처리 요청: businessId={}, reservationId={}, userId={}, status={}",
+                businessId, reservationId, currentUserId, request.getStatus());
+
+        return businessReservationService.completeReservation(
+                businessId, reservationId, currentUserId, request);
+    }
+
 
 
     // 현재 사용자 ID 추출

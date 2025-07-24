@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 public enum ReservationErrorCode {
     // 예약 조회/일반 관련
     RESERVATION_NOT_FOUND("예약 정보를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    RESERVATION_NOT_READY_FOR_COMPLETION("아직 완료 처리할 수 없는 예약입니다", HttpStatus.BAD_REQUEST),
     RESERVATION_ALREADY_EXISTS("해당 시간대에 이미 예약이 있습니다", HttpStatus.CONFLICT),
     RESERVATION_INVALID_STATUS("현재 예약 상태에서는 처리할 수 없습니다", HttpStatus.BAD_REQUEST),
 

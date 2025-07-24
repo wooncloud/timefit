@@ -40,6 +40,7 @@ public class BusinessReservationService {
     private final ReservationRepositoryCustom reservationRepositoryCustom;
     private final ReservationValidationUtil validationUtil;
     private final ReservationApprovalService reservationApprovalService;
+    private final ReservationCompletionService reservationCompletionService;
 
 
     /**
@@ -91,6 +92,18 @@ public class BusinessReservationService {
         return reservationApprovalService.changeReservationStatus(
                 businessId, reservationId, currentUserId, request);
     }
+
+    /**
+     * 예약 완료/노쇼 처리
+     */
+    public ResponseData<ReservationResponseDto.ReservationStatusChangeResult> completeReservation(
+            UUID businessId, UUID reservationId, UUID currentUserId,
+            ReservationRequestDto.CompleteReservation request) {
+
+        return reservationCompletionService.completeReservation(
+                businessId, reservationId, currentUserId, request);
+    }
+
 
     // Private
 
