@@ -460,4 +460,125 @@ public class ReservationResponseDto {
         }
     }
 
+    /**
+     * 예약 캘린더 조회 결과
+     */
+    @Getter
+    public static class ReservationCalendarResult {
+        private final BusinessInfo businessInfo;
+        private final CalendarInfo calendar;
+
+        private ReservationCalendarResult(BusinessInfo businessInfo, CalendarInfo calendar) {
+            this.businessInfo = businessInfo;
+            this.calendar = calendar;
+        }
+
+        public static ReservationCalendarResult of(BusinessInfo businessInfo, CalendarInfo calendar) {
+            return new ReservationCalendarResult(businessInfo, calendar);
+        }
+    }
+
+    /**
+     * 캘린더 정보
+     */
+    @Getter
+    public static class CalendarInfo {
+        private final LocalDate startDate;
+        private final LocalDate endDate;
+        private final List<CalendarDayInfo> days;
+
+        private CalendarInfo(LocalDate startDate, LocalDate endDate, List<CalendarDayInfo> days) {
+            this.startDate = startDate;
+            this.endDate = endDate;
+            this.days = days;
+        }
+
+        public static CalendarInfo of(LocalDate startDate, LocalDate endDate, List<CalendarDayInfo> days) {
+            return new CalendarInfo(startDate, endDate, days);
+        }
+    }
+
+    /**
+     * 하루 예약 정보
+     */
+    @Getter
+    public static class CalendarDayInfo {
+        private final LocalDate date;
+        private final String dayOfWeek;
+        private final List<CalendarReservationItem> reservations;
+        private final DailyStats dailyStats;
+
+        private CalendarDayInfo(LocalDate date, String dayOfWeek,
+                                List<CalendarReservationItem> reservations, DailyStats dailyStats) {
+            this.date = date;
+            this.dayOfWeek = dayOfWeek;
+            this.reservations = reservations;
+            this.dailyStats = dailyStats;
+        }
+
+        public static CalendarDayInfo of(LocalDate date, String dayOfWeek,
+                                         List<CalendarReservationItem> reservations, DailyStats dailyStats) {
+            return new CalendarDayInfo(date, dayOfWeek, reservations, dailyStats);
+        }
+    }
+
+    /**
+     * 캘린더용 예약 항목
+     */
+    @Getter
+    public static class CalendarReservationItem {
+        private final UUID reservationId;
+        private final String reservationNumber;
+        private final LocalTime time;
+        private final Integer duration;
+        private final ReservationStatus status;
+        private final String customerName;
+        private final String customerPhone;
+        private final List<SelectedOptionInfo> selectedOptions;
+        private final Integer totalPrice;
+        private final String notes;
+
+        private CalendarReservationItem(UUID reservationId, String reservationNumber, LocalTime time,
+                                        Integer duration, ReservationStatus status, String customerName,
+                                        String customerPhone, List<SelectedOptionInfo> selectedOptions,
+                                        Integer totalPrice, String notes) {
+            this.reservationId = reservationId;
+            this.reservationNumber = reservationNumber;
+            this.time = time;
+            this.duration = duration;
+            this.status = status;
+            this.customerName = customerName;
+            this.customerPhone = customerPhone;
+            this.selectedOptions = selectedOptions;
+            this.totalPrice = totalPrice;
+            this.notes = notes;
+        }
+
+        public static CalendarReservationItem of(UUID reservationId, String reservationNumber, LocalTime time,
+                                                 Integer duration, ReservationStatus status, String customerName,
+                                                 String customerPhone, List<SelectedOptionInfo> selectedOptions,
+                                                 Integer totalPrice, String notes) {
+            return new CalendarReservationItem(reservationId, reservationNumber, time, duration, status,
+                    customerName, customerPhone, selectedOptions, totalPrice, notes);
+        }
+    }
+
+    /**
+     * 일일 통계
+     */
+    @Getter
+    public static class DailyStats {
+        private final Integer totalReservations;
+        private final Integer totalRevenue;
+
+        private DailyStats(Integer totalReservations, Integer totalRevenue) {
+            this.totalReservations = totalReservations;
+            this.totalRevenue = totalRevenue;
+        }
+
+        public static DailyStats of(Integer totalReservations, Integer totalRevenue) {
+            return new DailyStats(totalReservations, totalRevenue);
+        }
+    }
+
 }
