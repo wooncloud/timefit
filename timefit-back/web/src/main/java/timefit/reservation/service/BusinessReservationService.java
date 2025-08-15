@@ -41,6 +41,7 @@ public class BusinessReservationService {
     private final ReservationValidationUtil validationUtil;
     private final ReservationApprovalService reservationApprovalService;
     private final ReservationCompletionService reservationCompletionService;
+    private final ReservationCalendarService reservationCalendarService;
 
 
     /**
@@ -102,6 +103,16 @@ public class BusinessReservationService {
 
         return reservationCompletionService.completeReservation(
                 businessId, reservationId, currentUserId, request);
+    }
+
+    /**
+     * 예약 캘린더 조회
+     */
+    public ResponseData<ReservationResponseDto.ReservationCalendarResult> getReservationCalendar(
+            UUID businessId, UUID currentUserId, LocalDate startDate, LocalDate endDate) {
+
+        return reservationCalendarService.getReservationCalendar(
+                businessId, currentUserId, startDate, endDate);
     }
 
 

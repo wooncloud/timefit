@@ -90,6 +90,26 @@ public class BusinessReservationController {
                 businessId, reservationId, currentUserId, request);
     }
 
+    /**
+     * 예약 캘린더 조회
+     * 권한: OWNER, MANAGER, MEMBER (모든 업체 구성원)
+     */
+    @GetMapping("/calendar")
+    public ResponseData<ReservationResponseDto.ReservationCalendarResult> getReservationCalendar(
+            @PathVariable UUID businessId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            HttpServletRequest request) {
+
+        UUID currentUserId = getCurrentUserId(request);
+
+        log.info("예약 캘린더 조회 요청: businessId={}, userId={}, startDate={}, endDate={}",
+                businessId, currentUserId, startDate, endDate);
+
+        return businessReservationService.getReservationCalendar(
+                businessId, currentUserId, startDate, endDate);
+    }
+
 
 
     // 현재 사용자 ID 추출
