@@ -32,7 +32,7 @@ public class UserRegistrationService {
      * 업체 사용자 등록 (User + Business + Role 모두 생성)
      */
     @Transactional
-    public UserRegistrationResult registerBusinessUser(AuthRequestDto.BusinessSignUp request) {
+    public UserRegistrationResult registerBusinessUser(AuthRequestDto.UserSignUp request) {
 
         // 1. 중복 체크
         validateDuplication(request);
@@ -67,7 +67,7 @@ public class UserRegistrationService {
     /**
      * 중복 검증
      */
-    private void validateDuplication(AuthRequestDto.BusinessSignUp request) {
+    private void validateDuplication(AuthRequestDto.UserSignUp request) {
         // 이메일 중복 체크
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AuthException(AuthErrorCode.EMAIL_ALREADY_EXISTS);

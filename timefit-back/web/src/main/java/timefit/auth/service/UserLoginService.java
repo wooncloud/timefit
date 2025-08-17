@@ -31,7 +31,7 @@ public class UserLoginService {
      * 업체 사용자 로그인
      */
     @Transactional
-    public UserLoginResult loginBusinessUser(AuthRequestDto.BusinessSignIn request) {
+    public UserLoginResult loginBusinessUser(AuthRequestDto.UserSignIn request) {
 
         // 1. 사용자 조회 및 검증
         User user = findAndValidateBusinessUser(request);
@@ -66,7 +66,7 @@ public class UserLoginService {
     /**
      * 업체 사용자 조회 및 검증
      */
-    private User findAndValidateBusinessUser(AuthRequestDto.BusinessSignIn request) {
+    private User findAndValidateBusinessUser(AuthRequestDto.UserSignIn request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 

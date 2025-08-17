@@ -29,7 +29,7 @@ public class AuthController {
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseData<AuthResponseDto.BusinessSignUp> businessSignUp(
-            @Valid @RequestBody AuthRequestDto.BusinessSignUp request,
+            @Valid @RequestBody AuthRequestDto.UserSignUp request,
             HttpServletResponse response) {
 
         log.info("업체 회원가입 요청: email={}", request.getEmail());
@@ -51,7 +51,7 @@ public class AuthController {
      */
     @PostMapping("/signin")
     public ResponseData<AuthResponseDto.BusinessSignIn> businessSignIn(
-            @Valid @RequestBody AuthRequestDto.BusinessSignIn request,
+            @Valid @RequestBody AuthRequestDto.UserSignIn request,
             HttpServletResponse response) {
 
         log.info("업체 로그인 요청: email={}", request.getEmail());

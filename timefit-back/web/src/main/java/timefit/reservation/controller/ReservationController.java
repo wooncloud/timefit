@@ -19,7 +19,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/reservations")
+@RequestMapping("/api/reservation")
 @RequiredArgsConstructor
 public class ReservationController {
 

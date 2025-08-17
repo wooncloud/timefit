@@ -25,7 +25,7 @@ public class AuthService {
      * 업체 회원가입
      */
     @Transactional
-    public ResponseData<AuthResponseDto.BusinessSignUp> businessSignUp(AuthRequestDto.BusinessSignUp request) {
+    public ResponseData<AuthResponseDto.BusinessSignUp> businessSignUp(AuthRequestDto.UserSignUp request) {
         log.info("업체 회원가입 시작: email={}", request.getEmail());
 
         // 1. 사용자 등록 (User + Business + Role 생성)
@@ -46,7 +46,7 @@ public class AuthService {
      * 업체 로그인
      */
     @Transactional
-    public ResponseData<AuthResponseDto.BusinessSignIn> businessSignIn(AuthRequestDto.BusinessSignIn request) {
+    public ResponseData<AuthResponseDto.BusinessSignIn> businessSignIn(AuthRequestDto.UserSignIn request) {
         log.info("업체 로그인 시작: email={}", request.getEmail());
 
         // 1. 로그인 처리
