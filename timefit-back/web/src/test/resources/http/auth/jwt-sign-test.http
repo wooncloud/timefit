@@ -1,0 +1,91 @@
+### JWT Auth API 테스트 - 회원가입과 로그인
+
+### 1. 헬스체크
+GET http://localhost:8080/api/auth/health
+
+### 2. 사용자 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "testuser@timefit.com",
+  "password": "password123",
+  "name": "테스트사용자",
+  "phoneNumber": "010-1234-5678"
+}
+
+> {%
+    client.test("회원가입 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.headers.valueOf("Authorization"), "Authorization 헤더가 있어야 함");
+        client.assert(response.body.data.accessToken, "accessToken이 응답에 있어야 함");
+    });
+
+    const authHeader = response.headers.valueOf("Authorization");
+    const accessToken = response.body.data.accessToken;
+    client.global.set("authHeader", authHeader);
+    client.global.set("accessToken", accessToken);
+
+    console.log("회원가입 성공");
+    console.log("Authorization 헤더:", authHeader?.substring(0, 30) + "...");
+    console.log("Access Token:", accessToken?.substring(0, 30) + "...");
+%}
+
+### 3. 사용자 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "testuser@timefit.com",
+  "password": "password123"
+}
+
+> {%
+    client.test("로그인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.headers.valueOf("Authorization"), "Authorization 헤더가 있어야 함");
+        client.assert(response.body.data.accessToken, "accessToken이 응답에 있어야 함");
+    });
+
+    const loginAuthHeader = response.headers.valueOf("Authorization");
+    const loginAccessToken = response.body.data.accessToken;
+    client.global.set("loginAuthHeader", loginAuthHeader);
+    client.global.set("loginAccessToken", loginAccessToken);
+
+    console.log("로그인 성공");
+    console.log("Authorization 헤더:", loginAuthHeader?.substring(0, 30) + "...");
+    console.log("Access Token:", loginAccessToken?.substring(0, 30) + "...");
+    console.log("사용자 정보:", response.body.data.name, response.body.data.email);
+%}
+
+### 4. JWT 토큰 상태 확인
+GET http://localhost:8080/api/auth/status-test
+Authorization: {{loginAuthHeader}}
+
+> {%
+    client.test("JWT 토큰 유효성 확인", function() {
+        client.assert(response.status === 200, "토큰이 유효해야 함");
+    });
+    console.log("토큰 상태:", response.body.data);
+%}
+
+### 5. 로그아웃
+POST http://localhost:8080/api/auth/logout
+Authorization: {{loginAuthHeader}}
+
+> {%
+    client.test("로그아웃 성공", function() {
+        client.assert(response.status === 200, "로그아웃이 성공해야 함");
+    });
+    console.log("로그아웃 완료");
+%}
+
+### 6. 로그아웃 후 토큰 상태 확인 (무효화 확인용)
+GET http://localhost:8080/api/auth/status-test
+Authorization: {{loginAuthHeader}}
+
+> {%
+    console.log("로그아웃 후 토큰 상태 확인:");
+    console.log("응답 코드:", response.status);
+    console.log("응답 내용:", response.body);
+%}
