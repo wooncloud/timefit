@@ -22,7 +22,7 @@ public class AuthService {
     private final AuthResponseFactory authResponseFactory;
 
     /**
-     * 유저 회원가입
+     * 사용자 회원가입
      */
     @Transactional
     public ResponseData<AuthResponseDto.UserSignUp> signup(AuthRequestDto.UserSignUp request) {
@@ -31,19 +31,19 @@ public class AuthService {
         // 1. 순수 사용자 등록 (User만 생성, 업체 정보 없음)
         UserRegistrationResult registrationResult = userRegistrationService.registerUser(request);
 
-        // 2. 토큰 생성
-        String token = authTokenService.generateToken(registrationResult.getUser().getId());
+        // 2. JWT 토큰 생성
+        String accessToken = authTokenService.generateToken(registrationResult.getUser().getId());
 
         // 3. 응답 생성
-        AuthResponseDto.UserSignUp response = authResponseFactory.createBusinessSignUpResponse(
-                registrationResult, token);
+        AuthResponseDto.UserSignUp response = authResponseFactory.createSignUpResponse(
+                registrationResult.getUser(), accessToken);
 
         log.info("회원가입 완료: userId={}", registrationResult.getUser().getId());
         return ResponseData.of(response);
     }
 
     /**
-     * 유저 로그인
+     * 사용자 로그인
      */
     @Transactional
     public ResponseData<AuthResponseDto.UserSignIn> signin(AuthRequestDto.UserSignIn request) {
@@ -52,12 +52,12 @@ public class AuthService {
         // 1. 로그인 처리
         UserLoginResult loginResult = userLoginService.loginUser(request);
 
-        // 2. 토큰 생성
-        String token = authTokenService.generateToken(loginResult.getUser().getId());
+        // 2. JWT 토큰 생성
+        String accessToken = authTokenService.generateToken(loginResult.getUser().getId());
 
         // 3. 응답 생성
-        AuthResponseDto.UserSignIn response = authResponseFactory.createBusinessSignInResponse(
-                loginResult, token);
+        AuthResponseDto.UserSignIn response = authResponseFactory.createSignInResponse(
+                loginResult, accessToken);
 
         log.info("로그인 완료: userId={}", loginResult.getUser().getId());
         return ResponseData.of(response);
@@ -73,12 +73,12 @@ public class AuthService {
         // 1. OAuth 로그인 처리
         UserLoginResult loginResult = userLoginService.loginOAuthUser(request);
 
-        // 2. 토큰 생성
-        String token = authTokenService.generateToken(loginResult.getUser().getId());
+        // 2. JWT 토큰 생성
+        String accessToken = authTokenService.generateToken(loginResult.getUser().getId());
 
         // 3. 응답 생성
-        AuthResponseDto.CustomerOAuth response = authResponseFactory.createCustomerOAuthResponse(
-                loginResult, token);
+        AuthResponseDto.CustomerOAuth response = authResponseFactory.createOAuthResponse(
+                loginResult, accessToken);
 
         log.info("고객 OAuth 로그인 완료: userId={}", loginResult.getUser().getId());
         return ResponseData.of(response);
@@ -91,7 +91,7 @@ public class AuthService {
     public ResponseData<Void> logout(AuthRequestDto.Logout request) {
         log.info("로그아웃 시작");
 
-        // 토큰 무효화
+        // JWT 토큰 무효화 (현재는 로그만 기록)
         authTokenService.invalidateToken(request.getTemporaryToken());
 
         log.info("로그아웃 완료");

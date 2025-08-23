@@ -16,13 +16,12 @@ public class AuthResponseDto {
         private final String phoneNumber;
         private final String role;
         private final String profileImageUrl;
-//        private final List<BusinessInfo> businesses;
-        private final String temporaryToken;
+        private final String accessToken;
         private final LocalDateTime createdAt;
         private final LocalDateTime lastLoginAt;
 
         private UserSignUp(UUID userId, String email, String name, String phoneNumber, String role,
-                           String profileImageUrl, String temporaryToken,
+                           String profileImageUrl, String accessToken,
                            LocalDateTime createdAt, LocalDateTime lastLoginAt) {
             this.userId = userId;
             this.email = email;
@@ -30,20 +29,18 @@ public class AuthResponseDto {
             this.phoneNumber = phoneNumber;
             this.role = role;
             this.profileImageUrl = profileImageUrl;
-//            this.businesses = businesses;
-            this.temporaryToken = temporaryToken;
+            this.accessToken = accessToken;
             this.createdAt = createdAt;
             this.lastLoginAt = lastLoginAt;
         }
 
         public static UserSignUp of(UUID userId, String email, String name, String phoneNumber, String role,
-                                    String profileImageUrl, String temporaryToken,
+                                    String profileImageUrl, String accessToken,
                                     LocalDateTime createdAt, LocalDateTime lastLoginAt) {
             return new UserSignUp(userId, email, name, phoneNumber, role, profileImageUrl,
-                    temporaryToken, createdAt, lastLoginAt);
+                    accessToken, createdAt, lastLoginAt);
         }
     }
-
 
     @Getter
     public static class UserSignIn {
@@ -54,12 +51,12 @@ public class AuthResponseDto {
         private final String role;
         private final String profileImageUrl;
         private final List<BusinessInfo> businesses;
-        private final String temporaryToken;
+        private final String accessToken;
         private final LocalDateTime createdAt;
         private final LocalDateTime lastLoginAt;
 
         private UserSignIn(UUID userId, String email, String name, String phoneNumber, String role,
-                           String profileImageUrl, List<BusinessInfo> businesses, String temporaryToken,
+                           String profileImageUrl, List<BusinessInfo> businesses, String accessToken,
                            LocalDateTime createdAt, LocalDateTime lastLoginAt) {
             this.userId = userId;
             this.email = email;
@@ -68,19 +65,18 @@ public class AuthResponseDto {
             this.role = role;
             this.profileImageUrl = profileImageUrl;
             this.businesses = businesses;
-            this.temporaryToken = temporaryToken;
+            this.accessToken = accessToken;
             this.createdAt = createdAt;
             this.lastLoginAt = lastLoginAt;
         }
 
         public static UserSignIn of(UUID userId, String email, String name, String phoneNumber, String role,
-                                    String profileImageUrl, List<BusinessInfo> businesses, String temporaryToken,
+                                    String profileImageUrl, List<BusinessInfo> businesses, String accessToken,
                                     LocalDateTime createdAt, LocalDateTime lastLoginAt) {
             return new UserSignIn(userId, email, name, phoneNumber, role, profileImageUrl,
-                    businesses, temporaryToken, createdAt, lastLoginAt);
+                    businesses, accessToken, createdAt, lastLoginAt);
         }
     }
-
 
     @Getter
     public static class CustomerOAuth {
@@ -92,14 +88,14 @@ public class AuthResponseDto {
         private final String profileImageUrl;
         private final String oauthProvider;
         private final String oauthId;
-        private final String temporaryToken;
+        private final String accessToken;
         private final Boolean isFirstLogin;
         private final LocalDateTime createdAt;
         private final LocalDateTime lastLoginAt;
 
         private CustomerOAuth(UUID userId, String email, String name, String phoneNumber, String role,
-                                String profileImageUrl, String oauthProvider, String oauthId, String temporaryToken,
-                                Boolean isFirstLogin, LocalDateTime createdAt, LocalDateTime lastLoginAt) {
+                              String profileImageUrl, String oauthProvider, String oauthId, String accessToken,
+                              Boolean isFirstLogin, LocalDateTime createdAt, LocalDateTime lastLoginAt) {
             this.userId = userId;
             this.email = email;
             this.name = name;
@@ -108,58 +104,55 @@ public class AuthResponseDto {
             this.profileImageUrl = profileImageUrl;
             this.oauthProvider = oauthProvider;
             this.oauthId = oauthId;
-            this.temporaryToken = temporaryToken;
+            this.accessToken = accessToken;
             this.isFirstLogin = isFirstLogin;
             this.createdAt = createdAt;
             this.lastLoginAt = lastLoginAt;
         }
 
         public static CustomerOAuth of(UUID userId, String email, String name, String phoneNumber, String role,
-                                        String profileImageUrl, String oauthProvider, String oauthId, String temporaryToken,
-                                        Boolean isFirstLogin, LocalDateTime createdAt, LocalDateTime lastLoginAt) {
+                                       String profileImageUrl, String oauthProvider, String oauthId, String accessToken,
+                                       Boolean isFirstLogin, LocalDateTime createdAt, LocalDateTime lastLoginAt) {
             return new CustomerOAuth(userId, email, name, phoneNumber, role, profileImageUrl, oauthProvider,
-                    oauthId, temporaryToken, isFirstLogin, createdAt, lastLoginAt);
+                    oauthId, accessToken, isFirstLogin, createdAt, lastLoginAt);
         }
     }
-
 
     @Getter
     public static class BusinessInfo {
         private final UUID businessId;
         private final String businessName;
         private final String businessType;
-        private final String businessNumber;
         private final String address;
         private final String contactPhone;
         private final String description;
         private final String logoUrl;
         private final String role;
         private final LocalDateTime joinedAt;
+        private final Boolean isActive;
         private final LocalDateTime createdAt;
-        private final LocalDateTime updatedAt;
 
-        private BusinessInfo(UUID businessId, String businessName, String businessType, String businessNumber,
-                                String address, String contactPhone, String description, String logoUrl, String role,
-                                LocalDateTime joinedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        private BusinessInfo(UUID businessId, String businessName, String businessType,
+                             String address, String contactPhone, String description, String logoUrl, String role,
+                             LocalDateTime joinedAt, Boolean isActive, LocalDateTime createdAt) {
             this.businessId = businessId;
             this.businessName = businessName;
             this.businessType = businessType;
-            this.businessNumber = businessNumber;
             this.address = address;
             this.contactPhone = contactPhone;
             this.description = description;
             this.logoUrl = logoUrl;
             this.role = role;
             this.joinedAt = joinedAt;
+            this.isActive = isActive;
             this.createdAt = createdAt;
-            this.updatedAt = updatedAt;
         }
 
-        public static BusinessInfo of(UUID businessId, String businessName, String businessType, String businessNumber,
-                                        String address, String contactPhone, String description, String logoUrl, String role,
-                                        LocalDateTime joinedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
-            return new BusinessInfo(businessId, businessName, businessType, businessNumber, address, contactPhone,
-                    description, logoUrl, role, joinedAt, createdAt, updatedAt);
+        public static BusinessInfo of(UUID businessId, String businessName, String businessType,
+                                      String address, String contactPhone, String description, String logoUrl, String role,
+                                      LocalDateTime joinedAt, Boolean isActive, LocalDateTime createdAt) {
+            return new BusinessInfo(businessId, businessName, businessType, address, contactPhone,
+                    description, logoUrl, role, joinedAt, isActive, createdAt);
         }
     }
 }

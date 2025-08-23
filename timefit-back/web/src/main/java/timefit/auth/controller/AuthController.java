@@ -11,6 +11,7 @@ import timefit.auth.dto.AuthRequestDto;
 import timefit.auth.dto.AuthResponseDto;
 import timefit.auth.service.AuthService;
 import timefit.common.ResponseData;
+import timefit.config.JwtConfig;
 
 @Slf4j
 @RestController
@@ -20,15 +21,12 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // 임시 헤더 이름
-    private static final String TEMP_TOKEN_HEADER = "x-client-token";
-
     /**
-     * 업체 회원가입
+     * 사용자 회원가입
      */
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<AuthResponseDto.UserSignUp> businessSignUp(
+    public ResponseData<AuthResponseDto.UserSignUp> signup(
             @Valid @RequestBody AuthRequestDto.UserSignUp request,
             HttpServletResponse response) {
 
@@ -36,21 +34,20 @@ public class AuthController {
 
         ResponseData<AuthResponseDto.UserSignUp> responseData = authService.signup(request);
 
-        // 응답 헤더에 임시 토큰 추가
-        String temporaryToken = responseData.getData().getTemporaryToken();
-        response.setHeader(TEMP_TOKEN_HEADER, temporaryToken);
+        // JWT 토큰을 Authorization 헤더에 설정
+        String accessToken = responseData.getData().getAccessToken();
+        response.setHeader(JwtConfig.AUTHORIZATION_HEADER, JwtConfig.TOKEN_PREFIX + accessToken);
 
-        log.info("회원가입 완료: userId={}, token={}",
-                responseData.getData().getUserId(), temporaryToken);
+        log.info("회원가입 완료: userId={}", responseData.getData().getUserId());
 
         return responseData;
     }
 
     /**
-     * 업체 로그인
+     * 사용자 로그인
      */
     @PostMapping("/signin")
-    public ResponseData<AuthResponseDto.UserSignIn> businessSignIn(
+    public ResponseData<AuthResponseDto.UserSignIn> signin(
             @Valid @RequestBody AuthRequestDto.UserSignIn request,
             HttpServletResponse response) {
 
@@ -58,12 +55,11 @@ public class AuthController {
 
         ResponseData<AuthResponseDto.UserSignIn> responseData = authService.signin(request);
 
-        // 응답 헤더에 임시 토큰 추가
-        String temporaryToken = responseData.getData().getTemporaryToken();
-        response.setHeader(TEMP_TOKEN_HEADER, temporaryToken);
+        // JWT 토큰을 Authorization 헤더에 설정
+        String accessToken = responseData.getData().getAccessToken();
+        response.setHeader(JwtConfig.AUTHORIZATION_HEADER, JwtConfig.TOKEN_PREFIX + accessToken);
 
-        log.info("로그인 완료: userId={}, token={}",
-                responseData.getData().getUserId(), temporaryToken);
+        log.info("로그인 완료: userId={}", responseData.getData().getUserId());
 
         return responseData;
     }
@@ -81,14 +77,13 @@ public class AuthController {
 
         ResponseData<AuthResponseDto.CustomerOAuth> responseData = authService.customerOAuthLogin(request);
 
-        // 응답 헤더에 임시 토큰 추가
-        String temporaryToken = responseData.getData().getTemporaryToken();
-        response.setHeader(TEMP_TOKEN_HEADER, temporaryToken);
+        // JWT 토큰을 Authorization 헤더에 설정
+        String accessToken = responseData.getData().getAccessToken();
+        response.setHeader(JwtConfig.AUTHORIZATION_HEADER, JwtConfig.TOKEN_PREFIX + accessToken);
 
-        log.info("고객 OAuth 로그인 완료: userId={}, isFirstLogin={}, token={}",
+        log.info("고객 OAuth 로그인 완료: userId={}, isFirstLogin={}",
                 responseData.getData().getUserId(),
-                responseData.getData().getIsFirstLogin(),
-                temporaryToken);
+                responseData.getData().getIsFirstLogin());
 
         return responseData;
     }
@@ -98,9 +93,14 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public ResponseData<Void> logout(
-            @RequestHeader(value = TEMP_TOKEN_HEADER, required = false) String token) {
+            @RequestHeader(value = JwtConfig.AUTHORIZATION_HEADER, required = false) String authorizationHeader) {
 
-        log.info("로그아웃 요청: token={}", token != null ? "있음" : "없음");
+        log.info("로그아웃 요청");
+
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith(JwtConfig.TOKEN_PREFIX)) {
+            token = authorizationHeader.substring(JwtConfig.TOKEN_PREFIX_LENGTH);
+        }
 
         if (token != null) {
             AuthRequestDto.Logout logoutRequest = AuthRequestDto.Logout.of(token);
@@ -124,13 +124,13 @@ public class AuthController {
      */
     @GetMapping("/status-test")
     public ResponseData<String> tokenStatus(
-            @RequestHeader(value = TEMP_TOKEN_HEADER, required = false) String token) {
+            @RequestHeader(value = JwtConfig.AUTHORIZATION_HEADER, required = false) String authorizationHeader) {
 
-        if (token == null) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith(JwtConfig.TOKEN_PREFIX)) {
             return ResponseData.of("토큰 없음");
         }
 
-        // 임시 구현 - 실제로는 AuthTokenService에서 검증
-        return ResponseData.of("토큰 있음: " + token.substring(0, Math.min(10, token.length())) + "...");
+        String token = authorizationHeader.substring(JwtConfig.TOKEN_PREFIX_LENGTH);
+        return ResponseData.of("JWT 토큰 있음: " + token.substring(0, Math.min(20, token.length())) + "...");
     }
 }
