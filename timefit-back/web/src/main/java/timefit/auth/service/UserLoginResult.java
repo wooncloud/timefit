@@ -17,7 +17,7 @@ public class UserLoginResult {
     private final List<UserBusinessRole> userBusinessRoles;
     private final boolean isFirstLogin;
 
-    public static UserLoginResult ofBusinessUser(User user, List<UserBusinessRole> userBusinessRoles) {
+    public static UserLoginResult ofUser(User user, List<UserBusinessRole> userBusinessRoles) {
         List<Business> businesses = userBusinessRoles.stream()
                 .map(UserBusinessRole::getBusiness)
                 .toList();

@@ -1,0 +1,619 @@
+### 예약 캘린더 조회 API 테스트
+
+### 1. OWNER 사용자 회원가입 (업체 생성)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "calendar-owner@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "캘린더사장",
+  "phoneNumber": "010-1111-2222",
+  "businessName": "캘린더 테스트 헬스장",
+  "businessType": "헬스장",
+  "businessNumber": "888-88-88888",
+  "address": "서울시 강남구 캘린더로 888",
+  "contactPhone": "02-8888-8888",
+  "description": "예약 캘린더 조회 테스트용 헬스장"
+}
+
+### 2. OWNER 로그인 (토큰 및 businessId 획득)
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "calendar-owner@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const ownerToken = response.headers.valueOf("x-client-token");
+    console.log("OWNER 토큰:", ownerToken);
+    client.global.set("ownerToken", ownerToken);
+
+    if (response.body.data && response.body.data.businesses && response.body.data.businesses.length > 0) {
+        const businessId = response.body.data.businesses[0].businessId;
+        console.log("업체 ID:", businessId);
+        client.global.set("businessId", businessId);
+    }
+%}
+
+### 3. MANAGER 사용자 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "calendar-manager@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "캘린더매니저",
+  "phoneNumber": "010-2222-3333",
+  "businessName": "매니저 개인업체",
+  "businessType": "개인",
+  "businessNumber": "999-99-99999",
+  "address": "서울시 강남구 매니저로 999",
+  "contactPhone": "02-9999-9999",
+  "description": "매니저용 개인 업체"
+}
+
+### 4. MANAGER를 업체에 초대
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "email": "calendar-manager@timefit.com",
+  "role": "MANAGER",
+  "invitationMessage": "캘린더 테스트를 위한 매니저 초대입니다."
+}
+
+> {%
+    if (response.body.data) {
+        const managerUserId = response.body.data.userId;
+        console.log("초대된 MANAGER ID:", managerUserId);
+        client.global.set("managerUserId", managerUserId);
+    }
+%}
+
+### 5. MANAGER 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "calendar-manager@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const managerToken = response.headers.valueOf("x-client-token");
+    console.log("MANAGER 토큰:", managerToken);
+    client.global.set("managerToken", managerToken);
+%}
+
+### 6. MEMBER 사용자 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "calendar-member@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "캘린더멤버",
+  "phoneNumber": "010-3333-4444",
+  "businessName": "멤버 개인업체",
+  "businessType": "개인",
+  "businessNumber": "777-77-77777",
+  "address": "서울시 강남구 멤버로 777",
+  "contactPhone": "02-7777-7777",
+  "description": "멤버용 개인 업체"
+}
+
+### 7. MEMBER를 업체에 초대
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "email": "calendar-member@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "캘린더 테스트를 위한 멤버 초대입니다."
+}
+
+### 8. MEMBER 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "calendar-member@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const memberToken = response.headers.valueOf("x-client-token");
+    console.log("MEMBER 토큰:", memberToken);
+    client.global.set("memberToken", memberToken);
+%}
+
+### 9. 고객 사용자 회원가입 (예약 생성용)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "calendar-customer@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "캘린더고객",
+  "phoneNumber": "010-4444-5555",
+  "businessName": "고객 개인업체",
+  "businessType": "개인",
+  "businessNumber": "666-66-66666",
+  "address": "서울시 강남구 고객로 666",
+  "contactPhone": "02-6666-6666",
+  "description": "고객용 개인 업체"
+}
+
+### 10. 고객 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "calendar-customer@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    const customerToken = response.headers.valueOf("x-client-token");
+    console.log("고객 토큰:", customerToken);
+    client.global.set("customerToken", customerToken);
+%}
+
+### 11. 업체 영업시간 설정 (예약 슬롯 생성 전 필수)
+PUT http://localhost:8080/api/schedule/operating-hours?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "businessHours": [
+    {
+      "dayOfWeek": 1,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 2,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 3,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 4,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 5,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 6,
+      "openTime": "10:00",
+      "closeTime": "18:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 0,
+      "openTime": null,
+      "closeTime": null,
+      "isClosed": true
+    }
+  ]
+}
+
+> {%
+    console.log("영업시간 설정 완료");
+%}
+
+### 12. 예약 슬롯 생성 - 8월 15일 (오늘)
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "slotDate": "2025-08-15",
+  "startTime": "14:00",
+  "endTime": "15:00",
+  "capacity": 3
+}
+
+> {%
+    if (response.body.data) {
+        const slot1 = response.body.data.slotId;
+        console.log("슬롯 1 생성:", slot1);
+        client.global.set("slot1", slot1);
+    }
+%}
+
+### 13. 예약 슬롯 생성 - 8월 16일
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "slotDate": "2025-08-16",
+  "startTime": "10:00",
+  "endTime": "11:30",
+  "capacity": 2
+}
+
+> {%
+    if (response.body.data) {
+        const slot2 = response.body.data.slotId;
+        console.log("슬롯 2 생성:", slot2);
+        client.global.set("slot2", slot2);
+    }
+%}
+
+### 14. 예약 슬롯 생성 - 8월 20일
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+x-client-token: {{ownerToken}}
+
+{
+  "slotDate": "2025-08-20",
+  "startTime": "16:00",
+  "endTime": "17:00",
+  "capacity": 4
+}
+
+> {%
+    if (response.body.data) {
+        const slot3 = response.body.data.slotId;
+        console.log("슬롯 3 생성:", slot3);
+        client.global.set("slot3", slot3);
+    }
+%}
+
+### 15. 예약 생성 - 8월 15일 14:00
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{slot1}}",
+  "reservationDate": "2025-08-15",
+  "reservationTime": "14:00",
+  "durationMinutes": 60,
+  "totalPrice": 50000,
+  "customerName": "캘린더고객",
+  "customerPhone": "010-4444-5555",
+  "notes": "캘린더 테스트용 예약 1"
+}
+
+> {%
+    if (response.body.data) {
+        console.log("✅ 8월 15일 예약 생성:", response.body.data.reservationNumber);
+    }
+%}
+
+### 16. 예약 생성 - 8월 16일 10:00
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{slot2}}",
+  "reservationDate": "2025-08-16",
+  "reservationTime": "10:00",
+  "durationMinutes": 90,
+  "totalPrice": 70000,
+  "customerName": "캘린더고객",
+  "customerPhone": "010-4444-5555",
+  "notes": "캘린더 테스트용 예약 2"
+}
+
+> {%
+    if (response.body.data) {
+        console.log("✅ 8월 16일 예약 생성:", response.body.data.reservationNumber);
+    }
+%}
+
+### 17. 예약 생성 - 8월 20일 16:00
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+x-client-token: {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{slot3}}",
+  "reservationDate": "2025-08-20",
+  "reservationTime": "16:00",
+  "durationMinutes": 60,
+  "totalPrice": 45000,
+  "customerName": "캘린더고객",
+  "customerPhone": "010-4444-5555",
+  "notes": "캘린더 테스트용 예약 3"
+}
+
+> {%
+    if (response.body.data) {
+        console.log("✅ 8월 20일 예약 생성:", response.body.data.reservationNumber);
+    }
+%}
+
+### 18. 캘린더 조회 - OWNER (1주일 범위)
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-15&endDate=2025-08-21
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("OWNER 캘린더 조회 응답 상태:", response.status);
+    console.log("OWNER 캘린더 조회 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("✅ OWNER 캘린더 조회 성공");
+        console.log("업체명:", response.body.data.businessInfo?.businessName);
+        console.log("캘린더 기간:", response.body.data.calendar?.startDate, "~", response.body.data.calendar?.endDate);
+
+        if (response.body.data.calendar?.days) {
+            console.log("일별 예약 현황:");
+            response.body.data.calendar.days.forEach(day => {
+                console.log(`- ${day.date} (${day.dayOfWeek}): 예약 ${day.reservations?.length || 0}건, 매출 ${day.dailyStats?.totalRevenue || 0}원`);
+                if (day.reservations && day.reservations.length > 0) {
+                    day.reservations.forEach(res => {
+                        console.log(`  • ${res.time} ${res.customerName} (${res.status}) - ${res.totalPrice}원`);
+                    });
+                }
+            });
+        }
+    }
+%}
+
+### 19. 캘린더 조회 - MANAGER (같은 기간)
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-15&endDate=2025-08-21
+x-client-token: {{managerToken}}
+
+> {%
+    console.log("MANAGER 캘린더 조회 응답 상태:", response.status);
+    console.log("MANAGER 캘린더 조회 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("✅ MANAGER 캘린더 조회 성공");
+        console.log("예약이 있는 날짜 수:", response.body.data.calendar?.days?.filter(d => d.reservations?.length > 0).length);
+    }
+%}
+
+### 20. 캘린더 조회 - MEMBER (같은 기간)
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-15&endDate=2025-08-21
+x-client-token: {{memberToken}}
+
+> {%
+    console.log("MEMBER 캘린더 조회 응답 상태:", response.status);
+    console.log("MEMBER 캘린더 조회 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("✅ MEMBER 캘린더 조회 성공");
+        console.log("총 예약 수:", response.body.data.calendar?.days?.reduce((total, day) => total + (day.reservations?.length || 0), 0));
+    }
+%}
+
+### 21. 캘린더 조회 - 1개월 범위 (8월 전체)
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-01&endDate=2025-08-31
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("1개월 캘린더 조회 응답 상태:", response.status);
+
+    if (response.body.data && response.body.data.calendar) {
+        console.log("✅ 8월 전체 캘린더 조회 성공");
+        console.log("전체 일수:", response.body.data.calendar.days?.length);
+
+        const totalReservations = response.body.data.calendar.days?.reduce((total, day) => total + (day.reservations?.length || 0), 0);
+        const totalRevenue = response.body.data.calendar.days?.reduce((total, day) => total + (day.dailyStats?.totalRevenue || 0), 0);
+
+        console.log("8월 총 예약 수:", totalReservations);
+        console.log("8월 총 매출:", totalRevenue);
+    }
+%}
+
+### 22. 캘린더 조회 - 3개월 범위 (8-10월)
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-01&endDate=2025-10-31
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("3개월 캘린더 조회 응답 상태:", response.status);
+
+    if (response.body.data && response.body.data.calendar) {
+        console.log("✅ 3개월 캘린더 조회 성공");
+        console.log("전체 일수:", response.body.data.calendar.days?.length);
+        console.log("조회 기간:", response.body.data.calendar.startDate, "~", response.body.data.calendar.endDate);
+    }
+%}
+
+### 23. 캘린더 조회 - 커스텀 기간 (주말만)
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-16&endDate=2025-08-17
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("커스텀 기간 캘린더 조회 응답 상태:", response.status);
+
+    if (response.body.data && response.body.data.calendar) {
+        console.log("✅ 커스텀 기간 캘린더 조회 성공");
+        console.log("주말 예약 현황:");
+        response.body.data.calendar.days?.forEach(day => {
+            console.log(`${day.date}: 예약 ${day.reservations?.length || 0}건`);
+        });
+    }
+%}
+
+### 24. 실패 케이스 - 고객이 업체 캘린더 조회 시도 (권한 없음)
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-15&endDate=2025-08-21
+x-client-token: {{customerToken}}
+
+> {%
+    console.log("고객 캘린더 조회 시도 응답 상태:", response.status);
+    console.log("고객 캘린더 조회 시도 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 403) {
+        console.log("✅ 고객의 업체 캘린더 조회 차단 성공");
+    } else {
+        console.log("⚠️ 권한 검증 실패 - 고객이 캘린더를 조회할 수 있음");
+    }
+%}
+
+### 25. 실패 케이스 - 다른 업체 캘린더 조회 시도
+GET http://localhost:8080/api/businesses/11111111-1111-1111-1111-111111111111/reservations/calendar?startDate=2025-08-15&endDate=2025-08-21
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("다른 업체 캘린더 조회 응답 상태:", response.status);
+
+    if (response.status === 403 || response.status === 404) {
+        console.log("✅ 다른 업체 캘린더 조회 차단 성공");
+    } else {
+        console.log("⚠️ 권한 검증 실패");
+    }
+%}
+
+### 26. 실패 케이스 - 토큰 없이 캘린더 조회 시도
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-15&endDate=2025-08-21
+
+> {%
+    console.log("토큰 없는 캘린더 조회 응답 상태:", response.status);
+
+    if (response.status === 401) {
+        console.log("✅ 인증되지 않은 캘린더 조회 차단 성공");
+    }
+%}
+
+### 27. 실패 케이스 - 잘못된 날짜 형식
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=invalid-date&endDate=2025-08-21
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("잘못된 날짜 형식 응답 상태:", response.status);
+
+    if (response.status === 400) {
+        console.log("✅ 잘못된 날짜 형식 검증 성공");
+    }
+%}
+
+### 28. 실패 케이스 - 시작일이 종료일보다 늦은 경우
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-25&endDate=2025-08-15
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("잘못된 날짜 범위 응답 상태:", response.status);
+
+    if (response.status === 400) {
+        console.log("✅ 잘못된 날짜 범위 검증 성공");
+    }
+%}
+
+### 29. 실패 케이스 - 1년 초과 범위 조회 (최대 범위 제한 테스트)
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-01-01&endDate=2026-12-31
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("1년 초과 범위 조회 응답 상태:", response.status);
+
+    if (response.status === 400) {
+        console.log("✅ 최대 범위 제한 검증 성공");
+    } else {
+        console.log("⚠️ 범위 제한이 적용되지 않음 - 성능에 영향을 줄 수 있음");
+    }
+%}
+
+### 30. 실패 케이스 - 존재하지 않는 업체 ID
+GET http://localhost:8080/api/businesses/00000000-0000-0000-0000-000000000000/reservations/calendar?startDate=2025-08-15&endDate=2025-08-21
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("존재하지 않는 업체 ID 응답 상태:", response.status);
+
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 업체 검증 성공");
+    }
+%}
+
+### 31. 데이터 정렬 검증 - 날짜순 정렬 확인
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-15&endDate=2025-08-21
+x-client-token: {{ownerToken}}
+
+> {%
+    if (response.body.data && response.body.data.calendar && response.body.data.calendar.days) {
+        console.log("\n=== 날짜 정렬 검증 ===");
+        const days = response.body.data.calendar.days;
+
+        let isDateSorted = true;
+        for (let i = 0; i < days.length - 1; i++) {
+            if (days[i].date > days[i + 1].date) {
+                isDateSorted = false;
+                break;
+            }
+        }
+
+        if (isDateSorted) {
+            console.log("✅ 날짜 오름차순 정렬 확인");
+        } else {
+            console.log("⚠️ 날짜 정렬이 올바르지 않음");
+        }
+
+        // 시간별 정렬 검증
+        days.forEach(day => {
+            if (day.reservations && day.reservations.length > 1) {
+                let isTimeSorted = true;
+                for (let i = 0; i < day.reservations.length - 1; i++) {
+                    if (day.reservations[i].time > day.reservations[i + 1].time) {
+                        isTimeSorted = false;
+                        break;
+                    }
+                }
+
+                if (isTimeSorted) {
+                    console.log(`✅ ${day.date} 시간 정렬 확인`);
+                } else {
+                    console.log(`⚠️ ${day.date} 시간 정렬이 올바르지 않음`);
+                }
+            }
+        });
+    }
+%}
+
+### 32. 빈 날짜 포함 확인 - 예약이 없는 날짜도 응답에 포함되는지 검증
+GET http://localhost:8080/api/businesses/{{businessId}}/reservations/calendar?startDate=2025-08-25&endDate=2025-08-30
+x-client-token: {{ownerToken}}
+
+> {%
+    console.log("빈 날짜 기간 캘린더 조회 응답 상태:", response.status);
+
+    if (response.body.data && response.body.data.calendar) {
+        console.log("\n=== 빈 날짜 포함 검증 ===");
+        const days = response.body.data.calendar.days;
+
+        if (days && days.length > 0) {
+            console.log("빈 기간 일수:", days.length);
+
+            const emptyDays = days.filter(day => !day.reservations || day.reservations.length === 0);
+            console.log("예약이 없는 날짜 수:", emptyDays.length);
+
+            if (emptyDays.length === days.length) {
+                console.log("✅ 예약이 없는 날짜도 모두 응답에 포함됨");
+            } else {
+                console.log("⚠️ 일부 날짜가 누락되었을 수 있음");
+            }
+
+            // 각 빈 날짜가 빈 배열을 가지는지 확인
+            emptyDays.forEach(day => {
+                if (Array.isArray(day.reservations) && day.reservations.length === 0) {
+                    console.log(`✅ ${day.date}: 빈 배열로 올바르게 처리`);
+                } else {
+                    console.log(`⚠️ ${day.date}: 빈 날짜 처리 문제`);
+                }
+            });
+        }
+    }
+%}

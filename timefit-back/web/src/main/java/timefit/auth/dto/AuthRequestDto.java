@@ -1,45 +1,27 @@
 package timefit.auth.dto;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+
 import java.util.Objects;
 
 public class AuthRequestDto {
 
     @Getter
-    public static class BusinessSignUp {
+    public static class UserSignUp {
         private final String email;
         private final String password;
         private final String name;
         private final String phoneNumber;
-        private final String businessName;
-        private final String businessType;
-        private final String businessNumber;
-        private final String address;
-        private final String contactPhone;
-        private final String description;
 
-        private BusinessSignUp(String email, String password, String name, String phoneNumber,
-                                String businessName, String businessType, String businessNumber,
-                                String address, String contactPhone, String description) {
+        private UserSignUp(String email, String password, String name, String phoneNumber) {
             this.email = email;
             this.password = password;
             this.name = name;
             this.phoneNumber = phoneNumber;
-            this.businessName = businessName;
-            this.businessType = businessType;
-            this.businessNumber = businessNumber;
-            this.address = address;
-            this.contactPhone = contactPhone;
-            this.description = description;
         }
 
-        public static BusinessSignUp of(String email, String password, String name, String phoneNumber,
-                                        String businessName, String businessType, String businessNumber,
-                                        String address, String contactPhone, String description) {
-            return new BusinessSignUp(email, password, name, phoneNumber, businessName,
-                    businessType, businessNumber, address, contactPhone, description);
+        public static UserSignUp of(String email, String password, String name, String phoneNumber) {
+            return new UserSignUp(email, password, name, phoneNumber);
         }
 
         @Override
@@ -47,39 +29,32 @@ public class AuthRequestDto {
             if (this == other) return true;
             if (other == null || getClass() != other.getClass()) return false;
 
-            BusinessSignUp that = (BusinessSignUp) other;
+            UserSignUp that = (UserSignUp) other;
 
             return Objects.equals(email, that.email) &&
                     Objects.equals(password, that.password) &&
                     Objects.equals(name, that.name) &&
-                    Objects.equals(phoneNumber, that.phoneNumber) &&
-                    Objects.equals(businessName, that.businessName) &&
-                    Objects.equals(businessType, that.businessType) &&
-                    Objects.equals(businessNumber, that.businessNumber) &&
-                    Objects.equals(address, that.address) &&
-                    Objects.equals(contactPhone, that.contactPhone) &&
-                    Objects.equals(description, that.description);
+                    Objects.equals(phoneNumber, that.phoneNumber);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(email, password, name, phoneNumber, businessName,
-                    businessType, businessNumber, address, contactPhone, description);
+            return Objects.hash(email, password, name, phoneNumber);
         }
     }
 
     @Getter
-    public static class BusinessSignIn {
+    public static class UserSignIn {
         private final String email;
         private final String password;
 
-        private BusinessSignIn(String email, String password) {
+        private UserSignIn(String email, String password) {
             this.email = email;
             this.password = password;
         }
 
-        public static BusinessSignIn of(String email, String password) {
-            return new BusinessSignIn(email, password);
+        public static UserSignIn of(String email, String password) {
+            return new UserSignIn(email, password);
         }
 
         @Override
@@ -87,7 +62,7 @@ public class AuthRequestDto {
             if (this == other) return true;
             if (other == null || getClass() != other.getClass()) return false;
 
-            BusinessSignIn that = (BusinessSignIn) other;
+            UserSignIn that = (UserSignIn) other;
 
             return Objects.equals(email, that.email) &&
                     Objects.equals(password, that.password);

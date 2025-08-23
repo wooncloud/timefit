@@ -26,6 +26,8 @@ public enum ReservationErrorCode {
     MODIFICATION_REASON_REQUIRED("예약 수정 사유는 필수입니다", HttpStatus.BAD_REQUEST),
     MODIFICATION_DEADLINE_PASSED("예약 수정 가능 시간이 지났습니다", HttpStatus.BAD_REQUEST),
     CANCELLATION_DEADLINE_PASSED("예약 취소 가능 시간이 지났습니다", HttpStatus.BAD_REQUEST),
+    CALENDAR_DATE_REQUIRED("캘린더 조회를 위한 시작일과 종료일은 필수입니다", HttpStatus.BAD_REQUEST),
+    CALENDAR_DATE_RANGE_TOO_LARGE("조회 가능한 최대 기간을 초과했습니다 (최대 1년)", HttpStatus.BAD_REQUEST),
 
     // 권한 관련
     NOT_BUSINESS_MEMBER("업체 구성원만 접근할 수 있습니다", HttpStatus.FORBIDDEN),

@@ -20,17 +20,17 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/businesses/{businessId}/reservations")
+@RequestMapping("/api/business/{businessId}/reservation")
 @RequiredArgsConstructor
 public class BusinessReservationController {
 
     private final BusinessReservationService businessReservationService;
 
     /**
-     * 받은 예약 신청 조회
+     * 예약 신청 목록 조회
      * 권한: OWNER, MANAGER, MEMBER (모든 업체 구성원)
      */
-    @GetMapping
+    @GetMapping("/requests")
     public ResponseData<ReservationResponseDto.BusinessReservationListResult> getBusinessReservations(
             @PathVariable UUID businessId,
             @RequestParam(required = false) String status,
@@ -88,6 +88,26 @@ public class BusinessReservationController {
 
         return businessReservationService.completeReservation(
                 businessId, reservationId, currentUserId, request);
+    }
+
+    /**
+     * 예약 일정 조회
+     * 권한: OWNER, MANAGER, MEMBER (모든 업체 구성원)
+     */
+    @GetMapping("/schedules")
+    public ResponseData<ReservationResponseDto.ReservationCalendarResult> getReservationCalendar(
+            @PathVariable UUID businessId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            HttpServletRequest request) {
+
+        UUID currentUserId = getCurrentUserId(request);
+
+        log.info("예약 캘린더 조회 요청: businessId={}, userId={}, startDate={}, endDate={}",
+                businessId, currentUserId, startDate, endDate);
+
+        return businessReservationService.getReservationCalendar(
+                businessId, currentUserId, startDate, endDate);
     }
 
 

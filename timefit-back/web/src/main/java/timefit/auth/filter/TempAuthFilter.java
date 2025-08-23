@@ -24,7 +24,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AuthFilter extends OncePerRequestFilter {
+public class TempAuthFilter extends OncePerRequestFilter {
 
     private final AuthTokenService authTokenService;
     private static final String TEMP_TOKEN_HEADER = "x-client-token";

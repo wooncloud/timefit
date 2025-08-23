@@ -11,11 +11,11 @@ import timefit.user.entity.User;
 public class UserRegistrationResult {
 
     private final User user;
-    private final Business business;
-    private final UserBusinessRole userBusinessRole;
+//    private final Business business;
+//    private final UserBusinessRole userBusinessRole;
 
-    public static UserRegistrationResult of(User user, Business business, UserBusinessRole userBusinessRole) {
-        return new UserRegistrationResult(user, business, userBusinessRole);
+    public static UserRegistrationResult of(User user) {
+        return new UserRegistrationResult(user);
     }
 }
 
