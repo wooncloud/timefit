@@ -5,8 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import timefit.business.entity.Business;
-import timefit.business.entity.UserBusinessRole;
 import timefit.business.repository.BusinessRepository;
 import timefit.business.repository.UserBusinessRoleRepository;
 import timefit.exception.auth.AuthException;
@@ -15,8 +13,6 @@ import timefit.user.entity.User;
 import timefit.user.repository.UserRepository;
 import timefit.auth.dto.AuthRequestDto;
 import timefit.auth.factory.UserFactory;
-import timefit.auth.factory.BusinessFactory;
-import timefit.auth.factory.UserBusinessRoleFactory;
 
 @Slf4j
 @Service
@@ -25,20 +21,18 @@ import timefit.auth.factory.UserBusinessRoleFactory;
 public class UserRegistrationService {
 
     private final UserRepository userRepository;
-    private final BusinessRepository businessRepository;
-    private final UserBusinessRoleRepository userBusinessRoleRepository;
 
     /**
-     * 업체 사용자 등록 (User + Business + Role 모두 생성)
+     * 사용자 등록 (User만 생성 (role: USER))
      */
     @Transactional
-    public UserRegistrationResult registerBusinessUser(AuthRequestDto.UserSignUp request) {
+    public UserRegistrationResult registerUser(AuthRequestDto.UserSignUp request) {
 
         // 1. 중복 체크
-        validateDuplication(request);
+        validateEmailDuplication(request);
 
-        // 2. User 생성
-        User user = UserFactory.createBusinessUser(
+        // 2. User 생성 (role: USER)
+        User user = UserFactory.createUser(
                 request.getEmail(),
                 request.getPassword(),
                 request.getName(),
@@ -46,36 +40,18 @@ public class UserRegistrationService {
         );
         User savedUser = userRepository.save(user);
 
-        // 3. Business 생성
-        Business business = BusinessFactory.createBusiness(
-                request.getBusinessName(),
-                request.getBusinessType(),
-                request.getBusinessNumber(),
-                request.getAddress(),
-                request.getContactPhone(),
-                request.getDescription()
-        );
-        Business savedBusiness = businessRepository.save(business);
+        log.info("순수 사용자 등록 완료: userId={}, role={}", savedUser.getId(), savedUser.getRole());
 
-        // 4. UserBusinessRole 생성 (OWNER 권한)
-        UserBusinessRole userBusinessRole = UserBusinessRoleFactory.createOwner(savedUser, savedBusiness);
-        UserBusinessRole savedRole = userBusinessRoleRepository.save(userBusinessRole);
-
-        return UserRegistrationResult.of(savedUser, savedBusiness, savedRole);
+        return UserRegistrationResult.of(savedUser);
     }
 
     /**
      * 중복 검증
      */
-    private void validateDuplication(AuthRequestDto.UserSignUp request) {
+    private void validateEmailDuplication(AuthRequestDto.UserSignUp request) {
         // 이메일 중복 체크
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AuthException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
-        }
-
-        // 사업자번호 중복 체크
-        if (businessRepository.existsByBusinessNumber(request.getBusinessNumber())) {
-            throw new AuthException(AuthErrorCode.BUSINESS_NUMBER_ALREADY_EXISTS);
         }
     }
 }

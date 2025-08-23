@@ -17,23 +17,23 @@ import java.util.List;
 public class AuthResponseFactory {
 
     /**
-     * 업체 회원가입 응답 생성
+     * 회원가입 응답 생성
      */
-    public AuthResponseDto.BusinessSignUp createBusinessSignUpResponse(UserRegistrationResult registrationResult, String token) {
+    public AuthResponseDto.UserSignUp createBusinessSignUpResponse(UserRegistrationResult registrationResult, String token) {
         User user = registrationResult.getUser();
-        Business business = registrationResult.getBusiness();
-        UserBusinessRole userBusinessRole = registrationResult.getUserBusinessRole();
+//        Business business = registrationResult.getBusiness();
+//        UserBusinessRole userBusinessRole = registrationResult.getUserBusinessRole();
 
-        AuthResponseDto.BusinessInfo businessInfo = createBusinessInfo(business, userBusinessRole);
+//        AuthResponseDto.BusinessInfo businessInfo = createBusinessInfo(business, userBusinessRole);
 
-        return AuthResponseDto.BusinessSignUp.of(
+        return AuthResponseDto.UserSignUp.of(
                 user.getId(),
                 user.getEmail(),
                 user.getName(),
                 user.getPhoneNumber(),
                 user.getRole().name(),
                 user.getProfileImageUrl(),
-                List.of(businessInfo),
+//                List.of(businessInfo),
                 token,
                 user.getCreatedAt(),
                 user.getLastLoginAt()
@@ -43,14 +43,14 @@ public class AuthResponseFactory {
     /**
      * 업체 로그인 응답 생성
      */
-    public AuthResponseDto.BusinessSignIn createBusinessSignInResponse(UserLoginResult loginResult, String token) {
+    public AuthResponseDto.UserSignIn createBusinessSignInResponse(UserLoginResult loginResult, String token) {
         User user = loginResult.getUser();
         List<Business> businesses = loginResult.getBusinesses();
         List<UserBusinessRole> userBusinessRoles = loginResult.getUserBusinessRoles();
 
         List<AuthResponseDto.BusinessInfo> businessInfos = createBusinessInfos(businesses, userBusinessRoles);
 
-        return AuthResponseDto.BusinessSignIn.of(
+        return AuthResponseDto.UserSignIn.of(
                 user.getId(),
                 user.getEmail(),
                 user.getName(),

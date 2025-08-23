@@ -9,44 +9,44 @@ import java.util.UUID;
 public class AuthResponseDto {
 
     @Getter
-    public static class BusinessSignUp {
+    public static class UserSignUp {
         private final UUID userId;
         private final String email;
         private final String name;
         private final String phoneNumber;
         private final String role;
         private final String profileImageUrl;
-        private final List<BusinessInfo> businesses;
+//        private final List<BusinessInfo> businesses;
         private final String temporaryToken;
         private final LocalDateTime createdAt;
         private final LocalDateTime lastLoginAt;
 
-        private BusinessSignUp(UUID userId, String email, String name, String phoneNumber, String role,
-                                String profileImageUrl, List<BusinessInfo> businesses, String temporaryToken,
-                                LocalDateTime createdAt, LocalDateTime lastLoginAt) {
+        private UserSignUp(UUID userId, String email, String name, String phoneNumber, String role,
+                           String profileImageUrl, String temporaryToken,
+                           LocalDateTime createdAt, LocalDateTime lastLoginAt) {
             this.userId = userId;
             this.email = email;
             this.name = name;
             this.phoneNumber = phoneNumber;
             this.role = role;
             this.profileImageUrl = profileImageUrl;
-            this.businesses = businesses;
+//            this.businesses = businesses;
             this.temporaryToken = temporaryToken;
             this.createdAt = createdAt;
             this.lastLoginAt = lastLoginAt;
         }
 
-        public static BusinessSignUp of(UUID userId, String email, String name, String phoneNumber, String role,
-                                        String profileImageUrl, List<BusinessInfo> businesses, String temporaryToken,
-                                        LocalDateTime createdAt, LocalDateTime lastLoginAt) {
-            return new BusinessSignUp(userId, email, name, phoneNumber, role, profileImageUrl,
-                    businesses, temporaryToken, createdAt, lastLoginAt);
+        public static UserSignUp of(UUID userId, String email, String name, String phoneNumber, String role,
+                                    String profileImageUrl, String temporaryToken,
+                                    LocalDateTime createdAt, LocalDateTime lastLoginAt) {
+            return new UserSignUp(userId, email, name, phoneNumber, role, profileImageUrl,
+                    temporaryToken, createdAt, lastLoginAt);
         }
     }
 
 
     @Getter
-    public static class BusinessSignIn {
+    public static class UserSignIn {
         private final UUID userId;
         private final String email;
         private final String name;
@@ -58,9 +58,9 @@ public class AuthResponseDto {
         private final LocalDateTime createdAt;
         private final LocalDateTime lastLoginAt;
 
-        private BusinessSignIn(UUID userId, String email, String name, String phoneNumber, String role,
-                                String profileImageUrl, List<BusinessInfo> businesses, String temporaryToken,
-                                LocalDateTime createdAt, LocalDateTime lastLoginAt) {
+        private UserSignIn(UUID userId, String email, String name, String phoneNumber, String role,
+                           String profileImageUrl, List<BusinessInfo> businesses, String temporaryToken,
+                           LocalDateTime createdAt, LocalDateTime lastLoginAt) {
             this.userId = userId;
             this.email = email;
             this.name = name;
@@ -73,10 +73,10 @@ public class AuthResponseDto {
             this.lastLoginAt = lastLoginAt;
         }
 
-        public static BusinessSignIn of(UUID userId, String email, String name, String phoneNumber, String role,
-                                        String profileImageUrl, List<BusinessInfo> businesses, String temporaryToken,
-                                        LocalDateTime createdAt, LocalDateTime lastLoginAt) {
-            return new BusinessSignIn(userId, email, name, phoneNumber, role, profileImageUrl,
+        public static UserSignIn of(UUID userId, String email, String name, String phoneNumber, String role,
+                                    String profileImageUrl, List<BusinessInfo> businesses, String temporaryToken,
+                                    LocalDateTime createdAt, LocalDateTime lastLoginAt) {
+            return new UserSignIn(userId, email, name, phoneNumber, role, profileImageUrl,
                     businesses, temporaryToken, createdAt, lastLoginAt);
         }
     }

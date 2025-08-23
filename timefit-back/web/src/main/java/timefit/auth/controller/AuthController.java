@@ -28,19 +28,19 @@ public class AuthController {
      */
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<AuthResponseDto.BusinessSignUp> businessSignUp(
+    public ResponseData<AuthResponseDto.UserSignUp> businessSignUp(
             @Valid @RequestBody AuthRequestDto.UserSignUp request,
             HttpServletResponse response) {
 
-        log.info("업체 회원가입 요청: email={}", request.getEmail());
+        log.info("회원가입 요청: email={}", request.getEmail());
 
-        ResponseData<AuthResponseDto.BusinessSignUp> responseData = authService.businessSignUp(request);
+        ResponseData<AuthResponseDto.UserSignUp> responseData = authService.signup(request);
 
         // 응답 헤더에 임시 토큰 추가
         String temporaryToken = responseData.getData().getTemporaryToken();
         response.setHeader(TEMP_TOKEN_HEADER, temporaryToken);
 
-        log.info("업체 회원가입 완료: userId={}, token={}",
+        log.info("회원가입 완료: userId={}, token={}",
                 responseData.getData().getUserId(), temporaryToken);
 
         return responseData;
@@ -50,19 +50,19 @@ public class AuthController {
      * 업체 로그인
      */
     @PostMapping("/signin")
-    public ResponseData<AuthResponseDto.BusinessSignIn> businessSignIn(
+    public ResponseData<AuthResponseDto.UserSignIn> businessSignIn(
             @Valid @RequestBody AuthRequestDto.UserSignIn request,
             HttpServletResponse response) {
 
-        log.info("업체 로그인 요청: email={}", request.getEmail());
+        log.info("로그인 요청: email={}", request.getEmail());
 
-        ResponseData<AuthResponseDto.BusinessSignIn> responseData = authService.businessSignIn(request);
+        ResponseData<AuthResponseDto.UserSignIn> responseData = authService.signin(request);
 
         // 응답 헤더에 임시 토큰 추가
         String temporaryToken = responseData.getData().getTemporaryToken();
         response.setHeader(TEMP_TOKEN_HEADER, temporaryToken);
 
-        log.info("업체 로그인 완료: userId={}, token={}",
+        log.info("로그인 완료: userId={}, token={}",
                 responseData.getData().getUserId(), temporaryToken);
 
         return responseData;
