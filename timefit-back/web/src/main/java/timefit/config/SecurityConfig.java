@@ -15,64 +15,72 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import timefit.auth.filter.AuthFilter;
+import timefit.auth.filter.JwtAuthFilter;
 
 import java.util.Arrays;
 
 /**
- * 역할: 경로별 접근 권한 설정, AuthFilter에 토큰 검증 위임
+ * Spring Security 설정
+ * JWT 기반 인증 및 경로별 접근 권한 설정
  */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final AuthFilter authFilter;
+    private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                // CSRF 비활성화 (API 서버)
+        return http
+                // CSRF 비활성화 (JWT 헤더 적용. + 차후 Refresh 구현 시 쿠키 사용. )
                 .csrf(AbstractHttpConfigurer::disable)
 
                 // CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // 세션 사용 안함 (Stateless)
+                // 세션 사용 안함 (JWT는 stateless)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // 경로별 접근 권한 설정 (AuthFilter에 실제 검증 위임)
-
+                // 경로별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // 모든 요청 허용
+                        // 공개 API (인증 불필요)
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/business/search/**").permitAll()
+                        .requestMatchers("/api/validation/**").permitAll()
+
+                        // 개발/모니터링 도구
+                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/favicon.ico").permitAll()
+
+                        // 나머지 /api/** 경로는 인증 필요
+                        .requestMatchers("/api/**").authenticated()
+
+                        // 그 외 모든 요청 허용
+                        .anyRequest().permitAll()
                 )
 
+                // JWT 인증 필터 추가 (UsernamePasswordAuthenticationFilter 앞에)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
-//                .authorizeHttpRequests(auth -> auth
-//                        // 공개 API - 인증 불필요
-//                        .requestMatchers("/api/auth/**").permitAll()
-//                        .requestMatchers("/api/validation/**").permitAll()
-//
-//                        // AuthFilter가 토큰 검증할 API - permitAll (실제 검증은 AuthFilter)
-//                        .requestMatchers("/api/business/**").permitAll()
-//                        .requestMatchers("/api/reservations/**").permitAll()
-//                        .requestMatchers("/api/services/**").permitAll()
-//                        .requestMatchers("/api/customers/**").permitAll()
-//
-//                        // 시스템 API
-//                        .requestMatchers("/actuator/**").permitAll()
-//                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-//                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-//
-//                        // 나머지 요청은 인증 필요 (실제로는 AuthFilter 에서 처리)
-//                        .anyRequest().authenticated()
-//                )
+                // 기본 로그인 폼 비활성화
+                .formLogin(AbstractHttpConfigurer::disable)
 
-                // AuthFilter를 UsernamePasswordAuthenticationFilter 이전에 추가
-                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
+                // HTTP Basic 인증 비활성화
+                .httpBasic(AbstractHttpConfigurer::disable)
 
-        return http.build();
+                .build();
+    }
+
+    /**
+     * 비밀번호 암호화 인코더
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     /**
@@ -82,26 +90,28 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 개발 환경에서는 모든 도메인 허용
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        // 허용할 오리진 (개발 환경)
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",    // React 개발 서버
+                "http://localhost:8080",    // 로컬 백엔드
+                "https://timefit.co.kr"     // 운영 도메인 (예시)
+        ));
+
+        // 허용할 HTTP 메서드
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
+        // 허용할 헤더
         configuration.setAllowedHeaders(Arrays.asList("*"));
+
+        // 인증 정보 포함 허용
         configuration.setAllowCredentials(true);
 
-        // 토큰 헤더 노출
-        configuration.setExposedHeaders(Arrays.asList("x-client-token"));
+        // 브라우저에서 접근할 수 있는 응답 헤더
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-    }
-
-    /**
-     * 비밀번호 암호화
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }
