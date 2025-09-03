@@ -62,6 +62,19 @@ public class BusinessResponseFactory {
         );
     }
 
+    public BusinessResponseDto.PublicBusinessDetail createPublicBusinessDetailResponse(Business business) {
+        return BusinessResponseDto.PublicBusinessDetail.of(
+                business.getId(),
+                business.getBusinessName(),
+                business.getBusinessType(),
+                business.getAddress(),
+                business.getContactPhone(),
+                business.getDescription(),
+                business.getLogoUrl(),
+                business.getCreatedAt()
+        );
+    }
+
     /**
      * 업체 요약 정보 응답 생성
      */
