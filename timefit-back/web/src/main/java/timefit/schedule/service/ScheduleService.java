@@ -101,44 +101,45 @@ public class ScheduleService {
     }
 
 
+//    /**
+//     * 예약 슬롯 생성 (단일 생성)
+//     * 권한: OWNER, MANAGER만 가능
+//     * @deprecated
+//     */
+//    @Transactional
+//    public ResponseData<ScheduleResponseDto.SlotDetail> createSlot(
+//            UUID businessId, ScheduleRequestDto.CreateSlot request, UUID currentUserId) {
+//
+//        log.info("예약 슬롯 생성 시작: businessId={}, userId={}, date={}, time={}",
+//                businessId, currentUserId, request.getSlotDate(), request.getStartTime());
+//
+//        // 1. 권한 검증
+//        Business business = validateBusinessExists(businessId);
+//        validateManagerOrOwnerRole(currentUserId, businessId);
+//
+//        // 2. 슬롯 생성 검증
+//        validateSlotCreation(request, business);
+//
+//        // 3. 슬롯 생성
+//        ReservationTimeSlot slot = createReservationTimeSlot(request, business);
+//        ReservationTimeSlot savedSlot = reservationTimeSlotRepository.save(slot);
+//
+//        // 4. 응답 생성
+//        ScheduleResponseDto.SlotDetail response = responseFactory.createSlotDetailResponse(savedSlot);
+//
+//        log.info("예약 슬롯 생성 완료: slotId={}", savedSlot.getId());
+//        return ResponseData.of(response);
+//    }
+
     /**
      * 예약 슬롯 생성
-     * 권한: OWNER, MANAGER만 가능
-     */
-    @Transactional
-    public ResponseData<ScheduleResponseDto.SlotDetail> createSlot(
-            UUID businessId, ScheduleRequestDto.CreateSlot request, UUID currentUserId) {
-
-        log.info("예약 슬롯 생성 시작: businessId={}, userId={}, date={}, time={}",
-                businessId, currentUserId, request.getSlotDate(), request.getStartTime());
-
-        // 1. 권한 검증
-        Business business = validateBusinessExists(businessId);
-        validateManagerOrOwnerRole(currentUserId, businessId);
-
-        // 2. 슬롯 생성 검증
-        validateSlotCreation(request, business);
-
-        // 3. 슬롯 생성
-        ReservationTimeSlot slot = createReservationTimeSlot(request, business);
-        ReservationTimeSlot savedSlot = reservationTimeSlotRepository.save(slot);
-
-        // 4. 응답 생성
-        ScheduleResponseDto.SlotDetail response = responseFactory.createSlotDetailResponse(savedSlot);
-
-        log.info("예약 슬롯 생성 완료: slotId={}", savedSlot.getId());
-        return ResponseData.of(response);
-    }
-
-    /**
-     * 여러 슬롯 일괄 생성
      * 권한: OWNER, MANAGER만 가능
      */
     @Transactional
     public ResponseData<ScheduleResponseDto.SlotCreationResult> createMultipleSlots(
             UUID businessId, ScheduleRequestDto.CreateMultipleSlots request, UUID currentUserId) {
 
-        log.info("다중 예약 슬롯 생성 시작: businessId={}, userId={}, slotCount={}",
+        log.info("예약 슬롯 생성 시작: businessId={}, userId={}, slotCount={}",
                 businessId, currentUserId, request.getSlots().size());
 
         // 1. 권한 검증
@@ -147,25 +148,19 @@ public class ScheduleService {
 
         // 2. 슬롯 일괄 생성
         List<ReservationTimeSlot> createdSlots = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
 
         for (ScheduleRequestDto.CreateSlot slotRequest : request.getSlots()) {
-            try {
-                validateSlotCreation(slotRequest, business);
-                ReservationTimeSlot slot = createReservationTimeSlot(slotRequest, business);
-                ReservationTimeSlot savedSlot = reservationTimeSlotRepository.save(slot);
-                createdSlots.add(savedSlot);
-            } catch (Exception e) {
-                errors.add(String.format("[%s %s] %s",
-                        slotRequest.getSlotDate(), slotRequest.getStartTime(), e.getMessage()));
-            }
+            validateSlotCreation(slotRequest, business);
+            ReservationTimeSlot slot = createReservationTimeSlot(slotRequest, business);
+            ReservationTimeSlot savedSlot = reservationTimeSlotRepository.save(slot);
+            createdSlots.add(savedSlot);
         }
 
         // 3. 응답 생성
         ScheduleResponseDto.SlotCreationResult response = responseFactory.createSlotCreationResult(
-                request.getSlots().size(), createdSlots, errors);
+                request.getSlots().size(), createdSlots);
 
-        log.info("다중 예약 슬롯 생성 완료: 성공={}, 실패={}", createdSlots.size(), errors.size());
+        log.info("다중 예약 슬롯 생성 완료: 성공={}", createdSlots.size());
         return ResponseData.of(response);
     }
 
