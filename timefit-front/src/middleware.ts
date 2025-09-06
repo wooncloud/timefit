@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateSession } from '@/lib/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
   const userAgent = request.headers.get('user-agent') || '';
@@ -17,29 +16,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // If on root path, redirect based on device
-  if (pathname === '/') {
-    if (isMobile) {
-      url.pathname = '/mobile';
-    } else {
-      url.pathname = '/pc';
-    }
+  if (isMobile) {
+    url.pathname = '/m';
     return NextResponse.redirect(url);
   }
-  
-  // If user is on wrong device-specific route, redirect
-  if (isMobile && pathname.startsWith('/pc')) {
-    url.pathname = pathname.replace('/pc', '/mobile');
-    return NextResponse.redirect(url);
-  }
-  
-  if (!isMobile && pathname.startsWith('/mobile')) {
-    url.pathname = pathname.replace('/mobile', '/pc');
-    return NextResponse.redirect(url);
-  }
-  
-  // Update Supabase session
-  return await updateSession(request);
 }
 
 export const config = {
