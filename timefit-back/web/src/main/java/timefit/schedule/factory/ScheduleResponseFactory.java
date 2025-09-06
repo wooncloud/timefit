@@ -127,7 +127,7 @@ public class ScheduleResponseFactory {
      * 슬롯 생성 결과 응답 생성
      */
     public ScheduleResponseDto.SlotCreationResult createSlotCreationResult(
-            Integer totalRequested, List<ReservationTimeSlot> createdSlots, List<String> errors) {
+            Integer totalRequested, List<ReservationTimeSlot> createdSlots) {
 
         List<ScheduleResponseDto.SlotDetail> slotDetails = createdSlots.stream()
                 .map(this::createSlotDetailResponse)
@@ -136,8 +136,6 @@ public class ScheduleResponseFactory {
         return ScheduleResponseDto.SlotCreationResult.of(
                 totalRequested,
                 createdSlots.size(),
-                errors.size(),
-                errors,
                 slotDetails
         );
     }

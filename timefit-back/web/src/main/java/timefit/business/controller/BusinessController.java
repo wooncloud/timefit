@@ -62,12 +62,11 @@ public class BusinessController {
      * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
      */
     @GetMapping("/{businessId}")
-    public ResponseData<BusinessResponseDto.BusinessDetail> getBusinessDetail (
-            @PathVariable UUID businessId,  HttpServletRequest request) {
+    public ResponseData<BusinessResponseDto.PublicBusinessDetail> getBusinessDetail (
+            @PathVariable UUID businessId) {
 
-        UUID currentUserId = getCurrentUserId(request);
-        log.info("업체 상세 조회 요청: businessId={}, userId={}", businessId, currentUserId);
-        return businessService.getBusinessDetail(businessId, currentUserId);
+        log.info("업체 상세 조회 요청: businessId={},", businessId);
+        return businessService.getBusinessDetail(businessId);
     }
 
     /**

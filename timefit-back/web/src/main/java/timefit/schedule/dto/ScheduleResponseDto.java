@@ -167,22 +167,17 @@ public class ScheduleResponseDto {
     public static class SlotCreationResult {
         private final Integer totalRequested;
         private final Integer successCount;
-        private final Integer failCount;
-        private final List<String> errors;
         private final List<SlotDetail> createdSlots;
 
-        private SlotCreationResult(Integer totalRequested, Integer successCount, Integer failCount,
-                                   List<String> errors, List<SlotDetail> createdSlots) {
+        private SlotCreationResult(Integer totalRequested, Integer successCount,
+                                    List<SlotDetail> createdSlots) {
             this.totalRequested = totalRequested;
             this.successCount = successCount;
-            this.failCount = failCount;
-            this.errors = errors;
             this.createdSlots = createdSlots;
         }
 
-        public static SlotCreationResult of(Integer totalRequested, Integer successCount, Integer failCount,
-                                            List<String> errors, List<SlotDetail> createdSlots) {
-            return new SlotCreationResult(totalRequested, successCount, failCount, errors, createdSlots);
+        public static SlotCreationResult of(Integer totalRequested, Integer successCount, List<SlotDetail> createdSlots) {
+            return new SlotCreationResult(totalRequested, successCount, createdSlots);
         }
     }
 }

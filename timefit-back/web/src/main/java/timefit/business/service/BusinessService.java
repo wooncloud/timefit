@@ -125,15 +125,19 @@ public class BusinessService {
      * 업체 상세 정보 조회
      * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
      */
-    public ResponseData<BusinessResponseDto.BusinessDetail> getBusinessDetail(UUID businessId, UUID userId) {
+    public ResponseData<BusinessResponseDto.PublicBusinessDetail> getBusinessDetail(UUID businessId) {
+        // 1. 업체 확인
         Business business = validateBusinessExists(businessId);
-        UserBusinessRole userRole = validateUserBusinessAccess(userId, businessId);
-        Integer totalMembers = getTotalMembersCount(businessId);
 
-        BusinessResponseDto.BusinessDetail businessDetail =
-                businessResponseFactory.createBusinessDetailResponse(business, userRole, totalMembers);
-        log.info("업체 상세 조회 완료: businessId={}, userId={}, role={}",
-                businessId, userId, userRole.getRole());
+        // 2. 활성화된 비즈니스만 공개
+        if (!business.isActiveBusiness()) {
+            throw new BusinessException(BusinessErrorCode.BUSINESS_NOT_ACTIVE);
+        }
+
+        BusinessResponseDto.PublicBusinessDetail businessDetail =
+                businessResponseFactory.createPublicBusinessDetailResponse(business);
+
+        log.info("업체 상세 조회 완료: businessId={}", businessId);
         return ResponseData.of(businessDetail);
     }
 
@@ -435,14 +439,6 @@ public class BusinessService {
 
         return ResponseData.of(searchResult);
     }
-
-    /**
-     * 업체 통계 조회
-     */
-
-    /**
-     * 추천 업체 조회
-     */
 
 
 //    ---

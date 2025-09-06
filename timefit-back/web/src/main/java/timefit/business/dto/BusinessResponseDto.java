@@ -89,6 +89,38 @@ public class BusinessResponseDto {
         }
     }
 
+    @Getter
+    public static class PublicBusinessDetail {
+        private final UUID businessId;
+        private final String businessName;
+        private final String businessType;
+        private final String address;
+        private final String contactPhone;
+        private final String description;
+        private final String logoUrl;
+        private final LocalDateTime createdAt;
+
+        private PublicBusinessDetail(UUID businessId, String businessName, String businessType,
+                                     String address, String contactPhone, String description,
+                                     String logoUrl, LocalDateTime createdAt) {
+            this.businessId = businessId;
+            this.businessName = businessName;
+            this.businessType = businessType;
+            this.address = address;
+            this.contactPhone = contactPhone;
+            this.description = description;
+            this.logoUrl = logoUrl;
+            this.createdAt = createdAt;
+        }
+
+        public static PublicBusinessDetail of(UUID businessId, String businessName, String businessType,
+                                              String address, String contactPhone, String description,
+                                              String logoUrl, LocalDateTime createdAt) {
+            return new PublicBusinessDetail(businessId, businessName, businessType, address,
+                    contactPhone, description, logoUrl, createdAt);
+        }
+    }
+
     /**
      * 업체 요약 정보 응답
      */

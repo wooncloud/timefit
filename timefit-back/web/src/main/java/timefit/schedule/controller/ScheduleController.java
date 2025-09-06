@@ -56,28 +56,28 @@ public class ScheduleController {
     }
 
 
+//    /**
+//     * 예약 슬롯 생성
+//     * 권한: OWNER, MANAGER만 가능
+//     */
+//    @PostMapping("/available-slots")
+//    @ResponseStatus(HttpStatus.CREATED)
+//    public ResponseData<ScheduleResponseDto.SlotDetail> createSlot(
+//            @RequestParam UUID businessId,
+//            @RequestBody ScheduleRequestDto.CreateSlot request,
+//            HttpServletRequest httpRequest) {
+//
+//        UUID currentUserId = getCurrentUserId(httpRequest);
+//        log.info("예약 슬롯 생성 요청: businessId={}, userId={}", businessId, currentUserId);
+//
+//        return scheduleService.createSlot(businessId, request, currentUserId);
+//    }
+
     /**
      * 예약 슬롯 생성
-     * 권한: OWNER, MANAGER만 가능
+     * 권한: 해당 업체의 OWNER, MANAGER만 가능
      */
     @PostMapping("/available-slots")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<ScheduleResponseDto.SlotDetail> createSlot(
-            @RequestParam UUID businessId,
-            @RequestBody ScheduleRequestDto.CreateSlot request,
-            HttpServletRequest httpRequest) {
-
-        UUID currentUserId = getCurrentUserId(httpRequest);
-        log.info("예약 슬롯 생성 요청: businessId={}, userId={}", businessId, currentUserId);
-
-        return scheduleService.createSlot(businessId, request, currentUserId);
-    }
-
-    /**
-     * 여러 슬롯 일괄 생성
-     * 권한: OWNER, MANAGER만 가능
-     */
-    @PostMapping("/available-slots/batch")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseData<ScheduleResponseDto.SlotCreationResult> createMultipleSlots(
             @RequestParam UUID businessId,
