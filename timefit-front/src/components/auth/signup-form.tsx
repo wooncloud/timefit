@@ -28,37 +28,34 @@ export function SignupForm({
           </a>
         </div>
       </div>
-        <div className="grid gap-1">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="m@example.com" required />
-        </div>
-        <div className="grid gap-1">
-          <Label htmlFor="password">비밀번호</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            required
-          />
-        </div>
-        <div className="grid gap-1">
-          <Label htmlFor="confirmPassword">비밀번호 확인</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            required
-          />
-        </div>
-        <div className="grid gap-1">
-          <Label htmlFor="name">이름</Label>
-          <Input id="name" type="text" placeholder="홍길동" required />
-        </div>
-        <div className="grid gap-1">
-          <Label htmlFor="phone">전화번호</Label>
-          <Input id="phone" type="tel" placeholder="010-1234-5678" required />
-        </div>
-        <Button type="submit" className="w-full">회원가입</Button>
+      <div className="grid gap-1">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" type="email" placeholder="m@example.com" required />
+      </div>
+      <div className="grid gap-1">
+        <Label htmlFor="password">비밀번호</Label>
+        <Input id="password" type="password" placeholder="••••••••" required />
+      </div>
+      <div className="grid gap-1">
+        <Label htmlFor="confirmPassword">비밀번호 확인</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          placeholder="••••••••"
+          required
+        />
+      </div>
+      <div className="grid gap-1">
+        <Label htmlFor="name">이름</Label>
+        <Input id="name" type="text" placeholder="홍길동" required />
+      </div>
+      <div className="grid gap-1">
+        <Label htmlFor="phone">전화번호</Label>
+        <Input id="phone" type="tel" placeholder="010-1234-5678" required />
+      </div>
+      <Button type="submit" className="w-full">
+        회원가입
+      </Button>
 
       <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
         <span className="relative z-10 bg-background px-2 text-muted-foreground">
