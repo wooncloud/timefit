@@ -8,7 +8,7 @@ export function EmailSigninForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,45 +35,45 @@ export function EmailSigninForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/20 rounded-lg">
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive-foreground">
           {error}
         </div>
       )}
-      
+
       <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-2">
+        <label htmlFor="email" className="mb-2 block text-sm font-medium">
           이메일
         </label>
         <input
           id="email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={e => setEmail(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
+          className="w-full rounded-lg border border-input px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-ring"
           placeholder="이메일을 입력하세요"
         />
       </div>
-      
+
       <div>
-        <label htmlFor="password" className="block text-sm font-medium mb-2">
+        <label htmlFor="password" className="mb-2 block text-sm font-medium">
           비밀번호
         </label>
         <input
           id="password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
+          className="w-full rounded-lg border border-input px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-ring"
           placeholder="비밀번호를 입력하세요"
         />
       </div>
-      
+
       <button
         type="submit"
         disabled={loading}
-        className="w-full px-4 py-3 text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+        className="w-full rounded-lg bg-primary px-4 py-3 text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
       >
         {loading ? '로그인 중...' : '로그인'}
       </button>

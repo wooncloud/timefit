@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function middleware(request: NextRequest) {
   const userAgent = request.headers.get('user-agent') || '';
   const isMobile = /Mobile|Android|iPhone|iPad|Windows Phone/i.test(userAgent);
-  
+
   const url = request.nextUrl.clone();
   const pathname = url.pathname;
-  
+
   // Skip middleware for static files and API routes
   if (
     pathname.startsWith('/_next') ||
@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
-  
+
   if (isMobile) {
     url.pathname = '/m';
     return NextResponse.redirect(url);
