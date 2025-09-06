@@ -37,20 +37,21 @@ export function MobileDock() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t">
-      <div className="flex justify-around items-center py-2">
-        {dockItems.map((item) => {
+    <div className="fixed bottom-0 left-0 right-0 border-t bg-background">
+      <div className="flex items-center justify-around py-2">
+        {dockItems.map(item => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-          
+          const isActive =
+            pathname === item.href || pathname.startsWith(item.href + '/');
+
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center min-w-0 py-1 px-2 text-xs',
-                isActive 
-                  ? 'text-primary' 
+                'flex min-w-0 flex-col items-center justify-center px-2 py-1 text-xs',
+                isActive
+                  ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
