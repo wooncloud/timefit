@@ -23,23 +23,11 @@ export function Navbar() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* <Link 
-              href="/pc/signin"
+            <Link
+              href="/signin"
               className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-colors"
             >
               로그인
-            </Link>
-            <Link 
-              href="/pc/signup"
-              className="px-4 py-2 text-sm font-medium text-primary border border-primary rounded-md hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              회원가입
-            </Link> */}
-            <Link 
-              href="/business-signin"
-              className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-colors"
-            >
-              사업자 로그인
             </Link>
           </div>
         </div>

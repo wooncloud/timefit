@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarClock } from "lucide-react";
 import Link from "next/link";
 
@@ -11,37 +12,53 @@ export function LoginForm({
 }: React.ComponentProps<"form">) {
   return (
     <form className={cn("grid gap-6", className)} {...props}>
-      <div className="flex flex-col items-center gap-2">
-        <Link href="/" className="flex flex-col items-center gap-2 font-medium">
-          <div className="flex size-8 items-center justify-center rounded-md">
-            <CalendarClock className="size-6" />
-          </div>
-          <span className="sr-only">Timefit</span>
-        </Link>
-        <h1 className="text-xl font-bold">
-          Welcome to <Link href="/">Timefit</Link>
-        </h1>
-        <div className="text-center text-sm">
-          Don&apos;t have an account?{" "}
-          <a href="#" className="underline underline-offset-4">
-            Sign up
-          </a>
+        <div className="flex flex-col items-center gap-2">
+            <Link href="/" className="flex flex-col items-center gap-2 font-medium">
+                <div className="flex size-8 items-center justify-center rounded-md">
+                    <CalendarClock className="size-6" />
+                </div>
+                <span className="sr-only">Timefit</span>
+            </Link>
+            <h1 className="text-xl font-bold">
+                Welcome to <Link href="/">Timefit</Link>
+            </h1>
+            <div className="text-center text-sm">
+                Don&apos;t have an account?{" "}
+                <a href="#" className="underline underline-offset-4">
+                    Sign up
+                </a>
+            </div>
         </div>
-      </div>
-      <div className="grid gap-3">
+        <Tabs defaultValue="user">
+        <div className="flex flex-col items-center gap-2">
+            <TabsList>
+                <TabsTrigger value="user">개인 로그인</TabsTrigger>
+                <TabsTrigger value="business">사업자 로그인</TabsTrigger>
+            </TabsList>
+        </div>
+      <div className="py-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" type="email" placeholder="m@example.com" required />
       </div>
-      <div className="grid gap-3">
+      <div className="py-2">
         <Label htmlFor="password">Password</Label>
         <Input id="password" type="password" placeholder="••••••••" required />
       </div>
       {/* <Button type="submit" className="w-full">
         Login
       </Button> */}
-      <Link href="/business"> {/* 임시 */}
-        <Button className="w-full">Login</Button>
-      </Link>
+        <TabsContent value="user">
+            <Link href="/business"> {/* 임시 */}
+                <Button className="w-full">고객 로그인</Button>
+            </Link>
+        </TabsContent>
+        <TabsContent value="business">
+            <Link href="/business"> {/* 임시 */}
+                <Button className="w-full">사업자 로그인</Button>
+            </Link>
+        </TabsContent>
+        </Tabs>
+
       <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
         <span className="bg-background text-muted-foreground relative z-10 px-2">
           Or
