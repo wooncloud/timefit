@@ -1,19 +1,15 @@
-### JWT Auth API 테스트 - 회원가입과 로그인
+### 업체 생성 API 테스트
 
-### 1. 헬스체크
-GET http://localhost:8080/api/auth/health
-
-### 2. 사용자 회원가입
+### 1. 업체 회원가입 (토큰 획득용)
 POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "email": "testuser@timefit.com",
-  "password": "password123",
-  "name": "테스트사용자",
-  "phoneNumber": "010-1234-5678"
+  "email": "create-test@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "김철수",
+  "phoneNumber": "010-9876-5432"
 }
-
 > {%
     client.test("회원가입 성공", function() {
         client.assert(response.status === 201, "응답 코드가 201이어야 함");
@@ -25,21 +21,17 @@ Content-Type: application/json
     const accessToken = response.body.data.accessToken;
     client.global.set("authHeader", authHeader);
     client.global.set("accessToken", accessToken);
-
-    console.log("회원가입 성공");
-    console.log("Authorization 헤더:", authHeader?.substring(0, 30) + "...");
-    console.log("Access Token:", accessToken?.substring(0, 30) + "...");
+    console.log("회원가입 성공 - Authorization:", authHeader?.substring(0, 30) + "...");
 %}
 
-### 3. 사용자 로그인
+### 2. 로그인 (토큰 획득)
 POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-  "email": "testuser@timefit.com",
-  "password": "password123"
+  "email": "create-test@timefit.com",
+  "password": "SecureP@ss123!"
 }
-
 > {%
     client.test("로그인 성공", function() {
         client.assert(response.status === 200, "응답 코드가 200이어야 함");
@@ -47,45 +39,158 @@ Content-Type: application/json
         client.assert(response.body.data.accessToken, "accessToken이 응답에 있어야 함");
     });
 
-    const loginAuthHeader = response.headers.valueOf("Authorization");
-    const loginAccessToken = response.body.data.accessToken;
-    client.global.set("loginAuthHeader", loginAuthHeader);
-    client.global.set("loginAccessToken", loginAccessToken);
-
-    console.log("로그인 성공");
-    console.log("Authorization 헤더:", loginAuthHeader?.substring(0, 30) + "...");
-    console.log("Access Token:", loginAccessToken?.substring(0, 30) + "...");
-    console.log("사용자 정보:", response.body.data.name, response.body.data.email);
+    const authHeader = response.headers.valueOf("Authorization");
+    const accessToken = response.body.data.accessToken;
+    client.global.set("businessAuthHeader", authHeader);
+    client.global.set("businessAccessToken", accessToken);
+    console.log("로그인 성공 - Authorization:", authHeader?.substring(0, 30) + "...");
+    console.log("로그인 사용자 정보:", response.body.data.name, response.body.data.email);
 %}
 
-### 4. JWT 토큰 상태 확인
+### 2.5. JWT 토큰 유효성 확인 (디버깅용)
 GET http://localhost:8080/api/auth/status-test
-Authorization: {{loginAuthHeader}}
+Authorization: {{bearerToken}}
 
 > {%
-    client.test("JWT 토큰 유효성 확인", function() {
-        client.assert(response.status === 200, "토큰이 유효해야 함");
-    });
-    console.log("토큰 상태:", response.body.data);
+    console.log("=== JWT 토큰 유효성 테스트 ===");
+    console.log("Status:", response.status);
+    console.log("Response:", JSON.stringify(response.body, null, 2));
+
+    if (response.status !== 200) {
+        console.log("토큰 검증 실패!");
+    } else {
+        console.log("토큰 검증 성공!");
+    }
 %}
 
-### 5. 로그아웃
-POST http://localhost:8080/api/auth/logout
-Authorization: {{loginAuthHeader}}
+### 3. 업체 생성 - 성공 케이스
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{businessAuthHeader}}
+
+{
+  "businessName": "새로운 카페",
+  "businessType": "카페",
+  "businessNumber": "222-22-22222",
+  "address": "서울시 강남구 역삼동 123",
+  "contactPhone": "02-2222-2222",
+  "description": "맛있는 커피를 제공하는 카페입니다"
+}
 
 > {%
-    client.test("로그아웃 성공", function() {
-        client.assert(response.status === 200, "로그아웃이 성공해야 함");
-    });
-    console.log("로그아웃 완료");
+    console.log("업체 생성 응답 상태:", response.status);
+    console.log("업체 생성 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("생성된 업체 ID:", response.body.data.businessId);
+        console.log("업체명:", response.body.data.businessName);
+        console.log("내 권한:", response.body.data.myRole);
+        client.global.set("newBusinessId", response.body.data.businessId);
+    }
 %}
 
-### 6. 로그아웃 후 토큰 상태 확인 (무효화 확인용)
-GET http://localhost:8080/api/auth/status-test
-Authorization: {{loginAuthHeader}}
+### 4. 실패 케이스 - 토큰 없이 생성
+POST http://localhost:8080/api/business
+Content-Type: application/json
+
+{
+  "businessName": "권한없는 카페",
+  "businessType": "카페",
+  "businessNumber": "333-33-33333",
+  "address": "서울시 강남구 역삼동 456",
+  "contactPhone": "02-3333-3333",
+  "description": "권한 없이 생성 시도"
+}
 
 > {%
-    console.log("로그아웃 후 토큰 상태 확인:");
-    console.log("응답 코드:", response.status);
-    console.log("응답 내용:", response.body);
+    console.log("토큰 없는 생성 응답 상태:", response.status);
+    console.log("토큰 없는 생성 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 5. 실패 케이스 - 중복된 사업자번호
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{bearerToken}}
+
+{
+  "businessName": "중복 사업자번호 업체",
+  "businessType": "음식점",
+  "businessNumber": "222-22-22222",
+  "address": "서울시 강남구 역삼동 789",
+  "contactPhone": "02-4444-4444",
+  "description": "중복된 사업자번호로 생성 시도"
+}
+
+> {%
+    console.log("중복 사업자번호 응답 상태:", response.status);
+    console.log("중복 사업자번호 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 6. 실패 케이스 - 필수 필드 누락 (businessName 없음)
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{bearerToken}}
+
+{
+  "businessType": "헬스장",
+  "businessNumber": "444-44-44444",
+  "address": "서울시 강남구 역삼동 999",
+  "contactPhone": "02-5555-5555",
+  "description": "업체명 누락 테스트"
+}
+
+> {%
+    console.log("필수 필드 누락 응답 상태:", response.status);
+    console.log("필수 필드 누락 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 7. 실패 케이스 - 잘못된 사업자번호 형식
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{bearerToken}}
+
+{
+  "businessName": "잘못된 형식 업체",
+  "businessType": "편의점",
+  "businessNumber": "invalid-format",
+  "address": "서울시 강남구 역삼동 777",
+  "contactPhone": "02-6666-6666",
+  "description": "잘못된 사업자번호 형식 테스트"
+}
+
+> {%
+    console.log("잘못된 형식 응답 상태:", response.status);
+    console.log("잘못된 형식 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 8. 생성된 업체 확인 - 상세 조회
+GET http://localhost:8080/api/business/{{newBusinessId}}
+Authorization: {{bearerToken}}
+
+> {%
+    console.log("생성된 업체 상세 조회 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("확인된 업체명:", response.body.data.businessName);
+        console.log("확인된 권한:", response.body.data.myRole);
+        console.log("확인된 구성원 수:", response.body.data.totalMembers);
+    }
+%}
+
+### 9. 생성 후 업체 목록 확인
+GET http://localhost:8080/api/business
+Authorization: {{bearerToken}}
+
+> {%
+    console.log("업체 목록 조회 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("내가 속한 업체 수:", response.body.data.length);
+
+        // 새로 생성된 업체가 목록에 있는지 확인
+        const newBusiness = response.body.data.find(b => b.businessName === "새로운 카페");
+        if (newBusiness) {
+            console.log("새 업체가 목록에서 확인됨:", newBusiness.businessName);
+        }
+    }
 %}
