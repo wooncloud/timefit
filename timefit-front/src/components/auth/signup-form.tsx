@@ -2,11 +2,10 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarClock } from 'lucide-react';
 import Link from 'next/link';
 
-export function LoginForm({
+export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<'form'>) {
@@ -20,28 +19,21 @@ export function LoginForm({
           <span className="sr-only">Timefit</span>
         </Link>
         <h1 className="text-xl font-bold">
-          Welcome to <Link href="/">Timefit</Link>
+          Join <Link href="/">Timefit</Link>
         </h1>
         <div className="text-center text-sm">
-          Don&apos;t have an account?{' '}
-          <a href="/signup" className="underline underline-offset-4">
-            Sign up
+          Already have an account?{' '}
+          <a href="/signin" className="underline underline-offset-4">
+            Sign in
           </a>
         </div>
       </div>
-      <Tabs defaultValue="user">
-        <div className="flex flex-col items-center gap-2">
-          <TabsList>
-            <TabsTrigger value="user">개인 로그인</TabsTrigger>
-            <TabsTrigger value="business">사업자 로그인</TabsTrigger>
-          </TabsList>
-        </div>
-        <div className="py-2">
+        <div className="grid gap-1">
           <Label htmlFor="email">Email</Label>
           <Input id="email" type="email" placeholder="m@example.com" required />
         </div>
-        <div className="py-2">
-          <Label htmlFor="password">Password</Label>
+        <div className="grid gap-1">
+          <Label htmlFor="password">비밀번호</Label>
           <Input
             id="password"
             type="password"
@@ -49,24 +41,24 @@ export function LoginForm({
             required
           />
         </div>
-        {/* <Button type="submit" className="w-full">
-        Login
-      </Button> */}
-        <TabsContent value="user">
-          <Link href="/business">
-            {' '}
-            {/* 임시 */}
-            <Button className="w-full">개인 로그인</Button>
-          </Link>
-        </TabsContent>
-        <TabsContent value="business">
-          <Link href="/business">
-            {' '}
-            {/* 임시 */}
-            <Button className="w-full">사업자 로그인</Button>
-          </Link>
-        </TabsContent>
-      </Tabs>
+        <div className="grid gap-1">
+          <Label htmlFor="confirmPassword">비밀번호 확인</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            required
+          />
+        </div>
+        <div className="grid gap-1">
+          <Label htmlFor="name">이름</Label>
+          <Input id="name" type="text" placeholder="홍길동" required />
+        </div>
+        <div className="grid gap-1">
+          <Label htmlFor="phone">전화번호</Label>
+          <Input id="phone" type="tel" placeholder="010-1234-5678" required />
+        </div>
+        <Button type="submit" className="w-full">회원가입</Button>
 
       <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
         <span className="relative z-10 bg-background px-2 text-muted-foreground">
@@ -75,11 +67,11 @@ export function LoginForm({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Button variant="outline" type="button" className="w-full">
-          <img src="/icons/apple.svg" alt="Apple" className="size-5" />
+          <img src="/apple.svg" alt="Apple" className="size-5" />
           Continue with Apple
         </Button>
         <Button variant="outline" type="button" className="w-full">
-          <img src="/icons/google.svg" alt="Google" className="size-5" />
+          <img src="/google.svg" alt="Google" className="size-5" />
           Continue with Google
         </Button>
       </div>
