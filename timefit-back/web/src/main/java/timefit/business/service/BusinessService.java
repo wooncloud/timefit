@@ -126,7 +126,13 @@ public class BusinessService {
      * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
      */
     public ResponseData<BusinessResponseDto.PublicBusinessDetail> getBusinessDetail(UUID businessId) {
+        // 1. 업체 확인
         Business business = validateBusinessExists(businessId);
+
+        // 2. 활성화된 비즈니스만 공개
+        if (!business.isActiveBusiness()) {
+            throw new BusinessException(BusinessErrorCode.BUSINESS_NOT_ACTIVE);
+        }
 
         BusinessResponseDto.PublicBusinessDetail businessDetail =
                 businessResponseFactory.createPublicBusinessDetailResponse(business);
