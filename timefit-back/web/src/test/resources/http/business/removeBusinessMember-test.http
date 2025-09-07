@@ -1,6 +1,6 @@
-### 구성원 제거 API 테스트
+### 구성원 제거 API 테스트 - JWT 기반
 
-### 1. OWNER 사용자 회원가입
+### 1. OWNER 사용자 회원가입 (제거권한 보유)
 POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
@@ -8,32 +8,48 @@ Content-Type: application/json
   "email": "remove-owner@timefit.com",
   "password": "SecureP@ss123!",
   "name": "제거사장",
-  "phoneNumber": "010-1111-2222",
+  "phoneNumber": "010-1111-2222"
+}
+
+> {%
+    client.test("OWNER 회원가입 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.headers.valueOf("Authorization"), "Authorization 헤더가 있어야 함");
+    });
+
+    const ownerAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("ownerAuthHeader", ownerAuthHeader);
+    client.global.set("ownerUserId", response.body.data.userId);
+
+    console.log("OWNER 회원가입 성공 - ID:", response.body.data.userId);
+    console.log("OWNER 이름:", response.body.data.name);
+%}
+
+### 2. OWNER 업체 생성
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
   "businessName": "구성원 제거 테스트 회사",
   "businessType": "IT",
-  "businessNumber": "800-80-80808",
-  "address": "서울시 강남구 제거로 800",
-  "contactPhone": "02-8080-8080",
+  "businessNumber": "500-50-50505",
+  "address": "서울시 강남구 제거로 500",
+  "contactPhone": "02-5050-5050",
   "description": "구성원 제거 테스트용 회사입니다"
 }
 
-### 2. OWNER 로그인
-POST http://localhost:8080/api/auth/signin
-Content-Type: application/json
-
-{
-  "email": "remove-owner@timefit.com",
-  "password": "SecureP@ss123!"
-}
 > {%
-    const token = response.headers.valueOf("x-client-token");
-    console.log("OWNER 토큰:", token);
-    client.global.set("ownerToken", token);
+    client.test("업체 생성 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.body.data.businessId, "businessId가 있어야 함");
+    });
 
-    if (response.body.data && response.body.data.businesses && response.body.data.businesses.length > 0) {
-        const businessId = response.body.data.businesses[0].businessId;
-        console.log("업체 ID:", businessId);
+    if (response.body.data) {
+        const businessId = response.body.data.businessId;
         client.global.set("businessId", businessId);
+        console.log("업체 생성 성공 - ID:", businessId);
+        console.log("업체명:", response.body.data.businessName);
     }
 %}
 
@@ -45,14 +61,16 @@ Content-Type: application/json
   "email": "remove-manager@timefit.com",
   "password": "SecureP@ss123!",
   "name": "제거매니저",
-  "phoneNumber": "010-2222-3333",
-  "businessName": "매니저 개인업체",
-  "businessType": "개인",
-  "businessNumber": "900-90-90909",
-  "address": "서울시 강남구 매니저로 900",
-  "contactPhone": "02-9090-9090",
-  "description": "매니저용 개인 업체"
+  "phoneNumber": "010-2222-3333"
 }
+
+> {%
+    const managerAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("managerAuthHeader", managerAuthHeader);
+    client.global.set("managerUserId", response.body.data.userId);
+
+    console.log("MANAGER용 사용자 회원가입 성공 - ID:", response.body.data.userId);
+%}
 
 ### 4. MEMBER 1 사용자 회원가입
 POST http://localhost:8080/api/auth/signup
@@ -62,14 +80,16 @@ Content-Type: application/json
   "email": "remove-member1@timefit.com",
   "password": "SecureP@ss123!",
   "name": "제거멤버1",
-  "phoneNumber": "010-3333-4444",
-  "businessName": "멤버1 개인업체",
-  "businessType": "개인",
-  "businessNumber": "101-01-01010",
-  "address": "서울시 강남구 멤버1로 101",
-  "contactPhone": "02-1010-1010",
-  "description": "멤버1용 개인 업체"
+  "phoneNumber": "010-3333-4444"
 }
+
+> {%
+    const member1AuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("member1AuthHeader", member1AuthHeader);
+    client.global.set("member1UserId", response.body.data.userId);
+
+    console.log("MEMBER1용 사용자 회원가입 성공 - ID:", response.body.data.userId);
+%}
 
 ### 5. MEMBER 2 사용자 회원가입
 POST http://localhost:8080/api/auth/signup
@@ -79,89 +99,120 @@ Content-Type: application/json
   "email": "remove-member2@timefit.com",
   "password": "SecureP@ss123!",
   "name": "제거멤버2",
-  "phoneNumber": "010-4444-5555",
-  "businessName": "멤버2 개인업체",
-  "businessType": "개인",
-  "businessNumber": "202-02-02020",
-  "address": "서울시 강남구 멤버2로 202",
-  "contactPhone": "02-2020-2020",
-  "description": "멤버2용 개인 업체"
+  "phoneNumber": "010-4444-5555"
 }
+
+> {%
+    const member2AuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("member2AuthHeader", member2AuthHeader);
+    client.global.set("member2UserId", response.body.data.userId);
+
+    console.log("MEMBER2용 사용자 회원가입 성공 - ID:", response.body.data.userId);
+%}
 
 ### 6. MANAGER 초대
 POST http://localhost:8080/api/business/{{businessId}}/members/invite
 Content-Type: application/json
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 {
   "email": "remove-manager@timefit.com",
   "role": "MANAGER",
   "invitationMessage": "매니저로 초대합니다"
 }
+
 > {%
-    if (response.body.data) {
-        client.global.set("managerUserId", response.body.data.userId);
-        console.log("MANAGER 사용자 ID:", response.body.data.userId);
-    }
+    console.log("MANAGER 초대 성공");
 %}
 
 ### 7. MEMBER 1 초대
 POST http://localhost:8080/api/business/{{businessId}}/members/invite
 Content-Type: application/json
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 {
   "email": "remove-member1@timefit.com",
   "role": "MEMBER",
   "invitationMessage": "멤버1로 초대합니다"
 }
+
 > {%
-    if (response.body.data) {
-        client.global.set("member1UserId", response.body.data.userId);
-        console.log("MEMBER1 사용자 ID:", response.body.data.userId);
-    }
+    console.log("MEMBER1 초대 성공");
 %}
 
 ### 8. MEMBER 2 초대
 POST http://localhost:8080/api/business/{{businessId}}/members/invite
 Content-Type: application/json
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 {
   "email": "remove-member2@timefit.com",
   "role": "MEMBER",
   "invitationMessage": "멤버2로 초대합니다"
 }
+
 > {%
-    if (response.body.data) {
-        client.global.set("member2UserId", response.body.data.userId);
-        console.log("MEMBER2 사용자 ID:", response.body.data.userId);
-    }
+    console.log("MEMBER2 초대 성공");
 %}
 
 ### 9. 초대 후 구성원 목록 확인
 GET http://localhost:8080/api/business/{{businessId}}/members
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    client.test("초대 후 구성원 목록 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(Array.isArray(response.body.data), "응답 데이터가 배열이어야 함");
+        client.assert(response.body.data.length === 4, "구성원이 4명이어야 함 (OWNER + MANAGER + MEMBER*2)");
+    });
+
+    console.log("=== 제거 전 구성원 목록 ===");
     console.log("제거 전 구성원 목록:", JSON.stringify(response.body, null, 2));
     console.log("제거 전 총 구성원 수:", response.body.data ? response.body.data.length : 0);
+
+    if (response.body.data) {
+        response.body.data.forEach((member, index) => {
+            console.log(`구성원 ${index + 1}:`, {
+                name: member.name,
+                email: member.email,
+                role: member.role,
+                isActive: member.isActive
+            });
+        });
+    }
 %}
 
 ### 10. 구성원 제거 - MEMBER 1 제거 성공 케이스
 DELETE http://localhost:8080/api/business/{{businessId}}/members/{{member1UserId}}
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    client.test("MEMBER1 제거 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.success === true, "제거가 성공해야 함");
+        client.assert(response.body.data === null, "data는 null이어야 함");
+    });
+
+    console.log("=== MEMBER1 제거 성공 ===");
     console.log("MEMBER1 제거 응답 상태:", response.status);
     console.log("MEMBER1 제거 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 200) {
+        console.log("✅ MEMBER1 제거 성공");
+    }
 %}
 
 ### 11. MEMBER 1 제거 후 구성원 목록 확인
 GET http://localhost:8080/api/business/{{businessId}}/members
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    client.test("MEMBER1 제거 후 구성원 목록 확인", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.data.length === 3, "구성원이 3명이어야 함 (MEMBER1 제거됨)");
+    });
+
+    console.log("=== MEMBER1 제거 후 구성원 목록 ===");
     console.log("MEMBER1 제거 후 구성원 목록:", JSON.stringify(response.body, null, 2));
 
     if (response.body.data) {
@@ -177,18 +228,29 @@ x-client-token: {{ownerToken}}
 
 ### 12. 구성원 제거 - MANAGER 제거 성공 케이스
 DELETE http://localhost:8080/api/business/{{businessId}}/members/{{managerUserId}}
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    client.test("MANAGER 제거 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.success === true, "제거가 성공해야 함");
+    });
+
+    console.log("=== MANAGER 제거 성공 ===");
     console.log("MANAGER 제거 응답 상태:", response.status);
     console.log("MANAGER 제거 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 200) {
+        console.log("✅ MANAGER 제거 성공");
+    }
 %}
 
 ### 13. MANAGER 제거 후 구성원 목록 확인
 GET http://localhost:8080/api/business/{{businessId}}/members
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    console.log("=== MANAGER 제거 후 구성원 목록 ===");
     console.log("MANAGER 제거 후 구성원 목록:", JSON.stringify(response.body, null, 2));
 
     if (response.body.data) {
@@ -200,66 +262,144 @@ x-client-token: {{ownerToken}}
     }
 %}
 
-### 14. MANAGER 로그인 (권한 테스트용)
-POST http://localhost:8080/api/auth/signin
-Content-Type: application/json
-
-{
-  "email": "remove-member2@timefit.com",
-  "password": "SecureP@ss123!"
-}
-> {%
-    const memberToken = response.headers.valueOf("x-client-token");
-    client.global.set("memberToken", memberToken);
-%}
-
-### 15. 실패 케이스 - MEMBER가 구성원 제거 시도 (권한 부족)
+### 14. 실패 케이스 - MEMBER가 구성원 제거 시도 (권한 부족)
 DELETE http://localhost:8080/api/business/{{businessId}}/members/{{member2UserId}}
-x-client-token: {{memberToken}}
+Authorization: {{member2AuthHeader}}
 
 > {%
+    client.test("MEMBER 제거 시도 차단", function() {
+        client.assert(response.status === 403, "응답 코드가 403이어야 함");
+        client.assert(response.body.error?.code === "INSUFFICIENT_PERMISSION", "에러 코드가 INSUFFICIENT_PERMISSION여야 함");
+    });
+
+    console.log("=== MEMBER 제거 시도 테스트 ===");
     console.log("MEMBER 제거 시도 응답 상태:", response.status);
     console.log("MEMBER 제거 시도 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 403) {
+        console.log("✅ MEMBER 제거 권한 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
 %}
 
-### 17. 실패 케이스 - 이미 제거된 구성원 재제거 시도
-DELETE http://localhost:8080/api/business/{{businessId}}/members/{{member1UserId}}
-x-client-token: {{ownerToken}}
+### 15. 실패 케이스 - 본인 제거 시도 (OWNER가 자신을 제거)
+DELETE http://localhost:8080/api/business/{{businessId}}/members/{{ownerUserId}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    client.test("본인 제거 시도 차단", function() {
+        client.assert(response.status === 400, "응답 코드가 400이어야 함");
+        client.assert(response.body.error?.code === "CANNOT_REMOVE_SELF", "에러 코드가 CANNOT_REMOVE_SELF여야 함");
+    });
+
+    console.log("=== 본인 제거 시도 테스트 ===");
+    console.log("본인 제거 시도 응답 상태:", response.status);
+    console.log("본인 제거 시도 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 본인 제거 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
+%}
+
+### 16. 실패 케이스 - 이미 제거된 구성원 재제거 시도
+DELETE http://localhost:8080/api/business/{{businessId}}/members/{{member1UserId}}
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    client.test("이미 제거된 구성원 재제거 차단", function() {
+        client.assert(response.status === 404, "응답 코드가 404여야 함");
+        client.assert(response.body.error?.code === "USER_NOT_BUSINESS_MEMBER", "에러 코드가 USER_NOT_BUSINESS_MEMBER여야 함");
+    });
+
+    console.log("=== 이미 제거된 구성원 재제거 테스트 ===");
     console.log("이미 제거된 구성원 재제거 응답 상태:", response.status);
     console.log("이미 제거된 구성원 재제거 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 404) {
+        console.log("✅ 이미 제거된 구성원 재제거 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
 %}
 
-### 18. 실패 케이스 - 존재하지 않는 사용자 제거
+### 17. 실패 케이스 - 존재하지 않는 사용자 제거
 DELETE http://localhost:8080/api/business/{{businessId}}/members/00000000-0000-0000-0000-000000000000
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    client.test("존재하지 않는 사용자 제거 차단", function() {
+        client.assert(response.status === 404, "응답 코드가 404여야 함");
+        client.assert(response.body.error?.code === "USER_NOT_BUSINESS_MEMBER", "에러 코드가 USER_NOT_BUSINESS_MEMBER여야 함");
+    });
+
+    console.log("=== 존재하지 않는 사용자 제거 테스트 ===");
     console.log("존재하지 않는 사용자 제거 응답 상태:", response.status);
     console.log("존재하지 않는 사용자 제거 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 사용자 제거 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
 %}
 
-### 19. 실패 케이스 - 토큰 없이 제거
+### 18. 실패 케이스 - 토큰 없이 제거
 DELETE http://localhost:8080/api/business/{{businessId}}/members/{{member2UserId}}
 
 > {%
+    client.test("토큰 없는 제거 차단", function() {
+        client.assert(response.status === 401, "응답 코드가 401이어야 함");
+    });
+
+    console.log("=== 토큰 없는 제거 테스트 ===");
     console.log("토큰 없는 제거 응답 상태:", response.status);
     console.log("토큰 없는 제거 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 401) {
+        console.log("✅ 토큰 없는 제거 차단 성공");
+    }
 %}
 
-### 20. 실패 케이스 - 존재하지 않는 업체에서 제거
+### 19. 실패 케이스 - 존재하지 않는 업체에서 제거
 DELETE http://localhost:8080/api/business/00000000-0000-0000-0000-000000000000/members/{{member2UserId}}
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    client.test("존재하지 않는 업체에서 제거 차단", function() {
+        client.assert(response.status === 404, "응답 코드가 404여야 함");
+        client.assert(response.body.error?.code === "BUSINESS_NOT_FOUND", "에러 코드가 BUSINESS_NOT_FOUND여야 함");
+    });
+
+    console.log("=== 존재하지 않는 업체에서 제거 테스트 ===");
     console.log("존재하지 않는 업체 제거 응답 상태:", response.status);
     console.log("존재하지 않는 업체 제거 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 업체에서 제거 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
+%}
+
+### 20. 실패 케이스 - 잘못된 UUID 형식으로 제거
+DELETE http://localhost:8080/api/business/invalid-uuid-format/members/{{member2UserId}}
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    client.test("잘못된 UUID 형식 제거 차단", function() {
+        client.assert(response.status === 400, "응답 코드가 400이어야 함");
+    });
+
+    console.log("=== 잘못된 UUID 형식 제거 테스트 ===");
+    console.log("잘못된 UUID 형식 제거 응답 상태:", response.status);
+    console.log("잘못된 UUID 형식 제거 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 잘못된 UUID 형식 제거 차단 성공");
+    }
 %}
 
 ### 21. 업체 비활성화 후 제거 테스트
 POST http://localhost:8080/api/business/{{businessId}}/toggle-status
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
     console.log("업체 비활성화 응답:", JSON.stringify(response.body, null, 2));
@@ -267,31 +407,63 @@ x-client-token: {{ownerToken}}
 
 ### 22. 실패 케이스 - 비활성화된 업체에서 구성원 제거
 DELETE http://localhost:8080/api/business/{{businessId}}/members/{{member2UserId}}
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    client.test("비활성화된 업체 제거 차단", function() {
+        client.assert(response.status === 400, "응답 코드가 400이어야 함");
+        client.assert(response.body.error?.code === "BUSINESS_NOT_ACTIVE", "에러 코드가 BUSINESS_NOT_ACTIVE여야 함");
+    });
+
+    console.log("=== 비활성화된 업체에서 제거 테스트 ===");
     console.log("비활성화된 업체 제거 응답 상태:", response.status);
     console.log("비활성화된 업체 제거 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 비활성화된 업체에서 제거 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
 %}
 
 ### 23. 업체 재활성화
 POST http://localhost:8080/api/business/{{businessId}}/toggle-status
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    console.log("업체 재활성화 응답:", JSON.stringify(response.body, null, 2));
+%}
 
 ### 24. 마지막 구성원 제거 - MEMBER 2 제거
 DELETE http://localhost:8080/api/business/{{businessId}}/members/{{member2UserId}}
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    client.test("마지막 MEMBER2 제거 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.success === true, "제거가 성공해야 함");
+    });
+
+    console.log("=== 마지막 MEMBER2 제거 ===");
     console.log("마지막 MEMBER2 제거 응답 상태:", response.status);
     console.log("마지막 MEMBER2 제거 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 200) {
+        console.log("✅ 마지막 MEMBER2 제거 성공");
+    }
 %}
 
 ### 25. 최종 구성원 목록 확인
 GET http://localhost:8080/api/business/{{businessId}}/members
-x-client-token: {{ownerToken}}
+Authorization: {{ownerAuthHeader}}
 
 > {%
+    client.test("최종 구성원 목록 확인", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.data.length === 1, "구성원이 1명이어야 함 (OWNER만 남음)");
+        client.assert(response.body.data[0].role === "OWNER", "남은 구성원이 OWNER여야 함");
+    });
+
+    console.log("=== 최종 구성원 목록 ===");
     console.log("최종 구성원 목록:", JSON.stringify(response.body, null, 2));
 
     if (response.body.data) {
@@ -308,5 +480,42 @@ x-client-token: {{ownerToken}}
         if (activeMembers.length === 1 && activeMembers[0].role === "OWNER") {
             console.log("✅ 모든 구성원 제거 완료, OWNER만 남음");
         }
+
+        // 제거 통계
+        console.log("\n=== 제거 작업 통계 ===");
+        console.log("- 초기 구성원: 4명 (OWNER + MANAGER + MEMBER*2)");
+        console.log("- 제거된 구성원: 3명 (MANAGER + MEMBER*2)");
+        console.log("- 최종 구성원: 1명 (OWNER)");
+        console.log("✅ 모든 제거 테스트 완료");
     }
+%}
+
+### 26. 제거된 구성원의 업체 접근 테스트
+GET http://localhost:8080/api/business/{{businessId}}
+Authorization: {{member1AuthHeader}}
+
+> {%
+    client.test("제거된 구성원 접근 차단", function() {
+        client.assert(response.status === 403, "응답 코드가 403이어야 함");
+        client.assert(response.body.error?.code === "USER_NOT_BUSINESS_MEMBER", "에러 코드가 USER_NOT_BUSINESS_MEMBER여야 함");
+    });
+
+    console.log("=== 제거된 구성원 접근 테스트 ===");
+    console.log("제거된 MEMBER1 접근 응답 상태:", response.status);
+    console.log("제거된 MEMBER1 접근 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 403) {
+        console.log("✅ 제거된 구성원 업체 접근 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
+%}
+
+### 27. JWT 토큰 상태 확인 (디버깅용)
+GET http://localhost:8080/api/auth/status-test
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    console.log("=== JWT 토큰 상태 확인 ===");
+    console.log("토큰 상태:", response.status);
+    console.log("토큰 응답:", JSON.stringify(response.body, null, 2));
 %}
