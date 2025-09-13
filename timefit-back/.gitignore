@@ -36,9 +36,12 @@ out/
 .vscode/
 
 ### Environment Variables & Local Config ###
-.env
+web/.env
 /uploads/
 
 ### Docker ###
 docker-compose.yml
 docker-compose.override.yml
+
+### QueryDSL generated sources ###
+**/build/generated/

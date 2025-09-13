@@ -1,0 +1,47 @@
+dependencies {
+    implementation project(':user')
+    implementation project(':jpa-common')
+    implementation project(':domain')
+
+    // Core Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Database
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'com.auth0:java-jwt:4.0.0'
+
+    // Monitoring & Management
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Utilities
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // Documentation
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
+    // Optional (필요 시 주석 해제)
+    // implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    // implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // Testing
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.h2database:h2'
+}
+
+// 실행 가능한 JAR 생성 (web 모듈만)
+jar {
+    enabled = false
+}
+
+bootJar {
+    enabled = true
+    archiveClassifier = ''
+}

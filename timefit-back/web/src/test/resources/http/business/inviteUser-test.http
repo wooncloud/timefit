@@ -1,0 +1,492 @@
+### 구성원 초대 API 테스트 - JWT 기반
+
+### 1. OWNER 사용자 회원가입 (초대권한 보유)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "invite-owner@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "김사장",
+  "phoneNumber": "010-1111-2222"
+}
+
+> {%
+    client.test("OWNER 회원가입 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.headers.valueOf("Authorization"), "Authorization 헤더가 있어야 함");
+    });
+
+    const ownerAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("ownerAuthHeader", ownerAuthHeader);
+    client.global.set("ownerUserId", response.body.data.userId);
+
+    console.log("OWNER 회원가입 성공 - ID:", response.body.data.userId);
+    console.log("OWNER 이름:", response.body.data.name);
+%}
+
+### 2. OWNER 업체 생성
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "businessName": "초대 테스트 병원",
+  "businessType": "병원",
+  "businessNumber": "100-10-10101",
+  "address": "서울시 강남구 초대로 100",
+  "contactPhone": "02-1010-1010",
+  "description": "구성원 초대 테스트용 병원입니다"
+}
+
+> {%
+    client.test("업체 생성 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.body.data.businessId, "businessId가 있어야 함");
+    });
+
+    if (response.body.data) {
+        const businessId = response.body.data.businessId;
+        client.global.set("businessId", businessId);
+        console.log("업체 생성 성공 - ID:", businessId);
+        console.log("업체명:", response.body.data.businessName);
+    }
+%}
+
+### 3. 초대받을 사용자 1 회원가입 (MANAGER로 초대할 예정)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "invitee-manager@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "이매니저",
+  "phoneNumber": "010-2222-3333"
+}
+
+> {%
+    const managerAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("managerAuthHeader", managerAuthHeader);
+    client.global.set("managerUserId", response.body.data.userId);
+
+    console.log("MANAGER용 사용자 회원가입 성공 - ID:", response.body.data.userId);
+%}
+
+### 4. 초대받을 사용자 2 회원가입 (MEMBER로 초대할 예정)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "invitee-member@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "박직원",
+  "phoneNumber": "010-3333-4444"
+}
+
+> {%
+    const memberAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("memberAuthHeader", memberAuthHeader);
+    client.global.set("memberUserId", response.body.data.userId);
+
+    console.log("MEMBER용 사용자 회원가입 성공 - ID:", response.body.data.userId);
+%}
+
+### 5. 구성원 초대 - MANAGER 권한으로 초대 (성공 케이스)
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "email": "invitee-manager@timefit.com",
+  "role": "MANAGER",
+  "invitationMessage": "저희 병원의 매니저로 초대드립니다. 함께 일해요!"
+}
+
+> {%
+    client.test("MANAGER 초대 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.body.data.userId, "userId가 응답에 있어야 함");
+        client.assert(response.body.data.assignedRole === "MANAGER", "권한이 MANAGER여야 함");
+    });
+
+    console.log("=== MANAGER 초대 성공 ===");
+    console.log("MANAGER 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("초대된 사용자 ID:", response.body.data.userId);
+        console.log("초대된 사용자 이름:", response.body.data.name);
+        console.log("초대된 사용자 이메일:", response.body.data.email);
+        console.log("부여된 권한:", response.body.data.assignedRole);
+        console.log("초대자명:", response.body.data.invitedByName);
+        console.log("초대 메시지:", response.body.data.invitationMessage);
+        console.log("초대 상태:", response.body.data.status);
+        console.log("초대 시간:", response.body.data.invitedAt);
+    }
+%}
+
+### 6. 구성원 초대 - MEMBER 권한으로 초대 (성공 케이스)
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "email": "invitee-member@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "병원 직원으로 초대합니다"
+}
+
+> {%
+    client.test("MEMBER 초대 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.body.data.userId, "userId가 응답에 있어야 함");
+        client.assert(response.body.data.assignedRole === "MEMBER", "권한이 MEMBER여야 함");
+    });
+
+    console.log("=== MEMBER 초대 성공 ===");
+    console.log("MEMBER 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("초대된 사용자 이름:", response.body.data.name);
+        console.log("부여된 권한:", response.body.data.assignedRole);
+        console.log("초대자명:", response.body.data.invitedByName);
+        console.log("초대 메시지:", response.body.data.invitationMessage);
+    }
+%}
+
+### 7. 초대 후 구성원 목록 확인
+GET http://localhost:8080/api/business/{{businessId}}/members
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    client.test("구성원 목록 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(Array.isArray(response.body.data), "응답 데이터가 배열이어야 함");
+        client.assert(response.body.data.length === 3, "구성원이 3명이어야 함 (OWNER + MANAGER + MEMBER)");
+    });
+
+    console.log("=== 초대 후 구성원 목록 ===");
+    console.log("구성원 목록:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("총 구성원 수:", response.body.data.length);
+
+        response.body.data.forEach((member, index) => {
+            console.log(`구성원 ${index + 1}:`, {
+                name: member.name,
+                email: member.email,
+                role: member.role,
+                invitedByName: member.invitedByName,
+                isActive: member.isActive
+            });
+        });
+
+        // 권한별 구성원 확인
+        const owner = response.body.data.find(m => m.role === "OWNER");
+        const manager = response.body.data.find(m => m.role === "MANAGER");
+        const member = response.body.data.find(m => m.role === "MEMBER");
+
+        if (owner) console.log("✅ OWNER 구성원 확인");
+        if (manager) console.log("✅ MANAGER 구성원 확인");
+        if (member) console.log("✅ MEMBER 구성원 확인");
+    }
+%}
+
+### 8. 추가 초대받을 사용자 3 회원가입 (MANAGER 권한 테스트용)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "invitee-member2@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "최직원2",
+  "phoneNumber": "010-4444-5555"
+}
+
+> {%
+    console.log("추가 초대용 사용자 회원가입 성공");
+%}
+
+### 9. MANAGER가 다른 사용자 초대 (성공 케이스)
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+Authorization: {{managerAuthHeader}}
+
+{
+  "email": "invitee-member2@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "매니저가 직원을 초대합니다"
+}
+
+> {%
+    client.test("MANAGER가 초대 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.body.data.userId, "userId가 응답에 있어야 함");
+    });
+
+    console.log("=== MANAGER가 초대 성공 ===");
+    console.log("MANAGER의 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("MANAGER가 초대한 사용자:", response.body.data.name);
+        console.log("초대자명:", response.body.data.invitedByName);
+        console.log("✅ MANAGER도 구성원 초대 권한 확인");
+    }
+%}
+
+### 10. 실패 케이스 - MEMBER가 구성원 초대 시도 (권한 부족)
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+Authorization: {{memberAuthHeader}}
+
+{
+  "email": "invitee-member2@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "MEMBER가 권한 없이 초대 시도"
+}
+
+> {%
+    client.test("MEMBER 초대 시도 차단", function() {
+        client.assert(response.status === 403, "응답 코드가 403이어야 함");
+        client.assert(response.body.error?.code === "INSUFFICIENT_PERMISSION", "에러 코드가 INSUFFICIENT_PERMISSION여야 함");
+    });
+
+    console.log("=== MEMBER 초대 시도 테스트 ===");
+    console.log("MEMBER 초대 시도 응답 상태:", response.status);
+    console.log("MEMBER 초대 시도 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 403) {
+        console.log("✅ MEMBER 초대 권한 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
+%}
+
+### 11. 실패 케이스 - 이미 구성원인 사용자 중복 초대
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "email": "invitee-manager@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "이미 구성원인 사용자를 다시 초대"
+}
+
+> {%
+    client.test("중복 초대 차단", function() {
+        client.assert(response.status === 400, "응답 코드가 400이어야 함");
+        client.assert(response.body.error?.code === "USER_ALREADY_MEMBER", "에러 코드가 USER_ALREADY_MEMBER여야 함");
+    });
+
+    console.log("=== 중복 초대 테스트 ===");
+    console.log("중복 초대 응답 상태:", response.status);
+    console.log("중복 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 중복 초대 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
+%}
+
+### 12. 실패 케이스 - 존재하지 않는 사용자 초대
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "email": "nonexistent-user@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "존재하지 않는 사용자 초대 시도"
+}
+
+> {%
+    client.test("존재하지 않는 사용자 초대 차단", function() {
+        client.assert(response.status === 404, "응답 코드가 404여야 함");
+        client.assert(response.body.error?.code === "USER_NOT_FOUND", "에러 코드가 USER_NOT_FOUND여야 함");
+    });
+
+    console.log("=== 존재하지 않는 사용자 초대 테스트 ===");
+    console.log("존재하지 않는 사용자 초대 응답 상태:", response.status);
+    console.log("존재하지 않는 사용자 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 사용자 초대 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
+%}
+
+### 13. 실패 케이스 - 토큰 없이 초대
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+
+{
+  "email": "invitee-member@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "토큰 없이 초대 시도"
+}
+
+> {%
+    client.test("토큰 없는 초대 차단", function() {
+        client.assert(response.status === 401, "응답 코드가 401이어야 함");
+    });
+
+    console.log("=== 토큰 없는 초대 테스트 ===");
+    console.log("토큰 없는 초대 응답 상태:", response.status);
+    console.log("토큰 없는 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 401) {
+        console.log("✅ 토큰 없는 초대 차단 성공");
+    }
+%}
+
+### 14. 실패 케이스 - 존재하지 않는 업체에 초대
+POST http://localhost:8080/api/business/00000000-0000-0000-0000-000000000000/members/invite
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "email": "invitee-member@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "존재하지 않는 업체에 초대 시도"
+}
+
+> {%
+    client.test("존재하지 않는 업체 초대 차단", function() {
+        client.assert(response.status === 404, "응답 코드가 404여야 함");
+        client.assert(response.body.error?.code === "BUSINESS_NOT_FOUND", "에러 코드가 BUSINESS_NOT_FOUND여야 함");
+    });
+
+    console.log("=== 존재하지 않는 업체 초대 테스트 ===");
+    console.log("존재하지 않는 업체 초대 응답 상태:", response.status);
+    console.log("존재하지 않는 업체 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 업체 초대 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
+%}
+
+### 15. 실패 케이스 - 잘못된 UUID 형식으로 초대
+POST http://localhost:8080/api/business/invalid-uuid-format/members/invite
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "email": "invitee-member@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "잘못된 UUID 형식으로 초대 시도"
+}
+
+> {%
+    client.test("잘못된 UUID 형식 초대 차단", function() {
+        client.assert(response.status === 400, "응답 코드가 400이어야 함");
+    });
+
+    console.log("=== 잘못된 UUID 형식 초대 테스트 ===");
+    console.log("잘못된 UUID 형식 초대 응답 상태:", response.status);
+    console.log("잘못된 UUID 형식 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 잘못된 UUID 형식 초대 차단 성공");
+    }
+%}
+
+### 16. 업체 비활성화 후 초대 테스트
+POST http://localhost:8080/api/business/{{businessId}}/toggle-status
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    console.log("업체 비활성화 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 17. 실패 케이스 - 비활성화된 업체에 초대 시도
+POST http://localhost:8080/api/business/{{businessId}}/members/invite
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "email": "invitee-member@timefit.com",
+  "role": "MEMBER",
+  "invitationMessage": "비활성화된 업체에 초대 시도"
+}
+
+> {%
+    client.test("비활성화된 업체 초대 차단", function() {
+        client.assert(response.status === 400, "응답 코드가 400이어야 함");
+        client.assert(response.body.error?.code === "BUSINESS_NOT_ACTIVE", "에러 코드가 BUSINESS_NOT_ACTIVE여야 함");
+    });
+
+    console.log("=== 비활성화된 업체 초대 테스트 ===");
+    console.log("비활성화된 업체 초대 응답 상태:", response.status);
+    console.log("비활성화된 업체 초대 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 비활성화된 업체 초대 차단 성공");
+        console.log("에러 코드:", response.body.error?.code);
+    }
+%}
+
+### 18. 업체 재활성화
+POST http://localhost:8080/api/business/{{businessId}}/toggle-status
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    console.log("업체 재활성화 응답:", JSON.stringify(response.body, null, 2));
+%}
+
+### 19. 최종 구성원 목록 확인
+GET http://localhost:8080/api/business/{{businessId}}/members
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    console.log("=== 최종 구성원 목록 ===");
+    console.log("최종 구성원 목록:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("최종 구성원 수:", response.body.data.length);
+
+        // 권한별 통계
+        const roleStats = response.body.data.reduce((acc, member) => {
+            acc[member.role] = (acc[member.role] || 0) + 1;
+            return acc;
+        }, {});
+
+        console.log("권한별 구성원 수:", roleStats);
+
+        console.log("\n=== 구성원 상세 정보 ===");
+        response.body.data.forEach((member, index) => {
+            console.log(`구성원 ${index + 1}:`, {
+                name: member.name,
+                email: member.email,
+                role: member.role,
+                invitedByName: member.invitedByName || '업체 생성자',
+                joinedAt: member.joinedAt,
+                isActive: member.isActive
+            });
+        });
+
+        // 활성 구성원 수
+        const activeMembers = response.body.data.filter(m => m.isActive !== false);
+        console.log("활성 구성원 수:", activeMembers.length);
+
+        // 검증
+        if (roleStats.OWNER === 1) {
+            console.log("✅ OWNER 1명 확인");
+        }
+        if (roleStats.MANAGER >= 1) {
+            console.log("✅ MANAGER 초대 성공 확인");
+        }
+        if (roleStats.MEMBER >= 1) {
+            console.log("✅ MEMBER 초대 성공 확인");
+        }
+    }
+%}
+
+### 20. JWT 토큰 상태 확인 (디버깅용)
+GET http://localhost:8080/api/auth/status-test
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    console.log("=== JWT 토큰 상태 확인 ===");
+    console.log("토큰 상태:", response.status);
+    console.log("토큰 응답:", JSON.stringify(response.body, null, 2));
+%}

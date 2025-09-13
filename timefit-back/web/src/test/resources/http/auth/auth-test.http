@@ -1,0 +1,115 @@
+### 1. 헬스체크 - 서버 동작 확인
+GET http://localhost:8080/api/auth/health
+
+### 2. 업체 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "fresh@example.com",
+  "password": "Password123!",
+  "name": "신규사장",
+  "phoneNumber": "010-1111-2222",
+  "businessName": "신규카페",
+  "businessType": "카페",
+  "businessNumber": "111-22-33333",
+  "address": "서울시 강남구 테헤란로 111",
+  "contactPhone": "02-1111-2222",
+  "description": "새로 오픈한 카페입니다"
+}
+
+> {%
+    client.test("업체 회원가입 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.headers.valueOf("x-client-token"), "x-client-token 헤더가 있어야 함");
+    });
+    client.global.set("businessToken", response.headers.valueOf("x-client-token"));
+    console.log("업체 토큰:", client.global.get("businessToken"));
+%}
+
+### 3. 업체 로그인 - (2. 업체 회원가입) 데이터로 로그인
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "fresh@example.com",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("업체 로그인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.headers.valueOf("x-client-token"), "x-client-token 헤더가 있어야 함");
+    });
+    client.global.set("businessToken", response.headers.valueOf("x-client-token"));
+    console.log("업체 로그인 토큰:", client.global.get("businessToken"));
+%}
+
+### 4. 고객 OAuth 로그인 (Google 가정)
+POST http://localhost:8080/api/auth/oauth
+Content-Type: application/json
+
+{
+  "provider": "GOOGLE",
+  "accessToken": "ya29.test_token",
+  "oauthId": "1234567890"
+}
+
+> {%
+    client.test("고객 OAuth 로그인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.headers.valueOf("x-client-token"), "x-client-token 헤더가 있어야 함");
+    });
+    client.global.set("customerToken", response.headers.valueOf("x-client-token"));
+    console.log("고객 토큰:", client.global.get("customerToken"));
+%}
+
+### 5. 사업자 로그인 상태 확인 (토큰 유효성 검증)
+GET http://localhost:8080/api/auth/status-test
+x-client-token: {{businessToken}}
+
+> {%
+    client.test("업체 토큰 유효성 검증", function() {
+        client.assert(response.status === 200, "토큰이 유효해야 함");
+    });
+%}
+
+### 6. 고객 로그인 상태 확인 (토큰 유효성 검증)
+GET http://localhost:8080/api/auth/token/status
+x-client-token: {{customerToken}}
+
+> {%
+    client.test("고객 토큰 유효성 검증", function() {
+        client.assert(response.status === 200, "토큰이 유효해야 함");
+    });
+%}
+
+### 7. 업체 로그아웃 (사업자 세션 종료)
+POST http://localhost:8080/api/auth/logout
+x-client-token: {{businessToken}}
+
+> {%
+    client.test("업체 로그아웃 성공", function() {
+        client.assert(response.status === 200, "로그아웃이 성공해야 함");
+    });
+%}
+
+### 8. 로그아웃 후 토큰 검증 (무효화 확인) + Error 잘못 지정해서 이메일 나옴 fix 해둘것
+GET http://localhost:8080/api/auth/token/status
+x-client-token: {{businessToken}}
+
+> {%
+    client.test("로그아웃 후 토큰 무효화 확인", function() {
+        client.assert(response.status === 401 || response.status === 403, "토큰이 무효화되어야 함");
+    });
+%}
+
+### 9. 고객 로그아웃 (고객 세션 종료)
+POST http://localhost:8080/api/auth/logout
+x-client-token: {{customerToken}}
+
+> {%
+    client.test("고객 로그아웃 성공", function() {
+        client.assert(response.status === 200, "로그아웃이 성공해야 함");
+    });
+%}
