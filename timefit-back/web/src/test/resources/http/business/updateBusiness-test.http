@@ -1,0 +1,550 @@
+### 업체 정보 수정 API 테스트 (JWT 기반) - OWNER/MANAGER 권한
+
+### 1. 업체 회원가입 (토큰 및 업체 생성)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "update-test@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "이영희",
+  "phoneNumber": "010-1111-2222"
+}
+
+> {%
+    client.test("업체 수정 테스트 회원가입 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.headers.valueOf("Authorization"), "Authorization 헤더가 있어야 함");
+    });
+
+    const authHeader = response.headers.valueOf("Authorization");
+    client.global.set("updateAuthHeader", authHeader);
+    console.log("업체 수정 테스트 회원가입 성공");
+%}
+
+### 2. 업체 생성
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{updateAuthHeader}}
+
+{
+  "businessName": "수정 테스트 미용실",
+  "businessType": "미용실",
+  "businessNumber": "555-55-55555",
+  "address": "서울시 강남구 테헤란로 555",
+  "contactPhone": "02-5555-5555",
+  "description": "수정 전 설명입니다"
+}
+
+> {%
+    client.test("업체 수정 테스트 업체 생성 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.body.data.businessId, "businessId가 있어야 함");
+    });
+
+    if (response.body.data) {
+        const businessId = response.body.data.businessId;
+        console.log("생성된 업체 ID:", businessId);
+        console.log("생성된 업체명:", response.body.data.businessName);
+        client.global.set("businessId", businessId);
+    }
+%}
+
+### 3. 수정 전 업체 정보 확인
+GET http://localhost:8080/api/business/{{businessId}}
+Authorization: {{updateAuthHeader}}
+
+> {%
+    client.test("수정 전 업체 정보 확인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.data, "응답 데이터가 있어야 함");
+    });
+
+    console.log("=== 수정 전 업체 정보 ===");
+    console.log("수정 전 업체 정보:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("수정 전 업체명:", response.body.data.businessName);
+        console.log("수정 전 업체 타입:", response.body.data.businessType);
+        console.log("수정 전 주소:", response.body.data.address);
+        console.log("수정 전 연락처:", response.body.data.contactPhone);
+        console.log("수정 전 설명:", response.body.data.description);
+        console.log("수정 전 사업자번호:", response.body.data.businessNumber);
+
+        // 수정 전 정보 저장 (검증용)
+        client.global.set("originalBusinessName", response.body.data.businessName);
+        client.global.set("originalAddress", response.body.data.address);
+        client.global.set("originalDescription", response.body.data.description);
+    }
+%}
+
+### 4. 업체 정보 수정 - 성공 케이스 (OWNER 권한, 전체 필드 수정)
+PUT http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: {{updateAuthHeader}}
+
+{
+  "businessName": "수정된 헤어샵",
+  "businessType": "헤어샵",
+  "address": "서울시 강남구 역삼동 999",
+  "contactPhone": "02-9999-9999",
+  "description": "수정된 설명: 고급 헤어 케어 서비스를 제공합니다",
+  "logoUrl": "https://example.com/new-logo.png"
+}
+
+> {%
+    client.test("업체 정보 수정 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.success === true, "성공 상태여야 함");
+        client.assert(response.body.data, "응답 데이터가 있어야 함");
+    });
+
+    console.log("=== 업체 정보 수정 결과 ===");
+    console.log("업체 수정 응답 상태:", response.status);
+    console.log("업체 수정 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("수정된 업체명:", response.body.data.businessName);
+        console.log("수정된 업체 타입:", response.body.data.businessType);
+        console.log("수정된 주소:", response.body.data.address);
+        console.log("수정된 연락처:", response.body.data.contactPhone);
+        console.log("수정된 설명:", response.body.data.description);
+        console.log("수정된 로고URL:", response.body.data.logoUrl);
+
+        // 수정 검증
+        if (response.body.data.businessName === "수정된 헤어샵") {
+            console.log("✅ 업체명 수정 성공");
+        }
+        if (response.body.data.address === "서울시 강남구 역삼동 999") {
+            console.log("✅ 주소 수정 성공");
+        }
+    }
+%}
+
+### 5. 수정 후 업체 정보 확인
+GET http://localhost:8080/api/business/{{businessId}}
+Authorization: {{updateAuthHeader}}
+
+> {%
+    client.test("수정 후 업체 정보 확인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    console.log("=== 수정 후 업체 정보 확인 ===");
+    console.log("수정 후 업체 정보:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("확인된 업체명:", response.body.data.businessName);
+        console.log("확인된 업체 타입:", response.body.data.businessType);
+        console.log("확인된 주소:", response.body.data.address);
+        console.log("확인된 설명:", response.body.data.description);
+        console.log("확인된 로고URL:", response.body.data.logoUrl);
+
+        // 수정이 제대로 반영되었는지 검증
+        if (response.body.data.businessName === "수정된 헤어샵") {
+            console.log("✅ 업체명 수정 반영 확인");
+        }
+        if (response.body.data.address === "서울시 강남구 역삼동 999") {
+            console.log("✅ 주소 수정 반영 확인");
+        }
+        if (response.body.data.description && response.body.data.description.includes("고급 헤어 케어")) {
+            console.log("✅ 설명 수정 반영 확인");
+        }
+    }
+%}
+
+### 6. 부분 수정 테스트 - 업체명만 수정
+PUT http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: {{updateAuthHeader}}
+
+{
+  "businessName": "부분수정 테스트샵"
+}
+
+> {%
+    client.test("부분 수정 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.success === true, "성공 상태여야 함");
+    });
+
+    console.log("=== 부분 수정 테스트 ===");
+    console.log("부분 수정 응답 상태:", response.status);
+    console.log("부분 수정 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("부분 수정된 업체명:", response.body.data.businessName);
+
+        if (response.body.data.businessName === "부분수정 테스트샵") {
+            console.log("✅ 부분 수정(업체명만) 성공");
+        }
+
+        // 다른 필드는 유지되었는지 확인
+        if (response.body.data.address === "서울시 강남구 역삼동 999") {
+            console.log("✅ 수정하지 않은 주소 필드 유지됨");
+        }
+    }
+%}
+
+### 7. 실패 케이스 - 토큰 없이 수정
+PUT http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+
+{
+  "businessName": "권한없는 수정 시도",
+  "description": "토큰 없이 수정 시도"
+}
+
+> {%
+    client.test("토큰 없는 수정 실패", function() {
+        client.assert(response.status === 401, "응답 코드가 401이어야 함");
+    });
+
+    console.log("=== 토큰 없는 수정 테스트 ===");
+    console.log("토큰 없는 수정 응답 상태:", response.status);
+    console.log("토큰 없는 수정 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 401) {
+        console.log("✅ 토큰 없는 수정 요청 올바르게 차단됨");
+    }
+%}
+
+### 8. 실패 케이스 - 존재하지 않는 업체 수정
+PUT http://localhost:8080/api/business/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+Authorization: {{updateAuthHeader}}
+
+{
+  "businessName": "존재하지 않는 업체 수정",
+  "description": "존재하지 않는 업체 수정 시도"
+}
+
+> {%
+    client.test("존재하지 않는 업체 수정 실패", function() {
+        client.assert(response.status === 404, "응답 코드가 404여야 함");
+    });
+
+    console.log("=== 존재하지 않는 업체 수정 테스트 ===");
+    console.log("존재하지 않는 업체 수정 응답 상태:", response.status);
+    console.log("존재하지 않는 업체 수정 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 업체 수정 요청 올바르게 처리됨");
+    }
+%}
+
+### 9. 실패 케이스 - 잘못된 UUID 형식
+PUT http://localhost:8080/api/business/invalid-uuid-format
+Content-Type: application/json
+Authorization: {{updateAuthHeader}}
+
+{
+  "businessName": "잘못된 UUID 테스트"
+}
+
+> {%
+    console.log("=== 잘못된 UUID 형식 수정 테스트 ===");
+    console.log("잘못된 UUID 수정 응답 상태:", response.status);
+    console.log("잘못된 UUID 수정 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400 || response.status === 500) {
+        console.log("✅ 잘못된 UUID 형식 올바르게 처리됨");
+    }
+%}
+
+### 10. 실패 케이스 - 잘못된 토큰
+PUT http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: Bearer invalid-token-12345
+
+{
+  "businessName": "잘못된 토큰 테스트"
+}
+
+> {%
+    client.test("잘못된 토큰 수정 실패", function() {
+        client.assert(response.status === 401, "응답 코드가 401이어야 함");
+    });
+
+    console.log("=== 잘못된 토큰 수정 테스트 ===");
+    console.log("잘못된 토큰 수정 응답 상태:", response.status);
+    console.log("잘못된 토큰 수정 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 401) {
+        console.log("✅ 잘못된 토큰 올바르게 차단됨");
+    }
+%}
+
+### 11. 다른 사용자 생성 (권한 테스트용)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "other-user@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "다른사용자",
+  "phoneNumber": "010-9876-5432"
+}
+
+> {%
+    const otherAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("otherUserAuthHeader", otherAuthHeader);
+    console.log("다른 사용자 생성 완료");
+%}
+
+### 12. 실패 케이스 - 권한 없는 업체 수정 (다른 사용자)
+PUT http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: {{otherUserAuthHeader}}
+
+{
+  "businessName": "권한 없는 업체 수정",
+  "description": "다른 사용자의 업체 수정 시도"
+}
+
+> {%
+    client.test("권한 없는 업체 수정 실패", function() {
+        client.assert(response.status === 403, "응답 코드가 403이어야 함");
+    });
+
+    console.log("=== 권한 없는 업체 수정 테스트 ===");
+    console.log("권한 없는 업체 수정 응답 상태:", response.status);
+    console.log("권한 없는 업체 수정 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 403) {
+        console.log("✅ 권한 없는 업체 접근 올바르게 차단됨");
+    }
+%}
+
+### 13. 사업자번호 중복 테스트를 위한 다른 업체 생성
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{otherUserAuthHeader}}
+
+{
+  "businessName": "중복 테스트용 업체",
+  "businessType": "테스트",
+  "businessNumber": "777-77-77777",
+  "address": "서울시 강남구 중복로 777",
+  "contactPhone": "02-7777-7777",
+  "description": "중복 테스트용 업체"
+}
+
+> {%
+    if (response.body.data) {
+        console.log("중복 테스트용 업체 생성 완료:", response.body.data.businessName);
+    }
+%}
+
+### 14. 실패 케이스 - 중복된 사업자번호로 수정
+PUT http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: {{updateAuthHeader}}
+
+{
+  "businessName": "중복 테스트",
+  "businessNumber": "777-77-77777"
+}
+
+> {%
+    client.test("중복 사업자번호 수정 실패", function() {
+        client.assert(response.status === 409, "응답 코드가 409여야 함");
+    });
+
+    console.log("=== 중복 사업자번호 수정 테스트 ===");
+    console.log("중복 사업자번호 수정 응답 상태:", response.status);
+    console.log("중복 사업자번호 수정 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 409) {
+        console.log("✅ 중복 사업자번호 올바르게 차단됨");
+    }
+%}
+
+### 15. 실패 케이스 - 잘못된 사업자번호 형식
+PUT http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: {{updateAuthHeader}}
+
+{
+  "businessName": "잘못된 형식 테스트",
+  "businessNumber": "invalid-format"
+}
+
+> {%
+    client.test("잘못된 사업자번호 형식 실패", function() {
+        client.assert(response.status === 400, "응답 코드가 400이어야 함");
+    });
+
+    console.log("=== 잘못된 사업자번호 형식 테스트 ===");
+    console.log("잘못된 사업자번호 형식 응답 상태:", response.status);
+    console.log("잘못된 사업자번호 형식 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 잘못된 사업자번호 형식 올바르게 차단됨");
+    }
+%}
+
+### 16. 실패 케이스 - 빈 값으로 수정 시도
+PUT http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: {{updateAuthHeader}}
+
+{
+  "businessName": "",
+  "description": ""
+}
+
+> {%
+    console.log("=== 빈 값으로 수정 테스트 ===");
+    console.log("빈 값 수정 응답 상태:", response.status);
+    console.log("빈 값 수정 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 빈 값 입력 올바르게 차단됨");
+    } else if (response.status === 200) {
+        console.log("⚠️ 빈 값이 허용됨 - 비즈니스 로직 확인 필요");
+    }
+%}
+
+### 17. 실패 케이스 - 과도하게 긴 필드값
+PUT http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: {{updateAuthHeader}}
+
+{
+  "businessName": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "description": "aherewogoaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}
+
+> {%
+    console.log("=== 과도하게 긴 필드값 테스트 ===");
+    console.log("긴 필드값 수정 응답 상태:", response.status);
+    console.log("긴 필드값 수정 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 필드 길이 제한 올바르게 적용됨");
+    } else if (response.status === 200) {
+        console.log("⚠️ 긴 필드값이 허용됨 - 검증 로직 확인 필요");
+    }
+%}
+
+### 18. 실제 사용 시나리오 - 로고 URL 추가
+PUT http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: {{updateAuthHeader}}
+
+{
+  "logoUrl": "https://cdn.example.com/logos/business-logo.jpg"
+}
+
+> {%
+    client.test("로고 URL 추가 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    console.log("=== 로고 URL 추가 테스트 ===");
+    console.log("로고 URL 추가 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.logoUrl) {
+        console.log("추가된 로고 URL:", response.body.data.logoUrl);
+        if (response.body.data.logoUrl === "https://cdn.example.com/logos/business-logo.jpg") {
+            console.log("✅ 로고 URL 추가 성공");
+        }
+    }
+%}
+
+### 19. 최종 업체 정보 확인
+GET http://localhost:8080/api/business/{{businessId}}
+Authorization: {{updateAuthHeader}}
+
+> {%
+    client.test("최종 업체 정보 확인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    console.log("=== 최종 업체 정보 확인 ===");
+    console.log("최종 업체 정보:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("최종 업체명:", response.body.data.businessName);
+        console.log("최종 업체 타입:", response.body.data.businessType);
+        console.log("최종 주소:", response.body.data.address);
+        console.log("최종 연락처:", response.body.data.contactPhone);
+        console.log("최종 설명:", response.body.data.description);
+        console.log("최종 로고URL:", response.body.data.logoUrl);
+        console.log("최종 사업자번호:", response.body.data.businessNumber);
+
+        // 최종 수정 상태 검증
+        const originalName = client.global.get("originalBusinessName");
+        const currentName = response.body.data.businessName;
+
+        if (originalName && currentName !== originalName) {
+            console.log("✅ 업체 정보가 성공적으로 수정됨");
+            console.log("  - 원래 이름:", originalName);
+            console.log("  - 현재 이름:", currentName);
+        }
+    }
+%}
+
+### 20. 업체 목록에서 수정 반영 확인
+GET http://localhost:8080/api/business
+Authorization: {{updateAuthHeader}}
+
+> {%
+    client.test("업체 목록에서 수정 반영 확인", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(Array.isArray(response.body.data), "data가 배열이어야 함");
+    });
+
+    console.log("=== 업체 목록에서 수정 반영 확인 ===");
+    console.log("업체 목록:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        const targetBusiness = response.body.data.find(b => b.businessId === client.global.get("businessId"));
+
+        if (targetBusiness) {
+            console.log("목록에서 확인된 업체명:", targetBusiness.businessName);
+            console.log("목록에서 확인된 업체 타입:", targetBusiness.businessType);
+
+            if (targetBusiness.businessName === "부분수정 테스트샵") {
+                console.log("✅ 업체 목록에 수정사항 반영됨");
+            }
+        } else {
+            console.log("⚠️ 업체 목록에서 해당 업체를 찾을 수 없음");
+        }
+    }
+%}
+
+### 21. 수정 내역 요약 및 검증
+GET http://localhost:8080/api/business/{{businessId}}
+Authorization: {{updateAuthHeader}}
+
+> {%
+    console.log("=== 수정 테스트 요약 ===");
+
+    const originalName = client.global.get("originalBusinessName");
+    const originalAddress = client.global.get("originalAddress");
+    const originalDescription = client.global.get("originalDescription");
+
+    if (response.body.data) {
+        console.log("\n수정 전후 비교:");
+        console.log("업체명: '" + originalName + "' → '" + response.body.data.businessName + "'");
+        console.log("주소: '" + originalAddress + "' → '" + response.body.data.address + "'");
+        console.log("설명: '" + originalDescription + "' → '" + response.body.data.description + "'");
+
+        console.log("\n추가된 필드:");
+        console.log("로고 URL:", response.body.data.logoUrl || "없음");
+
+        console.log("\n수정 권한:", response.body.data.myRole);
+        console.log("수정 시간:", response.body.data.updatedAt || "정보 없음");
+    }
+
+    console.log("\n=== 테스트된 시나리오 ===");
+    console.log("✅ 성공 케이스: OWNER 권한으로 정상 수정");
+    console.log("✅ 부분 수정: 일부 필드만 수정");
+    console.log("✅ 실패 케이스: 토큰 없음, 잘못된 토큰, 존재하지 않는 업체");
+    console.log("✅ 권한 케이스: 다른 사용자의 업체 수정 시도");
+    console.log("✅ 검증 케이스: 중복 사업자번호, 잘못된 형식, 빈 값, 긴 값");
+    console.log("✅ 실제 사용: 로고 URL 추가");
+    console.log("✅ 일관성: 상세 조회와 목록 조회에서 동일한 정보");
+%}

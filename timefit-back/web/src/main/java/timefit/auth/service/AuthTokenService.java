@@ -1,106 +1,160 @@
 package timefit.auth.service;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
+import timefit.config.JwtConfig;
 import timefit.exception.auth.AuthException;
 import timefit.exception.auth.AuthErrorCode;
 
-import java.util.Map;
+import java.util.Date;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 임시 토큰 관리 서비스 (JWT 구현 전까지 사용)
- * 나중에 JWT + Redis로 교체 예정
+ * JWT 기반 토큰 관리 서비스
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthTokenService {
 
-    // 메모리 기반 임시 저장소 (실제로는 Redis 사용 예정)
-    private final Map<String, UUID> tokenToUserMap = new ConcurrentHashMap<>();
-    private final Map<UUID, String> userToTokenMap = new ConcurrentHashMap<>();
+    private final JwtConfig jwtConfig;
 
     /**
-     * 임시 토큰 생성
+     * Access Token 생성
      */
     public String generateToken(UUID userId) {
-        // 기존 토큰 제거
-        removeExistingToken(userId);
+        try {
+            Algorithm algorithm = Algorithm.HMAC512(jwtConfig.getSecretKey());
+            Date now = new Date();
+            Date expiryDate = new Date(now.getTime() + jwtConfig.getAccessTokenExpiration());
 
-        // 새로운 토큰 생성
-        String token = createNewToken();
+            return JWT.create()
+                    .withIssuer(jwtConfig.getIssuer())
+                    .withSubject(userId.toString())
+                    .withIssuedAt(now)
+                    .withExpiresAt(expiryDate)
+                    .sign(algorithm);
 
-        // 저장
-        storeToken(token, userId);
+        } catch (JWTCreationException e) {
+            log.error("JWT 토큰 생성 실패: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+        }
+    }
 
-        log.debug("임시 토큰 생성: userId={}", userId);
-        return token;
+    /**
+     * Refresh Token 생성
+     */
+    public String generateRefreshToken(UUID userId) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC512(jwtConfig.getSecretKey());
+            Date now = new Date();
+            Date expiryDate = new Date(now.getTime() + jwtConfig.getRefreshTokenExpiration());
+
+            return JWT.create()
+                    .withIssuer(jwtConfig.getIssuer())
+                    .withSubject(userId.toString())
+                    .withIssuedAt(now)
+                    .withExpiresAt(expiryDate)
+                    .withClaim("tokenType", "refresh")
+                    .sign(algorithm);
+
+        } catch (JWTCreationException e) {
+            log.error("Refresh 토큰 생성 실패: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+        }
     }
 
     /**
      * 토큰에서 사용자 ID 추출
      */
     public UUID getUserIdFromToken(String token) {
-        UUID userId = tokenToUserMap.get(token);
-        if (userId == null) {
+        try {
+            DecodedJWT decodedJWT = verifyToken(token);
+            String userId = decodedJWT.getSubject();
+            return UUID.fromString(userId);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid UUID in token: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
-        return userId;
     }
 
     /**
      * 토큰 유효성 검증
      */
     public boolean isValidToken(String token) {
-        return tokenToUserMap.containsKey(token);
+        try {
+            verifyToken(token);
+            return true;
+        } catch (JWTVerificationException | IllegalArgumentException e) {
+            log.debug("Invalid token: {}", e.getMessage());
+            return false;
+        }
     }
 
     /**
-     * 토큰 무효화
+     * 토큰 만료 여부 확인
+     */
+    public boolean isTokenExpired(String token) {
+        try {
+            DecodedJWT decodedJWT = verifyToken(token);
+            return decodedJWT.getExpiresAt().before(new Date());
+        } catch (JWTVerificationException | IllegalArgumentException e) {
+            return true;
+        }
+    }
+
+    /**
+     * 토큰 검증 및 DecodedJWT 반환
+     */
+    private DecodedJWT verifyToken(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC512(jwtConfig.getSecretKey());
+            JWTVerifier verifier = JWT.require(algorithm)
+                    .withIssuer(jwtConfig.getIssuer())
+                    .build();
+
+            return verifier.verify(token);
+
+        } catch (TokenExpiredException e) {
+            log.debug("Token expired: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
+        } catch (JWTVerificationException e) {
+            log.error("JWT verification failed: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+        }
+    }
+
+    /**
+     * 토큰 무효화 (JWT 특성상 실제 무효화 불가)
+     * 추후 Redis 블랙리스트로 구현 가능
      */
     public void invalidateToken(String token) {
-        UUID userId = tokenToUserMap.remove(token);
-        if (userId != null) {
-            userToTokenMap.remove(userId);
-            log.debug("임시 토큰 무효화: userId={}", userId);
-        }
+        // JWT는 stateless하므로 서버에서 강제 만료 불가
+        // 추후 Redis 블랙리스트 구현 시 여기에 로직 추가
+        log.info("토큰 무효화 요청 (현재는 로그만 기록): {}", token != null ? "토큰 있음" : "토큰 없음");
     }
 
     /**
-     * 사용자의 모든 토큰 무효화
+     * 토큰에서 발행 시간 추출
      */
-    public void invalidateUserTokens(UUID userId) {
-        String token = userToTokenMap.remove(userId);
-        if (token != null) {
-            tokenToUserMap.remove(token);
-            log.debug("사용자 토큰 무효화: userId={}", userId);
-        }
+    public Date getIssuedAt(String token) {
+        DecodedJWT decodedJWT = verifyToken(token);
+        return decodedJWT.getIssuedAt();
     }
 
     /**
-     * 헬스 체크용 - 저장된 토큰 수 반환
+     * 토큰에서 만료 시간 추출
      */
-    public int getActiveTokenCount() {
-        return tokenToUserMap.size();
-    }
-
-    // ===== Private Methods =====
-
-    private void removeExistingToken(UUID userId) {
-        String existingToken = userToTokenMap.get(userId);
-        if (existingToken != null) {
-            tokenToUserMap.remove(existingToken);
-        }
-    }
-
-    private String createNewToken() {
-        return "temp_" + UUID.randomUUID().toString().replace("-", "");
-    }
-
-    private void storeToken(String token, UUID userId) {
-        tokenToUserMap.put(token, userId);
-        userToTokenMap.put(userId, token);
+    public Date getExpirationDate(String token) {
+        DecodedJWT decodedJWT = verifyToken(token);
+        return decodedJWT.getExpiresAt();
     }
 }

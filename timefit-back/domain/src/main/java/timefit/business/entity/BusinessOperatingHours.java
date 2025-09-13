@@ -33,4 +33,46 @@ public class BusinessOperatingHours extends BaseEntity {
 
     @Column(name = "is_closed", nullable = false)
     private Boolean isClosed = false;
+
+
+    /**
+     * 영업시간 생성 (정적 팩터리 메서드)
+     */
+    public static BusinessOperatingHours createOperatingHours(Business business, DayOfWeek dayOfWeek,
+                                                                LocalTime openTime, LocalTime closeTime, Boolean isClosed) {
+        BusinessOperatingHours hours = new BusinessOperatingHours();
+        hours.business = business;
+        hours.dayOfWeek = dayOfWeek;
+        hours.openTime = openTime;
+        hours.closeTime = closeTime;
+        hours.isClosed = isClosed != null ? isClosed : false;
+        return hours;
+    }
+
+    /**
+     * 영업시간 수정
+     */
+    public void updateOperatingHours(LocalTime openTime, LocalTime closeTime, Boolean isClosed) {
+        this.openTime = openTime;
+        this.closeTime = closeTime;
+        this.isClosed = isClosed;
+    }
+
+    /**
+     * 휴무일로 설정
+     */
+    public void setClosed() {
+        this.isClosed = true;
+        this.openTime = null;
+        this.closeTime = null;
+    }
+
+    /**
+     * 영업일로 설정
+     */
+    public void setOpen(LocalTime openTime, LocalTime closeTime) {
+        this.isClosed = false;
+        this.openTime = openTime;
+        this.closeTime = closeTime;
+    }
 }

@@ -10,7 +10,6 @@ import timefit.business.repository.UserBusinessRoleRepository;
 import timefit.exception.auth.AuthException;
 import timefit.exception.auth.AuthErrorCode;
 import timefit.user.entity.User;
-import timefit.user.entity.UserRole;
 import timefit.user.repository.UserRepository;
 import timefit.auth.dto.AuthRequestDto;
 import timefit.auth.factory.UserFactory;
@@ -31,10 +30,10 @@ public class UserLoginService {
      * 업체 사용자 로그인
      */
     @Transactional
-    public UserLoginResult loginBusinessUser(AuthRequestDto.BusinessSignIn request) {
+    public UserLoginResult loginUser(AuthRequestDto.UserSignIn request) {
 
         // 1. 사용자 조회 및 검증
-        User user = findAndValidateBusinessUser(request);
+        User user = findAndValidateUser(request);
 
         // 2. 사용자의 비즈니스 권한 조회
         List<UserBusinessRole> userBusinessRoles = getUserBusinessRoles(user.getId());
@@ -43,7 +42,7 @@ public class UserLoginService {
         UserFactory.updateLastLogin(user);
         userRepository.save(user);
 
-        return UserLoginResult.ofBusinessUser(user, userBusinessRoles);
+        return UserLoginResult.ofUser(user, userBusinessRoles);
     }
 
     /**
@@ -66,18 +65,13 @@ public class UserLoginService {
     /**
      * 업체 사용자 조회 및 검증
      */
-    private User findAndValidateBusinessUser(AuthRequestDto.BusinessSignIn request) {
+    private User findAndValidateUser(AuthRequestDto.UserSignIn request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
         // 비밀번호 검증
         if (!request.getPassword().equals(user.getPasswordHash())) {
             throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
-        }
-
-        // 업체 역할 확인
-        if (user.getRole() != UserRole.BUSINESS) {
-            throw new AuthException(AuthErrorCode.ACCESS_DENIED);
         }
 
         return user;
@@ -89,9 +83,9 @@ public class UserLoginService {
     private List<UserBusinessRole> getUserBusinessRoles(java.util.UUID userId) {
         List<UserBusinessRole> userBusinessRoles = userBusinessRoleRepository.findByUserIdAndIsActive(userId, true);
 
-        if (userBusinessRoles.isEmpty()) {
-            throw new AuthException(AuthErrorCode.ACCESS_DENIED);
-        }
+//        if (userBusinessRoles.isEmpty()) {
+//            throw new AuthException(AuthErrorCode.ACCESS_DENIED);
+//        }
 
         return userBusinessRoles;
     }

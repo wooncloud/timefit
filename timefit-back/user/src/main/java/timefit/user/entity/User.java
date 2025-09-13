@@ -55,15 +55,15 @@ public class User extends BaseEntity {
 
 
     /**
-     * 업체 사용자 생성 (이메일 회원가입)
+     * 사용자 생성 (이메일 회원가입)
      */
-    public static User createBusinessUser(String email, String password, String name, String phoneNumber) {
+    public static User createUser(String email, String password, String name, String phoneNumber) {
         User user = new User();
         user.email = email;
         user.passwordHash = password; // 실제로는 암호화 필요
         user.name = name;
         user.phoneNumber = phoneNumber;
-        user.role = UserRole.BUSINESS;
+//        user.role = UserRole.BUSINESS;
         user.lastLoginAt = LocalDateTime.now();
         return user;
     }

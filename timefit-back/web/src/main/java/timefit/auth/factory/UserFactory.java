@@ -1,9 +1,6 @@
 package timefit.auth.factory;
 
 import timefit.user.entity.User;
-import timefit.user.entity.UserRole;
-
-import java.time.LocalDateTime;
 
 /**
  * User Entity 생성을 담당하는 Factory 클래스
@@ -17,8 +14,8 @@ public class UserFactory {
     /**
      * 업체 사용자 생성 (이메일 회원가입)
      */
-    public static User createBusinessUser(String email, String password, String name, String phoneNumber) {
-        return User.createBusinessUser(email, password, name, phoneNumber);
+    public static User createUser(String email, String password, String name, String phoneNumber) {
+        return User.createUser(email, password, name, phoneNumber);
     }
 
     /**

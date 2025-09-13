@@ -9,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import timefit.auth.service.AuthTokenService;
+import timefit.config.JwtConfig;
 import timefit.exception.auth.AuthException;
 import timefit.exception.auth.AuthErrorCode;
 
@@ -18,71 +18,66 @@ import java.io.IOException;
 import java.util.UUID;
 
 /**
- * 임시 토큰 검증 필터 (JWT 구현 전까지 사용)
+ * JWT 토큰 인증 필터
+ * 모든 요청에 대해 JWT 토큰을 검증하고 사용자 정보를 설정
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AuthFilter extends OncePerRequestFilter {
+public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final AuthTokenService authTokenService;
 
-    private static final String TEMP_TOKEN_HEADER = "x-client-token";
-
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String requestURI = request.getRequestURI();
-        String method = request.getMethod();
-
-        log.debug("요청 처리: {} {}", method, requestURI);
+        log.debug("JWT 필터 처리: {}", requestURI);
 
         try {
             // 인증이 필요한 경로인지 확인
-            if (requiresAuth(requestURI)) {
-                validateToken(request);
+            if (requiresAuthentication(requestURI)) {
+                validateTokenAndSetUser(request);
             }
 
-        } catch (AuthException e) {
-            log.warn("인증 실패: {}, URI: {}", e.getMessage(), requestURI);
-            handleAuthError(response, e);
-            return;
-        } catch (Exception e) {
-            log.error("예상치 못한 인증 오류", e);
-            handleAuthError(response, new AuthException(AuthErrorCode.TOKEN_INVALID)); // AUTHENTICATION_FAILED 대신 기존 코드 사용
-            return;
-        }
+            filterChain.doFilter(request, response);
 
-        filterChain.doFilter(request, response);
+        } catch (AuthException e) {
+            log.warn("JWT 인증 실패: {} - {}", requestURI, e.getMessage());
+            handleAuthenticationError(response, e);
+        }
     }
 
     /**
      * 인증이 필요한 경로인지 확인
      */
-    private boolean requiresAuth(String requestURI) {
-        // 인증이 필요하지 않은 경로들
-        if (requestURI.startsWith("/api/business/auth/") ||
-                requestURI.startsWith("/api/customer/auth/") ||
-                requestURI.equals("/api/health") ||
-                requestURI.equals("/api/auth/logout") ||
-                requestURI.equals("/api/auth/token/status") ||
-                requestURI.startsWith("/api/validation/")) {
+    private boolean requiresAuthentication(String requestURI) {
+        // 공개 API (인증 불필요)
+        if (requestURI.startsWith("/api/auth/") ||
+                requestURI.startsWith("/api/business/search") ||
+                requestURI.startsWith("/api/validation/") ||
+                requestURI.startsWith("/actuator/") ||
+                requestURI.startsWith("/swagger-ui/") ||
+                requestURI.startsWith("/v3/api-docs/") ||
+                requestURI.equals("/favicon.ico")) {
             return false;
         }
 
-        // 그 외 모든 /api/ 경로는 인증 필요
+        // /api/로 시작하는 경로는 인증 필요
         return requestURI.startsWith("/api/");
     }
 
     /**
-     * 토큰 검증
+     * 토큰 검증 및 사용자 정보 설정
      */
-    private void validateToken(HttpServletRequest request) {
+    private void validateTokenAndSetUser(HttpServletRequest request) {
         String token = extractToken(request);
 
         if (!StringUtils.hasText(token)) {
-            throw new AuthException(AuthErrorCode.TOKEN_INVALID); // TOKEN_NOT_PROVIDED 대신 기존 코드 사용
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
 
         if (!authTokenService.isValidToken(token)) {
@@ -94,20 +89,28 @@ public class AuthFilter extends OncePerRequestFilter {
         request.setAttribute("userId", userId);
         request.setAttribute("token", token);
 
-        log.debug("인증 성공: userId={}", userId);
+        log.debug("JWT 인증 성공: userId={}", userId);
     }
 
     /**
-     * 요청에서 토큰 추출
+     * 요청에서 JWT 토큰 추출
      */
     private String extractToken(HttpServletRequest request) {
-        return request.getHeader(TEMP_TOKEN_HEADER);
+        String bearerToken = request.getHeader(JwtConfig.AUTHORIZATION_HEADER);
+
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(JwtConfig.TOKEN_PREFIX)) {
+            return bearerToken.substring(JwtConfig.TOKEN_PREFIX_LENGTH);
+        }
+
+        return null;
     }
 
     /**
-     * 인증 에러 처리
+     * 인증 에러 응답 처리
      */
-    private void handleAuthError(HttpServletResponse response, AuthException authException) throws IOException {
+    private void handleAuthenticationError(HttpServletResponse response, AuthException authException)
+            throws IOException {
+
         response.setStatus(authException.getHttpStatus().value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -116,7 +119,7 @@ public class AuthFilter extends OncePerRequestFilter {
                 "{\"success\":false,\"message\":\"%s\",\"error\":{\"code\":\"%s\",\"message\":\"%s\"}}",
                 "인증에 실패했습니다",
                 authException.getErrorCode(),
-                authException.getHttpStatus()
+                authException.getMessage()
         );
 
         response.getWriter().write(errorJson);

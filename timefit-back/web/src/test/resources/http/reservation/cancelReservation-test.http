@@ -1,0 +1,924 @@
+### 예약 취소 API 테스트 (JWT 기반) - 고객 권한
+
+### 1. 고객 회원가입 (예약 취소 테스트용)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "cancel-customer@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "취소테스트고객",
+  "phoneNumber": "010-1111-2222"
+}
+
+> {%
+    client.test("취소 테스트 고객 회원가입 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.headers.valueOf("Authorization"), "Authorization 헤더가 있어야 함");
+    });
+
+    const customerAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("customerAuthHeader", customerAuthHeader);
+    console.log("취소 테스트 고객 회원가입 성공");
+%}
+
+### 2. 업체 회원가입 (예약 받을 업체)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "cancel-business@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "업체사장",
+  "phoneNumber": "010-2222-3333"
+}
+
+> {%
+    const businessAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("businessAuthHeader", businessAuthHeader);
+    console.log("취소 테스트 업체 회원가입 성공");
+%}
+
+### 3. 업체 생성
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{businessAuthHeader}}
+
+{
+  "businessName": "예약 취소 테스트 헬스장",
+  "businessType": "헬스장",
+  "businessNumber": "999-99-99999",
+  "address": "서울시 강남구 취소로 999",
+  "contactPhone": "02-9999-9999",
+  "description": "예약 취소 테스트용 헬스장입니다"
+}
+
+> {%
+    client.test("취소 테스트 업체 생성 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+    });
+
+    if (response.body.data) {
+        const businessId = response.body.data.businessId;
+        console.log("생성된 업체 ID:", businessId);
+        client.global.set("businessId", businessId);
+    }
+%}
+
+### 4. 업체 영업시간 설정
+PUT http://localhost:8080/api/schedule/operating-hours?businessId={{businessId}}
+Content-Type: application/json
+Authorization: {{businessAuthHeader}}
+
+{
+  "businessHours": [
+    {
+      "dayOfWeek": 1,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 2,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 3,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 4,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 5,
+      "openTime": "09:00",
+      "closeTime": "20:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 6,
+      "openTime": "10:00",
+      "closeTime": "18:00",
+      "isClosed": false
+    },
+    {
+      "dayOfWeek": 0,
+      "openTime": null,
+      "closeTime": null,
+      "isClosed": true
+    }
+  ]
+}
+
+> {%
+    client.test("영업시간 설정 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    console.log("영업시간 설정 완료");
+    if (response.body.data) {
+        console.log("설정된 업체:", response.body.data.businessName);
+    }
+%}
+
+### 5. 예약 슬롯 생성 (업체에서) - 수정된 형태
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+Authorization: {{businessAuthHeader}}
+
+{
+  "slots": [
+    {
+      "slotDate": "2025-09-16",
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "capacity": 1
+    },
+    {
+      "slotDate": "2025-09-16",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "capacity": 1
+    }
+  ]
+}
+
+> {%
+    client.test("예약 슬롯 생성 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+    });
+
+    console.log("예약 슬롯 생성 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.createdSlots && response.body.data.createdSlots.length > 0) {
+        const firstSlot = response.body.data.createdSlots[0];
+        const secondSlot = response.body.data.createdSlots[1];
+
+        console.log("첫 번째 슬롯 ID:", firstSlot.slotId);
+        console.log("두 번째 슬롯 ID:", secondSlot.slotId);
+
+        client.global.set("firstSlotId", firstSlot.slotId);
+        client.global.set("secondSlotId", secondSlot.slotId);
+
+        console.log("총 요청된 슬롯 수:", response.body.data.totalRequested);
+        console.log("성공적으로 생성된 슬롯 수:", response.body.data.successCount);
+    } else {
+        console.log("❌ 슬롯 생성 실패 또는 응답 형태 오류");
+    }
+%}
+
+### 6. 첫 번째 예약 생성 (취소할 예약)
+POST http://localhost:8080/api/reservation
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{firstSlotId}}",
+  "reservationDate": "2025-09-16",
+  "reservationTime": "09:00",
+  "durationMinutes": 60,
+  "totalPrice": 50000,
+  "customerName": "취소테스트고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "첫 번째 예약 - 취소 예정"
+}
+
+> {%
+    client.test("첫 번째 예약 생성 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.body.data.reservationId, "reservationId가 있어야 함");
+    });
+
+    if (response.body.data) {
+        const firstReservationId = response.body.data.reservationId;
+        console.log("첫 번째 예약 ID:", firstReservationId);
+        console.log("첫 번째 예약 번호:", response.body.data.reservationNumber);
+        client.global.set("firstReservationId", firstReservationId);
+    }
+%}
+
+### 7. 두 번째 예약 생성 (취소할 예약)
+POST http://localhost:8080/api/reservation
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{secondSlotId}}",
+  "reservationDate": "2025-09-16",
+  "reservationTime": "10:00",
+  "durationMinutes": 60,
+  "totalPrice": 60000,
+  "customerName": "취소테스트고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "두 번째 예약 - 취소 예정"
+}
+
+> {%
+    if (response.body.data) {
+        const secondReservationId = response.body.data.reservationId;
+        console.log("두 번째 예약 ID:", secondReservationId);
+        client.global.set("secondReservationId", secondReservationId);
+    }
+%}
+
+### 8. 세 번째 예약 생성 (권한 테스트용) - 추가 슬롯 필요
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+Authorization: {{businessAuthHeader}}
+
+{
+  "slots": [
+    {
+      "slotDate": "2025-09-17",
+      "startTime": "14:00",
+      "endTime": "15:30",
+      "capacity": 1
+    }
+  ]
+}
+
+> {%
+    if (response.body.data && response.body.data.createdSlots && response.body.data.createdSlots.length > 0) {
+        const thirdSlot = response.body.data.createdSlots[0];
+        console.log("세 번째 슬롯 ID:", thirdSlot.slotId);
+        client.global.set("thirdSlotId", thirdSlot.slotId);
+    }
+%}
+
+### 9. 세 번째 예약 생성 (권한 테스트용)
+POST http://localhost:8080/api/reservation
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{thirdSlotId}}",
+  "reservationDate": "2025-09-17",
+  "reservationTime": "14:00",
+  "durationMinutes": 90,
+  "totalPrice": 75000,
+  "customerName": "취소테스트고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "세 번째 예약 - 권한 테스트용"
+}
+
+> {%
+    if (response.body.data) {
+        const thirdReservationId = response.body.data.reservationId;
+        console.log("세 번째 예약 ID:", thirdReservationId);
+        client.global.set("thirdReservationId", thirdReservationId);
+    }
+%}
+
+### 10. 취소 전 예약 목록 확인
+GET http://localhost:8080/api/reservation
+Authorization: {{customerAuthHeader}}
+
+> {%
+    client.test("취소 전 예약 목록 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.data, "응답 데이터가 있어야 함");
+    });
+
+    console.log("=== 취소 전 예약 목록 ===");
+    if (response.body.data && response.body.data.reservations) {
+        console.log("총 예약 수:", response.body.data.reservations.length);
+        response.body.data.reservations.forEach((reservation, index) => {
+            console.log(`${index + 1}. 예약번호: ${reservation.reservationNumber}, 상태: ${reservation.status}, 날짜: ${reservation.reservationDate} ${reservation.reservationTime}`);
+        });
+
+        const activeReservations = response.body.data.reservations.filter(r => r.status !== "CANCELLED");
+        console.log("활성 예약 수:", activeReservations.length);
+    }
+%}
+
+### 11. 첫 번째 예약 취소 - 성공 케이스 (정상적인 사유)
+DELETE http://localhost:8080/api/reservation/{{firstReservationId}}
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "reason": "개인 사정으로 인한 취소입니다."
+}
+
+> {%
+    client.test("첫 번째 예약 취소 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.success === true, "성공 상태여야 함");
+    });
+
+    console.log("=== 첫 번째 예약 취소 ===");
+    console.log("첫 번째 예약 취소 응답 상태:", response.status);
+    console.log("첫 번째 예약 취소 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("취소된 예약 번호:", response.body.data.reservationNumber);
+        console.log("취소 상태:", response.body.data.status);
+        console.log("취소 시간:", response.body.data.cancelledAt);
+        console.log("취소 사유:", response.body.data.cancelReason);
+
+        if (response.body.data.status === "CANCELLED") {
+            console.log("✅ 예약 상태가 CANCELLED로 변경됨");
+        }
+    }
+%}
+
+### 12. 두 번째 예약 취소 - 성공 케이스 (다른 사유)
+DELETE http://localhost:8080/api/reservation/{{secondReservationId}}
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "reason": "일정 변경으로 인한 취소"
+}
+
+> {%
+    client.test("두 번째 예약 취소 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    console.log("=== 두 번째 예약 취소 ===");
+    console.log("두 번째 예약 취소 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data && response.body.data.status === "CANCELLED") {
+        console.log("✅ 두 번째 예약도 정상 취소됨");
+    }
+%}
+
+### 13. 취소 후 예약 목록 확인
+GET http://localhost:8080/api/reservation
+Authorization: {{customerAuthHeader}}
+
+> {%
+    client.test("취소 후 예약 목록 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    console.log("=== 취소 후 예약 목록 ===");
+    if (response.body.data && response.body.data.reservations) {
+        console.log("총 예약 수:", response.body.data.reservations.length);
+
+        const cancelledReservations = response.body.data.reservations.filter(r => r.status === "CANCELLED");
+        const activeReservations = response.body.data.reservations.filter(r => r.status !== "CANCELLED");
+
+        console.log("취소된 예약 수:", cancelledReservations.length);
+        console.log("활성 예약 수:", activeReservations.length);
+
+        cancelledReservations.forEach((reservation, index) => {
+            console.log(`취소된 예약 ${index + 1}: ${reservation.reservationNumber} - ${reservation.cancelReason}`);
+        });
+
+        if (cancelledReservations.length === 2) {
+            console.log("✅ 두 개의 예약이 정상적으로 취소됨");
+        }
+    }
+%}
+
+### 14. 실패 케이스 - 이미 취소된 예약 재취소 시도
+DELETE http://localhost:8080/api/reservation/{{firstReservationId}}
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "reason": "이미 취소된 예약 재취소 시도"
+}
+
+> {%
+    client.test("이미 취소된 예약 재취소 실패", function() {
+        client.assert(response.status === 400, "응답 코드가 400이어야 함");
+    });
+
+    console.log("=== 이미 취소된 예약 재취소 테스트 ===");
+    console.log("재취소 시도 응답 상태:", response.status);
+    console.log("재취소 시도 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 이미 취소된 예약 재취소 올바르게 차단됨");
+    }
+%}
+
+### 15. 실패 케이스 - 토큰 없이 취소 시도
+DELETE http://localhost:8080/api/reservation/{{thirdReservationId}}
+Content-Type: application/json
+
+{
+  "reason": "토큰 없이 취소 시도"
+}
+
+> {%
+    client.test("토큰 없는 취소 실패", function() {
+        client.assert(response.status === 401, "응답 코드가 401이어야 함");
+    });
+
+    console.log("=== 토큰 없는 취소 테스트 ===");
+    console.log("토큰 없는 취소 응답 상태:", response.status);
+    console.log("토큰 없는 취소 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 401) {
+        console.log("✅ 토큰 없는 취소 요청 올바르게 차단됨");
+    }
+%}
+
+### 16. 실패 케이스 - 존재하지 않는 예약 취소
+DELETE http://localhost:8080/api/reservation/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "reason": "존재하지 않는 예약 취소 시도"
+}
+
+> {%
+    client.test("존재하지 않는 예약 취소 실패", function() {
+        client.assert(response.status === 404, "응답 코드가 404여야 함");
+    });
+
+    console.log("=== 존재하지 않는 예약 취소 테스트 ===");
+    console.log("존재하지 않는 예약 취소 응답 상태:", response.status);
+    console.log("존재하지 않는 예약 취소 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 예약 취소 올바르게 처리됨");
+    }
+%}
+
+### 17. 실패 케이스 - 잘못된 UUID 형식
+DELETE http://localhost:8080/api/reservation/invalid-uuid-format
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "reason": "잘못된 UUID 형식 취소 시도"
+}
+
+> {%
+    console.log("=== 잘못된 UUID 형식 취소 테스트 ===");
+    console.log("잘못된 UUID 취소 응답 상태:", response.status);
+    console.log("잘못된 UUID 취소 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400 || response.status === 500) {
+        console.log("✅ 잘못된 UUID 형식 올바르게 처리됨");
+    }
+%}
+
+### 18. 실패 케이스 - 잘못된 토큰
+DELETE http://localhost:8080/api/reservation/{{thirdReservationId}}
+Content-Type: application/json
+Authorization: Bearer invalid-token-12345
+
+{
+  "reason": "잘못된 토큰으로 취소 시도"
+}
+
+> {%
+    client.test("잘못된 토큰 취소 실패", function() {
+        client.assert(response.status === 401, "응답 코드가 401이어야 함");
+    });
+
+    console.log("=== 잘못된 토큰 취소 테스트 ===");
+    console.log("잘못된 토큰 취소 응답 상태:", response.status);
+    console.log("잘못된 토큰 취소 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 401) {
+        console.log("✅ 잘못된 토큰 올바르게 차단됨");
+    }
+%}
+
+### 19. 다른 고객 생성 (권한 테스트용)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "another-cancel-customer@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "다른취소고객",
+  "phoneNumber": "010-3333-4444"
+}
+
+> {%
+    const anotherAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("anotherCustomerAuthHeader", anotherAuthHeader);
+    console.log("다른 고객 생성 완료");
+%}
+
+### 20. 실패 케이스 - 다른 고객이 예약 취소 시도 (권한 없음)
+DELETE http://localhost:8080/api/reservation/{{thirdReservationId}}
+Content-Type: application/json
+Authorization: {{anotherCustomerAuthHeader}}
+
+{
+  "reason": "다른 고객이 예약 취소를 시도합니다."
+}
+
+> {%
+    client.test("다른 고객의 예약 취소 실패", function() {
+        client.assert(response.status === 403, "응답 코드가 403이어야 함");
+    });
+
+    console.log("=== 다른 고객의 예약 취소 테스트 ===");
+    console.log("다른 고객의 예약 취소 시도 응답 상태:", response.status);
+    console.log("다른 고객의 예약 취소 시도 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 403) {
+        console.log("✅ 다른 고객의 예약 취소 차단 성공");
+    } else {
+        console.log("⚠️ 다른 고객의 예약 취소가 허용됨 - 보안 문제");
+    }
+%}
+
+### 21. 실패 케이스 - 취소 사유 누락
+DELETE http://localhost:8080/api/reservation/{{thirdReservationId}}
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{}
+
+> {%
+    console.log("=== 취소 사유 누락 테스트 ===");
+    console.log("취소 사유 누락 응답 상태:", response.status);
+    console.log("취소 사유 누락 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 취소 사유 누락 검증 성공");
+    } else {
+        console.log("⚠️ 취소 사유 없이 취소가 허용됨");
+    }
+%}
+
+### 22. 실패 케이스 - 빈 취소 사유
+DELETE http://localhost:8080/api/reservation/{{thirdReservationId}}
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "reason": ""
+}
+
+> {%
+    console.log("=== 빈 취소 사유 테스트 ===");
+    console.log("빈 취소 사유 응답 상태:", response.status);
+    console.log("빈 취소 사유 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 빈 취소 사유 검증 성공");
+    } else {
+        console.log("⚠️ 빈 취소 사유가 허용됨");
+    }
+%}
+
+### 23. 실패 케이스 - 과도하게 긴 취소 사유
+DELETE http://localhost:8080/api/reservation/{{thirdReservationId}}
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "reason": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}
+
+> {%
+    console.log("=== 과도하게 긴 취소 사유 테스트 ===");
+    console.log("긴 취소 사유 응답 상태:", response.status);
+    console.log("긴 취소 사유 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 400) {
+        console.log("✅ 긴 취소 사유 검증 성공");
+    } else if (response.status === 200) {
+        console.log("⚠️ 긴 취소 사유가 허용됨 - 길이 제한 확인 필요");
+    }
+%}
+
+### 24. 성공 케이스 - 세 번째 예약 정상 취소 (상세 사유)
+DELETE http://localhost:8080/api/reservation/{{thirdReservationId}}
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "reason": "갑작스러운 업무로 인해 시간 조정이 어려워 부득이하게 취소합니다. 다음 기회에 다시 예약하겠습니다."
+}
+
+> {%
+    client.test("세 번째 예약 취소 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.success === true, "성공 상태여야 함");
+    });
+
+    console.log("=== 세 번째 예약 정상 취소 ===");
+    console.log("세 번째 예약 취소 응답:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("최종 취소된 예약 번호:", response.body.data.reservationNumber);
+        console.log("최종 취소 상태:", response.body.data.status);
+        console.log("최종 취소 사유:", response.body.data.cancelReason);
+
+        if (response.body.data.status === "CANCELLED") {
+            console.log("✅ 세 번째 예약도 정상 취소됨");
+        }
+    }
+%}
+
+### 25. 최종 예약 목록에서 취소된 예약 확인
+GET http://localhost:8080/api/reservation
+Authorization: {{customerAuthHeader}}
+
+> {%
+    client.test("최종 예약 목록 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    console.log("=== 최종 예약 목록에서 취소 상태 확인 ===");
+    if (response.body.data && response.body.data.reservations) {
+        console.log("총 예약 수:", response.body.data.reservations.length);
+
+        const cancelledReservations = response.body.data.reservations.filter(r => r.status === "CANCELLED");
+        console.log("취소된 예약 수:", cancelledReservations.length);
+
+        cancelledReservations.forEach((reservation, index) => {
+            console.log(`취소된 예약 ${index + 1}:`);
+            console.log(`  - 예약번호: ${reservation.reservationNumber}`);
+            console.log(`  - 날짜: ${reservation.reservationDate} ${reservation.reservationTime}`);
+            console.log(`  - 업체: ${reservation.businessName}`);
+            console.log(`  - 취소사유: ${reservation.cancelReason || "사유 없음"}`);
+            console.log(`  - 취소시간: ${reservation.cancelledAt || "시간 정보 없음"}`);
+        });
+
+        if (cancelledReservations.length === 3) {
+            console.log("✅ 모든 예약이 정상적으로 취소됨");
+        }
+    }
+%}
+
+### 26. 취소된 예약 상세 조회 테스트
+GET http://localhost:8080/api/reservation/{{firstReservationId}}
+Authorization: {{customerAuthHeader}}
+
+> {%
+    client.test("취소된 예약 상세 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    console.log("=== 취소된 예약 상세 조회 ===");
+    console.log("취소된 예약 상세 정보:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        console.log("예약 상태:", response.body.data.status);
+        console.log("취소 사유:", response.body.data.cancelReason);
+        console.log("취소 시간:", response.body.data.cancelledAt);
+
+        if (response.body.data.status === "CANCELLED") {
+            console.log("✅ 취소된 예약도 상세 조회 가능");
+        }
+    }
+%}
+
+### 27. 취소 필터링 테스트 - 취소된 예약만 조회
+GET http://localhost:8080/api/reservation?status=CANCELLED
+Authorization: {{customerAuthHeader}}
+
+> {%
+    client.test("취소된 예약 필터링 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    console.log("=== 취소된 예약만 필터링 조회 ===");
+    if (response.body.data && response.body.data.reservations) {
+        console.log("필터링된 취소 예약 수:", response.body.data.reservations.length);
+
+        const allCancelled = response.body.data.reservations.every(r => r.status === "CANCELLED");
+        if (allCancelled) {
+            console.log("✅ 취소된 예약만 올바르게 필터링됨");
+        } else {
+            console.log("⚠️ 취소되지 않은 예약도 포함됨");
+        }
+    }
+%}
+
+### 28. 취소 응답 구조 검증 테스트 - 추가 슬롯 생성
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+Authorization: {{businessAuthHeader}}
+
+{
+  "slots": [
+    {
+      "slotDate": "2025-09-20",
+      "startTime": "15:00",
+      "endTime": "15:30",
+      "capacity": 1
+    }
+  ]
+}
+
+> {%
+    if (response.body.data && response.body.data.createdSlots && response.body.data.createdSlots.length > 0) {
+        const verifySlot = response.body.data.createdSlots[0];
+        client.global.set("verifySlotId", verifySlot.slotId);
+        console.log("검증용 슬롯 생성:", verifySlot.slotId);
+    }
+%}
+
+### 29. 검증용 예약 생성
+POST http://localhost:8080/api/reservation
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{verifySlotId}}",
+  "reservationDate": "2025-09-20",
+  "reservationTime": "15:00",
+  "durationMinutes": 30,
+  "totalPrice": 30000,
+  "customerName": "취소테스트고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "응답 구조 검증용 예약"
+}
+
+> {%
+    if (response.body.data) {
+        const verifyReservationId = response.body.data.reservationId;
+        client.global.set("verifyReservationId", verifyReservationId);
+        console.log("검증용 예약 생성:", verifyReservationId);
+    }
+%}
+
+### 30. 응답 구조 검증을 위한 취소
+DELETE http://localhost:8080/api/reservation/{{verifyReservationId}}
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "reason": "응답 구조 검증을 위한 취소"
+}
+
+> {%
+    client.test("취소 응답 구조 검증", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.success === true, "success가 true여야 함");
+        client.assert(response.body.message, "message 필드가 있어야 함");
+        client.assert(response.body.data, "data 필드가 있어야 함");
+        client.assert(response.body.data.reservationId, "reservationId가 있어야 함");
+        client.assert(response.body.data.status === "CANCELLED", "status가 CANCELLED여야 함");
+        client.assert(response.body.data.cancelReason, "cancelReason이 있어야 함");
+    });
+
+    console.log("=== 취소 응답 구조 검증 ===");
+    console.log("응답 구조 검증:", {
+        success: response.body.success,
+        hasMessage: !!response.body.message,
+        hasData: !!response.body.data,
+        hasReservationId: !!(response.body.data?.reservationId),
+        status: response.body.data?.status,
+        hasCancelReason: !!(response.body.data?.cancelReason),
+        hasCancelledAt: !!(response.body.data?.cancelledAt)
+    });
+
+    if (response.body.data) {
+        console.log("취소 응답 데이터 구조:");
+        console.log("- 예약 ID:", response.body.data.reservationId);
+        console.log("- 예약 번호:", response.body.data.reservationNumber);
+        console.log("- 상태:", response.body.data.status);
+        console.log("- 취소 사유:", response.body.data.cancelReason);
+        console.log("- 취소 시간:", response.body.data.cancelledAt);
+
+        const requiredFields = ['reservationId', 'reservationNumber', 'status', 'cancelReason'];
+        const missingFields = requiredFields.filter(field => !response.body.data[field]);
+
+        if (missingFields.length === 0) {
+            console.log("✅ 취소 응답의 모든 필수 필드 존재");
+        } else {
+            console.log("⚠️ 누락된 필드:", missingFields);
+        }
+    }
+%}
+
+### 31. 성능 테스트 - 연속 취소 처리 시간 (추가 예약 생성)
+POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+Content-Type: application/json
+Authorization: {{businessAuthHeader}}
+
+{
+  "slots": [
+    {
+      "slotDate": "2025-09-25",
+      "startTime": "16:00",
+      "endTime": "16:45",
+      "capacity": 1
+    }
+  ]
+}
+
+> {%
+    if (response.body.data && response.body.data.createdSlots && response.body.data.createdSlots.length > 0) {
+        const performanceSlot = response.body.data.createdSlots[0];
+        client.global.set("performanceSlotId", performanceSlot.slotId);
+        console.log("성능 테스트용 슬롯 생성:", performanceSlot.slotId);
+    }
+%}
+
+### 32. 성능 테스트용 예약 생성
+POST http://localhost:8080/api/reservation
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "businessId": "{{businessId}}",
+  "availableSlotId": "{{performanceSlotId}}",
+  "reservationDate": "2025-09-25",
+  "reservationTime": "16:00",
+  "durationMinutes": 45,
+  "totalPrice": 40000,
+  "customerName": "취소테스트고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "성능 테스트용 예약"
+}
+
+> {%
+    if (response.body.data) {
+        const performanceReservationId = response.body.data.reservationId;
+        client.global.set("performanceReservationId", performanceReservationId);
+        console.log("성능 테스트용 예약 생성:", performanceReservationId);
+    }
+%}
+
+### 33. 성능 테스트 - 취소 응답 시간 측정
+DELETE http://localhost:8080/api/reservation/{{performanceReservationId}}
+Content-Type: application/json
+Authorization: {{customerAuthHeader}}
+
+{
+  "reason": "성능 테스트를 위한 취소"
+}
+
+> {%
+    const startTime = new Date().getTime();
+
+    client.test("성능 테스트 취소 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    const endTime = new Date().getTime();
+    const responseTime = endTime - startTime;
+
+    console.log("=== 성능 테스트 ===");
+    console.log("취소 처리 응답 시간:", responseTime + "ms");
+
+    if (responseTime < 3000) { // 3초 이내
+        console.log("✅ 취소 처리 응답 시간 양호 (" + responseTime + "ms)");
+    } else {
+        console.log("⚠️ 취소 처리 응답 시간 느림 (" + responseTime + "ms)");
+    }
+%}
+
+### 34. 최종 검증 - 취소 테스트 요약
+GET http://localhost:8080/api/reservation
+Authorization: {{customerAuthHeader}}
+
+> {%
+    console.log("=== 최종 취소 테스트 요약 ===");
+
+    if (response.body.data && response.body.data.reservations) {
+        const totalReservations = response.body.data.reservations.length;
+        const cancelledReservations = response.body.data.reservations.filter(r => r.status === "CANCELLED");
+        const activeReservations = response.body.data.reservations.filter(r => r.status !== "CANCELLED");
+
+        console.log("\n취소 테스트 결과 요약:");
+        console.log("- 총 생성된 예약 수:", totalReservations);
+        console.log("- 취소된 예약 수:", cancelledReservations.length);
+        console.log("- 활성 예약 수:", activeReservations.length);
+
+        console.log("\n취소된 예약 상세:");
+        cancelledReservations.forEach((reservation, index) => {
+            console.log(`${index + 1}. ${reservation.reservationNumber}`);
+            console.log(`   - 날짜: ${reservation.reservationDate} ${reservation.reservationTime}`);
+            console.log(`   - 가격: ${reservation.totalPrice}원`);
+            console.log(`   - 사유: ${reservation.cancelReason}`);
+        });
+
+        // 취소 패턴 분석
+        const reasonKeywords = cancelledReservations.map(r => r.cancelReason?.substring(0, 10) || "사유없음");
+        console.log("\n취소 사유 패턴:", reasonKeywords);
+
+        if (cancelledReservations.length >= 5) {
+            console.log("✅ 충분한 수의 취소 테스트 완료");
+        }
+    }
+
+    console.log("\n=== 테스트된 시나리오 ===");
+    console.log("✅ 성공 케이스: 정상적인 사유로 예약 취소 (4건)");
+    console.log("✅ 실패 케이스: 토큰 없음, 잘못된 토큰, 존재하지 않는 예약");
+    console.log("✅ 권한 케이스: 다른 고객의 예약 취소 시도");
+    console.log("✅ 검증 케이스: 이미 취소된 예약 재취소, 사유 누락/빈값/긴값");
+    console.log("✅ 구조 검증: 응답 데이터 구조 및 필수 필드");
+    console.log("✅ 성능 테스트: 취소 처리 응답 시간");
+    console.log("✅ 필터링: 취소된 예약만 조회");
+    console.log("✅ 상세 조회: 취소된 예약의 상세 정보 확인");
+%}

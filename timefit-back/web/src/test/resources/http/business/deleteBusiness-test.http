@@ -1,0 +1,327 @@
+### 업체 삭제 API 테스트
+
+### 1. OWNER 사용자 회원가입
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "delete-test@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "박삭제",
+  "phoneNumber": "010-3333-4444"
+}
+> {%
+    const authHeader = response.headers.valueOf("Authorization");
+    client.global.set("ownerAuthHeader", authHeader);
+    console.log("OWNER 회원가입 성공");
+%}
+
+### 2. 업체 생성
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "businessName": "삭제 테스트 카페",
+  "businessType": "카페",
+  "businessNumber": "666-66-66666",
+  "address": "서울시 강남구 삭제로 666",
+  "contactPhone": "02-6666-6666",
+  "description": "삭제될 예정인 카페입니다"
+}
+> {%
+    if (response.body.data) {
+        const businessId = response.body.data.businessId;
+        client.global.set("businessId", businessId);
+        console.log("업체 생성 성공, ID:", businessId);
+        console.log("업체명:", response.body.data.businessName);
+    }
+%}
+
+### 3. 삭제 전 업체 정보 확인
+GET http://localhost:8080/api/business/{{businessId}}
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    console.log("=== 삭제 전 업체 정보 ===");
+    if (response.body.data) {
+        console.log("업체명:", response.body.data.businessName);
+        console.log("업체 타입:", response.body.data.businessType);
+        console.log("주소:", response.body.data.address);
+        console.log("생성일:", response.body.data.createdAt);
+    }
+%}
+
+### 4. 업체 삭제 성공 - OWNER 권한 (핵심 테스트)
+DELETE http://localhost:8080/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "confirmDelete": true,
+  "deleteReason": "사업 정리로 인한 업체 폐업"
+}
+> {%
+    console.log("=== 업체 삭제 결과 ===");
+    console.log("삭제 응답 상태:", response.status);
+
+    if (response.status === 200) {
+        console.log("✅ 업체 삭제 성공");
+        if (response.body.data) {
+            console.log("삭제된 업체 ID:", response.body.data.businessId);
+            console.log("삭제된 업체명:", response.body.data.businessName);
+            console.log("삭제 시간:", response.body.data.deletedAt);
+            console.log("삭제 사유:", response.body.data.deleteReason);
+            console.log("상태 메시지:", response.body.data.statusMessage);
+        }
+    } else {
+        console.log("❌ 업체 삭제 실패, 응답:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### 5. 삭제 후 업체 정보 조회 - 삭제 확인
+GET http://localhost:8080/api/business/{{businessId}}
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    console.log("=== 삭제 후 개별 조회 결과 ===");
+    console.log("조회 응답 상태:", response.status);
+    console.log("조회 응답 내용:", JSON.stringify(response.body, null, 2));
+
+    if (response.status === 404) {
+        console.log("✅ 삭제된 업체는 조회되지 않음 (완전 제거)");
+    } else if (response.status === 403) {
+        console.log("✅ 삭제된 업체는 접근 권한 없음 (비활성화)");
+    } else if (response.body.data && response.body.data.isActive === false) {
+        console.log("✅ 삭제된 업체는 비활성 상태로 표시됨");
+    } else if (response.status === 200) {
+        console.log("⚠️ 삭제된 업체가 여전히 조회됨 - 비즈니스 로직 확인 필요");
+        console.log("업체 상태:", response.body.data);
+    }
+%}
+
+### 6. 삭제 후 업체 목록 조회 - 목록에서 삭제 확인
+GET http://localhost:8080/api/business
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    console.log("=== 삭제 후 업체 목록 ===");
+    console.log("목록 조회 상태:", response.status);
+    console.log("목록 조회 결과:", JSON.stringify(response.body, null, 2));
+
+    if (response.body.data) {
+        const deletedBusinessId = client.global.get("businessId");
+        const deletedBusiness = response.body.data.find(b => b.businessId === deletedBusinessId);
+
+        if (!deletedBusiness) {
+            console.log("✅ 삭제된 업체가 목록에서 완전 제거됨");
+        } else if (deletedBusiness.isActive === false) {
+            console.log("✅ 삭제된 업체가 비활성 상태로 표시됨");
+            console.log("비활성 업체 정보:", deletedBusiness);
+        } else {
+            console.log("⚠️ 삭제된 업체가 여전히 활성 상태로 표시됨");
+            console.log("문제 업체 정보:", deletedBusiness);
+        }
+
+        console.log("총 업체 수:", response.body.data.length);
+        console.log("활성 업체 수:", response.body.data.filter(b => b.isActive !== false).length);
+        console.log("비활성 업체 수:", response.body.data.filter(b => b.isActive === false).length);
+    }
+%}
+
+### ========== 이제 삭제 실패 케이스들 테스트 ==========
+
+### 7. 새로운 테스트용 업체 생성 (실패 케이스 테스트용)
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "businessName": "실패 테스트용 카페",
+  "businessType": "카페",
+  "businessNumber": "777-77-77777",
+  "address": "서울시 강남구 실패로 777",
+  "contactPhone": "02-7777-7777",
+  "description": "실패 케이스 테스트용 카페"
+}
+> {%
+    if (response.body.data) {
+        const testBusinessId = response.body.data.businessId;
+        client.global.set("testBusinessId", testBusinessId);
+        console.log("실패 테스트용 업체 생성 성공, ID:", testBusinessId);
+    }
+%}
+
+### 8. MEMBER 사용자 생성 및 초대
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "member-test@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "멤버권한",
+  "phoneNumber": "010-4444-5555"
+}
+> {%
+    const memberAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("memberAuthHeader", memberAuthHeader);
+    console.log("MEMBER 회원가입 성공");
+%}
+
+### 9. MEMBER 초대
+POST http://localhost:8080/api/business/{{testBusinessId}}/members/invite
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "email": "member-test@timefit.com",
+  "role": "MEMBER"
+}
+> {%
+    console.log("MEMBER 초대 완료");
+%}
+
+### 10. 실패 케이스 - MEMBER가 업체 삭제 시도
+DELETE http://localhost:8080/api/business/{{testBusinessId}}
+Content-Type: application/json
+Authorization: {{memberAuthHeader}}
+
+{
+  "confirmDelete": true,
+  "deleteReason": "MEMBER가 삭제 시도"
+}
+> {%
+    console.log("MEMBER 삭제 시도 응답:", response.status);
+    if (response.status === 403) {
+        console.log("✅ MEMBER 삭제 권한 차단 성공");
+        console.log("에러:", response.body.error?.code);
+    } else {
+        console.log("❌ MEMBER 삭제 권한 차단 실패, 응답:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### 11. 실패 케이스 - 삭제 확인 없이 시도 (confirmDelete: false)
+DELETE http://localhost:8080/api/business/{{testBusinessId}}
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "confirmDelete": false,
+  "deleteReason": "삭제 확인하지 않음"
+}
+> {%
+    console.log("삭제 확인 없는 요청 응답:", response.status);
+    if (response.status === 400) {
+        console.log("✅ 삭제 확인 필수 검증 성공");
+        console.log("에러:", response.body.error?.code);
+    } else {
+        console.log("❌ 삭제 확인 검증 실패, 응답:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### 12. 실패 케이스 - 토큰 없이 삭제 시도
+DELETE http://localhost:8080/api/business/{{testBusinessId}}
+Content-Type: application/json
+
+{
+  "confirmDelete": true,
+  "deleteReason": "토큰 없이 삭제 시도"
+}
+> {%
+    console.log("토큰 없는 삭제 응답:", response.status);
+    if (response.status === 401) {
+        console.log("✅ 토큰 없는 삭제 차단 성공");
+    } else {
+        console.log("❌ 토큰 없는 삭제 차단 실패, 응답:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### 13. 실패 케이스 - 존재하지 않는 업체 삭제
+DELETE http://localhost:8080/api/business/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "confirmDelete": true,
+  "deleteReason": "존재하지 않는 업체 삭제 시도"
+}
+> {%
+    console.log("존재하지 않는 업체 삭제 응답:", response.status);
+    if (response.status === 404) {
+        console.log("✅ 존재하지 않는 업체 삭제 차단 성공");
+        console.log("에러:", response.body.error?.code);
+    } else {
+        console.log("❌ 존재하지 않는 업체 삭제 차단 실패, 응답:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### 14. 정상 삭제 후 재삭제 시도 테스트
+DELETE http://localhost:8080/api/business/{{testBusinessId}}
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "confirmDelete": true,
+  "deleteReason": "두 번째 업체 정상 삭제"
+}
+> {%
+    console.log("두 번째 업체 정상 삭제 응답:", response.status);
+    if (response.status === 200) {
+        console.log("✅ 두 번째 업체 삭제 성공");
+    }
+%}
+
+### 15. 실패 케이스 - 이미 삭제된 업체 재삭제 시도
+DELETE http://localhost:8080/api/business/{{testBusinessId}}
+Content-Type: application/json
+Authorization: {{ownerAuthHeader}}
+
+{
+  "confirmDelete": true,
+  "deleteReason": "이미 삭제된 업체 재삭제 시도"
+}
+> {%
+    console.log("재삭제 시도 응답:", response.status);
+    if (response.status === 400 || response.status === 404) {
+        console.log("✅ 이미 삭제된 업체 재삭제 차단 성공");
+        console.log("에러:", response.body.error?.code);
+    } else {
+        console.log("❌ 재삭제 차단 실패, 응답:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### 16. 최종 상태 확인 - 논리적 삭제 검증
+GET http://localhost:8080/api/business
+Authorization: {{ownerAuthHeader}}
+
+> {%
+    console.log("=== 최종 업체 목록 (논리적 삭제 검증) ===");
+    if (response.body.data) {
+        const totalBusinesses = response.body.data.length;
+        const activeBusinesses = response.body.data.filter(b => b.isActive !== false);
+        const inactiveBusinesses = response.body.data.filter(b => b.isActive === false);
+
+        console.log("총 업체 수 (DB에 존재):", totalBusinesses);
+        console.log("활성 업체 수 (is_active=true):", activeBusinesses.length);
+        console.log("비활성 업체 수 (is_active=false):", inactiveBusinesses.length);
+
+        if (inactiveBusinesses.length >= 2) {
+            console.log("✅ 논리적 삭제 테스트 완료 - 2개 업체가 비활성화됨");
+            console.log("비활성화된 업체들:");
+            inactiveBusinesses.forEach((business, index) => {
+                console.log(`  ${index + 1}. ${business.businessName} (is_active: ${business.isActive})`);
+            });
+        } else if (totalBusinesses === 0) {
+            console.log("ℹ️ 업체가 목록에서 필터링됨 (비활성 업체는 목록에 표시하지 않음)");
+            console.log("✅ 논리적 삭제 정상 작동 - UI에서는 비활성 업체 숨김");
+        } else {
+            console.log("⚠️ 비활성화 처리 확인 필요");
+            response.body.data.forEach((business, index) => {
+                console.log(`${index + 1}. ${business.businessName} - is_active: ${business.isActive}`);
+            });
+        }
+
+        console.log("✅ 업체 삭제(비활성화) 테스트 완료");
+        console.log("📝 참고: 삭제는 is_active=false 처리로 구현됨 (논리적 삭제)");
+    }
+%}
