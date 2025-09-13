@@ -48,11 +48,7 @@ public class SecurityConfig {
                         // 공개 API (인증 불필요)
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/business/search/**").permitAll()
-
                         .requestMatchers("/api/business/**").permitAll()
-                        .requestMatchers("/api/reservation/**").permitAll()
-                        .requestMatchers("/api/schedule/**").permitAll()
-
                         .requestMatchers("/api/validation/**").permitAll()
 
                         // 개발/모니터링 도구
