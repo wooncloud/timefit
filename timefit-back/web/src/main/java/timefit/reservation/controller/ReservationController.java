@@ -82,7 +82,7 @@ public class ReservationController {
      * 예약 수정
      * 권한: 예약 소유자 본인
      */
-    @PutMapping("/{reservationId}")
+    @PatchMapping("/{reservationId}")
     public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> updateReservation(
             @PathVariable UUID reservationId,
             @Valid @RequestBody ReservationRequestDto.UpdateReservation request,
