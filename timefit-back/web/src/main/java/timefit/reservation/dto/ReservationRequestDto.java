@@ -19,18 +19,20 @@ public class ReservationRequestDto {
         private final UUID businessId;
         private final UUID customerId;
         private final UUID availableSlotId;
+        private final Integer totalPrice;
         private final Integer durationMinutes;
         private final List<SelectedOption> selectedOptions;
         private final String notes;
         private final String customerName;
         private final String customerPhone;
 
-        private CreateReservation(UUID businessId, UUID customerId, UUID availableSlotId,
+        private CreateReservation(UUID businessId, UUID customerId, UUID availableSlotId, Integer totalPrice,
                                     Integer durationMinutes, List<SelectedOption> selectedOptions,
                                     String notes, String customerName, String customerPhone) {
             this.businessId = businessId;
             this.customerId = customerId;
             this.availableSlotId = availableSlotId;
+            this.totalPrice = totalPrice;
             this.durationMinutes = durationMinutes;
             this.selectedOptions = selectedOptions;
             this.notes = notes;
@@ -38,17 +40,17 @@ public class ReservationRequestDto {
             this.customerPhone = customerPhone;
         }
 
-        public static CreateReservation of(UUID businessId, UUID customerId, UUID availableSlotId,
+        public static CreateReservation of(UUID businessId, UUID customerId, UUID availableSlotId, Integer totalPrice,
                                             Integer durationMinutes, List<SelectedOption> selectedOptions,
                                             String notes, String customerName, String customerPhone) {
-            return new CreateReservation(businessId, customerId, availableSlotId, durationMinutes,
+            return new CreateReservation(businessId, customerId, availableSlotId, durationMinutes, totalPrice,
                     selectedOptions, notes, customerName, customerPhone);
         }
 
         // 총 금액 계산
         public Integer getTotalPrice() {
             if (selectedOptions == null || selectedOptions.isEmpty()) {
-                return 0;
+                return this.totalPrice;
             }
             return selectedOptions.stream()
                     .mapToInt(SelectedOption::getPrice)
@@ -63,6 +65,7 @@ public class ReservationRequestDto {
             return Objects.equals(businessId, that.businessId) &&
                     Objects.equals(customerId, that.customerId) &&
                     Objects.equals(availableSlotId, that.availableSlotId) &&
+                    Objects.equals(totalPrice, that.totalPrice) &&
                     Objects.equals(durationMinutes, that.durationMinutes) &&
                     Objects.equals(selectedOptions, that.selectedOptions) &&
                     Objects.equals(notes, that.notes) &&
@@ -72,7 +75,7 @@ public class ReservationRequestDto {
 
         @Override
         public int hashCode() {
-            return Objects.hash(businessId, customerId, availableSlotId, durationMinutes,
+            return Objects.hash(businessId, customerId, availableSlotId, durationMinutes, totalPrice,
                     selectedOptions, notes, customerName, customerPhone);
         }
     }
