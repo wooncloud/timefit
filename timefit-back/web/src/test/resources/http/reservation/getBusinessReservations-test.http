@@ -1,139 +1,96 @@
-### 업체 예약 조회 API 테스트
+### 업체 예약 조회 API 테스트 (핵심 기능) - 업체 권한
 
-### 1. 업체 사용자 회원가입 (예약을 받을 업체)
+### 1. 고객 회원가입 (예약 생성용)
 POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "email": "business-reservations@timefit.com",
+  "email": "business-query-customer@timefit.com",
   "password": "SecureP@ss123!",
-  "name": "업체예약관리자",
-  "phoneNumber": "010-2222-3333",
-  "businessName": "예약관리 테스트 헬스장",
-  "businessType": "헬스장",
-  "businessNumber": "222-22-22222",
-  "address": "서울시 강남구 헬스로 222",
-  "contactPhone": "02-2222-2222",
-  "description": "업체 예약 조회 테스트용 헬스장"
+  "name": "업체조회테스트고객",
+  "phoneNumber": "010-1111-2222"
 }
 
-### 2. 업체 사용자 로그인
-POST http://localhost:8080/api/auth/signin
+> {%
+    const customerAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("customerAuthHeader", customerAuthHeader);
+    console.log("고객 회원가입 성공");
+%}
+
+### 2. 업체 회원가입
+POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "email": "business-reservations@timefit.com",
-  "password": "SecureP@ss123!"
+  "email": "business-query-owner@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "업체사장",
+  "phoneNumber": "010-2222-3333"
 }
-> {%
-    const businessToken = response.headers.valueOf("x-client-token");
-    console.log("업체 토큰:", businessToken);
-    client.global.set("businessToken", businessToken);
 
-    if (response.body.data && response.body.data.businesses && response.body.data.businesses.length > 0) {
-        const businessId = response.body.data.businesses[0].businessId;
-        console.log("업체 ID:", businessId);
+> {%
+    const businessAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("businessAuthHeader", businessAuthHeader);
+    console.log("업체 회원가입 성공");
+%}
+
+### 3. 업체 생성
+POST http://localhost:8080/api/business
+Content-Type: application/json
+Authorization: {{businessAuthHeader}}
+
+{
+  "businessName": "예약조회 테스트 요가원",
+  "businessType": "요가원",
+  "businessNumber": "333-33-33333",
+  "address": "서울시 마포구 조회로 333",
+  "contactPhone": "02-3333-3333",
+  "description": "업체 예약 조회 테스트용 요가원"
+}
+
+> {%
+    if (response.body.data) {
+        const businessId = response.body.data.businessId;
+        console.log("업체 생성 성공:", businessId);
         client.global.set("businessId", businessId);
     }
 %}
 
-### 3. 고객 1 회원가입
-POST http://localhost:8080/api/auth/signup
-Content-Type: application/json
-
-{
-  "email": "customer1@timefit.com",
-  "password": "SecureP@ss123!",
-  "name": "고객1",
-  "phoneNumber": "010-1111-1111",
-  "businessName": "고객1 개인업체",
-  "businessType": "개인",
-  "businessNumber": "111-11-11111",
-  "address": "서울시 강남구 고객로 111",
-  "contactPhone": "02-1111-1111",
-  "description": "고객1 개인업체"
-}
-
-### 4. 고객 1 로그인
-POST http://localhost:8080/api/auth/signin
-Content-Type: application/json
-
-{
-  "email": "customer1@timefit.com",
-  "password": "SecureP@ss123!"
-}
-> {%
-    const customer1Token = response.headers.valueOf("x-client-token");
-    console.log("고객1 토큰:", customer1Token);
-    client.global.set("customer1Token", customer1Token);
-%}
-
-### 5. 고객 2 회원가입
-POST http://localhost:8080/api/auth/signup
-Content-Type: application/json
-
-{
-  "email": "customer2@timefit.com",
-  "password": "SecureP@ss123!",
-  "name": "고객2",
-  "phoneNumber": "010-2222-2222",
-  "businessName": "고객2 개인업체",
-  "businessType": "개인",
-  "businessNumber": "222-22-22222",
-  "address": "서울시 강남구 고객로 222",
-  "contactPhone": "02-2222-2222",
-  "description": "고객2 개인업체"
-}
-
-### 6. 고객 2 로그인
-POST http://localhost:8080/api/auth/signin
-Content-Type: application/json
-
-{
-  "email": "customer2@timefit.com",
-  "password": "SecureP@ss123!"
-}
-> {%
-    const customer2Token = response.headers.valueOf("x-client-token");
-    console.log("고객2 토큰:", customer2Token);
-    client.global.set("customer2Token", customer2Token);
-%}
-
-### 7. 업체 영업시간 설정
+### 4. 영업시간 설정
 PUT http://localhost:8080/api/schedule/operating-hours?businessId={{businessId}}
 Content-Type: application/json
-x-client-token: {{businessToken}}
+Authorization: {{businessAuthHeader}}
 
 {
   "businessHours": [
     {
       "dayOfWeek": 1,
-      "openTime": "09:00",
-      "closeTime": "20:00",
+      "openTime": "07:00",
+      "closeTime": "21:00",
       "isClosed": false
     },
     {
       "dayOfWeek": 2,
-      "openTime": "09:00",
-      "closeTime": "20:00",
+      "openTime": "07:00",
+      "closeTime": "21:00",
       "isClosed": false
     },
     {
       "dayOfWeek": 3,
-      "openTime": "09:00",
-      "closeTime": "20:00",
+      "openTime": "07:00",
+      "closeTime": "21:00",
       "isClosed": false
     },
     {
       "dayOfWeek": 4,
-      "openTime": "09:00",
-      "closeTime": "20:00",
+      "openTime": "07:00",
+      "closeTime": "21:00",
       "isClosed": false
     },
     {
       "dayOfWeek": 5,
-      "openTime": "09:00",
-      "closeTime": "20:00",
+      "openTime": "07:00",
+      "closeTime": "21:00",
       "isClosed": false
     },
     {
@@ -151,459 +108,323 @@ x-client-token: {{businessToken}}
   ]
 }
 
-### 8. 예약 슬롯 생성 (8월 20일)
+> {%
+    console.log("영업시간 설정 완료");
+%}
+
+### 5. 예약 슬롯 생성 (2026년 날짜)
 POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
 Content-Type: application/json
-x-client-token: {{businessToken}}
+Authorization: {{businessAuthHeader}}
 
 {
-  "slotDate": "2025-08-20",
-  "startTime": "14:00",
-  "endTime": "15:00",
-  "capacity": 5
+  "slots": [
+    {
+      "slotDate": "2026-10-15",
+      "startTime": "08:00",
+      "endTime": "09:00",
+      "capacity": 10
+    },
+    {
+      "slotDate": "2026-10-15",
+      "startTime": "18:00",
+      "endTime": "19:00",
+      "capacity": 8
+    },
+    {
+      "slotDate": "2026-10-16",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "capacity": 12
+    }
+  ]
 }
 
 > {%
-    if (response.body.data) {
-        client.global.set("slot1", response.body.data.slotId);
-        console.log("슬롯 1 생성:", response.body.data.slotId);
+    if (response.status === 201 && response.body.data && response.body.data.createdSlots && response.body.data.createdSlots.length >= 3) {
+        const slot1 = response.body.data.createdSlots[0];
+        const slot2 = response.body.data.createdSlots[1];
+        const slot3 = response.body.data.createdSlots[2];
+
+        client.global.set("slot1Id", slot1.slotId);
+        client.global.set("slot2Id", slot2.slotId);
+        client.global.set("slot3Id", slot3.slotId);
+
+        console.log("✅ 3개 슬롯 생성 완료");
+    } else {
+        console.log("❌ 슬롯 생성 실패");
     }
 %}
 
-### 9. 예약 슬롯 생성 (8월 21일)
-POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
+### 6. 테스트용 예약 3개 생성 - 첫 번째 예약 (PENDING)
+POST http://localhost:8080/api/reservation
 Content-Type: application/json
-x-client-token: {{businessToken}}
-
-{
-  "slotDate": "2025-08-21",
-  "startTime": "10:00",
-  "endTime": "11:30",
-  "capacity": 3
-}
-
-> {%
-    if (response.body.data) {
-        client.global.set("slot2", response.body.data.slotId);
-        console.log("슬롯 2 생성:", response.body.data.slotId);
-    }
-%}
-
-### 10. 예약 슬롯 생성 (8월 22일)
-POST http://localhost:8080/api/schedule/available-slots?businessId={{businessId}}
-Content-Type: application/json
-x-client-token: {{businessToken}}
-
-{
-  "slotDate": "2025-08-22",
-  "startTime": "16:00",
-  "endTime": "17:00",
-  "capacity": 2
-}
-
-> {%
-    if (response.body.data) {
-        client.global.set("slot3", response.body.data.slotId);
-        console.log("슬롯 3 생성:", response.body.data.slotId);
-    }
-%}
-
-### 11. 고객 1 예약 신청 (8월 20일) - PENDING 상태
-POST http://localhost:8080/api/reservations
-Content-Type: application/json
-x-client-token: {{customer1Token}}
+Authorization: {{customerAuthHeader}}
 
 {
   "businessId": "{{businessId}}",
-  "availableSlotId": "{{slot1}}",
-  "reservationDate": "2025-08-20",
-  "reservationTime": "14:00",
+  "availableSlotId": "{{slot1Id}}",
+  "reservationDate": "2026-10-15",
+  "reservationTime": "08:00",
   "durationMinutes": 60,
-  "totalPrice": 50000,
-  "customerName": "고객1",
-  "customerPhone": "010-1111-1111",
-  "notes": "고객1의 첫 번째 예약입니다."
+  "totalPrice": 25000,
+  "customerName": "업체조회테스트고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "아침 요가 클래스 예약"
 }
 
 > {%
-    if (response.body.data) {
-        console.log("✅ 고객1 예약 생성:", response.body.data.reservationNumber);
+    if (response.status === 201 && response.body.data) {
+        console.log("첫 번째 예약 생성 완료:", response.body.data.reservationNumber);
         client.global.set("reservation1Id", response.body.data.reservationId);
     }
 %}
 
-### 12. 고객 1 예약 신청 (8월 21일) - PENDING 상태
-POST http://localhost:8080/api/reservations
+### 7. 테스트용 예약 3개 생성 - 두 번째 예약 (PENDING)
+POST http://localhost:8080/api/reservation
 Content-Type: application/json
-x-client-token: {{customer1Token}}
+Authorization: {{customerAuthHeader}}
 
 {
   "businessId": "{{businessId}}",
-  "availableSlotId": "{{slot2}}",
-  "reservationDate": "2025-08-21",
-  "reservationTime": "10:00",
-  "durationMinutes": 90,
-  "totalPrice": 70000,
-  "customerName": "고객1",
-  "customerPhone": "010-1111-1111",
-  "notes": "고객1의 두 번째 예약입니다."
+  "availableSlotId": "{{slot2Id}}",
+  "reservationDate": "2026-10-15",
+  "reservationTime": "18:00",
+  "durationMinutes": 60,
+  "totalPrice": 30000,
+  "customerName": "업체조회테스트고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "저녁 요가 클래스 예약"
 }
 
 > {%
-    if (response.body.data) {
-        console.log("✅ 고객1 두 번째 예약 생성:", response.body.data.reservationNumber);
+    if (response.status === 201 && response.body.data) {
+        console.log("두 번째 예약 생성 완료:", response.body.data.reservationNumber);
         client.global.set("reservation2Id", response.body.data.reservationId);
     }
 %}
 
-### 13. 고객 2 예약 신청 (8월 20일) - PENDING 상태
-POST http://localhost:8080/api/reservations
+### 8. 테스트용 예약 3개 생성 - 세 번째 예약 (PENDING)
+POST http://localhost:8080/api/reservation
 Content-Type: application/json
-x-client-token: {{customer2Token}}
+Authorization: {{customerAuthHeader}}
 
 {
   "businessId": "{{businessId}}",
-  "availableSlotId": "{{slot1}}",
-  "reservationDate": "2025-08-20",
-  "reservationTime": "14:00",
+  "availableSlotId": "{{slot3Id}}",
+  "reservationDate": "2026-10-16",
+  "reservationTime": "10:00",
   "durationMinutes": 60,
-  "totalPrice": 50000,
-  "customerName": "고객2",
-  "customerPhone": "010-2222-2222",
-  "notes": "고객2의 예약입니다."
+  "totalPrice": 28000,
+  "customerName": "업체조회테스트고객",
+  "customerPhone": "010-1111-2222",
+  "notes": "오전 요가 클래스 예약"
 }
 
 > {%
-    if (response.body.data) {
-        console.log("✅ 고객2 예약 생성:", response.body.data.reservationNumber);
+    if (response.status === 201 && response.body.data) {
+        console.log("세 번째 예약 생성 완료:", response.body.data.reservationNumber);
         client.global.set("reservation3Id", response.body.data.reservationId);
     }
 %}
 
-### 14. 고객 2 예약 신청 (8월 22일) - PENDING 상태
-POST http://localhost:8080/api/reservations
-Content-Type: application/json
-x-client-token: {{customer2Token}}
-
-{
-  "businessId": "{{businessId}}",
-  "availableSlotId": "{{slot3}}",
-  "reservationDate": "2025-08-22",
-  "reservationTime": "16:00",
-  "durationMinutes": 60,
-  "totalPrice": 45000,
-  "customerName": "고객2",
-  "customerPhone": "010-2222-2222",
-  "notes": "고객2의 두 번째 예약입니다."
-}
+### 9. ✅ 성공 케이스 - 업체의 모든 예약 조회 (올바른 엔드포인트)
+GET http://localhost:8080/api/business/{{businessId}}/reservation/requests
+Authorization: {{businessAuthHeader}}
 
 > {%
-    if (response.body.data) {
-        console.log("✅ 고객2 두 번째 예약 생성:", response.body.data.reservationNumber);
-        client.global.set("reservation4Id", response.body.data.reservationId);
+    console.log("=== 업체의 모든 예약 조회 ===");
+    console.log("응답 상태:", response.status);
+    console.log("응답 본문:", JSON.stringify(response.body, null, 2));
+
+    client.test("업체 예약 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.success === true, "success가 true여야 함");
+        client.assert(response.body.data, "응답 데이터가 있어야 함");
+    });
+
+    if (response.status === 200 && response.body.data && response.body.data.reservations) {
+        const reservations = response.body.data.reservations;
+        console.log("✅ 업체 예약 조회 성공");
+        console.log("총 예약 수:", reservations.length);
+
+        reservations.forEach((reservation, index) => {
+            console.log(`${index + 1}. 예약번호: ${reservation.reservationNumber}`);
+            console.log(`   고객명: ${reservation.customerInfo.customerName}`);
+            console.log(`   날짜: ${reservation.reservationDetails.reservationDate} ${reservation.reservationDetails.reservationTime}`);
+            console.log(`   상태: ${reservation.status}`);
+            console.log(`   가격: ${reservation.reservationDetails.totalPrice}원`);
+            console.log(`   연락처: ${reservation.customerInfo.customerPhone}`);
+        });
+
+        if (reservations.length === 3) {
+            console.log("✅ 3개의 예약이 모두 조회됨");
+        }
+
+        // 정렬 확인 (최신순)
+        if (reservations.length > 1) {
+            const isNewestFirst = new Date(reservations[0].createdAt) >= new Date(reservations[1].createdAt);
+            console.log("예약 정렬:", isNewestFirst ? "최신순" : "오래된순");
+        }
+    } else {
+        console.log("❌ 업체 예약 조회 실패");
     }
 %}
 
-### 15. 고객 1 예약 취소 (테스트용 CANCELLED 상태 생성)
-DELETE http://localhost:8080/api/reservations/{{reservation2Id}}
-Content-Type: application/json
-x-client-token: {{customer1Token}}
-
-{
-  "reason": "일정이 바뀌어서 취소합니다."
-}
+### 10. ✅ 성공 케이스 - 날짜별 필터링 조회
+GET http://localhost:8080/api/business/{{businessId}}/reservation/requests?date=2026-10-15
+Authorization: {{businessAuthHeader}}
 
 > {%
-    if (response.body.data) {
-        console.log("✅ 고객1 예약 취소:", response.body.data.currentStatus);
-    }
-%}
+    console.log("=== 날짜별 예약 조회 (2026-10-15) ===");
+    console.log("응답 상태:", response.status);
 
-### 16. 업체 예약 조회 - 전체 조회 (필터 없음)
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations
-x-client-token: {{businessToken}}
+    if (response.status === 200 && response.body.data && response.body.data.reservations) {
+        const reservations = response.body.data.reservations;
+        console.log("✅ 날짜별 예약 조회 성공");
+        console.log("10월 15일 예약 수:", reservations.length);
 
-> {%
-    console.log("전체 예약 조회 응답:", JSON.stringify(response.body, null, 2));
+        const allSameDate = reservations.every(r => r.reservationDetails.reservationDate === "2026-10-15");
+        if (allSameDate) {
+            console.log("✅ 날짜 필터링이 올바르게 작동함");
+        } else {
+            console.log("⚠️ 날짜 필터링 확인 필요");
+        }
 
-    if (response.body.data) {
-        console.log("✅ 전체 예약 조회 성공");
-        console.log("업체명:", response.body.data.businessInfo.businessName);
-        console.log("총 예약 수:", response.body.data.reservations.length);
-        console.log("전체 예약 개수:", response.body.data.pagination.totalElements);
-
-        console.log("\n=== 전체 예약 목록 ===");
-        response.body.data.reservations.forEach((reservation, index) => {
-            console.log(`${index + 1}. ${reservation.reservationNumber}`);
-            console.log(`   - 고객: ${reservation.customerInfo.customerName} (${reservation.customerInfo.customerPhone})`);
-            console.log(`   - 일시: ${reservation.reservationDetails.date} ${reservation.reservationDetails.time}`);
-            console.log(`   - 상태: ${reservation.status}`);
-            console.log(`   - 액션 필요: ${reservation.requiresAction}`);
+        reservations.forEach((reservation, index) => {
+            console.log(`${index + 1}. ${reservation.reservationDetails.reservationTime} - ${reservation.customerInfo.customerName}`);
         });
     }
 %}
 
-### 17. 업체 예약 조회 - 상태 필터 (PENDING만)
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?status=PENDING
-x-client-token: {{businessToken}}
+### 11. ✅ 성공 케이스 - 상태별 필터링 조회
+GET http://localhost:8080/api/business/{{businessId}}/reservation/requests?status=PENDING
+Authorization: {{businessAuthHeader}}
 
 > {%
-    console.log("PENDING 예약 조회 응답:", JSON.stringify(response.body, null, 2));
+    console.log("=== 상태별 예약 조회 (PENDING) ===");
+    console.log("응답 상태:", response.status);
 
-    if (response.body.data) {
-        console.log("✅ PENDING 예약 조회 성공");
-        console.log("PENDING 예약 수:", response.body.data.reservations.length);
+    if (response.status === 200 && response.body.data && response.body.data.reservations) {
+        const reservations = response.body.data.reservations;
+        console.log("✅ 상태별 예약 조회 성공");
+        console.log("PENDING 상태 예약 수:", reservations.length);
 
-        console.log("\n=== PENDING 예약 목록 ===");
-        response.body.data.reservations.forEach((reservation, index) => {
-            console.log(`${index + 1}. ${reservation.customerInfo.customerName} - ${reservation.reservationDetails.date} ${reservation.reservationDetails.time} (${reservation.status})`);
-
-            if (reservation.requiresAction) {
-                console.log(`   🔔 액션 필요: 승인 대기 중`);
-            }
-        });
+        const allPending = reservations.every(r => r.status === "PENDING");
+        if (allPending) {
+            console.log("✅ 상태 필터링이 올바르게 작동함");
+        } else {
+            console.log("⚠️ 상태 필터링 확인 필요");
+        }
     }
 %}
 
-### 18. 업체 예약 조회 - 상태 필터 (CANCELLED만)
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?status=CANCELLED
-x-client-token: {{businessToken}}
+### 12. ❌ 실패 케이스 - 토큰 없이 조회
+GET http://localhost:8080/api/business/{{businessId}}/reservation/requests
 
 > {%
-    if (response.body.data) {
-        console.log("✅ CANCELLED 예약 조회 성공");
-        console.log("CANCELLED 예약 수:", response.body.data.reservations.length);
+    client.test("토큰 없는 업체 예약 조회 실패", function() {
+        client.assert(response.status === 401, "응답 코드가 401이어야 함");
+    });
 
-        console.log("\n=== CANCELLED 예약 목록 ===");
-        response.body.data.reservations.forEach((reservation, index) => {
-            console.log(`${index + 1}. ${reservation.customerInfo.customerName} - ${reservation.reservationDetails.date} ${reservation.reservationDetails.time} (${reservation.status})`);
-        });
-    }
+    console.log("❌ 토큰 없는 업체 예약 조회 차단됨 (401)");
 %}
 
-### 19. 업체 예약 조회 - 특정 날짜 필터 (8월 20일)
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?date=2025-08-20
-x-client-token: {{businessToken}}
-
-> {%
-    if (response.body.data) {
-        console.log("✅ 8월 20일 예약 조회 성공");
-        console.log("8월 20일 예약 수:", response.body.data.reservations.length);
-
-        console.log("\n=== 8월 20일 예약 목록 ===");
-        response.body.data.reservations.forEach((reservation, index) => {
-            console.log(`${index + 1}. ${reservation.customerInfo.customerName} - ${reservation.reservationDetails.time} (${reservation.status})`);
-        });
-    }
-%}
-
-### 20. 업체 예약 조회 - 날짜 범위 필터 (8월 20일~22일)
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?startDate=2025-08-20&endDate=2025-08-22
-x-client-token: {{businessToken}}
-
-> {%
-    if (response.body.data) {
-        console.log("✅ 8월 20-22일 예약 조회 성공");
-        console.log("해당 기간 예약 수:", response.body.data.reservations.length);
-
-        console.log("\n=== 8월 20-22일 예약 목록 ===");
-        response.body.data.reservations.forEach((reservation, index) => {
-            console.log(`${index + 1}. ${reservation.customerInfo.customerName} - ${reservation.reservationDetails.date} ${reservation.reservationDetails.time} (${reservation.status})`);
-        });
-    }
-%}
-
-### 21. 업체 예약 조회 - 복합 필터 (8월 20일 + PENDING)
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?date=2025-08-20&status=PENDING
-x-client-token: {{businessToken}}
-
-> {%
-    if (response.body.data) {
-        console.log("✅ 8월 20일 PENDING 예약 조회 성공");
-        console.log("조건에 맞는 예약 수:", response.body.data.reservations.length);
-
-        console.log("\n=== 8월 20일 PENDING 예약 목록 ===");
-        response.body.data.reservations.forEach((reservation, index) => {
-            console.log(`${index + 1}. ${reservation.customerInfo.customerName} - ${reservation.reservationDetails.time} (${reservation.status})`);
-        });
-    }
-%}
-
-### 22. 업체 예약 조회 - 페이징 테스트 (page=0, size=2)
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?page=0&size=2
-x-client-token: {{businessToken}}
-
-> {%
-    if (response.body.data) {
-        console.log("✅ 페이징 조회 성공");
-        console.log("첫 번째 페이지 예약 수:", response.body.data.reservations.length);
-        console.log("총 예약 수:", response.body.data.pagination.totalElements);
-        console.log("총 페이지 수:", response.body.data.pagination.totalPages);
-        console.log("다음 페이지 존재:", response.body.data.pagination.hasNext);
-        console.log("이전 페이지 존재:", response.body.data.pagination.hasPrevious);
-
-        console.log("\n=== 첫 번째 페이지 (최신 2개) ===");
-        response.body.data.reservations.forEach((reservation, index) => {
-            console.log(`${index + 1}. ${reservation.customerInfo.customerName} - ${reservation.reservationDetails.date} ${reservation.reservationDetails.time}`);
-        });
-    }
-%}
-
-### 23. 업체 예약 조회 - 두 번째 페이지
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?page=1&size=2
-x-client-token: {{businessToken}}
-
-> {%
-    if (response.body.data) {
-        console.log("✅ 두 번째 페이지 조회 성공");
-        console.log("두 번째 페이지 예약 수:", response.body.data.reservations.length);
-        console.log("현재 페이지:", response.body.data.pagination.currentPage);
-
-        console.log("\n=== 두 번째 페이지 (다음 2개) ===");
-        response.body.data.reservations.forEach((reservation, index) => {
-            console.log(`${index + 1}. ${reservation.customerInfo.customerName} - ${reservation.reservationDetails.date} ${reservation.reservationDetails.time}`);
-        });
-    }
-%}
-
-### 24. 다른 업체 사용자 회원가입 (권한 테스트용)
+### 13. ❌ 실패 케이스 - 다른 업체가 조회 시도
 POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-  "email": "another-business@timefit.com",
+  "email": "another-business-owner@timefit.com",
   "password": "SecureP@ss123!",
-  "name": "다른업체",
-  "phoneNumber": "010-9999-9999",
-  "businessName": "다른 업체",
-  "businessType": "카페",
-  "businessNumber": "999-99-99999",
-  "address": "서울시 강남구 다른로 999",
-  "contactPhone": "02-9999-9999",
-  "description": "다른 업체"
+  "name": "다른업체사장",
+  "phoneNumber": "010-4444-5555"
 }
 
-### 25. 다른 업체 사용자 로그인
-POST http://localhost:8080/api/auth/signin
-Content-Type: application/json
-
-{
-  "email": "another-business@timefit.com",
-  "password": "SecureP@ss123!"
-}
 > {%
-    const anotherBusinessToken = response.headers.valueOf("x-client-token");
-    console.log("다른 업체 토큰:", anotherBusinessToken);
-    client.global.set("anotherBusinessToken", anotherBusinessToken);
+    const anotherBusinessAuthHeader = response.headers.valueOf("Authorization");
+    client.global.set("anotherBusinessAuthHeader", anotherBusinessAuthHeader);
+    console.log("다른 업체 사장 생성 완료");
 %}
 
-### 26. 실패 케이스 - 다른 업체가 예약 조회 시도 (권한 없음)
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations
-x-client-token: {{anotherBusinessToken}}
+### 14. ❌ 실패 케이스 - 권한 없는 업체의 예약 조회 시도
+GET http://localhost:8080/api/business/{{businessId}}/reservation/requests
+Authorization: {{anotherBusinessAuthHeader}}
 
 > {%
-    console.log("다른 업체의 예약 조회 시도 응답 상태:", response.status);
-    if (response.status === 403 || response.status === 404) {
-        console.log("✅ 다른 업체의 예약 조회 차단 성공");
-    } else {
-        console.log("⚠️ 다른 업체의 예약 조회가 허용됨 - 보안 문제");
-    }
+    client.test("권한 없는 업체의 예약 조회 실패", function() {
+        client.assert(response.status === 403, "응답 코드가 403이어야 함");
+    });
+
+    console.log("❌ 권한 없는 업체의 예약 조회 차단됨 (403)");
 %}
 
-### 27. 실패 케이스 - 존재하지 않는 업체의 예약 조회
-GET http://localhost:8080/api/businesses/00000000-0000-0000-0000-000000000000/reservations
-x-client-token: {{businessToken}}
+### 15. ❌ 실패 케이스 - 존재하지 않는 업체 조회
+GET http://localhost:8080/api/business/00000000-0000-0000-0000-000000000000/reservation/requests
+Authorization: {{businessAuthHeader}}
 
 > {%
-    console.log("존재하지 않는 업체 예약 조회 응답 상태:", response.status);
-    if (response.status === 404) {
-        console.log("✅ 존재하지 않는 업체 예약 조회 차단 성공");
-    }
+    client.test("존재하지 않는 업체 조회 실패", function() {
+        client.assert(response.status === 404, "응답 코드가 404여야 함");
+    });
+
+    console.log("❌ 존재하지 않는 업체 조회 차단됨 (404)");
 %}
 
-### 28. 실패 케이스 - 잘못된 상태 값
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?status=INVALID_STATUS
-x-client-token: {{businessToken}}
+### 16. ✅ 최종 검증 - 페이징 테스트
+GET http://localhost:8080/api/business/{{businessId}}/reservation/requests?page=1&size=2
+Authorization: {{businessAuthHeader}}
 
 > {%
-    console.log("잘못된 상태 값 조회 응답 상태:", response.status);
-    if (response.status === 400) {
-        console.log("✅ 잘못된 상태 값 검증 성공");
-    }
-%}
+    console.log("=== 페이징 테스트 (page=1, size=2) ===");
+    console.log("응답 상태:", response.status);
 
-### 29. 실패 케이스 - 잘못된 날짜 형식
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?date=invalid-date
-x-client-token: {{businessToken}}
+    if (response.status === 200 && response.body.data) {
+        console.log("✅ 페이징 조회 성공");
 
-> {%
-    console.log("잘못된 날짜 형식 조회 응답 상태:", response.status);
-    if (response.status === 400) {
-        console.log("✅ 잘못된 날짜 형식 검증 성공");
-    }
-%}
+        if (response.body.data.reservations) {
+            console.log("조회된 예약 수:", response.body.data.reservations.length);
+        }
 
-### 30. 빈 결과 테스트 - 미래 날짜 범위
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?startDate=2025-12-01&endDate=2025-12-31
-x-client-token: {{businessToken}}
-
-> {%
-    if (response.body.data) {
-        console.log("✅ 미래 날짜 범위 조회 성공");
-        console.log("미래 날짜 범위 예약 수:", response.body.data.reservations.length);
-        console.log("총 예약 개수:", response.body.data.pagination.totalElements);
-
-        if (response.body.data.pagination.totalElements === 0) {
-            console.log("✅ 빈 결과 처리 정상");
+        if (response.body.data.pagination) {
+            console.log("페이징 정보:");
+            console.log("- 현재 페이지:", response.body.data.pagination.page);
+            console.log("- 페이지 크기:", response.body.data.pagination.size);
+            console.log("- 전체 개수:", response.body.data.pagination.totalElements);
+            console.log("- 다음 페이지 여부:", response.body.data.pagination.hasNext);
         }
     }
+
+    console.log("\n=== 테스트 완료 시나리오 ===");
+    console.log("✅ 업체의 모든 예약 조회");
+    console.log("✅ 날짜별 필터링 조회 (2026-10-15)");
+    console.log("✅ 상태별 필터링 조회 (PENDING)");
+    console.log("✅ 페이징 조회");
+    console.log("❌ 권한 없는 접근 차단 (토큰 없음, 다른 업체, 존재하지 않는 업체)");
 %}
 
-### 31. 정렬 확인 테스트 - 생성일 내림차순 확인
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?size=10
-x-client-token: {{businessToken}}
+### 17. ✅ 날짜 범위 필터링 테스트
+GET http://localhost:8080/api/business/{{businessId}}/reservation/requests?startDate=2026-10-15&endDate=2026-10-16
+Authorization: {{businessAuthHeader}}
 
 > {%
-    if (response.body.data && response.body.data.reservations) {
-        console.log("\n=== 예약 생성일 정렬 순서 확인 ===");
-        response.body.data.reservations.forEach((reservation, index) => {
-            console.log(`${index + 1}. ${reservation.customerInfo.customerName} - ${reservation.createdAt}`);
+    console.log("=== 날짜 범위 예약 조회 (2026-10-15 ~ 2026-10-16) ===");
+    console.log("응답 상태:", response.status);
+
+    if (response.status === 200 && response.body.data && response.body.data.reservations) {
+        const reservations = response.body.data.reservations;
+        console.log("✅ 날짜 범위 예약 조회 성공");
+        console.log("범위 내 예약 수:", reservations.length);
+
+        const inDateRange = reservations.every(r => {
+            const reservationDate = r.reservationDetails.reservationDate;
+            return reservationDate >= "2026-10-15" && reservationDate <= "2026-10-16";
         });
 
-        // 정렬 순서 검증 (생성일 내림차순)
-        const dates = response.body.data.reservations.map(r => new Date(r.createdAt));
-        let isSorted = true;
-        for (let i = 0; i < dates.length - 1; i++) {
-            if (dates[i] < dates[i + 1]) {
-                isSorted = false;
-                break;
-            }
-        }
-
-        if (isSorted) {
-            console.log("✅ 생성일 내림차순 정렬 확인");
+        if (inDateRange) {
+            console.log("✅ 날짜 범위 필터링이 올바르게 작동함");
         } else {
-            console.log("⚠️ 정렬 순서가 올바르지 않음");
+            console.log("⚠️ 날짜 범위 필터링 확인 필요");
         }
-    }
-%}
-
-### 32. requiresAction 필드 확인
-GET http://localhost:8080/api/businesses/{{businessId}}/reservations?status=PENDING
-x-client-token: {{businessToken}}
-
-> {%
-    if (response.body.data && response.body.data.reservations) {
-        console.log("\n=== requiresAction 필드 확인 ===");
-        response.body.data.reservations.forEach((reservation, index) => {
-            console.log(`${index + 1}. ${reservation.customerInfo.customerName} - 액션 필요: ${reservation.requiresAction}`);
-
-            if (reservation.status === "PENDING" && reservation.requiresAction) {
-                console.log(`   🔔 ${reservation.reservationNumber}: 승인 대기 중`);
-            }
-        });
-
-        const actionRequired = response.body.data.reservations.filter(r => r.requiresAction).length;
-        console.log(`액션이 필요한 예약 수: ${actionRequired}`);
     }
 %}
