@@ -149,7 +149,7 @@ export default function BusinessSignInPage() {
                             {isLoading ? "로그인 중..." : "로그인"}
                         </Button>
                     </div>
-                    <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+                    {/* <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                         <span className="relative z-10 bg-background px-2 text-muted-foreground">
                         Or
                         </span>
@@ -163,11 +163,12 @@ export default function BusinessSignInPage() {
                             <img src="/icons/google.svg" alt="Google" className="size-5"/>
                             Google로 로그인
                         </Button>
-                    </div>
+                    </div> */}
                     <div
                         className="*:[a]:hover:text-primary *:[a]:underline *:[a]:underline-offset-4 text-balance text-center text-xs text-muted-foreground">
-                        By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
-                        and <a href="/policy/privacy">Privacy Policy</a>.
+                        By clicking continue, you agree to our 
+                        <Link href="/policy/service">Terms of Service</Link>{' '} and 
+                        <Link href="/policy/privacy">Privacy Policy</Link>.
                     </div>
                     <hr/>
                     <div
