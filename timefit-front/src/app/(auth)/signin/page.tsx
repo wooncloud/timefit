@@ -1,3 +1,5 @@
+'use client';
+
 import {cn} from "@/lib/utils";
 import Link from "next/link";
 import {CalendarClock} from "lucide-react";
@@ -5,13 +7,90 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
-import React from "react";
+import {ChangeEvent, FormEvent, useState} from "react";
+import {useRouter} from "next/navigation";
+import {initialSigninForm, validateSigninForm} from "./signin";
+import {
+    SigninFormData,
+    SigninFormErrors,
+    SigninHandlerResponse,
+    SigninRequestBody
+} from "@/types/auth/signin";
 
 export default function BusinessSignInPage() {
+    const [formData, setFormData] = useState<SigninFormData>(initialSigninForm);
+    const [errors, setErrors] = useState<SigninFormErrors>({});
+    const [message, setMessage] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<"user" | "business">("user");
+    const router = useRouter();
+
+    const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const {name, value} = event.target;
+        const fieldName = name as keyof SigninFormData;
+
+        setFormData(prev => ({
+            ...prev,
+            [fieldName]: value,
+        }));
+
+        if (errors[fieldName]) {
+            setErrors(prev => ({
+                ...prev,
+                [fieldName]: undefined,
+            }));
+        }
+    };
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const {isValid, errors: validationErrors} = validateSigninForm(formData);
+        setErrors(validationErrors);
+
+        if (!isValid) {
+            return;
+        }
+
+        setIsLoading(true);
+        setMessage("");
+
+        try {
+            const requestBody: SigninRequestBody = {
+                email: formData.email,
+                password: formData.password,
+            };
+
+            const response = await fetch("/api/auth/signin", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+            const data = (await response.json()) as SigninHandlerResponse;
+
+            if (data.success) {
+                setMessage("로그인에 성공했습니다. 메인 페이지로 이동합니다.");
+                setTimeout(() => {
+                    router.replace("/");
+                }, 1500);
+            } else {
+                setMessage(data.message || "로그인에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("로그인 요청 오류:", error);
+            setMessage("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
             <div className="w-full max-w-sm">
-                <form className={cn('grid gap-6')}>
+                <form className={cn('grid gap-6')} onSubmit={handleSubmit}>
                     <div className="flex flex-col items-center gap-2">
                         <Link href="/" className="flex flex-col items-center gap-2 font-medium">
                             <div className="flex size-8 items-center justify-center rounded-md">
@@ -29,7 +108,15 @@ export default function BusinessSignInPage() {
                             </a>
                         </div>
                     </div>
-                    <Tabs defaultValue="user">
+                    {message && (
+                        <div className={cn(
+                            "text-center text-sm p-3 rounded-md",
+                            message.includes("성공") ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"
+                        )}>
+                            {message}
+                        </div>
+                    )}
+                    <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "user" | "business") }>
                         <div className="flex flex-col items-center gap-2">
                             <TabsList>
                                 <TabsTrigger value="user">개인 로그인</TabsTrigger>
@@ -38,33 +125,41 @@ export default function BusinessSignInPage() {
                         </div>
                         <div className="py-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="m@example.com" required/>
+                            <Input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder="m@example.com"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                className={errors.email ? "border-red-500" : ""}
+                                required
+                            />
+                            {errors.email && <span className="text-sm text-red-500">{errors.email}</span>}
                         </div>
                         <div className="py-2">
                             <Label htmlFor="password">Password</Label>
                             <Input
                                 id="password"
+                                name="password"
                                 type="password"
                                 placeholder="••••••••"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                className={errors.password ? "border-red-500" : ""}
                                 required
                             />
+                            {errors.password && <span className="text-sm text-red-500">{errors.password}</span>}
                         </div>
-                        {/* <Button type="submit" className="w-full">
-        Login
-      </Button> */}
                         <TabsContent value="user">
-                            <Link href="/business">
-                                {' '}
-                                {/* 임시 */}
-                                <Button className="w-full">개인 로그인</Button>
-                            </Link>
+                            <Button type="submit" className="w-full" disabled={isLoading}>
+                                {isLoading ? "로그인 중..." : "개인 로그인"}
+                            </Button>
                         </TabsContent>
                         <TabsContent value="business">
-                            <Link href="/business">
-                                {' '}
-                                {/* 임시 */}
-                                <Button className="w-full">사업자 로그인</Button>
-                            </Link>
+                            <Button type="submit" className="w-full" disabled={isLoading}>
+                                {isLoading ? "로그인 중..." : "사업자 로그인"}
+                            </Button>
                         </TabsContent>
                     </Tabs>
 
