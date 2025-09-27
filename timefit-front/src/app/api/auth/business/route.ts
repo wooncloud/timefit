@@ -8,7 +8,7 @@ import {
   CreateBusinessRequestBody,
   CreateBusinessSuccessPayload
 } from '@/types/auth/business/createBusiness';
-import { getAccessTokenFromCookie } from '@/lib/cookie';
+import { getServerSession } from '@/lib/session/server';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as CreateBusinessRequestBody;
 
-    const accessToken = await getAccessTokenFromCookie();
+    const session = await getServerSession();
+    const accessToken = session.user?.accessToken;
     if (!accessToken) {
       const errorPayload: CreateBusinessHandlerErrorResponse = {
         success: false,

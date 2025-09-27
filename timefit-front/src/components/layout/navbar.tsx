@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { Button } from "@/components/ui/button"
-import { hasAccessTokenCookie } from '@/lib/cookie';
+import { Button } from "@/components/ui/button";
+import { getCurrentUserFromSession } from '@/lib/session/server';
 
 export async function Navbar() {
-  const isAuthenticated = await hasAccessTokenCookie();
+  const user = await getCurrentUserFromSession();
+  const isAuthenticated = Boolean(user);
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background">

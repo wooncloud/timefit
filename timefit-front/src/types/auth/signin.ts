@@ -6,6 +6,8 @@ export interface SigninRequestBody {
   password: string;
 }
 
+import type { AuthUserProfile } from '@/types/auth/user';
+
 /**
  * 백엔드 회원 로그인 응답 구조.
  */
@@ -17,7 +19,7 @@ export interface SigninApiResponse {
 /**
  * 백엔드 로그인 성공 시 포함되는 사용자 데이터.
  */
-export interface SigninSuccessPayload extends Record<string, unknown> {
+export interface SigninSuccessPayload extends AuthUserProfile {
   accessToken?: string;
 }
 

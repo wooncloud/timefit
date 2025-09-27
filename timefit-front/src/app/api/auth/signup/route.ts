@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getIronSession } from 'iron-session';
 import {
   SignupApiResponse,
   SignupHandlerErrorResponse,
   SignupHandlerResponse,
   SignupHandlerSuccessResponse,
-  SignupRequestBody
+  SignupRequestBody,
+  SignupSuccessPayload
 } from '@/types/auth/signup';
-import {
-  clearAccessTokenCookie,
-  setAccessTokenCookie
-} from '@/lib/cookie';
+import { sessionOptions, SessionData, SessionUser } from '@/lib/session/options';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
@@ -39,12 +38,14 @@ export async function POST(request: NextRequest) {
         success: false,
         message: responseData.message || '회원가입에 실패했습니다.'
       };
-      await clearAccessTokenCookie();
-      return NextResponse.json<SignupHandlerResponse>(errorPayload, { status: response.status });
+      const responseJson = NextResponse.json<SignupHandlerResponse>(errorPayload, { status: response.status });
+      const session = await getIronSession<SessionData>(request, responseJson, sessionOptions);
+      session.destroy();
+      return responseJson;
     }
 
     const headerAccessToken = response.headers.get('Authorization')?.replace('Bearer ', '');
-    const payloadAccessToken = (responseData.data as { accessToken?: string } | undefined)?.accessToken;
+    const payloadAccessToken = (responseData.data as SignupSuccessPayload | undefined)?.accessToken;
     const accessToken = payloadAccessToken || headerAccessToken;
 
     if (!accessToken) {
@@ -52,32 +53,43 @@ export async function POST(request: NextRequest) {
         success: false,
         message: '액세스 토큰이 응답에 포함되어 있지 않습니다.'
       };
-      await clearAccessTokenCookie();
-      return NextResponse.json<SignupHandlerResponse>(errorPayload, { status: 500 });
+      const responseJson = NextResponse.json<SignupHandlerResponse>(errorPayload, { status: 500 });
+      const session = await getIronSession<SessionData>(request, responseJson, sessionOptions);
+      session.destroy();
+      return responseJson;
     }
 
-    await setAccessTokenCookie(accessToken);
+    const successData = {
+      ...(responseData.data ?? {}),
+      accessToken,
+    } as SignupSuccessPayload;
 
     const successPayload: SignupHandlerSuccessResponse = {
       success: true,
       message: '회원가입에 성공했습니다.',
-      data: {
-        ...(responseData.data ?? {}),
-        accessToken
-      }
+      data: successData,
     };
 
-    return NextResponse.json<SignupHandlerResponse>(successPayload);
+    const responseJson = NextResponse.json<SignupHandlerResponse>(successPayload);
+    const session = await getIronSession<SessionData>(request, responseJson, sessionOptions);
+    const { accessToken: _, ...userProfile } = successData;
+    session.user = {
+      ...(userProfile as SessionUser),
+      accessToken,
+    };
+    await session.save();
+    return responseJson;
 
   } catch (error) {
     console.error('회원가입 API 오류:', error);
-    await clearAccessTokenCookie();
-    return NextResponse.json(
-      {
-        success: false,
-        message: '서버 오류가 발생했습니다.'
-      },
-      { status: 500 }
-    );
+    const errorPayload = {
+      success: false,
+      message: '서버 오류가 발생했습니다.'
+    } satisfies SignupHandlerErrorResponse;
+
+    const responseJson = NextResponse.json(errorPayload, { status: 500 });
+    const session = await getIronSession<SessionData>(request, responseJson, sessionOptions);
+    session.destroy();
+    return responseJson;
   }
 }

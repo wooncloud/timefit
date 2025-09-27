@@ -3,7 +3,6 @@
 import {cn} from "@/lib/utils";
 import Link from "next/link";
 import {CalendarClock} from "lucide-react";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
@@ -66,6 +65,7 @@ export default function BusinessSignInPage() {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                credentials: 'include',
                 body: JSON.stringify(requestBody),
             });
 

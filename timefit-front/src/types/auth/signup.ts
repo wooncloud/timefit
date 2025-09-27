@@ -13,7 +13,14 @@ export interface SignupRequestBody {
  */
 export interface SignupApiResponse {
   message?: string;
-  data?: Record<string, unknown>;
+  data?: SignupSuccessPayload;
+}
+
+/**
+ * 회원가입 성공 시 포함되는 사용자 데이터.
+ */
+export interface SignupSuccessPayload extends AuthUserProfile {
+  accessToken?: string;
 }
 
 /**
@@ -34,7 +41,7 @@ export type SignupFormErrors = Partial<Record<keyof SignupFormData, string>>;
 export interface SignupHandlerSuccessResponse {
   success: true;
   message: string;
-  data: Record<string, unknown>;
+  data: SignupSuccessPayload;
 }
 
 /**
@@ -51,3 +58,4 @@ export interface SignupHandlerErrorResponse {
 export type SignupHandlerResponse =
   | SignupHandlerSuccessResponse
   | SignupHandlerErrorResponse;
+import type { AuthUserProfile } from '@/types/auth/user';
