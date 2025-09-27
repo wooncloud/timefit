@@ -197,11 +197,11 @@ export default function BusinessSignUpPage() {
                 <SelectValue placeholder="업종 선택" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="FOOD">음식점</SelectItem>
-                <SelectItem value="FITNESS">헬스/피트니스</SelectItem>
-                <SelectItem value="EDUCATION">교육</SelectItem>
-                <SelectItem value="SERVICE">서비스</SelectItem>
-                <SelectItem value="ETC">기타</SelectItem>
+                <SelectItem value="BD001">음식점</SelectItem>
+                <SelectItem value="BD002">헬스/피트니스</SelectItem>
+                <SelectItem value="BD003">교육</SelectItem>
+                <SelectItem value="BD004">서비스</SelectItem>
+                <SelectItem value="BD005">기타</SelectItem>
               </SelectContent>
             </Select>
             {errors.businessType && <span className="text-sm text-red-500">{errors.businessType}</span>}
