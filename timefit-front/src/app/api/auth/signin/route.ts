@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
@@ -9,10 +8,12 @@ import {
   SigninRequestBody,
   SigninSuccessPayload
 } from '@/types/auth/signin';
+import {
+  clearAccessTokenCookie,
+  setAccessTokenCookie
+} from '@/lib/cookie';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
-const ACCESS_TOKEN_COOKIE_NAME = 'accessToken';
-const ACCESS_TOKEN_MAX_AGE = 60 * 15; // 15 minutes
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       };
 
       // 실패 시 토큰 쿠키 제거 시도
-      (await cookies()).delete(ACCESS_TOKEN_COOKIE_NAME);
+      clearAccessTokenCookie();
       return NextResponse.json<SigninHandlerResponse>(errorPayload, { status: response.status });
     }
 
@@ -48,18 +49,11 @@ export async function POST(request: NextRequest) {
         success: false,
         message: '액세스 토큰이 응답에 포함되어 있지 않습니다.'
       };
+      clearAccessTokenCookie();
       return NextResponse.json<SigninHandlerResponse>(errorPayload, { status: 500 });
     }
 
-    (await cookies()).set({
-      name: ACCESS_TOKEN_COOKIE_NAME,
-      value: accessToken,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: ACCESS_TOKEN_MAX_AGE,
-    });
+    setAccessTokenCookie(accessToken);
 
     const successData: SigninSuccessPayload = {
       ...(responseData.data ?? {}),
@@ -76,6 +70,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('로그인 API 오류:', error);
+    clearAccessTokenCookie();
     return NextResponse.json(
       {
         success: false,

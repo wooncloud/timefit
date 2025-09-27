@@ -6,6 +6,10 @@ import {
   SignupHandlerSuccessResponse,
   SignupRequestBody
 } from '@/types/auth/signup';
+import {
+  clearAccessTokenCookie,
+  setAccessTokenCookie
+} from '@/lib/cookie';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
@@ -35,11 +39,24 @@ export async function POST(request: NextRequest) {
         success: false,
         message: responseData.message || '회원가입에 실패했습니다.'
       };
+      clearAccessTokenCookie();
       return NextResponse.json<SignupHandlerResponse>(errorPayload, { status: response.status });
     }
 
-    const authHeader = response.headers.get('Authorization');
-    const accessToken = authHeader?.replace('Bearer ', '');
+    const headerAccessToken = response.headers.get('Authorization')?.replace('Bearer ', '');
+    const payloadAccessToken = (responseData.data as { accessToken?: string } | undefined)?.accessToken;
+    const accessToken = payloadAccessToken || headerAccessToken;
+
+    if (!accessToken) {
+      const errorPayload: SignupHandlerErrorResponse = {
+        success: false,
+        message: '액세스 토큰이 응답에 포함되어 있지 않습니다.'
+      };
+      clearAccessTokenCookie();
+      return NextResponse.json<SignupHandlerResponse>(errorPayload, { status: 500 });
+    }
+
+    setAccessTokenCookie(accessToken);
 
     const successPayload: SignupHandlerSuccessResponse = {
       success: true,
@@ -54,6 +71,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('회원가입 API 오류:', error);
+    clearAccessTokenCookie();
     return NextResponse.json(
       {
         success: false,
