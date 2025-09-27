@@ -90,7 +90,7 @@ export default function BusinessSignInPage() {
     return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
             <div className="w-full max-w-sm">
-                <form className={cn('grid gap-6')} onSubmit={handleSubmit}>
+                <form className={cn('grid gap-4')} onSubmit={handleSubmit}>
                     <div className="flex flex-col items-center gap-2">
                         <Link href="/" className="flex flex-col items-center gap-2 font-medium">
                             <div className="flex size-8 items-center justify-center rounded-md">
@@ -103,9 +103,9 @@ export default function BusinessSignInPage() {
                         </h1>
                         <div className="text-center text-sm">
                             Don&apos;t have an account?{' '}
-                            <a href="/signup" className="underline underline-offset-4">
+                            <Link href="/signup" className="underline underline-offset-4">
                                 Sign up
-                            </a>
+                            </Link>
                         </div>
                     </div>
                     {message && (
@@ -116,67 +116,52 @@ export default function BusinessSignInPage() {
                             {message}
                         </div>
                     )}
-                    <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "user" | "business") }>
-                        <div className="flex flex-col items-center gap-2">
-                            <TabsList>
-                                <TabsTrigger value="user">개인 로그인</TabsTrigger>
-                                <TabsTrigger value="business">사업자 로그인</TabsTrigger>
-                            </TabsList>
-                        </div>
-                        <div className="py-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                name="email"
-                                type="email"
-                                placeholder="m@example.com"
-                                value={formData.email}
-                                onChange={handleInputChange}
-                                className={errors.email ? "border-red-500" : ""}
-                                required
-                            />
-                            {errors.email && <span className="text-sm text-red-500">{errors.email}</span>}
-                        </div>
-                        <div className="py-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                name="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={formData.password}
-                                onChange={handleInputChange}
-                                className={errors.password ? "border-red-500" : ""}
-                                required
-                            />
-                            {errors.password && <span className="text-sm text-red-500">{errors.password}</span>}
-                        </div>
-                        <TabsContent value="user">
-                            <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading ? "로그인 중..." : "개인 로그인"}
-                            </Button>
-                        </TabsContent>
-                        <TabsContent value="business">
-                            <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading ? "로그인 중..." : "사업자 로그인"}
-                            </Button>
-                        </TabsContent>
-                    </Tabs>
-
-                    <div
-                        className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-        <span className="relative z-10 bg-background px-2 text-muted-foreground">
-          Or
-        </span>
+                    <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="m@example.com"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            className={errors.email ? "border-red-500" : ""}
+                            required
+                        />
+                        {errors.email && <span className="text-sm text-red-500">{errors.email}</span>}
+                    </div>
+                    <div>
+                        <Label htmlFor="password">Password</Label>
+                        <Input
+                            id="password"
+                            name="password"
+                            type="password"
+                            placeholder="••••••••"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            className={errors.password ? "border-red-500" : ""}
+                            required
+                        />
+                        {errors.password && <span className="text-sm text-red-500">{errors.password}</span>}
+                    </div>
+                    <div>
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                            {isLoading ? "로그인 중..." : "로그인"}
+                        </Button>
+                    </div>
+                    <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+                        <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                        Or
+                        </span>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                         <Button variant="outline" type="button" className="w-full">
                             <img src="/icons/apple.svg" alt="Apple" className="size-5"/>
-                            Continue with Apple
+                            Apple로 로그인
                         </Button>
                         <Button variant="outline" type="button" className="w-full">
                             <img src="/icons/google.svg" alt="Google" className="size-5"/>
-                            Continue with Google
+                            Google로 로그인
                         </Button>
                     </div>
                     <div

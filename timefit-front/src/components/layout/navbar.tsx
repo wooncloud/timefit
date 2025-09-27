@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Button } from "@/components/ui/button"
 
 export function Navbar() {
   return (
@@ -16,11 +17,14 @@ export function Navbar() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden items-center space-x-4 md:flex">
-            <Link
-              href="/signin"
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              로그인
+            <Link href="/signin">
+              <Button>로그인</Button>
+            </Link>
+            <Link href="/signup">
+              <Button variant="outline">회원가입</Button>
+            </Link>
+            <Link href="/business">
+              <Button>사업자 페이지</Button>
             </Link>
           </div>
         </div>
