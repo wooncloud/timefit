@@ -217,7 +217,7 @@ export default function SignUpPage() {
                     <div
                         className="*:[a]:hover:text-primary *:[a]:underline *:[a]:underline-offset-4 text-balance text-center text-xs text-muted-foreground">
                         By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
-                        and <a href="#">Privacy Policy</a>.
+                        and <a href="/policy/privacy">Privacy Policy</a>.
                     </div>
                     <hr/>
                     <div
