@@ -12,18 +12,19 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 
-const data = {
-  user: {
-    name: '운구름',
-    email: 'wooncloud@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
-  teams: [
+const defaultUser = {
+  name: '운구름',
+  email: 'wooncloud@example.com',
+  avatar: '/avatars/shadcn.jpg',
+};
+
+const defaultTeams = [
   { name: 'Acme Inc', plan: 'Enterprise' },
   { name: 'Acme Corp.', plan: 'Startup' },
   { name: 'Evil Corp.', plan: 'Free' },
-  ],
-  navMain: [
+];
+
+const navItems = [
     {
       title: '메인',
       url: '#',
@@ -66,20 +67,34 @@ const data = {
         { title: '팀 관리', url: '#' },
       ],
     },
-  ],
-};
+];
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user?: {
+    name: string;
+    email: string;
+    avatar?: string | null;
+  } | null;
+  teams?: {
+    name: string;
+    plan: string;
+  }[];
+}
+
+export function AppSidebar({ user, teams, ...props }: AppSidebarProps) {
+  const sidebarUser = user ?? defaultUser;
+  const sidebarTeams = teams ?? defaultTeams;
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={sidebarTeams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={sidebarUser} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
