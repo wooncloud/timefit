@@ -13,8 +13,7 @@ interface SetAccessTokenOptions {
  * 액세스 토큰을 공용 쿠키로 저장.
  */
 export async function setAccessTokenCookie(token: string, options: SetAccessTokenOptions = {}) {
-  const cookieStore = cookies();
-  (await cookieStore).set({
+  (await cookies()).set({
     name: ACCESS_TOKEN_COOKIE_NAME,
     value: token,
     httpOnly: true,
