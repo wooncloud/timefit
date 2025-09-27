@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       };
 
       // 실패 시 토큰 쿠키 제거 시도
-      clearAccessTokenCookie();
+      await clearAccessTokenCookie();
       return NextResponse.json<SigninHandlerResponse>(errorPayload, { status: response.status });
     }
 
@@ -49,11 +49,11 @@ export async function POST(request: NextRequest) {
         success: false,
         message: '액세스 토큰이 응답에 포함되어 있지 않습니다.'
       };
-      clearAccessTokenCookie();
+      await clearAccessTokenCookie();
       return NextResponse.json<SigninHandlerResponse>(errorPayload, { status: 500 });
     }
 
-    setAccessTokenCookie(accessToken);
+    await setAccessTokenCookie(accessToken);
 
     const successData: SigninSuccessPayload = {
       ...(responseData.data ?? {}),
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('로그인 API 오류:', error);
-    clearAccessTokenCookie();
+    await clearAccessTokenCookie();
     return NextResponse.json(
       {
         success: false,

@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         success: false,
         message: responseData.message || '회원가입에 실패했습니다.'
       };
-      clearAccessTokenCookie();
+      await clearAccessTokenCookie();
       return NextResponse.json<SignupHandlerResponse>(errorPayload, { status: response.status });
     }
 
@@ -52,11 +52,11 @@ export async function POST(request: NextRequest) {
         success: false,
         message: '액세스 토큰이 응답에 포함되어 있지 않습니다.'
       };
-      clearAccessTokenCookie();
+      await clearAccessTokenCookie();
       return NextResponse.json<SignupHandlerResponse>(errorPayload, { status: 500 });
     }
 
-    setAccessTokenCookie(accessToken);
+    await setAccessTokenCookie(accessToken);
 
     const successPayload: SignupHandlerSuccessResponse = {
       success: true,
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('회원가입 API 오류:', error);
-    clearAccessTokenCookie();
+    await clearAccessTokenCookie();
     return NextResponse.json(
       {
         success: false,

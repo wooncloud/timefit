@@ -31,3 +31,17 @@ export async function setAccessTokenCookie(token: string, options: SetAccessToke
 export async function clearAccessTokenCookie() {
   (await cookies()).delete(ACCESS_TOKEN_COOKIE_NAME);
 }
+
+/**
+ * 쿠키에 저장된 액세스 토큰을 반환.
+ */
+export async function getAccessTokenFromCookie(): Promise<string | undefined> {
+  return (await cookies()).get(ACCESS_TOKEN_COOKIE_NAME)?.value;
+}
+
+/**
+ * 액세스 토큰 쿠키 존재 여부를 확인.
+ */
+export async function hasAccessTokenCookie(): Promise<boolean> {
+  return Boolean(await getAccessTokenFromCookie());
+}
