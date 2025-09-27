@@ -19,9 +19,9 @@ const data = {
     avatar: '/avatars/shadcn.jpg',
   },
   teams: [
-    { name: 'Acme Inc', plan: 'Enterprise' },
-    { name: 'Acme Corp.', plan: 'Startup' },
-    { name: 'Evil Corp.', plan: 'Free' },
+  { name: 'Acme Inc', plan: 'Enterprise' },
+  { name: 'Acme Corp.', plan: 'Startup' },
+  { name: 'Evil Corp.', plan: 'Free' },
   ],
   navMain: [
     {
