@@ -97,10 +97,7 @@ public class AuthService {
         log.info("토큰 갱신 시작");
 
         // 1. Refresh Token 유효성 검증
-        if (!authTokenService.isValidToken(request.getRefreshToken())) {
-            log.warn("유효하지 않은 Refresh Token");
-            throw new RuntimeException("유효하지 않은 토큰입니다");
-        }
+        authTokenService.isValidToken(request.getRefreshToken());
 
         // 2. 사용자 ID 추출
         java.util.UUID userId = authTokenService.getUserIdFromToken(request.getRefreshToken());

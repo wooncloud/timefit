@@ -81,7 +81,7 @@ public class AuthTokenService {
             String userId = decodedJWT.getSubject();
             return UUID.fromString(userId);
         } catch (IllegalArgumentException e) {
-            log.error("Invalid UUID in token: {}", e.getMessage());
+            log.error("유효하지 않은 UUID의 token 입니다: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
@@ -94,7 +94,7 @@ public class AuthTokenService {
             verifyToken(token);
             return true;
         } catch (JWTVerificationException | IllegalArgumentException e) {
-            log.debug("Invalid token: {}", e.getMessage());
+            log.debug("유효하지 않은 token: {}", e.getMessage());
             return false;
         }
     }
@@ -124,10 +124,10 @@ public class AuthTokenService {
             return verifier.verify(token);
 
         } catch (TokenExpiredException e) {
-            log.debug("Token expired: {}", e.getMessage());
+            log.debug("Token 만료됨: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
         } catch (JWTVerificationException e) {
-            log.error("JWT verification failed: {}", e.getMessage());
+            log.error("JWT 검증 실패: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
@@ -137,7 +137,7 @@ public class AuthTokenService {
      * 추후 Redis 블랙리스트로 구현 가능
      */
     public void invalidateToken(String token) {
-        // JWT는 stateless하므로 서버에서 강제 만료 불가
+        // JWT는 stateless 하므로 서버에서 강제 만료 불가
         // 추후 Redis 블랙리스트 구현 시 여기에 로직 추가
         log.info("토큰 무효화 요청 (현재는 로그만 기록): {}", token != null ? "토큰 있음" : "토큰 없음");
     }
