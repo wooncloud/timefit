@@ -9,16 +9,12 @@ import timefit.user.entity.User;
 
 import java.util.List;
 
-/**
- * Auth 관련 응답 DTO 생성을 담당하는 Factory 클래스
- */
 @Component
 public class AuthResponseFactory {
 
-    /**
-     * 회원가입 응답 생성
-     */
-    public AuthResponseDto.UserSignUp createSignUpResponse(User user, String accessToken) {
+
+    // 회원가입 (비즈니스 정보 X)
+    public AuthResponseDto.UserSignUp createSignUpResponse(User user, String accessToken, String refreshToken) {
         return AuthResponseDto.UserSignUp.of(
                 user.getId(),
                 user.getEmail(),
@@ -27,15 +23,14 @@ public class AuthResponseFactory {
                 user.getRole().name(),
                 user.getProfileImageUrl(),
                 accessToken,
+                refreshToken,
                 user.getCreatedAt(),
                 user.getLastLoginAt()
         );
     }
 
-    /**
-     * 로그인 응답 생성
-     */
-    public AuthResponseDto.UserSignIn createSignInResponse(UserLoginResult loginResult, String accessToken) {
+    // 로그인 응답 (비즈니스 정보 불러옴)
+    public AuthResponseDto.UserSignIn createSignInResponse(UserLoginResult loginResult, String accessToken, String refreshToken) {
         User user = loginResult.getUser();
         List<Business> businesses = loginResult.getBusinesses();
         List<UserBusinessRole> userBusinessRoles = loginResult.getUserBusinessRoles();
@@ -51,17 +46,19 @@ public class AuthResponseFactory {
                 user.getProfileImageUrl(),
                 businessInfos,
                 accessToken,
+                refreshToken,
                 user.getCreatedAt(),
                 user.getLastLoginAt()
         );
     }
 
-    /**
-     * OAuth 로그인 응답 생성
-     */
-    public AuthResponseDto.CustomerOAuth createOAuthResponse(UserLoginResult loginResult, String accessToken) {
+    // OAuth 로그인
+    public AuthResponseDto.CustomerOAuth createOAuthResponse(UserLoginResult loginResult, String accessToken, String refreshToken) {
         User user = loginResult.getUser();
-        boolean isFirstLogin = loginResult.isFirstLogin();
+        List<Business> businesses = loginResult.getBusinesses();
+        List<UserBusinessRole> userBusinessRoles = loginResult.getUserBusinessRoles();
+
+        List<AuthResponseDto.BusinessInfo> businessInfos = createBusinessInfos(businesses, userBusinessRoles);
 
         return AuthResponseDto.CustomerOAuth.of(
                 user.getId(),
@@ -70,10 +67,10 @@ public class AuthResponseFactory {
                 user.getPhoneNumber(),
                 user.getRole().name(),
                 user.getProfileImageUrl(),
-                user.getOauthProvider(),
-                user.getOauthId(),
+                businessInfos,
                 accessToken,
-                isFirstLogin,
+                refreshToken,
+                loginResult.isFirstLogin(),
                 user.getCreatedAt(),
                 user.getLastLoginAt()
         );
