@@ -88,6 +88,20 @@ public class AuthController {
         return responseData;
     }
 
+    // JWT 토큰 갱신
+    @PostMapping("/refresh")
+    public ResponseData<AuthResponseDto.TokenRefresh> refreshToken(
+            @Valid @RequestBody AuthRequestDto.TokenRefresh request) {
+
+        log.info("토큰 갱신 요청");
+
+        ResponseData<AuthResponseDto.TokenRefresh> responseData = authService.refreshToken(request);
+
+        log.info("토큰 갱신 완료");
+
+        return responseData;
+    }
+
     /**
      * 로그아웃
      */

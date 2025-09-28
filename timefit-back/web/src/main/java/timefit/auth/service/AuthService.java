@@ -10,6 +10,8 @@ import timefit.common.ResponseData;
 import timefit.auth.dto.AuthRequestDto;
 import timefit.auth.dto.AuthResponseDto;
 
+import java.util.Date;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,10 +35,11 @@ public class AuthService {
 
         // 2. JWT 토큰 생성
         String accessToken = authTokenService.generateToken(registrationResult.getUser().getId());
+        String refreshToken = authTokenService.generateRefreshToken(registrationResult.getUser().getId());
 
         // 3. 응답 생성
         AuthResponseDto.UserSignUp response = authResponseFactory.createSignUpResponse(
-                registrationResult.getUser(), accessToken);
+                registrationResult.getUser(), accessToken, refreshToken);
 
         log.info("회원가입 완료: userId={}", registrationResult.getUser().getId());
         return ResponseData.of(response);
@@ -54,10 +57,11 @@ public class AuthService {
 
         // 2. JWT 토큰 생성
         String accessToken = authTokenService.generateToken(loginResult.getUser().getId());
+        String refreshToken = authTokenService.generateRefreshToken(loginResult.getUser().getId());
 
         // 3. 응답 생성
         AuthResponseDto.UserSignIn response = authResponseFactory.createSignInResponse(
-                loginResult, accessToken);
+                loginResult, accessToken, refreshToken);
 
         log.info("로그인 완료: userId={}", loginResult.getUser().getId());
         return ResponseData.of(response);
@@ -73,14 +77,47 @@ public class AuthService {
         // 1. OAuth 로그인 처리
         UserLoginResult loginResult = userLoginService.loginOAuthUser(request);
 
-        // 2. JWT 토큰 생성
+        // 2. JWT 토큰 생성 (Access Token + Refresh Token)
         String accessToken = authTokenService.generateToken(loginResult.getUser().getId());
+        String refreshToken = authTokenService.generateRefreshToken(loginResult.getUser().getId());
 
         // 3. 응답 생성
         AuthResponseDto.CustomerOAuth response = authResponseFactory.createOAuthResponse(
-                loginResult, accessToken);
+                loginResult, accessToken, refreshToken);
 
         log.info("고객 OAuth 로그인 완료: userId={}", loginResult.getUser().getId());
+        return ResponseData.of(response);
+    }
+
+    /**
+     * 토큰 갱신
+     */
+    @Transactional
+    public ResponseData<AuthResponseDto.TokenRefresh> refreshToken(AuthRequestDto.TokenRefresh request) {
+        log.info("토큰 갱신 시작");
+
+        // 1. Refresh Token 유효성 검증
+        if (!authTokenService.isValidToken(request.getRefreshToken())) {
+            log.warn("유효하지 않은 Refresh Token");
+            throw new RuntimeException("유효하지 않은 토큰입니다");
+        }
+
+        // 2. 사용자 ID 추출
+        java.util.UUID userId = authTokenService.getUserIdFromToken(request.getRefreshToken());
+
+        // 3. 토큰 재생성
+        String newAccessToken = authTokenService.generateToken(userId);
+        String newRefreshToken = authTokenService.generateRefreshToken(userId);
+
+        // 4. 만료 시간 계산
+        Date expirationDate = authTokenService.getExpirationDate(newAccessToken);
+        long expiresIn = (expirationDate.getTime() - System.currentTimeMillis()) / 1000;
+
+        // 5. 응답 생성
+        AuthResponseDto.TokenRefresh response = AuthResponseDto.TokenRefresh.of(
+                newAccessToken, newRefreshToken, "Bearer", expiresIn);
+
+        log.info("토큰 갱신 완료: userId={}", userId);
         return ResponseData.of(response);
     }
 
