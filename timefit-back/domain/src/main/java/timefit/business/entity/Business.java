@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.Getter;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import timefit.common.entity.BaseEntity;
 
 @Entity
@@ -42,11 +44,9 @@ public class Business extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    /**
-     * 비즈니스 생성
-     */
+    // 업체 새 생성
     public static Business createBusiness(String businessName, String businessType, String businessNumber,
-                                          String address, String contactPhone, String description) {
+                                            String address, String contactPhone, String description) {
         Business business = new Business();
         business.businessName = businessName;
         business.businessType = businessType;
@@ -58,11 +58,9 @@ public class Business extends BaseEntity {
         return business;
     }
 
-    /**
-     * 비즈니스 정보 업데이트
-     */
+    // 업체 전체 정보 업데이트
     public void updateBusinessInfo(String businessName, String businessType, String address,
-                                   String contactPhone, String description, String logoUrl) {
+                                    String contactPhone, String description, String logoUrl) {
         if (businessName != null) {
             this.businessName = businessName;
         }
@@ -83,16 +81,12 @@ public class Business extends BaseEntity {
         }
     }
 
-    /**
-     * 비즈니스 로고 업데이트
-     */
+    // 업체 로고 업데이트
     public void updateLogo(String logoUrl) {
         this.logoUrl = logoUrl;
     }
 
-    /**
-     * 비즈니스 기본 정보만 업데이트 (상호명, 업종, 주소)
-     */
+    // 업체 기본 정보만 업데이트 (상호명, 업종, 주소)
     public void updateBasicInfo(String businessName, String businessType, String address) {
         if (businessName != null) {
             this.businessName = businessName;
@@ -105,9 +99,7 @@ public class Business extends BaseEntity {
         }
     }
 
-    /**
-     * 연락처 정보만 업데이트
-     */
+    // 연락처 정보만 업데이트
     public void updateContactInfo(String contactPhone, String description) {
         if (contactPhone != null) {
             this.contactPhone = contactPhone;
@@ -117,23 +109,17 @@ public class Business extends BaseEntity {
         }
     }
 
-    /**
-     * 비즈니스 논리삭제 (비활성화)
-     */
+    // 업체 비활성화 (논리적 삭제)
     public void deactivate() {
         this.isActive = false;
     }
 
-    /**
-     * 비즈니스 활성화 (복구)
-     */
+    // 업체 활성화 (복구)
     public void activate() {
         this.isActive = true;
     }
 
-    /**
-     * 비즈니스 활성 상태 확인
-     */
+    // 업체 활성 상태 확인
     public boolean isActiveBusiness() {
         return Boolean.TRUE.equals(this.isActive);
     }
