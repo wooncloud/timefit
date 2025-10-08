@@ -1,21 +1,21 @@
 package timefit.business.dto;
 
 import lombok.Getter;
+import timefit.business.entity.BusinessTypeCode;
 import timefit.common.entity.BusinessRole;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class BusinessResponseDto {
 
-    /**
-     * 업체 상세 정보 응답
-     */
+    //업체 상세 정보 응답
     @Getter
     public static class BusinessProfile {
         private final UUID businessId;
         private final String businessName;
-        private final String businessType;
+        private final Set<BusinessTypeCode> businessTypes;
         private final String businessNumber;
         private final String address;
         private final String contactPhone;
@@ -25,12 +25,12 @@ public class BusinessResponseDto {
         private final LocalDateTime createdAt;
         private final LocalDateTime updatedAt;
 
-        private BusinessProfile(UUID businessId, String businessName, String businessType, String businessNumber,
-                                String address, String contactPhone, String description, String logoUrl,
-                                String myRole, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        private BusinessProfile(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
+                                String businessNumber, String address, String contactPhone, String description,
+                                String logoUrl, String myRole, LocalDateTime createdAt, LocalDateTime updatedAt) {
             this.businessId = businessId;
             this.businessName = businessName;
-            this.businessType = businessType;
+            this.businessTypes = businessTypes;
             this.businessNumber = businessNumber;
             this.address = address;
             this.contactPhone = contactPhone;
@@ -41,10 +41,10 @@ public class BusinessResponseDto {
             this.updatedAt = updatedAt;
         }
 
-        public static BusinessProfile of(UUID businessId, String businessName, String businessType, String businessNumber,
-                                            String address, String contactPhone, String description, String logoUrl,
-                                            String myRole, LocalDateTime createdAt, LocalDateTime updatedAt) {
-            return new BusinessProfile(businessId, businessName, businessType, businessNumber, address, contactPhone,
+        public static BusinessProfile of(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
+                                            String businessNumber, String address, String contactPhone, String description,
+                                            String logoUrl, String myRole, LocalDateTime createdAt, LocalDateTime updatedAt) {
+            return new BusinessProfile(businessId, businessName, businessTypes, businessNumber, address, contactPhone,
                     description, logoUrl, myRole, createdAt, updatedAt);
         }
     }
@@ -53,7 +53,7 @@ public class BusinessResponseDto {
     public static class BusinessDetail {
         private final UUID businessId;
         private final String businessName;
-        private final String businessType;
+        private final Set<BusinessTypeCode> businessTypes;
         private final String businessNumber;
         private final String address;
         private final String contactPhone;
@@ -64,12 +64,13 @@ public class BusinessResponseDto {
         private final LocalDateTime createdAt;
         private final LocalDateTime updatedAt;
 
-        private BusinessDetail(UUID businessId, String businessName, String businessType, String businessNumber,
-                                String address, String contactPhone, String description, String logoUrl,
-                                String myRole, Integer totalMembers, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        private BusinessDetail(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
+                                String businessNumber, String address, String contactPhone, String description,
+                                String logoUrl, String myRole, Integer totalMembers,
+                                LocalDateTime createdAt, LocalDateTime updatedAt) {
             this.businessId = businessId;
             this.businessName = businessName;
-            this.businessType = businessType;
+            this.businessTypes = businessTypes;
             this.businessNumber = businessNumber;
             this.address = address;
             this.contactPhone = contactPhone;
@@ -81,10 +82,11 @@ public class BusinessResponseDto {
             this.updatedAt = updatedAt;
         }
 
-        public static BusinessDetail of(UUID businessId, String businessName, String businessType, String businessNumber,
-                                        String address, String contactPhone, String description, String logoUrl,
-                                        String myRole, Integer totalMembers, LocalDateTime createdAt, LocalDateTime updatedAt) {
-            return new BusinessDetail(businessId, businessName, businessType, businessNumber, address, contactPhone,
+        public static BusinessDetail of(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
+                                        String businessNumber, String address, String contactPhone, String description,
+                                        String logoUrl, String myRole, Integer totalMembers,
+                                        LocalDateTime createdAt, LocalDateTime updatedAt) {
+            return new BusinessDetail(businessId, businessName, businessTypes, businessNumber, address, contactPhone,
                     description, logoUrl, myRole, totalMembers, createdAt, updatedAt);
         }
     }
@@ -93,19 +95,19 @@ public class BusinessResponseDto {
     public static class PublicBusinessDetail {
         private final UUID businessId;
         private final String businessName;
-        private final String businessType;
+        private final Set<BusinessTypeCode> businessTypes;
         private final String address;
         private final String contactPhone;
         private final String description;
         private final String logoUrl;
         private final LocalDateTime createdAt;
 
-        private PublicBusinessDetail(UUID businessId, String businessName, String businessType,
-                                     String address, String contactPhone, String description,
-                                     String logoUrl, LocalDateTime createdAt) {
+        private PublicBusinessDetail(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
+                                        String address, String contactPhone, String description,
+                                        String logoUrl, LocalDateTime createdAt) {
             this.businessId = businessId;
             this.businessName = businessName;
-            this.businessType = businessType;
+            this.businessTypes = businessTypes;
             this.address = address;
             this.contactPhone = contactPhone;
             this.description = description;
@@ -113,33 +115,32 @@ public class BusinessResponseDto {
             this.createdAt = createdAt;
         }
 
-        public static PublicBusinessDetail of(UUID businessId, String businessName, String businessType,
-                                              String address, String contactPhone, String description,
-                                              String logoUrl, LocalDateTime createdAt) {
-            return new PublicBusinessDetail(businessId, businessName, businessType, address,
+        public static PublicBusinessDetail of(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
+                                                String address, String contactPhone, String description,
+                                                String logoUrl, LocalDateTime createdAt) {
+            return new PublicBusinessDetail(businessId, businessName, businessTypes, address,
                     contactPhone, description, logoUrl, createdAt);
         }
     }
 
-    /**
-     * 업체 요약 정보 응답
-     */
+    // 업체 요약 정보 응답
     @Getter
     public static class BusinessSummary {
         private final UUID businessId;
         private final String businessName;
-        private final String businessType;
+        private final Set<BusinessTypeCode> businessTypes;
         private final String logoUrl;
         private final String myRole;
         private final LocalDateTime joinedAt;
         private final Integer totalMembers;
         private final Boolean isActive;
 
-        private BusinessSummary(UUID businessId, String businessName, String businessType, String logoUrl,
-                                String myRole, LocalDateTime joinedAt, Integer totalMembers, Boolean isActive) {
+        private BusinessSummary(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
+                                String logoUrl, String myRole, LocalDateTime joinedAt,
+                                Integer totalMembers, Boolean isActive) {
             this.businessId = businessId;
             this.businessName = businessName;
-            this.businessType = businessType;
+            this.businessTypes = businessTypes;
             this.logoUrl = logoUrl;
             this.myRole = myRole;
             this.joinedAt = joinedAt;
@@ -147,15 +148,15 @@ public class BusinessResponseDto {
             this.isActive = isActive;
         }
 
-        public static BusinessSummary of(UUID businessId, String businessName, String businessType, String logoUrl,
-                                            String myRole, LocalDateTime joinedAt, Integer totalMembers, Boolean isActive) {
-            return new BusinessSummary(businessId, businessName, businessType, logoUrl, myRole, joinedAt, totalMembers, isActive);
+        public static BusinessSummary of(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
+                                            String logoUrl, String myRole, LocalDateTime joinedAt,
+                                            Integer totalMembers, Boolean isActive) {
+            return new BusinessSummary(businessId, businessName, businessTypes, logoUrl, myRole, joinedAt,
+                    totalMembers, isActive);
         }
     }
 
-    /**
-     * 구성원 정보 응답
-     */
+    // 구성원 정보 응답
     @Getter
     public static class BusinessMember {
         private final UUID userId;
@@ -191,9 +192,7 @@ public class BusinessResponseDto {
         }
     }
 
-    /**
-     * 초대 결과 응답
-     */
+    // 초대 결과 응답
     @Getter
     public static class InvitationResult {
         private final UUID userId;
@@ -223,9 +222,7 @@ public class BusinessResponseDto {
         }
     }
 
-    /**
-     * 업체 검색 결과 응답
-     */
+    // 업체 검색 결과 응답 (페이징 포함)
     @Getter
     public static class BusinessSearchResult {
         private final List<BusinessSearchItem> businesses;
@@ -251,29 +248,27 @@ public class BusinessResponseDto {
         }
     }
 
-    /**
-     * 검색된 업체 정보
-     */
+    // 검색된 업체 정보
     @Getter
     public static class BusinessSearchItem {
         private final UUID businessId;
         private final String businessName;
-        private final String businessType;
+        private final Set<BusinessTypeCode> businessTypes;
         private final String address;
         private final String contactPhone;
         private final String description;
         private final String logoUrl;
         private final Integer totalMembers;
-        private final Double rating;
+        private final Float rating;
         private final Integer reviewCount;
-        private final Double distance;
+        private final Float distance;
 
-        private BusinessSearchItem(UUID businessId, String businessName, String businessType, String address,
-                                    String contactPhone, String description, String logoUrl, Integer totalMembers,
-                                    Double rating, Integer reviewCount, Double distance) {
+        private BusinessSearchItem(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
+                                    String address, String contactPhone, String description, String logoUrl,
+                                    Integer totalMembers, Float rating, Integer reviewCount, Float distance) {
             this.businessId = businessId;
             this.businessName = businessName;
-            this.businessType = businessType;
+            this.businessTypes = businessTypes;
             this.address = address;
             this.contactPhone = contactPhone;
             this.description = description;
@@ -284,17 +279,15 @@ public class BusinessResponseDto {
             this.distance = distance;
         }
 
-        public static BusinessSearchItem of(UUID businessId, String businessName, String businessType, String address,
-                                            String contactPhone, String description, String logoUrl, Integer totalMembers,
-                                            Double rating, Integer reviewCount, Double distance) {
-            return new BusinessSearchItem(businessId, businessName, businessType, address, contactPhone, description,
+        public static BusinessSearchItem of(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
+                                            String address, String contactPhone, String description, String logoUrl,
+                                            Integer totalMembers, Float rating, Integer reviewCount, Float distance) {
+            return new BusinessSearchItem(businessId, businessName, businessTypes, address, contactPhone, description,
                     logoUrl, totalMembers, rating, reviewCount, distance);
         }
     }
 
-    /**
-     * 삭제 결과 응답
-     */
+    // 삭제 결과 응답
     @Getter
     public static class DeleteResult {
         private final UUID businessId;
@@ -316,9 +309,7 @@ public class BusinessResponseDto {
         }
     }
 
-    /**
-     * 업체 생성 결과 (내부 서비스 전용)
-     */
+    // 업체 생성 결과 (내부 서비스 전용)
     @Getter
     public static class BusinessCreationResult {
         private final UUID businessId;
@@ -347,9 +338,7 @@ public class BusinessResponseDto {
         }
     }
 
-    /**
-     * 권한 검증 결과 (내부 서비스 전용)
-     */
+    // 권한 검증 결과 (내부 서비스 전용)
     @Getter
     public static class PermissionCheckResult {
         private final Boolean hasPermission;

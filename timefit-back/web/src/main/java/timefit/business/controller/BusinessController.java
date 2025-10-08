@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import timefit.business.dto.BusinessRequestDto;
 import timefit.business.dto.BusinessResponseDto;
+import timefit.business.entity.BusinessTypeCode;
 import timefit.business.service.BusinessService;
 import timefit.common.ResponseData;
 
@@ -193,15 +194,15 @@ public class BusinessController {
     @GetMapping("/search")
     public ResponseData<BusinessResponseDto.BusinessSearchResult> searchBusinesses(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String businessType,
+            @RequestParam(required = false) BusinessTypeCode businessTypes,
             @RequestParam(required = false) String region,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
         log.info("업체 검색 요청: keyword={}, businessType={}, region={}, page={}, size={}",
-                keyword, businessType, region, page, size);
+                keyword, businessTypes, region, page, size);
 
-        return businessService.searchBusinesses(keyword, businessType, region, page, size);
+        return businessService.searchBusinesses(keyword, businessTypes, region, page, size);
     }
 
 

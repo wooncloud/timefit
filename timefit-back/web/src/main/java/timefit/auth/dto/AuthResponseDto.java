@@ -1,9 +1,11 @@
 package timefit.auth.dto;
 
 import lombok.Getter;
+import timefit.business.entity.BusinessTypeCode;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class AuthResponseDto {
@@ -146,7 +148,7 @@ public class AuthResponseDto {
     public static class BusinessInfo {
         private final UUID businessId;
         private final String businessName;
-        private final String businessType;
+        private final Set<BusinessTypeCode> businessTypes;
         private final String address;
         private final String contactPhone;
         private final String description;
@@ -156,12 +158,12 @@ public class AuthResponseDto {
         private final Boolean isActive;
         private final LocalDateTime createdAt;
 
-        private BusinessInfo(UUID businessId, String businessName, String businessType,
+        private BusinessInfo(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
                                 String address, String contactPhone, String description, String logoUrl, String role,
                                 LocalDateTime joinedAt, Boolean isActive, LocalDateTime createdAt) {
             this.businessId = businessId;
             this.businessName = businessName;
-            this.businessType = businessType;
+            this.businessTypes = businessTypes;
             this.address = address;
             this.contactPhone = contactPhone;
             this.description = description;
@@ -172,10 +174,10 @@ public class AuthResponseDto {
             this.createdAt = createdAt;
         }
 
-        public static BusinessInfo of(UUID businessId, String businessName, String businessType,
+        public static BusinessInfo of(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
                                         String address, String contactPhone, String description, String logoUrl, String role,
                                         LocalDateTime joinedAt, Boolean isActive, LocalDateTime createdAt) {
-            return new BusinessInfo(businessId, businessName, businessType, address, contactPhone,
+            return new BusinessInfo(businessId, businessName, businessTypes, address, contactPhone,
                     description, logoUrl, role, joinedAt, isActive, createdAt);
         }
     }

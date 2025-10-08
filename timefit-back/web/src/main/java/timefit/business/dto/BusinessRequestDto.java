@@ -1,28 +1,28 @@
 package timefit.business.dto;
 
 import lombok.Getter;
+import timefit.business.entity.BusinessTypeCode;
 import timefit.common.entity.BusinessRole;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 public class BusinessRequestDto {
-    /**
-     * 업체 정보 생성
-     */
+    // 업체 정보 생성
     @Getter
     public static class CreateBusiness {
         private final String businessName;
-        private final String businessType;
+        private final Set<BusinessTypeCode> businessTypes;
         private final String businessNumber;
         private final String address;
         private final String contactPhone;
         private final String description;
         private final UUID ownerUserId;
 
-        private CreateBusiness(String businessName, String businessType, String businessNumber,
+        private CreateBusiness(String businessName, Set<BusinessTypeCode> businessTypes, String businessNumber,
                                 String address, String contactPhone, String description, UUID ownerUserId) {
             this.businessName = businessName;
-            this.businessType = businessType;
+            this.businessTypes = businessTypes;
             this.businessNumber = businessNumber;
             this.address = address;
             this.contactPhone = contactPhone;
@@ -30,9 +30,9 @@ public class BusinessRequestDto {
             this.ownerUserId = ownerUserId;
         }
 
-        public static CreateBusiness of(String businessName, String businessType, String businessNumber,
+        public static CreateBusiness of(String businessName, Set<BusinessTypeCode> businessTypes, String businessNumber,
                                         String address, String contactPhone, String description, UUID ownerUserId) {
-            return new CreateBusiness(businessName, businessType, businessNumber, address, contactPhone, description, ownerUserId);
+            return new CreateBusiness(businessName, businessTypes, businessNumber, address, contactPhone, description, ownerUserId);
         }
 
         @Override
@@ -43,7 +43,7 @@ public class BusinessRequestDto {
             CreateBusiness that = (CreateBusiness) other;
 
             return Objects.equals(businessName, that.businessName) &&
-                    Objects.equals(businessType, that.businessType) &&
+                    Objects.equals(businessTypes, that.businessTypes) &&
                     Objects.equals(businessNumber, that.businessNumber) &&
                     Objects.equals(address, that.address) &&
                     Objects.equals(contactPhone, that.contactPhone) &&
@@ -53,28 +53,25 @@ public class BusinessRequestDto {
 
         @Override
         public int hashCode() {
-            return Objects.hash(businessName, businessType, businessNumber, address, contactPhone, description, ownerUserId);
+            return Objects.hash(businessName, businessTypes, businessNumber, address, contactPhone, description, ownerUserId);
         }
     }
 
-    /**
-     * 업체 정보 수정
-     */
+    // 업체 정보 수정
     @Getter
     public static class UpdateBusiness {
         private final String businessName;
-        private final String businessType;
+        private final Set<BusinessTypeCode> businessTypes;
         private final String businessNumber;
         private final String address;
         private final String contactPhone;
         private final String description;
         private final String logoUrl;
 
-        private UpdateBusiness(String businessName, String businessType,  String businessNumber,
-                                String address,
-                                String contactPhone, String description, String logoUrl) {
+        private UpdateBusiness(String businessName, Set<BusinessTypeCode> businessTypes, String businessNumber,
+                                String address, String contactPhone, String description, String logoUrl) {
             this.businessName = businessName;
-            this.businessType = businessType;
+            this.businessTypes = businessTypes;
             this.businessNumber = businessNumber;
             this.address = address;
             this.contactPhone = contactPhone;
@@ -82,9 +79,9 @@ public class BusinessRequestDto {
             this.logoUrl = logoUrl;
         }
 
-        public static UpdateBusiness of(String businessName, String businessType, String businessNumber,
+        public static UpdateBusiness of(String businessName, Set<BusinessTypeCode> businessTypes, String businessNumber,
                                         String address, String contactPhone, String description, String logoUrl) {
-            return new UpdateBusiness(businessName, businessType, businessNumber, address, contactPhone, description, logoUrl);
+            return new UpdateBusiness(businessName, businessTypes, businessNumber, address, contactPhone, description, logoUrl);
         }
 
         @Override
@@ -95,7 +92,7 @@ public class BusinessRequestDto {
             UpdateBusiness that = (UpdateBusiness) other;
 
             return Objects.equals(businessName, that.businessName) &&
-                    Objects.equals(businessType, that.businessType) &&
+                    Objects.equals(businessTypes, that.businessTypes) &&
                     Objects.equals(businessNumber, that.businessNumber) &&
                     Objects.equals(address, that.address) &&
                     Objects.equals(contactPhone, that.contactPhone) &&
@@ -105,7 +102,7 @@ public class BusinessRequestDto {
 
         @Override
         public int hashCode() {
-            return Objects.hash(businessName, businessType, businessNumber , address, contactPhone, description, logoUrl);
+            return Objects.hash(businessName, businessTypes, businessNumber, address, contactPhone, description, logoUrl);
         }
     }
 
@@ -160,9 +157,7 @@ public class BusinessRequestDto {
         }
     }
 
-    /**
-     * 업체 삭제 확인 요청
-     */
+    // 업체 삭제 확인 요청
     @Getter
     public static class DeleteBusiness {
         private final Boolean confirmDelete;
@@ -194,9 +189,7 @@ public class BusinessRequestDto {
         }
     }
 
-    /**
-     * 구성원 권한 변경 요청
-     */
+    // 구성원 권한 변경 요청
     @Getter
     public static class ChangeRole {
         private final UUID businessId;
@@ -234,9 +227,7 @@ public class BusinessRequestDto {
         }
     }
 
-    /**
-     * 사용자 초대 요청
-     */
+    // 사용자 초대 요청
     @Getter
     public static class InviteUser {
         private final String email;

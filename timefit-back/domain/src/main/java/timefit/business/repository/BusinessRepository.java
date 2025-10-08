@@ -20,9 +20,6 @@ public interface BusinessRepository extends JpaRepository<Business, UUID> {
     // 업체명 검색
     List<Business> findByBusinessNameContaining(String businessName);
 
-    // 업종별 조회
-    List<Business> findByBusinessType(String businessType);
-
     // 주소 기반 검색
     List<Business> findByAddressContaining(String address);
 

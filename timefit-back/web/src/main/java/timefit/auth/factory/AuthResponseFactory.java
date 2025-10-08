@@ -97,7 +97,7 @@ public class AuthResponseFactory {
         return AuthResponseDto.BusinessInfo.of(
                 business.getId(),
                 business.getBusinessName(),
-                business.getBusinessType(),
+                business.getBusinessTypes(),
                 business.getAddress(),
                 business.getContactPhone(),
                 business.getDescription(),

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 import timefit.business.entity.Business;
+import timefit.business.entity.BusinessTypeCode;
 import timefit.business.entity.QBusiness;
 import timefit.business.entity.QUserBusinessRole;
 
@@ -21,7 +22,6 @@ import java.util.UUID;
 public class BusinessRepositoryImpl implements BusinessRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
-
     private final QBusiness business = QBusiness.business;
     private final QUserBusinessRole userBusinessRole = QUserBusinessRole.userBusinessRole;
 
@@ -31,8 +31,8 @@ public class BusinessRepositoryImpl implements BusinessRepositoryCustom {
 
         if (StringUtils.hasText(keyword)) {
             builder.or(business.businessName.containsIgnoreCase(keyword))
-                    .or(business.businessType.containsIgnoreCase(keyword))
                     .or(business.address.containsIgnoreCase(keyword));
+            // businessType은 Set 이므로 contains 사용 불가 - 삭제
         }
 
         List<Business> businesses = queryFactory
@@ -76,9 +76,9 @@ public class BusinessRepositoryImpl implements BusinessRepositoryCustom {
     }
 
     @Override
-    public Page<Business> findByBusinessType(String businessType, Pageable pageable) {
-        BooleanExpression condition = StringUtils.hasText(businessType)
-                ? business.businessType.eq(businessType)
+    public Page<Business> findByBusinessType(BusinessTypeCode businessTypeCode, Pageable pageable) {
+        BooleanExpression condition = businessTypeCode != null
+                ? business.businessTypes.contains(businessTypeCode)
                 : null;
 
         List<Business> businesses = queryFactory
@@ -122,14 +122,14 @@ public class BusinessRepositoryImpl implements BusinessRepositoryCustom {
     }
 
     @Override
-    public Page<Business> findByBusinessNameAndType(String businessName, String businessType, Pageable pageable) {
+    public Page<Business> findByBusinessNameAndType(String businessName, BusinessTypeCode businessTypeCode, Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
         if (StringUtils.hasText(businessName)) {
             builder.and(business.businessName.containsIgnoreCase(businessName));
         }
-        if (StringUtils.hasText(businessType)) {
-            builder.and(business.businessType.eq(businessType));
+        if (businessTypeCode != null) {
+            builder.and(business.businessTypes.contains(businessTypeCode));
         }
 
         List<Business> businesses = queryFactory
@@ -150,11 +150,11 @@ public class BusinessRepositoryImpl implements BusinessRepositoryCustom {
     }
 
     @Override
-    public Page<Business> findByBusinessTypeAndRegion(String businessType, String region, Pageable pageable) {
+    public Page<Business> findByBusinessTypeAndRegion(BusinessTypeCode businessTypeCode, String region, Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
-        if (StringUtils.hasText(businessType)) {
-            builder.and(business.businessType.eq(businessType));
+        if (businessTypeCode != null) {
+            builder.and(business.businessTypes.contains(businessTypeCode));
         }
         if (StringUtils.hasText(region)) {
             builder.and(business.address.containsIgnoreCase(region));
@@ -178,55 +178,54 @@ public class BusinessRepositoryImpl implements BusinessRepositoryCustom {
     }
 
     @Override
-    public Page<Business> searchBusinesses(String keyword, String businessType, String region, Pageable pageable) {
-        BooleanBuilder builder = new BooleanBuilder();
+    public Page<Business> searchBusinesses(String keyword, BusinessTypeCode businessTypeCode, String region, Pageable pageable) {
+        BooleanBuilder whereClause = new BooleanBuilder();
+        whereClause.and(business.isActive.isTrue());
 
-        // 활성화된 업체만 조회 (공개 검색용 - 추가된 조건)
-        builder.and(business.isActive.eq(true));
-
-        // 키워드 검색 (업체명, 업종, 주소)
+        // 키워드 검색 (업체명 또는 주소에 포함)
         if (StringUtils.hasText(keyword)) {
-            BooleanBuilder keywordBuilder = new BooleanBuilder();
-            keywordBuilder.or(business.businessName.containsIgnoreCase(keyword))
-                    .or(business.businessType.containsIgnoreCase(keyword))
-                    .or(business.address.containsIgnoreCase(keyword));
-            builder.and(keywordBuilder);
+            whereClause.and(
+                    business.businessName.containsIgnoreCase(keyword)
+                            .or(business.address.containsIgnoreCase(keyword))
+            );
         }
 
-        // 업종 필터
-        if (StringUtils.hasText(businessType)) {
-            builder.and(business.businessType.eq(businessType));
+        // 업종 검색 - ElementCollection contains 사용
+        if (businessTypeCode != null) {
+            whereClause.and(business.businessTypes.contains(businessTypeCode));
         }
 
-        // 지역 필터
+        // 지역 검색 (주소에 포함)
         if (StringUtils.hasText(region)) {
-            builder.and(business.address.containsIgnoreCase(region));
+            whereClause.and(business.address.containsIgnoreCase(region));
         }
 
-        List<Business> businesses = queryFactory
+        // 페이징 쿼리 실행
+        List<Business> results = queryFactory
                 .selectFrom(business)
-                .where(builder)
+                .where(whereClause)
                 .orderBy(business.businessName.asc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
+        // 전체 개수 조회
         Long total = queryFactory
                 .select(business.count())
                 .from(business)
-                .where(builder)
+                .where(whereClause)
                 .fetchOne();
 
-        return new PageImpl<>(businesses, pageable, total != null ? total : 0);
+        return new PageImpl<>(results, pageable, total != null ? total : 0L);
     }
 
     @Override
-    public long countByBusinessType(String businessType) {
+    public long countByBusinessType(BusinessTypeCode businessTypeCode) {
         Long count = queryFactory
                 .select(business.count())
                 .from(business)
-                .where(StringUtils.hasText(businessType)
-                        ? business.businessType.eq(businessType)
+                .where(businessTypeCode != null
+                        ? business.businessTypes.contains(businessTypeCode)
                         : null)
                 .fetchOne();
         return count != null ? count : 0;
@@ -248,7 +247,8 @@ public class BusinessRepositoryImpl implements BusinessRepositoryCustom {
     public List<Business> findRecommendedBusinesses(int limit) {
         return queryFactory
                 .selectFrom(business)
-                .orderBy(business.businessName.asc()) // 추후 평점이나 인기도 기준으로 변경 가능
+                .where(business.isActive.isTrue())
+                .orderBy(business.businessName.asc())
                 .limit(limit)
                 .fetch();
     }

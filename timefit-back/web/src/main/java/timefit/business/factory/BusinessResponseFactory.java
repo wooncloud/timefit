@@ -31,7 +31,7 @@ public class BusinessResponseFactory {
         return BusinessResponseDto.BusinessProfile.of(
                 business.getId(),
                 business.getBusinessName(),
-                business.getBusinessType(),
+                business.getBusinessTypes(),
                 business.getBusinessNumber(),
                 business.getAddress(),
                 business.getContactPhone(),
@@ -49,7 +49,7 @@ public class BusinessResponseFactory {
         return BusinessResponseDto.BusinessDetail.of(
                 business.getId(),
                 business.getBusinessName(),
-                business.getBusinessType(),
+                business.getBusinessTypes(),
                 business.getBusinessNumber(),
                 business.getAddress(),
                 business.getContactPhone(),
@@ -66,7 +66,7 @@ public class BusinessResponseFactory {
         return BusinessResponseDto.PublicBusinessDetail.of(
                 business.getId(),
                 business.getBusinessName(),
-                business.getBusinessType(),
+                business.getBusinessTypes(),
                 business.getAddress(),
                 business.getContactPhone(),
                 business.getDescription(),
@@ -88,7 +88,7 @@ public class BusinessResponseFactory {
         return BusinessResponseDto.BusinessSummary.of(
                 business.getId(),
                 business.getBusinessName(),
-                business.getBusinessType(),
+                business.getBusinessTypes(),
                 business.getLogoUrl(),
                 myRole,
                 joinedAt,
@@ -202,7 +202,7 @@ public class BusinessResponseFactory {
         return BusinessResponseDto.BusinessSearchItem.of(
                 business.getId(),
                 business.getBusinessName(),
-                business.getBusinessType(),
+                business.getBusinessTypes(),
                 business.getAddress(),
                 business.getContactPhone(),
                 business.getDescription(),

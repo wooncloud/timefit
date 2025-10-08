@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import timefit.business.dto.BusinessRequestDto;
 import timefit.business.dto.BusinessResponseDto;
 import timefit.business.entity.Business;
+import timefit.business.entity.BusinessTypeCode;
 import timefit.business.entity.UserBusinessRole;
 import timefit.business.factory.BusinessResponseFactory;
 import timefit.business.repository.BusinessRepository;
@@ -99,7 +100,7 @@ public class BusinessService {
         // 3. 업체 생성
         Business business = Business.createBusiness(
                 request.getBusinessName(),
-                request.getBusinessType(),
+                request.getBusinessTypes(),
                 request.getBusinessNumber(),
                 request.getAddress(),
                 request.getContactPhone(),
@@ -162,7 +163,7 @@ public class BusinessService {
 
         business.updateBusinessInfo(
                 request.getBusinessName(),
-                request.getBusinessType(),
+                request.getBusinessTypes(),
                 request.getAddress(),
                 request.getContactPhone(),
                 request.getDescription(),
@@ -415,7 +416,7 @@ public class BusinessService {
      * 권한: 모든 사용자 (로그인 불필요)
      */
     public ResponseData<BusinessResponseDto.BusinessSearchResult> searchBusinesses(
-            String keyword, String businessType, String region, int page, int size) {
+            String keyword, BusinessTypeCode businessType, String region, int page, int size) {
 
         log.info("업체 검색 시작: keyword={}, businessType={}, region={}, page={}, size={}",
                 keyword, businessType, region, page, size);
@@ -537,7 +538,7 @@ public class BusinessService {
         return BusinessResponseDto.BusinessSearchItem.of(
                 business.getId(),
                 business.getBusinessName(),
-                business.getBusinessType(),
+                business.getBusinessTypes(),
                 business.getAddress(),
                 business.getContactPhone(),
                 business.getDescription(),
