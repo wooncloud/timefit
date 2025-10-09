@@ -36,12 +36,14 @@ clean {
 }
 
 
-
+jar {
+    enabled = true
+}
 
 bootJar {
     enabled = false
 }
 
-jar {
-    enabled = true
+bootRun {
+    enabled = false
 }
