@@ -22,6 +22,7 @@ import timefit.exception.business.BusinessErrorCode;
 import timefit.exception.business.BusinessException;
 import timefit.reservation.entity.ReservationTimeSlot;
 import timefit.reservation.repository.ReservationTimeSlotRepository;
+import timefit.menu.entity.Menu;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -278,9 +279,10 @@ public class ScheduleService {
 
 
 
-    private ReservationTimeSlot createReservationTimeSlot(ScheduleRequestDto.CreateSlot request, Business business) {
+    private ReservationTimeSlot createReservationTimeSlot(ScheduleRequestDto.CreateSlot request, Business business, Menu menu) {
         return ReservationTimeSlot.createSlot(
                 business,
+                menu,
                 request.getSlotDate(),
                 request.getStartTime(),
                 request.getEndTime(),

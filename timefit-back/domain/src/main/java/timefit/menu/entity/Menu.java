@@ -1,4 +1,4 @@
-package timefit.service.entity;
+package timefit.menu.entity;
 
 import jakarta.validation.constraints.*;
 import timefit.business.entity.Business;
@@ -10,10 +10,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "service")
+@Table(name = "menu")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Service extends BaseEntity {
+public class Menu extends BaseEntity {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
@@ -51,7 +51,7 @@ public class Service extends BaseEntity {
     private Boolean isActive = true;
 
     // 1. SLOT_BASED 서비스 생성
-    public static Service createSlotBased(
+    public static Menu createSlotBased(
             Business business,
             String serviceName,
             BusinessTypeCode category,
@@ -59,16 +59,16 @@ public class Service extends BaseEntity {
             String description,
             String imageUrl) {
 
-        Service service = new Service();
-        service.business = business;
-        service.serviceName = serviceName;
-        service.category = category;
-        service.price = price;
-        service.description = description;
-        service.imageUrl = imageUrl;
-        service.slotType = SlotType.SLOT_BASED;
-        service.isActive = true;
-        return service;
+        Menu menu = new Menu();
+        menu.business = business;
+        menu.serviceName = serviceName;
+        menu.category = category;
+        menu.price = price;
+        menu.description = description;
+        menu.imageUrl = imageUrl;
+        menu.slotType = SlotType.SLOT_BASED;
+        menu.isActive = true;
+        return menu;
     }
 
     // 2. 서비스 정보 업데이트

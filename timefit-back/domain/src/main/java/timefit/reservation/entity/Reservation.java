@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import timefit.business.entity.Business;
 import timefit.common.entity.BaseEntity;
-import timefit.service.entity.Service;
+import timefit.menu.entity.Menu;
 import timefit.user.entity.User;
 
 import java.time.LocalDate;
@@ -34,8 +34,8 @@ public class Reservation extends BaseEntity {
     private Business business;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id")
-    private Service service;
+    @JoinColumn(name = "menu_id")
+    private Menu menu;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "slot_id")

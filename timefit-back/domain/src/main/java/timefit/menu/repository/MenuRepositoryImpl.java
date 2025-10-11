@@ -1,21 +1,21 @@
-package timefit.service.repository;
+package timefit.menu.repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import timefit.service.entity.QService;
-import timefit.service.entity.Service;
+import timefit.menu.entity.Menu;
+import timefit.menu.entity.QService;
 
 import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public class ServiceRepositoryImpl implements ServiceRepositoryCustom {
+public class MenuRepositoryImpl implements MenuRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
     private final QService service = QService.service;
 
     @Override
-    public List<Service> findByBusinessIdOrderByServiceName(UUID businessId) {
+    public List<Menu> findByBusinessIdOrderByServiceName(UUID businessId) {
         return queryFactory
                 .selectFrom(service)
                 .where(service.business.id.eq(businessId))
@@ -24,7 +24,7 @@ public class ServiceRepositoryImpl implements ServiceRepositoryCustom {
     }
 
     @Override
-    public List<Service> findActiveServicesByBusinessId(UUID businessId) {
+    public List<Menu> findActiveServicesByBusinessId(UUID businessId) {
         return queryFactory
                 .selectFrom(service)
                 .where(
@@ -36,7 +36,7 @@ public class ServiceRepositoryImpl implements ServiceRepositoryCustom {
     }
 
     @Override
-    public List<Service> findServicesByBusinessAndCategory(UUID businessId, String category) {
+    public List<Menu> findServicesByBusinessAndCategory(UUID businessId, String category) {
         return queryFactory
                 .selectFrom(service)
                 .where(
@@ -48,7 +48,7 @@ public class ServiceRepositoryImpl implements ServiceRepositoryCustom {
     }
 
     @Override
-    public List<Service> findServicesByBusinessAndPriceRange(UUID businessId, Integer minPrice, Integer maxPrice) {
+    public List<Menu> findServicesByBusinessAndPriceRange(UUID businessId, Integer minPrice, Integer maxPrice) {
         return queryFactory
                 .selectFrom(service)
                 .where(
@@ -60,7 +60,7 @@ public class ServiceRepositoryImpl implements ServiceRepositoryCustom {
     }
 
     @Override
-    public List<Service> findServicesByBusinessAndMaxDuration(UUID businessId, Integer maxDuration) {
+    public List<Menu> findServicesByBusinessAndMaxDuration(UUID businessId, Integer maxDuration) {
         return queryFactory
                 .selectFrom(service)
                 .where(
@@ -72,7 +72,7 @@ public class ServiceRepositoryImpl implements ServiceRepositoryCustom {
     }
 
     @Override
-    public List<Service> searchServicesByName(UUID businessId, String serviceName) {
+    public List<Menu> searchServicesByName(UUID businessId, String serviceName) {
         return queryFactory
                 .selectFrom(service)
                 .where(
