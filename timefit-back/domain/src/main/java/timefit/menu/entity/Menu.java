@@ -71,6 +71,26 @@ public class Menu extends BaseEntity {
         return menu;
     }
 
+    public static Menu createOrderBased(
+            Business business,
+            String serviceName,
+            BusinessTypeCode category,
+            Integer price,
+            String description,
+            String imageUrl) {
+
+        Menu menu = new Menu();
+        menu.business = business;
+        menu.serviceName = serviceName;
+        menu.category = category;
+        menu.price = price;
+        menu.description = description;
+        menu.imageUrl = imageUrl;
+        menu.slotType = SlotType.ORDER_BASED;
+        menu.isActive = true;
+        return menu;
+    }
+
     // 2. 서비스 정보 업데이트
     public void updateInfo(
             String serviceName,
