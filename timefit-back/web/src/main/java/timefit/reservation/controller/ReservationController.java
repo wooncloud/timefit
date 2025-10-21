@@ -1,52 +1,69 @@
 package timefit.reservation.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import timefit.common.ResponseData;
+import timefit.common.auth.CurrentUserId;
 import timefit.reservation.dto.ReservationRequestDto;
 import timefit.reservation.dto.ReservationResponseDto;
 import timefit.reservation.service.ReservationService;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * 고객용 예약 관리
- * - 예약 신청, 조회, 수정, 취소 기능
+ * Reservation Controller
+ *
+ * API 엔드포인트:
+ * - 고객용: /api/reservations
+ * - 업체용: /api/businesses/{businessId}/reservations
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/reservation")
 @RequiredArgsConstructor
 public class ReservationController {
 
     private final ReservationService reservationService;
 
+    // ========================================
+    // 고객용 API: /api/reservations
+    // ========================================
+
     /**
-     * 예약 신청
-     * 권한: 인증된 고객
+     * 예약 생성
+     * POST /api/reservations
      */
-    @PostMapping
+    @PostMapping("/api/reservations")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseData<ReservationResponseDto.ReservationDetail> createReservation(
             @Valid @RequestBody ReservationRequestDto.CreateReservation request,
-            HttpServletRequest httpRequest) {
-        UUID currentUserId = getCurrentUserId(httpRequest);
+            @CurrentUserId UUID customerId) {
 
-        log.info("예약 신청 요청: userId={}, businessId={}, availableSlotId={}",
-                currentUserId, request.getBusinessId(), request.getAvailableSlotId());
+        log.info("예약 생성 요청: customerId={}, businessId={}, menuId={}",
+                customerId, request.getBusinessId(), request.getMenuId());
 
-        return reservationService.createReservation(request, currentUserId);
+        // 예약 타입에 따라 분기
+        ReservationResponseDto.ReservationDetail response;
+        if (request.isReservationBased()) {
+            response = reservationService.createReservationBased(request, customerId);
+        } else if (request.isOnDemandBased()) {
+            response = reservationService.createOnDemandBased(request, customerId);
+        } else {
+            throw new IllegalArgumentException("유효하지 않은 예약 타입입니다");
+        }
+
+        return ResponseData.of(response);
     }
 
     /**
      * 내 예약 목록 조회
-     * 권한: 인증된 고객 본인
+     * GET /api/reservations
      */
-    @GetMapping
+    @GetMapping("/api/reservations")
     public ResponseData<ReservationResponseDto.ReservationListResult> getMyReservations(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String startDate,
@@ -54,81 +71,154 @@ public class ReservationController {
             @RequestParam(required = false) UUID businessId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            HttpServletRequest request) {
-        UUID currentUserId = getCurrentUserId(request);
+            @CurrentUserId UUID customerId) {
 
-        log.info("내 예약 목록 조회 요청: userId={}, status={}, startDate={}, endDate={}",
-                currentUserId, status, startDate, endDate);
+        log.info("내 예약 목록 조회 요청: customerId={}, status={}, page={}",
+                customerId, status, page);
 
-        return reservationService.getMyReservations(currentUserId, status, startDate, endDate, businessId, page, size);
+        return ResponseData.of(reservationService.getMyReservations(
+                customerId, status, startDate, endDate, businessId, page, size));
     }
 
     /**
      * 예약 상세 조회
-     * 권한: 예약 소유자 본인
+     * GET /api/reservations/{reservationId}
      */
-    @GetMapping("/{reservationId}")
+    @GetMapping("/api/reservations/{reservationId}")
     public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> getReservationDetail(
             @PathVariable UUID reservationId,
-            HttpServletRequest request) {
-        UUID currentUserId = getCurrentUserId(request);
+            @CurrentUserId UUID customerId) {
 
-        log.info("예약 상세 조회 요청: reservationId={}, userId={}", reservationId, currentUserId);
+        log.info("예약 상세 조회 요청: reservationId={}, customerId={}",
+                reservationId, customerId);
 
-        return reservationService.getReservationDetail(reservationId, currentUserId);
+        return ResponseData.of(reservationService.getReservationDetail(reservationId, customerId));
     }
 
     /**
      * 예약 수정
-     * 권한: 예약 소유자 본인
+     * PUT /api/reservations/{reservationId}
      */
-    @PatchMapping("/{reservationId}")
+    @PutMapping("/api/reservations/{reservationId}")
     public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> updateReservation(
             @PathVariable UUID reservationId,
             @Valid @RequestBody ReservationRequestDto.UpdateReservation request,
-            HttpServletRequest httpRequest) {
-        UUID currentUserId = getCurrentUserId(httpRequest);
+            @CurrentUserId UUID customerId) {
 
-        log.info("예약 수정 요청: reservationId={}, userId={}, newDate={}, newTime={}",
-                reservationId, currentUserId, request.getReservationDate(), request.getReservationTime());
+        log.info("예약 수정 요청: reservationId={}, customerId={}",
+                reservationId, customerId);
 
-        return reservationService.updateReservation(reservationId, currentUserId, request);
+        return ResponseData.of(reservationService.updateReservation(reservationId, customerId, request));
     }
 
     /**
      * 예약 취소
-     * 권한: 예약 소유자 본인
+     * DELETE /api/reservations/{reservationId}
      */
-    @DeleteMapping("/{reservationId}")
+    @DeleteMapping("/api/reservations/{reservationId}")
     public ResponseData<ReservationResponseDto.ReservationCancelResult> cancelReservation(
             @PathVariable UUID reservationId,
             @Valid @RequestBody ReservationRequestDto.CancelReservation request,
-            HttpServletRequest httpRequest) {
+            @CurrentUserId UUID customerId) {
 
-        UUID currentUserId = getCurrentUserId(httpRequest);
+        log.info("예약 취소 요청: reservationId={}, customerId={}",
+                reservationId, customerId);
 
-        log.info("예약 취소 요청: userId={}, reservationId={}, reason={}",
-                currentUserId, reservationId, request.getReason());
-
-        return reservationService.cancelReservation(reservationId, currentUserId, request);
+        return ResponseData.of(reservationService.cancelReservation(reservationId, customerId, request));
     }
 
-
-
-
-    //    --- util
+    // ========================================
+    // 업체용 API: /api/businesses/{businessId}/reservations
+    // ========================================
 
     /**
-     * 현재 사용자 ID 추출 (Refactor 할 때 Common 단위로 빼는거 생각해야합니다.)
-     * 그리고 생각해보니 여긴 Controller 인데
+     * 업체 예약 목록 조회
+     * GET /api/businesses/{businessId}/reservations
      */
-    private UUID getCurrentUserId(HttpServletRequest request) {
-        Object userId = request.getAttribute("userId");
+    @GetMapping("/api/businesses/{businessId}/reservations")
+    public ResponseData<ReservationResponseDto.BusinessReservationListResult> getBusinessReservations(
+            @PathVariable UUID businessId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @CurrentUserId UUID currentUserId) {
 
-        if (userId == null) {
-            throw new RuntimeException("사용자 인증 정보가 없습니다. AuthFilter 확인 필요");
-        }
+        log.info("업체 예약 목록 조회 요청: businessId={}, userId={}, status={}",
+                businessId, currentUserId, status);
 
-        return (UUID) userId;
+        return ResponseData.of(reservationService.getBusinessReservations(
+                businessId, currentUserId, status, startDate, endDate, page, size));
+    }
+
+    /**
+     * 예약 승인
+     * POST /api/businesses/{businessId}/reservations/{reservationId}/approve
+     */
+    @PostMapping("/api/businesses/{businessId}/reservations/{reservationId}/approve")
+    public ResponseData<ReservationResponseDto.ReservationStatusChangeResult> approveReservation(
+            @PathVariable UUID businessId,
+            @PathVariable UUID reservationId,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("예약 승인 요청: businessId={}, reservationId={}, userId={}",
+                businessId, reservationId, currentUserId);
+
+        return ResponseData.of(reservationService.approveReservation(businessId, reservationId, currentUserId));
+    }
+
+    /**
+     * 예약 거절
+     * POST /api/businesses/{businessId}/reservations/{reservationId}/reject
+     */
+    @PostMapping("/api/businesses/{businessId}/reservations/{reservationId}/reject")
+    public ResponseData<ReservationResponseDto.ReservationStatusChangeResult> rejectReservation(
+            @PathVariable UUID businessId,
+            @PathVariable UUID reservationId,
+            @RequestBody(required = false) String reason,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("예약 거절 요청: businessId={}, reservationId={}, userId={}",
+                businessId, reservationId, currentUserId);
+
+        return ResponseData.of(reservationService.rejectReservation(
+                businessId, reservationId, currentUserId, reason));
+    }
+
+    /**
+     * 예약 완료 처리
+     * POST /api/businesses/{businessId}/reservations/{reservationId}/complete
+     */
+    @PostMapping("/api/businesses/{businessId}/reservations/{reservationId}/complete")
+    public ResponseData<ReservationResponseDto.ReservationCompletionResult> completeReservation(
+            @PathVariable UUID businessId,
+            @PathVariable UUID reservationId,
+            @RequestBody(required = false) String notes,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("예약 완료 처리 요청: businessId={}, reservationId={}, userId={}",
+                businessId, reservationId, currentUserId);
+
+        return ResponseData.of(reservationService.completeReservation(
+                businessId, reservationId, currentUserId, notes));
+    }
+
+    /**
+     * 노쇼 처리
+     * POST /api/businesses/{businessId}/reservations/{reservationId}/no-show
+     */
+    @PostMapping("/api/businesses/{businessId}/reservations/{reservationId}/no-show")
+    public ResponseData<ReservationResponseDto.ReservationCompletionResult> markAsNoShow(
+            @PathVariable UUID businessId,
+            @PathVariable UUID reservationId,
+            @RequestBody(required = false) String notes,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("노쇼 처리 요청: businessId={}, reservationId={}, userId={}",
+                businessId, reservationId, currentUserId);
+
+        return ResponseData.of(reservationService.markAsNoShow(
+                businessId, reservationId, currentUserId, notes));
     }
 }

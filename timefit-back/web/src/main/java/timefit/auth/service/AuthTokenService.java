@@ -10,9 +10,11 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import timefit.auth.dto.AuthRequestDto;
+import timefit.auth.dto.AuthResponseDto;
 import timefit.config.JwtConfig;
-import timefit.exception.auth.AuthException;
 import timefit.exception.auth.AuthErrorCode;
+import timefit.exception.auth.AuthException;
 
 import java.util.Date;
 import java.util.UUID;
@@ -73,6 +75,35 @@ public class AuthTokenService {
     }
 
     /**
+     * 토큰 갱신 (Refresh Token으로 새 Access + Refresh Token 발급)
+     */
+    public AuthResponseDto.TokenRefresh refreshToken(AuthRequestDto.TokenRefresh request) {
+        // 1. Refresh Token 유효성 검증
+        if (!isValidToken(request.getRefreshToken())) {
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+        }
+
+        // 2. 사용자 ID 추출
+        UUID userId = getUserIdFromToken(request.getRefreshToken());
+
+        // 3. 새 토큰 생성
+        String newAccessToken = generateToken(userId);
+        String newRefreshToken = generateRefreshToken(userId);
+
+        // 4. 만료 시간 계산
+        Date expirationDate = getExpirationDate(newAccessToken);
+        long expiresIn = (expirationDate.getTime() - System.currentTimeMillis()) / 1000;
+
+        // 5. DTO 반환
+        return AuthResponseDto.TokenRefresh.of(
+                newAccessToken,
+                newRefreshToken,
+                "Bearer",
+                expiresIn
+        );
+    }
+
+    /**
      * 토큰에서 사용자 ID 추출
      */
     public UUID getUserIdFromToken(String token) {
@@ -81,7 +112,7 @@ public class AuthTokenService {
             String userId = decodedJWT.getSubject();
             return UUID.fromString(userId);
         } catch (IllegalArgumentException e) {
-            log.error("유효하지 않은 UUID의 token 입니다: {}", e.getMessage());
+            log.error("유효하지 않은 UUID의 token입니다: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
@@ -100,19 +131,29 @@ public class AuthTokenService {
     }
 
     /**
-     * 토큰 만료 여부 확인
+     * 토큰 만료 시간 조회
      */
-    public boolean isTokenExpired(String token) {
+    public Date getExpirationDate(String token) {
         try {
             DecodedJWT decodedJWT = verifyToken(token);
-            return decodedJWT.getExpiresAt().before(new Date());
-        } catch (JWTVerificationException | IllegalArgumentException e) {
-            return true;
+            return decodedJWT.getExpiresAt();
+        } catch (JWTVerificationException e) {
+            log.error("토큰 만료 시간 조회 실패: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
 
     /**
-     * 토큰 검증 및 DecodedJWT 반환
+     * 토큰 무효화 (로그아웃)
+     * 현재는 로그만 기록 (추후 Redis 등으로 블랙리스트 관리 가능)
+     */
+    public void invalidateToken(String token) {
+        log.info("토큰 무효화 요청: {}", token.substring(0, Math.min(20, token.length())));
+        // TODO: Redis 블랙리스트 추가
+    }
+
+    /**
+     * 토큰 검증
      */
     private DecodedJWT verifyToken(String token) {
         try {
@@ -124,37 +165,11 @@ public class AuthTokenService {
             return verifier.verify(token);
 
         } catch (TokenExpiredException e) {
-            log.debug("Token 만료됨: {}", e.getMessage());
+            log.warn("만료된 토큰: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
         } catch (JWTVerificationException e) {
-            log.error("JWT 검증 실패: {}", e.getMessage());
+            log.warn("토큰 검증 실패: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
-    }
-
-    /**
-     * 토큰 무효화 (JWT 특성상 실제 무효화 불가)
-     * 추후 Redis 블랙리스트로 구현 가능
-     */
-    public void invalidateToken(String token) {
-        // JWT는 stateless 하므로 서버에서 강제 만료 불가
-        // 추후 Redis 블랙리스트 구현 시 여기에 로직 추가
-        log.info("토큰 무효화 요청 (현재는 로그만 기록): {}", token != null ? "토큰 있음" : "토큰 없음");
-    }
-
-    /**
-     * 토큰에서 발행 시간 추출
-     */
-    public Date getIssuedAt(String token) {
-        DecodedJWT decodedJWT = verifyToken(token);
-        return decodedJWT.getIssuedAt();
-    }
-
-    /**
-     * 토큰에서 만료 시간 추출
-     */
-    public Date getExpirationDate(String token) {
-        DecodedJWT decodedJWT = verifyToken(token);
-        return decodedJWT.getExpiresAt();
     }
 }

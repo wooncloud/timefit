@@ -3,13 +3,15 @@ package timefit.menu.dto;
 import lombok.Getter;
 import timefit.business.entity.BusinessTypeCode;
 import timefit.menu.entity.Menu;
-import timefit.menu.entity.SlotType;
+import timefit.menu.entity.OrderType;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-// 메뉴 상세 정보 응답
+/**
+ * 메뉴 상세 정보 응답 DTO
+ */
 @Getter
 public class MenuResponse {
 
@@ -18,8 +20,12 @@ public class MenuResponse {
     private final String serviceName;
     private final BusinessTypeCode category;
     private final Integer price;
-    private final SlotType slotType;
     private final String description;
+    private final OrderType orderType;
+
+    // ✅ 추가: 서비스 소요 시간
+    private final Integer durationMinutes;
+
     private final String imageUrl;
     private final Boolean isActive;
     private final LocalDateTime createdAt;
@@ -31,8 +37,9 @@ public class MenuResponse {
             String serviceName,
             BusinessTypeCode category,
             Integer price,
-            SlotType slotType,
             String description,
+            OrderType orderType,
+            Integer durationMinutes,
             String imageUrl,
             Boolean isActive,
             LocalDateTime createdAt,
@@ -43,14 +50,18 @@ public class MenuResponse {
         this.serviceName = serviceName;
         this.category = category;
         this.price = price;
-        this.slotType = slotType;
         this.description = description;
+        this.orderType = orderType;
+        this.durationMinutes = durationMinutes;
         this.imageUrl = imageUrl;
         this.isActive = isActive;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
+    /**
+     * Entity → DTO 변환 (정적 팩토리 메서드)
+     */
     public static MenuResponse of(Menu menu) {
         return new MenuResponse(
                 menu.getId(),
@@ -58,8 +69,9 @@ public class MenuResponse {
                 menu.getServiceName(),
                 menu.getCategory(),
                 menu.getPrice(),
-                menu.getSlotType(),
                 menu.getDescription(),
+                menu.getOrderType(),
+                menu.getDurationMinutes(),  // ✅ 추가
                 menu.getImageUrl(),
                 menu.getIsActive(),
                 menu.getCreatedAt(),
@@ -80,4 +92,3 @@ public class MenuResponse {
         return Objects.hash(menuId);
     }
 }
-

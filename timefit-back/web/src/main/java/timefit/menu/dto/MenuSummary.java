@@ -3,12 +3,14 @@ package timefit.menu.dto;
 import lombok.Getter;
 import timefit.business.entity.BusinessTypeCode;
 import timefit.menu.entity.Menu;
-import timefit.menu.entity.SlotType;
+import timefit.menu.entity.OrderType;
 
 import java.util.Objects;
 import java.util.UUID;
 
-// 메뉴 목록 응답
+/**
+ * 메뉴 목록 응답 DTO (간략 정보)
+ */
 @Getter
 public class MenuSummary {
 
@@ -16,7 +18,11 @@ public class MenuSummary {
     private final String serviceName;
     private final BusinessTypeCode category;
     private final Integer price;
-    private final SlotType slotType;
+    private final OrderType orderType;
+
+    // ✅ 추가: 소요 시간 (목록에서도 표시하면 유용)
+    private final Integer durationMinutes;
+
     private final String imageUrl;
     private final Boolean isActive;
 
@@ -25,7 +31,8 @@ public class MenuSummary {
             String serviceName,
             BusinessTypeCode category,
             Integer price,
-            SlotType slotType,
+            OrderType orderType,
+            Integer durationMinutes,
             String imageUrl,
             Boolean isActive) {
 
@@ -33,18 +40,23 @@ public class MenuSummary {
         this.serviceName = serviceName;
         this.category = category;
         this.price = price;
-        this.slotType = slotType;
+        this.orderType = orderType;
+        this.durationMinutes = durationMinutes;
         this.imageUrl = imageUrl;
         this.isActive = isActive;
     }
 
+    /**
+     * Entity → DTO 변환 (정적 팩토리 메서드)
+     */
     public static MenuSummary of(Menu menu) {
         return new MenuSummary(
                 menu.getId(),
                 menu.getServiceName(),
                 menu.getCategory(),
                 menu.getPrice(),
-                menu.getSlotType(),
+                menu.getOrderType(),
+                menu.getDurationMinutes(),  // ✅ 추가
                 menu.getImageUrl(),
                 menu.getIsActive()
         );
