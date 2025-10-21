@@ -1,10 +1,10 @@
-package timefit.exception.schedule;
+package timefit.exception.booking;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public enum ScheduleErrorCode {
+public enum BookingErrorCode {
 
 
     AVAILABLE_SLOT_NOT_FOUND("예약 슬롯을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
@@ -20,12 +20,13 @@ public enum ScheduleErrorCode {
     AVAILABLE_SLOT_TIME_FORMAT_INVALID("슬롯 시간 형식이 올바르지 않습니다", HttpStatus.BAD_REQUEST),
     AVAILABLE_SLOT_CAPACITY_INVALID("슬롯 용량은 1명 이상이어야 합니다", HttpStatus.BAD_REQUEST),
     AVAILABLE_SLOT_BATCH_LIMIT_EXCEEDED("한 번에 생성할 수 있는 슬롯 개수를 초과했습니다", HttpStatus.BAD_REQUEST),
-    AVAILABLE_SLOT_DATE_RANGE_EXCEEDED("슬롯 생성 가능 기간을 초과했습니다", HttpStatus.BAD_REQUEST);
+    AVAILABLE_SLOT_DATE_RANGE_EXCEEDED("슬롯 생성 가능 기간을 초과했습니다", HttpStatus.BAD_REQUEST),
+    SLOT_INVALID_MENU_TYPE("예약형 메뉴만 슬롯을 생성할 수 있습니다", HttpStatus.BAD_REQUEST);
 
     private final String message;
     private final HttpStatus httpStatus;
 
-    ScheduleErrorCode(String message, HttpStatus httpStatus) {
+    BookingErrorCode(String message, HttpStatus httpStatus) {
         this.message = message;
         this.httpStatus = httpStatus;
     }
