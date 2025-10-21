@@ -5,7 +5,6 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -22,37 +21,13 @@ import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
-public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
+public class ReservationQueryRepositoryImpl implements ReservationQueryRepository {
 
     private final JPAQueryFactory queryFactory;
     private final QReservation reservation = QReservation.reservation;
 
     @Override
-    public List<Reservation> findReservationsByCustomerOrderByDate(UUID customerId) {
-        return queryFactory
-                .selectFrom(reservation)
-                .where(reservation.customer.id.eq(customerId))
-                .orderBy(
-                        reservation.reservationDate.desc(),
-                        reservation.reservationTime.desc()
-                )
-                .fetch();
-    }
-
-    @Override
-    public List<Reservation> findReservationsByBusinessOrderByDate(UUID businessId) {
-        return queryFactory
-                .selectFrom(reservation)
-                .where(reservation.business.id.eq(businessId))
-                .orderBy(
-                        reservation.reservationDate.desc(),
-                        reservation.reservationTime.desc()
-                )
-                .fetch();
-    }
-
-    @Override
-    public List<Reservation> findReservationsByBusinessAndDate(UUID businessId, LocalDate reservationDate) {
+    public List<Reservation> findByBusinessIdAndReservationDate(UUID businessId, LocalDate reservationDate) {
         return queryFactory
                 .selectFrom(reservation)
                 .where(
@@ -64,37 +39,7 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
     }
 
     @Override
-    public List<Reservation> findReservationsByBusinessAndStatus(UUID businessId, ReservationStatus status) {
-        return queryFactory
-                .selectFrom(reservation)
-                .where(
-                        reservation.business.id.eq(businessId)
-                                .and(reservation.status.eq(status))
-                )
-                .orderBy(
-                        reservation.reservationDate.desc(),
-                        reservation.reservationTime.desc()
-                )
-                .fetch();
-    }
-
-    @Override
-    public List<Reservation> findReservationsByCustomerAndStatus(UUID customerId, ReservationStatus status) {
-        return queryFactory
-                .selectFrom(reservation)
-                .where(
-                        reservation.customer.id.eq(customerId)
-                                .and(reservation.status.eq(status))
-                )
-                .orderBy(
-                        reservation.reservationDate.desc(),
-                        reservation.reservationTime.desc()
-                )
-                .fetch();
-    }
-
-    @Override
-    public List<Reservation> findReservationsByBusinessAndDateRange(UUID businessId, LocalDate startDate, LocalDate endDate) {
+    public List<Reservation> findByBusinessIdAndDateRange(UUID businessId, LocalDate startDate, LocalDate endDate) {
         return queryFactory
                 .selectFrom(reservation)
                 .where(
@@ -109,51 +54,7 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
     }
 
     @Override
-    public List<Reservation> findReservationsByBusinessAndService(UUID businessId, UUID serviceId) {
-        return queryFactory
-                .selectFrom(reservation)
-                .where(
-                        reservation.business.id.eq(businessId)
-                                .and(reservation.service.id.eq(serviceId))
-                )
-                .orderBy(
-                        reservation.reservationDate.desc(),
-                        reservation.reservationTime.desc()
-                )
-                .fetch();
-    }
-
-    @Override
-    public List<Reservation> findReservationsBySlotAndActiveStatuses(UUID slotId) {
-        return queryFactory
-                .selectFrom(reservation)
-                .where(
-                        reservation.slot.id.eq(slotId)
-                                .and(reservation.status.in(
-                                        ReservationStatus.PENDING,
-                                        ReservationStatus.CONFIRMED
-                                ))
-                )
-                .fetch();
-    }
-
-    @Override
-    public int countActiveReservationsBySlot(UUID slotId) {
-        return Math.toIntExact(queryFactory
-                .select(reservation.count())
-                .from(reservation)
-                .where(
-                        reservation.slot.id.eq(slotId)
-                                .and(reservation.status.notIn(
-                                        ReservationStatus.CANCELLED,
-                                        ReservationStatus.NO_SHOW
-                                ))
-                )
-                .fetchOne());
-    }
-
-    @Override
-    public List<Reservation> findTodayReservationsByBusiness(UUID businessId, LocalDate today, ReservationStatus status) {
+    public List<Reservation> findTodayReservationsByBusinessAndStatus(UUID businessId, LocalDate today, ReservationStatus status) {
         return queryFactory
                 .selectFrom(reservation)
                 .where(
@@ -166,9 +67,24 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
     }
 
     @Override
+    public Long countActiveReservationsBySlot(UUID slotId) {
+        return queryFactory
+                .select(reservation.count())
+                .from(reservation)
+                .where(
+                        reservation.bookingSlot.id.eq(slotId)
+                                .and(reservation.status.notIn(
+                                        ReservationStatus.CANCELLED,
+                                        ReservationStatus.NO_SHOW
+                                ))
+                )
+                .fetchOne();
+    }
+
+    @Override
     public Page<Reservation> findMyReservationsWithFilters(UUID customerId, ReservationStatus status,
-                                                            LocalDate startDate, LocalDate endDate, UUID businessId,
-                                                            Pageable pageable) {
+                                                           LocalDate startDate, LocalDate endDate, UUID businessId,
+                                                           Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
         // 기본 조건: 내 예약만
@@ -216,9 +132,9 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
     }
 
     @Override
-    public Page<Reservation> findBusinessReservationsWithFilters(
-            UUID businessId, ReservationStatus status, LocalDate startDate, LocalDate endDate, Pageable pageable) {
-
+    public Page<Reservation> findBusinessReservationsWithFilters(UUID businessId, ReservationStatus status,
+                                                                 LocalDate startDate, LocalDate endDate,
+                                                                 Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
         // 필수 조건: 해당 업체의 예약
@@ -287,7 +203,6 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
 
         return new PageImpl<>(results, pageable, total != null ? total : 0L);
     }
-
 
     /**
      * 정렬 조건 변환
