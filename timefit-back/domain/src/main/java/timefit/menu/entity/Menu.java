@@ -1,14 +1,23 @@
 package timefit.menu.entity;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import timefit.business.entity.Business;
 import timefit.business.entity.BusinessTypeCode;
 import timefit.common.entity.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Menu Entity
+ * - 업체에서 제공하는 서비스/메뉴
+ * - BusinessTypeCode로 카테고리 관리 (Business와 일관성 유지)
+ * - OrderType 으로 예약형/주문형 구분
+ */
 @Entity
 @Table(name = "menu")
 @Getter
@@ -20,20 +29,20 @@ public class Menu extends BaseEntity {
     @JoinColumn(name = "business_id", nullable = false)
     private Business business;
 
+    @NotNull
     @NotBlank(message = "서비스명은 필수입니다")
     @Size(max = 100, message = "서비스명은 100자 이하로 입력해주세요")
     @Column(name = "service_name", nullable = false, length = 100)
     private String serviceName;
 
-    @NotEmpty(message = "최소 1개 이상의 업종을 선택해야 합니다")
+    @NotNull(message = "최소 1개 이상의 업종을 선택해야 합니다")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(name = "category", nullable = false)
     private BusinessTypeCode category;
-//    private String category;
 
     @NotNull(message = "가격은 필수입니다")
-    @Min(value = 0, message = "가격은 0원 이상이어야 합니다")
-    @Column(nullable = false)
+    @Positive
+    @Column(name = "price", nullable = false)
     private Integer price;
 
     @Column(columnDefinition = "TEXT")
@@ -42,22 +51,23 @@ public class Menu extends BaseEntity {
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
-    @NotNull(message = "서비스 타입은 필수입니다")
+    @Column(name = "duration_minutes")
+    private Integer durationMinutes;
+
+    @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private SlotType slotType;
+    @Column(name = "order_type", nullable = false)
+    private OrderType orderType;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    // 1. SLOT_BASED 서비스 생성
-    public static Menu createSlotBased(
-            Business business,
-            String serviceName,
-            BusinessTypeCode category,
-            Integer price,
-            String description,
-            String imageUrl) {
+    // 예약형 메뉴 생성
+    public static Menu createReservationBased(Business business, String serviceName, BusinessTypeCode category,
+                                              Integer price, String description, Integer durationMinutes,
+                                              String imageUrl) {
+        validateReservationFields(durationMinutes);
+        validateBusinessCategory(business, category);
 
         Menu menu = new Menu();
         menu.business = business;
@@ -65,19 +75,18 @@ public class Menu extends BaseEntity {
         menu.category = category;
         menu.price = price;
         menu.description = description;
+        menu.durationMinutes = durationMinutes;
+        menu.orderType = OrderType.RESERVATION_BASED;
         menu.imageUrl = imageUrl;
-        menu.slotType = SlotType.SLOT_BASED;
         menu.isActive = true;
         return menu;
     }
 
-    public static Menu createOrderBased(
-            Business business,
-            String serviceName,
-            BusinessTypeCode category,
-            Integer price,
-            String description,
-            String imageUrl) {
+    // 주문형 메뉴 생성
+    public static Menu createOnDemandBased(Business business, String serviceName, BusinessTypeCode category,
+                                           Integer price, String description, Integer durationMinutes,
+                                           String imageUrl) {
+        validateBusinessCategory(business, category);
 
         Menu menu = new Menu();
         menu.business = business;
@@ -85,59 +94,86 @@ public class Menu extends BaseEntity {
         menu.category = category;
         menu.price = price;
         menu.description = description;
+        menu.durationMinutes = durationMinutes;
+        menu.orderType = OrderType.ONDEMAND_BASED;
         menu.imageUrl = imageUrl;
-        menu.slotType = SlotType.ORDER_BASED;
         menu.isActive = true;
         return menu;
     }
 
-    // 2. 서비스 정보 업데이트
-    public void updateInfo(
-            String serviceName,
-            BusinessTypeCode category,
-            Integer price,
-            String description,
-            String imageUrl) {
-
+    // 메뉴 기본 정보 수정
+    public void updateBasicInfo(String serviceName, BusinessTypeCode category, Integer price, String description) {
         if (serviceName != null) {
             this.serviceName = serviceName;
         }
         if (category != null) {
+            validateBusinessCategory(this.business, category);
             this.category = category;
         }
-        if (price != null) {
+        if (price != null && price > 0) {
             this.price = price;
         }
         if (description != null) {
             this.description = description;
         }
-        if (imageUrl != null) {
-            this.imageUrl = imageUrl;
+    }
+
+    // 소요 시간 수정
+    public void updateDuration(Integer durationMinutes) {
+        if (OrderType.RESERVATION_BASED == this.orderType) {
+            validateReservationFields(durationMinutes);
         }
+        this.durationMinutes = durationMinutes;
     }
 
-    // 3. 서비스 비활성화 (논리적 삭제)
-    public void deactivate() {
-        this.isActive = false;
+    // 이미지 URL 수정
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
-    // 4. 서비스 활성화
-    public void activate() {
-        this.isActive = true;
+    // 메뉴 활성화/비활성화
+    public void updateActiveStatus(boolean isActive) {
+        this.isActive = isActive;
     }
 
-    // 5. 서비스 활성 상태 확인
-    public boolean isActiveService() {
+    // 예약형 메뉴인지 확인
+    public boolean isReservationBased() {
+        return OrderType.RESERVATION_BASED == this.orderType;
+    }
+
+    // 주문형 메뉴인지 확인
+    public boolean isOnDemandBased() {
+        return OrderType.ONDEMAND_BASED == this.orderType;
+    }
+
+    // 활성 상태 확인
+    public boolean isActiveMenu() {
         return Boolean.TRUE.equals(this.isActive);
     }
 
-    // 6. SLOT_BASED 타입인지 확인
-    public boolean isSlotBased() {
-        return this.slotType == SlotType.SLOT_BASED;
+    // 소요 시간 설정 여부 확인
+    public boolean hasDuration() {
+        return this.durationMinutes != null && this.durationMinutes > 0;
     }
 
-    // 7. ORDER_BASED 타입인지 확인
-    public boolean isOrderBased() {
-        return this.slotType == SlotType.ORDER_BASED;
+    // 특정 카테고리에 속하는지 확인
+    public boolean belongsToCategory(BusinessTypeCode targetCategory) {
+        return this.category == targetCategory;
+    }
+
+    // === 검증 메서드 ===
+
+    private static void validateReservationFields(Integer durationMinutes) {
+        if (durationMinutes == null || durationMinutes <= 0) {
+            throw new IllegalArgumentException("예약형 메뉴는 소요시간이 필수입니다");
+        }
+    }
+
+    private static void validateBusinessCategory(Business business, BusinessTypeCode category) {
+        if (!business.getBusinessTypes().contains(category)) {
+            throw new IllegalArgumentException(
+                    String.format("메뉴 카테고리 '%s'는 업체 업종에 포함되지 않습니다", category)
+            );
+        }
     }
 }
