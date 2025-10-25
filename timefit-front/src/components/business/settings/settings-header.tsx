@@ -1,15 +1,13 @@
 import { Button } from '@/components/ui/button';
-import { CardHeader, CardTitle } from '@/components/ui/card';
+import { CardHeader } from '@/components/ui/card';
 
 interface SettingsHeaderProps {
-  title: string;
   onSave?: () => void;
 }
 
-export function SettingsHeader({ title, onSave }: SettingsHeaderProps) {
+export function SettingsHeader({ onSave }: SettingsHeaderProps) {
   return (
-    <CardHeader className="flex flex-row items-center justify-between">
-      <CardTitle>{title}</CardTitle>
+    <CardHeader className="flex flex-row items-center justify-end">
       <Button onClick={onSave}>저장</Button>
     </CardHeader>
   );
