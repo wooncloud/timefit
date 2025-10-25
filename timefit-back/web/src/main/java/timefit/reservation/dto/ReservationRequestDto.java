@@ -2,7 +2,6 @@ package timefit.reservation.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Getter;
-import timefit.reservation.entity.ReservationStatus;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -69,37 +68,6 @@ public class ReservationRequestDto {
             this.customerName = customerName;
             this.customerPhone = customerPhone;
             this.notes = notes;
-        }
-
-        /**
-         * RESERVATION_BASED 예약 생성 (슬롯 기반)
-         */
-        public static CreateReservation forReservationBased(
-                UUID businessId, UUID menuId, UUID bookingSlotId,
-                Integer durationMinutes, Integer totalPrice,
-                String customerName, String customerPhone, String notes) {
-            return new CreateReservation(
-                    businessId, menuId, bookingSlotId,
-                    null, null, // 날짜/시간은 슬롯에서 가져옴
-                    durationMinutes, totalPrice,
-                    customerName, customerPhone, notes
-            );
-        }
-
-        /**
-         * ONDEMAND_BASED 예약 생성 (즉시 예약)
-         */
-        public static CreateReservation forOnDemandBased(
-                UUID businessId, UUID menuId,
-                LocalDate reservationDate, LocalTime reservationTime,
-                Integer durationMinutes, Integer totalPrice,
-                String customerName, String customerPhone, String notes) {
-            return new CreateReservation(
-                    businessId, menuId, null, // bookingSlotId 없음
-                    reservationDate, reservationTime,
-                    durationMinutes, totalPrice,
-                    customerName, customerPhone, notes
-            );
         }
 
         /**
@@ -215,78 +183,6 @@ public class ReservationRequestDto {
         @Override
         public int hashCode() {
             return Objects.hash(reason);
-        }
-    }
-
-    /**
-     * 예약 상태 변경 요청 (업체용 - 승인/거절)
-     */
-    @Getter
-    public static class ChangeReservationStatus {
-
-        @NotNull(message = "변경할 상태는 필수입니다")
-        private final ReservationStatus status;
-
-        @Size(max = 200, message = "사유는 200자를 초과할 수 없습니다")
-        private final String reason;
-
-        private ChangeReservationStatus(ReservationStatus status, String reason) {
-            this.status = status;
-            this.reason = reason;
-        }
-
-        public static ChangeReservationStatus of(ReservationStatus status, String reason) {
-            return new ChangeReservationStatus(status, reason);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-            ChangeReservationStatus that = (ChangeReservationStatus) other;
-            return Objects.equals(status, that.status) &&
-                    Objects.equals(reason, that.reason);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(status, reason);
-        }
-    }
-
-    /**
-     * 예약 완료/노쇼 처리 요청 (업체용)
-     */
-    @Getter
-    public static class CompleteReservation {
-
-        @NotNull(message = "완료 상태는 필수입니다")
-        private final ReservationStatus status;
-
-        @Size(max = 200, message = "메모는 200자를 초과할 수 없습니다")
-        private final String notes;
-
-        private CompleteReservation(ReservationStatus status, String notes) {
-            this.status = status;
-            this.notes = notes;
-        }
-
-        public static CompleteReservation of(ReservationStatus status, String notes) {
-            return new CompleteReservation(status, notes);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-            CompleteReservation that = (CompleteReservation) other;
-            return Objects.equals(status, that.status) &&
-                    Objects.equals(notes, that.notes);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(status, notes);
         }
     }
 }

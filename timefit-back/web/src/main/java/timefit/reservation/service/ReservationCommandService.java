@@ -5,7 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.booking.entity.BookingSlot;
+import timefit.booking.repository.BookingSlotQueryRepository;
 import timefit.booking.repository.BookingSlotRepository;
+import timefit.booking.service.validator.BookingSlotValidator;
 import timefit.business.entity.Business;
 import timefit.business.entity.UserBusinessRole;
 import timefit.business.repository.BusinessRepository;
@@ -58,6 +60,10 @@ public class ReservationCommandService {
     private final ReservationValidator reservationValidator;
     private final ReservationNumberUtil reservationNumberUtil;
 
+    // ✅ BookingSlot 검증을 위한 의존성 추가
+    private final BookingSlotValidator bookingSlotValidator;
+    private final BookingSlotQueryRepository bookingSlotQueryRepository;
+
     // ========== 예약 생성 ==========
 
     /**
@@ -78,7 +84,20 @@ public class ReservationCommandService {
         // 2. 검증
         validateMenuBelongsToBusiness(menu, business.getId());
         validateBookingSlotBelongsToBusiness(bookingSlot, business.getId());
-        validateBookingSlotAvailable(bookingSlot);
+
+        // ✅ isAvailable 체크 (업체의 수동 비활성화)
+        if (!bookingSlot.getIsAvailable()) {
+            throw new BookingException(BookingErrorCode.AVAILABLE_SLOT_NOT_AVAILABLE);
+        }
+
+        // ✅ BookingSlot 통합 검증 (실제 예약 수 체크)
+        Integer currentBookings = bookingSlotQueryRepository
+                .countActiveReservationsBySlot(bookingSlot.getId());
+        bookingSlotValidator.validateBookableSlot(
+                bookingSlot.getId(),
+                business.getId(),
+                currentBookings
+        );
 
         // 3. Entity 생성 (정적 팩토리)
         Reservation reservation = Reservation.createReservationBased(
@@ -340,7 +359,7 @@ public class ReservationCommandService {
      */
     private User getUserEntity(UUID userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(BusinessErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ReservationException(ReservationErrorCode.NOT_RESERVATION_OWNER));
     }
 
     /**
@@ -362,8 +381,8 @@ public class ReservationCommandService {
     /**
      * BookingSlot 엔티티 조회
      */
-    private BookingSlot getBookingSlotEntity(UUID bookingSlotId) {
-        return bookingSlotRepository.findById(bookingSlotId)
+    private BookingSlot getBookingSlotEntity(UUID slotId) {
+        return bookingSlotRepository.findById(slotId)
                 .orElseThrow(() -> new BookingException(BookingErrorCode.AVAILABLE_SLOT_NOT_FOUND));
     }
 
@@ -372,7 +391,7 @@ public class ReservationCommandService {
      */
     private void validateMenuBelongsToBusiness(Menu menu, UUID businessId) {
         if (!menu.getBusiness().getId().equals(businessId)) {
-            throw new MenuException(MenuErrorCode.MENU_ACCESS_DENIED);
+            throw new MenuException(MenuErrorCode.MENU_NOT_FOUND);
         }
     }
 
@@ -382,15 +401,6 @@ public class ReservationCommandService {
     private void validateBookingSlotBelongsToBusiness(BookingSlot bookingSlot, UUID businessId) {
         if (!bookingSlot.getBusiness().getId().equals(businessId)) {
             throw new BookingException(BookingErrorCode.AVAILABLE_SLOT_NOT_FOUND);
-        }
-    }
-
-    /**
-     * BookingSlot 예약 가능 여부 검증
-     */
-    private void validateBookingSlotAvailable(BookingSlot bookingSlot) {
-        if (!bookingSlot.getIsAvailable()) {
-            throw new BookingException(BookingErrorCode.AVAILABLE_SLOT_NOT_AVAILABLE);
         }
     }
 
