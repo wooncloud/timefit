@@ -23,11 +23,13 @@ export default async function BusinessLayout({
   return (
     <SidebarProvider>
       <AppSidebar
-        user={sessionUser && {
-          name: sessionUser.name,
-          email: sessionUser.email,
-          avatar: sessionUser.profileImageUrl ?? null,
-        }}
+        user={
+          sessionUser && {
+            name: sessionUser.name,
+            email: sessionUser.email,
+            avatar: sessionUser.profileImageUrl ?? null,
+          }
+        }
       />
       <SidebarInset>
         <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear">

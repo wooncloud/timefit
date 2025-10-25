@@ -12,7 +12,9 @@ export const initialSigninForm: SigninFormData = {
   password: '',
 };
 
-export function validateSigninForm(formData: SigninFormData): SigninValidationResult {
+export function validateSigninForm(
+  formData: SigninFormData
+): SigninValidationResult {
   const errors: SigninFormErrors = {};
 
   if (!formData.email) {

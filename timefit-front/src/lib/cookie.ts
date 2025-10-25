@@ -12,7 +12,10 @@ interface SetAccessTokenOptions {
 /**
  * 액세스 토큰을 공용 쿠키로 저장.
  */
-export async function setAccessTokenCookie(token: string, options: SetAccessTokenOptions = {}) {
+export async function setAccessTokenCookie(
+  token: string,
+  options: SetAccessTokenOptions = {}
+) {
   (await cookies()).set({
     name: ACCESS_TOKEN_COOKIE_NAME,
     value: token,

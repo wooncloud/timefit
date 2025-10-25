@@ -3,7 +3,11 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 
-import { sessionOptions, SessionData, SessionUser } from '@/lib/session/options';
+import {
+  sessionOptions,
+  SessionData,
+  SessionUser,
+} from '@/lib/session/options';
 
 export async function getServerSession() {
   return getIronSession<SessionData>(await cookies(), sessionOptions);

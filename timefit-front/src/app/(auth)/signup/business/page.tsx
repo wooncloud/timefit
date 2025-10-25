@@ -20,13 +20,13 @@ import {
   initialBusinessSignupForm,
   validateBusinessSignupForm,
   formatBusinessNumber,
-  formatContactPhone
+  formatContactPhone,
 } from './business';
 import {
   BusinessSignupFormData,
   BusinessSignupFormErrors,
   CreateBusinessHandlerResponse,
-  CreateBusinessRequestBody
+  CreateBusinessRequestBody,
 } from '@/types/auth/business/createBusiness';
 
 /*
@@ -46,13 +46,17 @@ updatedAt
  */
 
 export default function BusinessSignUpPage() {
-  const [formData, setFormData] = useState<BusinessSignupFormData>(initialBusinessSignupForm);
+  const [formData, setFormData] = useState<BusinessSignupFormData>(
+    initialBusinessSignupForm
+  );
   const [errors, setErrors] = useState<BusinessSignupFormErrors>({});
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = event.target;
     const fieldName = name as keyof BusinessSignupFormData;
 
@@ -63,13 +67,13 @@ export default function BusinessSignUpPage() {
       nextValue = formatContactPhone(value);
     }
 
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [fieldName]: nextValue,
     }));
 
     if (errors[fieldName]) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         [fieldName]: undefined,
       }));
@@ -77,13 +81,13 @@ export default function BusinessSignUpPage() {
   };
 
   const handleBusinessTypeChange = (value: string) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       businessType: value,
     }));
 
     if (errors.businessType) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         businessType: undefined,
       }));
@@ -93,7 +97,8 @@ export default function BusinessSignUpPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const { isValid, errors: validationErrors } = validateBusinessSignupForm(formData);
+    const { isValid, errors: validationErrors } =
+      validateBusinessSignupForm(formData);
     setErrors(validationErrors);
 
     if (!isValid) {
@@ -110,7 +115,9 @@ export default function BusinessSignUpPage() {
         businessNumber: formData.businessNumber,
         address: formData.address.trim(),
         contactPhone: formData.contactPhone,
-        ...(formData.description.trim() ? { description: formData.description.trim() } : {}),
+        ...(formData.description.trim()
+          ? { description: formData.description.trim() }
+          : {}),
       };
 
       const response = await fetch('/api/auth/business', {
@@ -185,7 +192,11 @@ export default function BusinessSignUpPage() {
               className={errors.businessName ? 'border-red-500' : ''}
               required
             />
-            {errors.businessName && <span className="text-sm text-red-500">{errors.businessName}</span>}
+            {errors.businessName && (
+              <span className="text-sm text-red-500">
+                {errors.businessName}
+              </span>
+            )}
           </div>
           <div className="grid gap-1">
             <Label htmlFor="businessType">업종</Label>
@@ -193,7 +204,10 @@ export default function BusinessSignUpPage() {
               value={formData.businessType}
               onValueChange={handleBusinessTypeChange}
             >
-              <SelectTrigger id="businessType" className={errors.businessType ? 'border-red-500' : ''}>
+              <SelectTrigger
+                id="businessType"
+                className={errors.businessType ? 'border-red-500' : ''}
+              >
                 <SelectValue placeholder="업종 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -204,7 +218,11 @@ export default function BusinessSignUpPage() {
                 <SelectItem value="BD005">기타</SelectItem>
               </SelectContent>
             </Select>
-            {errors.businessType && <span className="text-sm text-red-500">{errors.businessType}</span>}
+            {errors.businessType && (
+              <span className="text-sm text-red-500">
+                {errors.businessType}
+              </span>
+            )}
           </div>
           <div className="grid gap-1">
             <Label htmlFor="businessNumber">사업자 번호</Label>
@@ -218,7 +236,11 @@ export default function BusinessSignUpPage() {
               className={errors.businessNumber ? 'border-red-500' : ''}
               required
             />
-            {errors.businessNumber && <span className="text-sm text-red-500">{errors.businessNumber}</span>}
+            {errors.businessNumber && (
+              <span className="text-sm text-red-500">
+                {errors.businessNumber}
+              </span>
+            )}
           </div>
           <div className="grid gap-1">
             <Label htmlFor="address">주소</Label>
@@ -232,7 +254,9 @@ export default function BusinessSignUpPage() {
               className={errors.address ? 'border-red-500' : ''}
               required
             />
-            {errors.address && <span className="text-sm text-red-500">{errors.address}</span>}
+            {errors.address && (
+              <span className="text-sm text-red-500">{errors.address}</span>
+            )}
           </div>
           <div className="grid gap-1">
             <Label htmlFor="contactPhone">회사 전화번호</Label>
@@ -246,7 +270,11 @@ export default function BusinessSignUpPage() {
               className={errors.contactPhone ? 'border-red-500' : ''}
               required
             />
-            {errors.contactPhone && <span className="text-sm text-red-500">{errors.contactPhone}</span>}
+            {errors.contactPhone && (
+              <span className="text-sm text-red-500">
+                {errors.contactPhone}
+              </span>
+            )}
           </div>
           <div className="grid gap-1">
             <Label htmlFor="description">회사 설명</Label>

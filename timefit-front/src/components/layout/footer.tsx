@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button"
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export function Footer() {
   return (
@@ -8,11 +8,21 @@ export function Footer() {
         <div className="flex flex-col items-center space-y-4 md:space-y-6">
           <div className="text-center">
             <div>
-              <Link href={'#'}><Button variant="link">입점 문의</Button></Link>
-              <Link href={'#'}><Button variant="link">채용</Button></Link>
-              <Link href={'#'}><Button variant="link">광고 문의</Button></Link>
-              <Link href={'#'}><Button variant="link">공지사항</Button></Link>
-              <Link href={'#'}><Button variant="link">Q&A</Button></Link>
+              <Link href={'#'}>
+                <Button variant="link">입점 문의</Button>
+              </Link>
+              <Link href={'#'}>
+                <Button variant="link">채용</Button>
+              </Link>
+              <Link href={'#'}>
+                <Button variant="link">광고 문의</Button>
+              </Link>
+              <Link href={'#'}>
+                <Button variant="link">공지사항</Button>
+              </Link>
+              <Link href={'#'}>
+                <Button variant="link">Q&A</Button>
+              </Link>
             </div>
             <div>
               <Link href={'/policy/service'}>

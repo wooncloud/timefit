@@ -6,11 +6,12 @@ import {
   CreateBusinessHandlerResponse,
   CreateBusinessHandlerSuccessResponse,
   CreateBusinessRequestBody,
-  CreateBusinessSuccessPayload
+  CreateBusinessSuccessPayload,
 } from '@/types/auth/business/createBusiness';
 import { getServerSession } from '@/lib/session/server';
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+const BACKEND_API_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,9 +22,11 @@ export async function POST(request: NextRequest) {
     if (!accessToken) {
       const errorPayload: CreateBusinessHandlerErrorResponse = {
         success: false,
-        message: '로그인이 필요합니다.'
+        message: '로그인이 필요합니다.',
       };
-      return NextResponse.json<CreateBusinessHandlerResponse>(errorPayload, { status: 401 });
+      return NextResponse.json<CreateBusinessHandlerResponse>(errorPayload, {
+        status: 401,
+      });
     }
 
     const response = await fetch(`${BACKEND_API_URL}/api/business`, {
@@ -45,9 +48,11 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorPayload: CreateBusinessHandlerErrorResponse = {
         success: false,
-        message: responseData?.message || '사업자 등록에 실패했습니다.'
+        message: responseData?.message || '사업자 등록에 실패했습니다.',
       };
-      return NextResponse.json<CreateBusinessHandlerResponse>(errorPayload, { status: response.status });
+      return NextResponse.json<CreateBusinessHandlerResponse>(errorPayload, {
+        status: response.status,
+      });
     }
 
     const successPayload: CreateBusinessHandlerSuccessResponse = {
@@ -58,14 +63,15 @@ export async function POST(request: NextRequest) {
 
     const statusCode = response.status === 204 ? 200 : response.status;
 
-    return NextResponse.json<CreateBusinessHandlerResponse>(successPayload, { status: statusCode });
-
+    return NextResponse.json<CreateBusinessHandlerResponse>(successPayload, {
+      status: statusCode,
+    });
   } catch (error) {
     console.error('사업자 등록 API 오류:', error);
     return NextResponse.json<CreateBusinessHandlerResponse>(
       {
         success: false,
-        message: '서버 오류가 발생했습니다.'
+        message: '서버 오류가 발생했습니다.',
       },
       { status: 500 }
     );

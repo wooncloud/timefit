@@ -11,11 +11,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-export default function Layout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
       <body

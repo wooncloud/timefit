@@ -1,6 +1,6 @@
 import {
   BusinessSignupFormData,
-  BusinessSignupFormErrors
+  BusinessSignupFormErrors,
 } from '@/types/auth/business/createBusiness';
 
 interface BusinessSignupValidationResult {
@@ -70,7 +70,9 @@ export function formatContactPhone(value: string): string {
   return `${digits.slice(0, 3)}-${digits.slice(3, digits.length - 4)}-${digits.slice(-4)}`;
 }
 
-export function validateBusinessSignupForm(formData: BusinessSignupFormData): BusinessSignupValidationResult {
+export function validateBusinessSignupForm(
+  formData: BusinessSignupFormData
+): BusinessSignupValidationResult {
   const errors: BusinessSignupFormErrors = {};
 
   if (!formData.businessName.trim()) {
@@ -85,7 +87,8 @@ export function validateBusinessSignupForm(formData: BusinessSignupFormData): Bu
   if (!businessNumber) {
     errors.businessNumber = '사업자 번호를 입력해주세요.';
   } else if (!businessNumberPattern.test(businessNumber)) {
-    errors.businessNumber = '올바른 사업자 번호 형식을 입력해주세요. (123-45-67890)';
+    errors.businessNumber =
+      '올바른 사업자 번호 형식을 입력해주세요. (123-45-67890)';
   }
 
   if (!formData.address.trim()) {

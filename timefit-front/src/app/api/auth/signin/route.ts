@@ -6,11 +6,16 @@ import {
   SigninHandlerResponse,
   SigninHandlerSuccessResponse,
   SigninRequestBody,
-  SigninSuccessPayload
+  SigninSuccessPayload,
 } from '@/types/auth/signin';
-import { sessionOptions, SessionData, SessionUser } from '@/lib/session/options';
+import {
+  sessionOptions,
+  SessionData,
+  SessionUser,
+} from '@/lib/session/options';
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+const BACKEND_API_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,26 +34,42 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorPayload: SigninHandlerErrorResponse = {
         success: false,
-        message: responseData.message || '로그인에 실패했습니다.'
+        message: responseData.message || '로그인에 실패했습니다.',
       };
 
-      const responseJson = NextResponse.json<SigninHandlerResponse>(errorPayload, { status: response.status });
-      const session = await getIronSession<SessionData>(request, responseJson, sessionOptions);
+      const responseJson = NextResponse.json<SigninHandlerResponse>(
+        errorPayload,
+        { status: response.status }
+      );
+      const session = await getIronSession<SessionData>(
+        request,
+        responseJson,
+        sessionOptions
+      );
       session.destroy();
       return responseJson;
     }
 
-    const headerAccessToken = response.headers.get('Authorization')?.replace('Bearer ', '');
+    const headerAccessToken = response.headers
+      .get('Authorization')
+      ?.replace('Bearer ', '');
     const payloadAccessToken = responseData.data?.accessToken;
     const accessToken = payloadAccessToken || headerAccessToken;
 
     if (!accessToken) {
       const errorPayload: SigninHandlerErrorResponse = {
         success: false,
-        message: '액세스 토큰이 응답에 포함되어 있지 않습니다.'
+        message: '액세스 토큰이 응답에 포함되어 있지 않습니다.',
       };
-      const responseJson = NextResponse.json<SigninHandlerResponse>(errorPayload, { status: 500 });
-      const session = await getIronSession<SessionData>(request, responseJson, sessionOptions);
+      const responseJson = NextResponse.json<SigninHandlerResponse>(
+        errorPayload,
+        { status: 500 }
+      );
+      const session = await getIronSession<SessionData>(
+        request,
+        responseJson,
+        sessionOptions
+      );
       session.destroy();
       return responseJson;
     }
@@ -64,8 +85,13 @@ export async function POST(request: NextRequest) {
       data: successData,
     };
 
-    const responseJson = NextResponse.json<SigninHandlerResponse>(successPayload);
-    const session = await getIronSession<SessionData>(request, responseJson, sessionOptions);
+    const responseJson =
+      NextResponse.json<SigninHandlerResponse>(successPayload);
+    const session = await getIronSession<SessionData>(
+      request,
+      responseJson,
+      sessionOptions
+    );
     const { accessToken: _, ...userProfile } = successData;
     session.user = {
       ...(userProfile as SessionUser),
@@ -73,16 +99,19 @@ export async function POST(request: NextRequest) {
     };
     await session.save();
     return responseJson;
-
   } catch (error) {
     console.error('로그인 API 오류:', error);
     const errorPayload = {
       success: false,
-      message: '서버 오류가 발생했습니다.'
+      message: '서버 오류가 발생했습니다.',
     } satisfies SigninHandlerErrorResponse;
 
     const responseJson = NextResponse.json(errorPayload, { status: 500 });
-    const session = await getIronSession<SessionData>(request, responseJson, sessionOptions);
+    const session = await getIronSession<SessionData>(
+      request,
+      responseJson,
+      sessionOptions
+    );
     session.destroy();
     return responseJson;
   }

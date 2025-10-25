@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import { getCurrentUserFromSession } from '@/lib/session/server';
 
 export async function Navbar() {

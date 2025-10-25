@@ -75,4 +75,6 @@ export interface BusinessSignupFormData {
 /**
  * 사업자 등록 폼 오류 상태.
  */
-export type BusinessSignupFormErrors = Partial<Record<keyof BusinessSignupFormData, string>>;
+export type BusinessSignupFormErrors = Partial<
+  Record<keyof BusinessSignupFormData, string>
+>;
