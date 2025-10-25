@@ -1,5 +1,5 @@
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +10,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Eye, Pencil } from 'lucide-react';
 import type { Customer } from '@/types/customer/customer';
+
+dayjs.locale('ko');
 
 interface CustomerTableRowProps {
   customer: Customer;
@@ -22,14 +24,10 @@ export function CustomerTableRow({ customer }: CustomerTableRowProps) {
       <TableCell>{customer.phone}</TableCell>
       <TableCell className="text-center">{customer.totalVisits}회</TableCell>
       <TableCell>
-        {format(new Date(customer.lastVisitDate), 'yyyy.MM.dd (EEE)', {
-          locale: ko,
-        })}
+        {dayjs(customer.lastVisitDate).format('YYYY.MM.DD (ddd)')}
       </TableCell>
       <TableCell>
-        {format(new Date(customer.firstVisitDate), 'yyyy.MM.dd (EEE)', {
-          locale: ko,
-        })}
+        {dayjs(customer.firstVisitDate).format('YYYY.MM.DD (ddd)')}
       </TableCell>
       <TableCell>
         <div className="max-w-[200px] truncate text-muted-foreground">

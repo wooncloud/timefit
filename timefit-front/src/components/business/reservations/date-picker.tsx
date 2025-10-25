@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
 import { CalendarIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -13,6 +13,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+
+dayjs.locale('ko');
 
 interface DatePickerProps {
   date?: Date;
@@ -43,7 +45,7 @@ export function DatePicker({
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, 'PPP', { locale: ko }) : placeholder}
+          {date ? dayjs(date).format('YYYY년 M월 D일') : placeholder}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
