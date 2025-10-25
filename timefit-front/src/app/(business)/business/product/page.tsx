@@ -1,5 +1,5 @@
 export default function Page() {
-  return <div>Coming soon</div>;
+  return <div>준비중</div>;
 }
 
 
