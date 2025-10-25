@@ -54,13 +54,6 @@ export default function Page() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">고객 목록</h1>
-        <p className="text-muted-foreground">
-          고객 정보를 조회하고 관리합니다.
-        </p>
-      </div>
-
       <CustomerFilterToolbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
