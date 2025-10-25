@@ -80,16 +80,16 @@ public class BookingSlotValidator {
     }
 
     /**
-     * BookingSlot의 용량이 초과되지 않았는지 검증
+     * BookingSlot의 예약 가능 여부 검증 (capacity 제거)
      *
      * @param slot 검증할 BookingSlot 엔티티
-     * @param currentBookings 현재 예약 수
-     * @throws BookingException 용량 초과일 경우
+     * @param currentBookings 현재 예약 수 (0 또는 1)
+     * @throws BookingException 이미 예약된 슬롯일 경우
      */
     public void validateSlotCapacity(BookingSlot slot, Integer currentBookings) {
         if (!slot.canAcceptReservation(currentBookings)) {
-            log.warn("슬롯 용량 초과: slotId={}, capacity={}, current={}",
-                    slot.getId(), slot.getCapacity(), currentBookings);
+            log.warn("슬롯 예약 불가 (이미 예약됨): slotId={}, currentBookings={}",
+                    slot.getId(), currentBookings);
             throw new BookingException(BookingErrorCode.AVAILABLE_SLOT_CAPACITY_EXCEEDED);
         }
     }
@@ -121,11 +121,11 @@ public class BookingSlotValidator {
     }
 
     /**
-     * 예약 가능한 슬롯인지 전체 검증 (가장 많이 사용)
+     * 예약 가능한 슬롯인지 전체 검증
      *
      * @param slotId 검증할 슬롯 ID
      * @param businessId 업체 ID
-     * @param currentBookings 현재 예약 수
+     * @param currentBookings 현재 예약 수 (0 또는 1)
      * @return 조회된 예약 가능한 BookingSlot 엔티티
      */
     public BookingSlot validateBookableSlot(UUID slotId, UUID businessId, Integer currentBookings) {
