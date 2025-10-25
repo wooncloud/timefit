@@ -3,10 +3,10 @@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { SettingsHeader } from './components/settings-header';
-import { FormLabel } from './components/form-label';
-import { BusinessTypeSelect } from './components/business-type-select';
-import { AddressSearch } from './components/address-search';
+import { SettingsHeader } from '@/components/business/settings/settings-header';
+import { FormLabel } from '@/components/business/settings/form-label';
+import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
+import { AddressSearch } from '@/components/business/settings/address-search';
 
 export default function Page() {
   return (
