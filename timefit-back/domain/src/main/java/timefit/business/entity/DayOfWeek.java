@@ -17,9 +17,9 @@ public enum DayOfWeek {
     DayOfWeek(int value) {
         this.value = value;
     }
-
+    // custom SUNDAY is 0 & java.time sunday is 7. 따라서 getValue()%7 으로 계산해야 옳음.
     public boolean matches(java.time.DayOfWeek standardDay) {
-        return this.value == standardDay.getValue() - 1;
+        return this.value == standardDay.getValue() % 7;
     }
 
     public static DayOfWeek fromValue(int value) {
