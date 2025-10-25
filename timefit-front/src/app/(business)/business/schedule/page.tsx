@@ -12,12 +12,12 @@ export default function Page() {
     useState<BusinessHours[]>(mockBusinessHours);
   const [selectedDayId, setSelectedDayId] = useState<string>('mon');
 
-  const selectedDay = businessHours.find((d) => d.id === selectedDayId);
-  const selectedWeekday = WEEKDAYS.find((w) => w.id === selectedDayId);
+  const selectedDay = businessHours.find(d => d.id === selectedDayId);
+  const selectedWeekday = WEEKDAYS.find(w => w.id === selectedDayId);
 
   const handleToggle = (id: string, enabled: boolean) => {
-    setBusinessHours((prev) =>
-      prev.map((day) => (day.id === id ? { ...day, isEnabled: enabled } : day))
+    setBusinessHours(prev =>
+      prev.map(day => (day.id === id ? { ...day, isEnabled: enabled } : day))
     );
   };
 
@@ -26,8 +26,8 @@ export default function Page() {
     type: 'start' | 'end',
     value: string
   ) => {
-    setBusinessHours((prev) =>
-      prev.map((day) =>
+    setBusinessHours(prev =>
+      prev.map(day =>
         day.id === id
           ? {
               ...day,
@@ -60,5 +60,3 @@ export default function Page() {
     </div>
   );
 }
-
-

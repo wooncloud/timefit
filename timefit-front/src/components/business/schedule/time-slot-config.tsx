@@ -41,7 +41,7 @@ export function TimeSlotConfig({
           min="1"
           max="60"
           value={interval}
-          onChange={(e) => onIntervalChange?.(Number(e.target.value))}
+          onChange={e => onIntervalChange?.(Number(e.target.value))}
           className="w-20"
         />
       </div>

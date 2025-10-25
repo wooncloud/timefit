@@ -13,7 +13,7 @@ export function ReservationStatsCards({
 }: ReservationStatsCardsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-      {reservationStatConfigs.map((config) => (
+      {reservationStatConfigs.map(config => (
         <ReservationStatCard
           key={config.id}
           icon={config.icon}

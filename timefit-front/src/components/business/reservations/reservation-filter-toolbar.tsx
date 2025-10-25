@@ -51,7 +51,7 @@ export function ReservationFilterToolbar() {
               </SelectContent>
             </Select>
           </div>
-          <div className="md:col-span-1 flex gap-2">
+          <div className="flex gap-2 md:col-span-1">
             <Input placeholder="고객명 입력" className="flex-1" />
             <Button size="icon">
               <Search className="h-4 w-4" />

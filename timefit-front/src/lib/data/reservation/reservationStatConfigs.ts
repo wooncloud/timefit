@@ -21,8 +21,8 @@ export const reservationStatConfigs: ReservationStatConfig[] = [
       bg: 'bg-yellow-100 dark:bg-yellow-900',
       icon: 'text-yellow-600 dark:text-yellow-400',
     },
-    getCount: (reservations) =>
-      reservations.filter((r) => r.status === 'pending').length,
+    getCount: reservations =>
+      reservations.filter(r => r.status === 'pending').length,
   },
   {
     id: 'confirmed',
@@ -32,8 +32,8 @@ export const reservationStatConfigs: ReservationStatConfig[] = [
       bg: 'bg-green-100 dark:bg-green-900',
       icon: 'text-green-600 dark:text-green-400',
     },
-    getCount: (reservations) =>
-      reservations.filter((r) => r.status === 'confirmed').length,
+    getCount: reservations =>
+      reservations.filter(r => r.status === 'confirmed').length,
   },
   {
     id: 'completed',
@@ -43,8 +43,8 @@ export const reservationStatConfigs: ReservationStatConfig[] = [
       bg: 'bg-blue-100 dark:bg-blue-900',
       icon: 'text-blue-600 dark:text-blue-400',
     },
-    getCount: (reservations) =>
-      reservations.filter((r) => r.status === 'completed').length,
+    getCount: reservations =>
+      reservations.filter(r => r.status === 'completed').length,
   },
   {
     id: 'cancelled',
@@ -54,8 +54,8 @@ export const reservationStatConfigs: ReservationStatConfig[] = [
       bg: 'bg-red-100 dark:bg-red-900',
       icon: 'text-red-600 dark:text-red-400',
     },
-    getCount: (reservations) =>
-      reservations.filter((r) => r.status === 'cancelled').length +
-      reservations.filter((r) => r.status === 'noshow').length,
+    getCount: reservations =>
+      reservations.filter(r => r.status === 'cancelled').length +
+      reservations.filter(r => r.status === 'noshow').length,
   },
 ];

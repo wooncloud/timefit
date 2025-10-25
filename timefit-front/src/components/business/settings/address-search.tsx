@@ -19,7 +19,7 @@ export function AddressSearch({
     <div className="relative">
       <Input
         value={value}
-        onChange={(e) => onChange?.(e.target.value)}
+        onChange={e => onChange?.(e.target.value)}
         placeholder={placeholder}
       />
       <Button
@@ -29,10 +29,9 @@ export function AddressSearch({
         onClick={onSearch}
         type="button"
       >
-        <Search className="h-4 w-4 mr-1" />
+        <Search className="mr-1 h-4 w-4" />
         주소 검색
       </Button>
     </div>
   );
 }
-

@@ -6,8 +6,8 @@ export const navItems = [
     icon: House,
     isActive: true,
     items: [
-      // { title: "대시보드", url: "#" },
-      { title: '캘린더', url: '/business' },
+      { title: '대시보드', url: '/business' },
+      { title: '캘린더', url: '/business/calendar' },
     ],
   },
   {
@@ -26,8 +26,8 @@ export const navItems = [
     isActive: true,
     items: [
       { title: '고객 목록', url: '/business/customers' },
-      { title: '고객 채팅', url: '/business/customers/chat' },
-      { title: '공지', url: '/business/customers/notice' },
+      // { title: '고객 채팅', url: '/business/customers/chat' },
+      // { title: '공지', url: '/business/customers/notice' },
     ],
   },
   {

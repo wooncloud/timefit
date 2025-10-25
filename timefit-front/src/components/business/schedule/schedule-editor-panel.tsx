@@ -24,10 +24,10 @@ export function ScheduleEditorPanel({
   >([]);
 
   const handleSlotStatusChange = (time: string, status: TimeSlotStatus) => {
-    setSlots((prev) => {
-      const existing = prev.find((s) => s.time === time);
+    setSlots(prev => {
+      const existing = prev.find(s => s.time === time);
       if (existing) {
-        return prev.map((s) => (s.time === time ? { time, status } : s));
+        return prev.map(s => (s.time === time ? { time, status } : s));
       }
       return [...prev, { time, status }];
     });
@@ -37,7 +37,9 @@ export function ScheduleEditorPanel({
     <Card className="flex-1">
       <CardHeader>
         <CardTitle>
-          {selectedDay ? `${selectedDay} 예약 슬롯 편집` : '요일 예약 슬롯 편집'}
+          {selectedDay
+            ? `${selectedDay} 예약 슬롯 편집`
+            : '요일 예약 슬롯 편집'}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">

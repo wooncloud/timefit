@@ -12,4 +12,3 @@ export function SettingsHeader({ onSave }: SettingsHeaderProps) {
     </CardHeader>
   );
 }
-

@@ -1,8 +1,4 @@
-import {
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export function TeamTableHeader() {
   return (
@@ -18,4 +14,3 @@ export function TeamTableHeader() {
     </TableHeader>
   );
 }
-

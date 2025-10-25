@@ -10,7 +10,7 @@ export function ReservationTableBody({
 }: ReservationTableBodyProps) {
   return (
     <TableBody>
-      {reservations.map((reservation) => (
+      {reservations.map(reservation => (
         <ReservationTableRow key={reservation.id} reservation={reservation} />
       ))}
     </TableBody>

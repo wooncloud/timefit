@@ -25,10 +25,10 @@ export function WeekdayHoursRow({
   return (
     <div
       className={cn(
-        'flex items-center gap-4 rounded-lg border p-2 cursor-pointer transition-colors',
+        'flex cursor-pointer items-center gap-4 rounded-lg border p-2 transition-colors',
         isSelected
-          ? 'bg-accent border-primary'
-          : 'hover:bg-accent/50 border-transparent'
+          ? 'border-primary bg-accent'
+          : 'border-transparent hover:bg-accent/50'
       )}
       onClick={() => onSelect?.(day.id)}
     >
@@ -36,31 +36,31 @@ export function WeekdayHoursRow({
       <Input
         type="time"
         value={day.startTime}
-        onChange={(e) => {
+        onChange={e => {
           e.stopPropagation();
           onTimeChange?.(day.id, 'start', e.target.value);
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
         disabled={!day.isEnabled}
-        className="w-32 bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+        className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
       />
       <Input
         type="time"
         value={day.endTime}
-        onChange={(e) => {
+        onChange={e => {
           e.stopPropagation();
           onTimeChange?.(day.id, 'end', e.target.value);
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
         disabled={!day.isEnabled}
-        className="w-32 bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+        className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
       />
       <Switch
         checked={day.isEnabled}
-        onCheckedChange={(checked) => {
+        onCheckedChange={checked => {
           onToggle?.(day.id, checked);
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       />
     </div>
   );

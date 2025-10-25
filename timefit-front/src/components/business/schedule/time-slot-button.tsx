@@ -43,7 +43,7 @@ export function TimeSlotButton({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        {timeSlotStatuses.map((statusType) => (
+        {timeSlotStatuses.map(statusType => (
           <DropdownMenuItem
             key={statusType}
             onClick={() => onStatusChange?.(statusType)}

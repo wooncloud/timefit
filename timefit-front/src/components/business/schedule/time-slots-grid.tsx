@@ -62,18 +62,18 @@ export function TimeSlotsGrid({
 
   const slotMap = useMemo(() => {
     const map = new Map<string, TimeSlotStatus>();
-    slots.forEach((slot) => map.set(slot.time, slot.status));
+    slots.forEach(slot => map.set(slot.time, slot.status));
     return map;
   }, [slots]);
 
   return (
     <div className="grid grid-cols-8 gap-2">
-      {timeSlots.map((time) => (
+      {timeSlots.map(time => (
         <TimeSlotButton
           key={time}
           time={time}
           status={slotMap.get(time) || 'available'}
-          onStatusChange={(status) => onSlotStatusChange?.(time, status)}
+          onStatusChange={status => onSlotStatusChange?.(time, status)}
         />
       ))}
     </div>

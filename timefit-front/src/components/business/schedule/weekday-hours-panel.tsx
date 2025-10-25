@@ -26,8 +26,8 @@ export function WeekdayHoursPanel({
         <CardTitle>영업 시간</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {businessHours.map((day) => {
-          const weekday = WEEKDAYS.find((w) => w.id === day.id);
+        {businessHours.map(day => {
+          const weekday = WEEKDAYS.find(w => w.id === day.id);
           return (
             <WeekdayHoursRow
               key={day.id}

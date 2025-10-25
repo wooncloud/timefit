@@ -112,4 +112,3 @@ export function TeamTableRow({
     </TableRow>
   );
 }
-

@@ -1,9 +1,6 @@
 import type { Metadata } from 'next';
 import { AppSidebar } from '@/components/business/sidebar/app-sidebar';
-import {
-  SidebarInset,
-  SidebarProvider,
-} from '@/components/ui/sidebar';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { BusinessHeader } from '@/components/business/business-header';
 import { getCurrentUserFromSession } from '@/lib/session/server';
 
@@ -32,9 +29,7 @@ export default async function BusinessLayout({
       />
       <SidebarInset>
         <BusinessHeader />
-        <div className="p-4">
-          {children}
-        </div>
+        <div className="p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

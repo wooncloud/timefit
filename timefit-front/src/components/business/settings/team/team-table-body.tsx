@@ -16,7 +16,7 @@ export function TeamTableBody({
 }: TeamTableBodyProps) {
   return (
     <TableBody>
-      {members.map((member) => (
+      {members.map(member => (
         <TeamTableRow
           key={member.id}
           member={member}
@@ -28,4 +28,3 @@ export function TeamTableBody({
     </TableBody>
   );
 }
-
