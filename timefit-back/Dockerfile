@@ -1,6 +1,6 @@
-FROM openjdk:21-jdk-slim
+# Multi-stage build for production
+FROM openjdk:21-jdk-slim AS builder
 
-# 작업 디렉토리 설정
 WORKDIR /app
 
 # Gradle Wrapper와 설정 파일들 복사
@@ -24,14 +24,19 @@ RUN ./gradlew dependencies --no-daemon
 # 소스 코드 복사
 COPY . .
 
-# gradlew 실행 권한 다시 부여 (COPY . . 로 인해 덮어써짐)
-RUN chmod +x ./gradlew
-
 # 애플리케이션 빌드
 RUN ./gradlew :web:bootJar --no-daemon
+
+# Production stage
+FROM openjdk:21-jre-slim
+
+WORKDIR /app
+
+# JAR 파일만 복사
+COPY --from=builder /app/web/build/libs/web-0.0.1-SNAPSHOT.jar app.jar
 
 # 포트 노출
 EXPOSE 8080
 
 # 애플리케이션 실행
-CMD ["java", "-jar", "web/build/libs/web-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
