@@ -1,12 +1,9 @@
 package timefit.business.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
+import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import timefit.common.entity.BaseEntity;
 
@@ -24,6 +21,12 @@ public class Business extends BaseEntity {
     @Column(name = "business_name", nullable = false)
     private String businessName;
 
+    /**
+     * - 업체가 제공하는 업종(대분류) 목록
+     * - UX: 최초 Business 생성 시 선택
+     * - 초기: 1개 (예: HAIR)
+     * - 확장: 여러 개 추가 가능 (예: HAIR, NAIL)
+     */
     @ElementCollection(targetClass = BusinessTypeCode.class, fetch = FetchType.EAGER)
     @CollectionTable(
             name = "business_type",
@@ -33,7 +36,6 @@ public class Business extends BaseEntity {
     @Column(name = "type_code", nullable = false, length = 10)
     @NotEmpty(message = "최소 1개 이상의 업종을 선택해야 합니다")
     private Set<BusinessTypeCode> businessTypes = new HashSet<>();
-//    private String businessType;
 
     @NotBlank(message = "사업자번호는 필수입니다")
     @Pattern(regexp = "^[0-9]{3}-[0-9]{2}-[0-9]{5}$", message = "사업자번호 형식이 올바르지 않습니다 (예: 123-45-67890)")
@@ -53,12 +55,22 @@ public class Business extends BaseEntity {
     @Column(name = "logo_url")
     private String logoUrl;
 
+    @Column(name = "business_notice", columnDefinition = "TEXT")
+    private String businessNotice;
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    // 업체 새 생성
-    public static Business createBusiness(String businessName, Set<BusinessTypeCode> businessTypes, String businessNumber,
-                                            String address, String contactPhone, String description) {
+    // ----------------- 정적 팩토리 메서드
+
+    // 업체 새로 생성
+    public static Business createBusiness(
+            String businessName,
+            Set<BusinessTypeCode> businessTypes,
+            String businessNumber,
+            String address,
+            String contactPhone,
+            String description) {
         Business business = new Business();
         business.businessName = businessName;
         business.businessTypes = businessTypes;
@@ -70,9 +82,18 @@ public class Business extends BaseEntity {
         return business;
     }
 
+    // -------------------------- 비즈니스 메서드
+
     // 업체 전체 정보 업데이트
-    public void updateBusinessInfo(String businessName, Set<BusinessTypeCode> businessTypes, String address,
-                                    String contactPhone, String description, String logoUrl) {
+    public void updateBusinessInfo(
+            String businessName,
+            Set<BusinessTypeCode> businessTypes,
+            String address,
+            String contactPhone,
+            String description,
+            String logoUrl,
+            String businessNotice) {
+
         if (businessName != null) {
             this.businessName = businessName;
         }
@@ -90,6 +111,9 @@ public class Business extends BaseEntity {
         }
         if (logoUrl != null) {
             this.logoUrl = logoUrl;
+        }
+        if (businessNotice != null) {
+            this.businessNotice = businessNotice;
         }
     }
 
@@ -121,6 +145,11 @@ public class Business extends BaseEntity {
         }
     }
 
+    // 업체 공지사항 업데이트
+    public void updateBusinessNotice(String businessNotice) {
+        this.businessNotice = businessNotice;
+    }
+
     // 업체 비활성화 (논리적 삭제)
     public void deactivate() {
         this.isActive = false;
@@ -129,10 +158,5 @@ public class Business extends BaseEntity {
     // 업체 활성화 (복구)
     public void activate() {
         this.isActive = true;
-    }
-
-    // 업체 활성 상태 확인
-    public boolean isActiveBusiness() {
-        return Boolean.TRUE.equals(this.isActive);
     }
 }
