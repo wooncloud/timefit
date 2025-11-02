@@ -1,7 +1,9 @@
 package timefit.menu.dto;
 
 import lombok.Getter;
+import timefit.business.entity.BusinessCategory;
 import timefit.business.entity.BusinessTypeCode;
+import timefit.business.entity.ServiceCategoryCode;
 import timefit.menu.entity.Menu;
 import timefit.menu.entity.OrderType;
 
@@ -10,7 +12,9 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * 메뉴 상세 정보 응답 DTO
+ * Menu Response DTO
+ * - category (BusinessTypeCode) 제거
+ * - businessCategoryId, businessType, categoryCode, categoryName 추가
  */
 @Getter
 public class MenuResponse {
@@ -18,14 +22,19 @@ public class MenuResponse {
     private final UUID menuId;
     private final UUID businessId;
     private final String serviceName;
-    private final BusinessTypeCode category;
+
+    /**
+     * ✅ 신규: BusinessCategory 정보
+     */
+    private final UUID businessCategoryId;
+    private final BusinessTypeCode businessType;        // 대분류
+    private final ServiceCategoryCode categoryCode;     // 중분류 코드
+    private final String categoryName;                  // 중분류 표시명
+
     private final Integer price;
     private final String description;
     private final OrderType orderType;
-
-    // ✅ 추가: 서비스 소요 시간
     private final Integer durationMinutes;
-
     private final String imageUrl;
     private final Boolean isActive;
     private final LocalDateTime createdAt;
@@ -35,7 +44,10 @@ public class MenuResponse {
             UUID menuId,
             UUID businessId,
             String serviceName,
-            BusinessTypeCode category,
+            UUID businessCategoryId,
+            BusinessTypeCode businessType,
+            ServiceCategoryCode categoryCode,
+            String categoryName,
             Integer price,
             String description,
             OrderType orderType,
@@ -48,7 +60,10 @@ public class MenuResponse {
         this.menuId = menuId;
         this.businessId = businessId;
         this.serviceName = serviceName;
-        this.category = category;
+        this.businessCategoryId = businessCategoryId;
+        this.businessType = businessType;
+        this.categoryCode = categoryCode;
+        this.categoryName = categoryName;
         this.price = price;
         this.description = description;
         this.orderType = orderType;
@@ -59,19 +74,22 @@ public class MenuResponse {
         this.updatedAt = updatedAt;
     }
 
-    /**
-     * Entity → DTO 변환 (정적 팩토리 메서드)
-     */
+    // Entity → DTO 변환 (정적 팩토리 메서드)
     public static MenuResponse of(Menu menu) {
+        BusinessCategory category = menu.getBusinessCategory();
+
         return new MenuResponse(
                 menu.getId(),
                 menu.getBusiness().getId(),
                 menu.getServiceName(),
-                menu.getCategory(),
+                category.getId(),                       // businessCategoryId
+                category.getBusinessType(),             // businessType (대분류)
+                category.getCategoryCode(),             // categoryCode (중분류 코드)
+                category.getCategoryDisplayName(),      // categoryName (중분류 표시명)
                 menu.getPrice(),
                 menu.getDescription(),
                 menu.getOrderType(),
-                menu.getDurationMinutes(),  // ✅ 추가
+                menu.getDurationMinutes(),
                 menu.getImageUrl(),
                 menu.getIsActive(),
                 menu.getCreatedAt(),

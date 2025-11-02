@@ -115,7 +115,8 @@ public class BusinessCommandService {
                 request.getAddress(),
                 request.getContactPhone(),
                 request.getDescription(),
-                request.getLogoUrl()
+                request.getLogoUrl(),
+                request.getBusinessNotice()
         );
 
         // 5. 응답 생성 (DTO 정적 팩토리 사용)

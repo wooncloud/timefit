@@ -6,13 +6,24 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import timefit.business.entity.BusinessTypeCode;
+import timefit.business.entity.ServiceCategoryCode;
 import timefit.menu.entity.OrderType;
 
 import java.util.Objects;
 
+/**
+ * Menu Request DTO
+ * - category (BusinessTypeCode) 제거
+ * - businessType (대분류) 추가
+ * - categoryCode (중분류) 추가
+ */
 public class MenuRequest {
 
-    // 메뉴 생성 요청
+    /**
+     * 메뉴 생성 요청
+     * - businessType: Business.businessTypes 중 선택
+     * - categoryCode: businessType에 속하는 중분류 선택
+     */
     @Getter
     public static class CreateMenu {
 
@@ -20,8 +31,19 @@ public class MenuRequest {
         @Size(max = 100, message = "서비스명은 100자 이하로 입력해주세요")
         private final String serviceName;
 
+        /**
+         * 대분류 (업종)
+         * - Business.businessTypes 중 선택
+         */
+        @NotNull(message = "업종은 필수입니다")
+        private final BusinessTypeCode businessType;
+
+        /**
+         * 중분류 (서비스 카테고리)
+         * - businessType에 속하는 ServiceCategoryCode 선택
+         */
         @NotNull(message = "카테고리는 필수입니다")
-        private final BusinessTypeCode category;
+        private final ServiceCategoryCode categoryCode;
 
         @NotNull(message = "가격은 필수입니다")
         @Min(value = 0, message = "가격은 0원 이상이어야 합니다")
@@ -33,7 +55,6 @@ public class MenuRequest {
         @NotNull(message = "주문 타입은 필수입니다")
         private final OrderType orderType;
 
-        // ✅ 추가: 서비스 소요 시간 (필수)
         @NotNull(message = "소요 시간은 필수입니다")
         @Min(value = 1, message = "소요 시간은 최소 1분 이상이어야 합니다")
         private final Integer durationMinutes;
@@ -42,7 +63,8 @@ public class MenuRequest {
 
         public CreateMenu(
                 String serviceName,
-                BusinessTypeCode category,
+                BusinessTypeCode businessType,
+                ServiceCategoryCode categoryCode,
                 Integer price,
                 String description,
                 OrderType orderType,
@@ -50,7 +72,8 @@ public class MenuRequest {
                 String imageUrl) {
 
             this.serviceName = serviceName;
-            this.category = category;
+            this.businessType = businessType;
+            this.categoryCode = categoryCode;
             this.price = price;
             this.description = description;
             this.orderType = orderType;
@@ -64,7 +87,8 @@ public class MenuRequest {
             if (other == null || getClass() != other.getClass()) return false;
             CreateMenu that = (CreateMenu) other;
             return Objects.equals(serviceName, that.serviceName) &&
-                    Objects.equals(category, that.category) &&
+                    Objects.equals(businessType, that.businessType) &&
+                    Objects.equals(categoryCode, that.categoryCode) &&
                     Objects.equals(price, that.price) &&
                     Objects.equals(description, that.description) &&
                     Objects.equals(orderType, that.orderType) &&
@@ -74,19 +98,20 @@ public class MenuRequest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(serviceName, category, price, description,
-                    orderType, durationMinutes, imageUrl);
+            return Objects.hash(serviceName, businessType, categoryCode, price,
+                    description, orderType, durationMinutes, imageUrl);
         }
     }
 
     // 메뉴 수정 요청 (모든 필드 nullable for partial update)
+    // businessType, categoryCode 추가 (선택적 수정 가능)
     @Getter
     public static class UpdateMenu {
 
         @Size(max = 100, message = "서비스명은 100자 이하로 입력해주세요")
         private final String serviceName;
-
-        private final BusinessTypeCode category;
+        private final BusinessTypeCode businessType;
+        private final ServiceCategoryCode categoryCode;
 
         @Min(value = 0, message = "가격은 0원 이상이어야 합니다")
         private final Integer price;
@@ -94,7 +119,6 @@ public class MenuRequest {
         @Size(max = 500, message = "설명은 500자 이하로 입력해주세요")
         private final String description;
 
-        // ✅ 추가: 소요 시간 수정 (nullable)
         @Min(value = 1, message = "소요 시간은 최소 1분 이상이어야 합니다")
         private final Integer durationMinutes;
 
@@ -102,14 +126,16 @@ public class MenuRequest {
 
         public UpdateMenu(
                 String serviceName,
-                BusinessTypeCode category,
+                BusinessTypeCode businessType,
+                ServiceCategoryCode categoryCode,
                 Integer price,
                 String description,
                 Integer durationMinutes,
                 String imageUrl) {
 
             this.serviceName = serviceName;
-            this.category = category;
+            this.businessType = businessType;
+            this.categoryCode = categoryCode;
             this.price = price;
             this.description = description;
             this.durationMinutes = durationMinutes;
@@ -122,7 +148,8 @@ public class MenuRequest {
             if (other == null || getClass() != other.getClass()) return false;
             UpdateMenu that = (UpdateMenu) other;
             return Objects.equals(serviceName, that.serviceName) &&
-                    Objects.equals(category, that.category) &&
+                    Objects.equals(businessType, that.businessType) &&
+                    Objects.equals(categoryCode, that.categoryCode) &&
                     Objects.equals(price, that.price) &&
                     Objects.equals(description, that.description) &&
                     Objects.equals(durationMinutes, that.durationMinutes) &&
@@ -131,8 +158,8 @@ public class MenuRequest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(serviceName, category, price, description,
-                    durationMinutes, imageUrl);
+            return Objects.hash(serviceName, businessType, categoryCode, price,
+                    description, durationMinutes, imageUrl);
         }
     }
 }

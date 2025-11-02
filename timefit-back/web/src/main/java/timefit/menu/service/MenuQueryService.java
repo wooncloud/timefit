@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.business.service.validator.BusinessValidator;
-import timefit.menu.dto.MenuResponse;
 import timefit.menu.dto.MenuListResponse;
+import timefit.menu.dto.MenuResponse;
 import timefit.menu.entity.Menu;
 import timefit.menu.repository.MenuQueryRepository;
 import timefit.menu.service.validator.MenuValidator;
@@ -16,6 +16,8 @@ import java.util.UUID;
 
 /**
  * Menu 조회 전담 서비스
+ * - MenuResponse, MenuSummary가 BusinessCategory 정보 포함
+ * - 기존 조회 로직은 변경 불필요 (DTO의 of() 메서드가 처리)
  */
 @Slf4j
 @Service
@@ -29,6 +31,9 @@ public class MenuQueryService {
 
     /**
      * 메뉴 목록 조회 (업체별)
+     *
+     * @param businessId 업체 ID
+     * @return 활성화된 메뉴 목록
      */
     public MenuListResponse getMenuList(UUID businessId) {
         log.info("메뉴 목록 조회 시작: businessId={}", businessId);
@@ -36,7 +41,7 @@ public class MenuQueryService {
         // 업체 존재 확인
         businessValidator.validateBusinessExists(businessId);
 
-        // 활성화된 메뉴만 조회 (Custom Repository 사용)
+        // 활성화된 메뉴만 조회
         List<Menu> menus = menuQueryRepository.findActiveMenusByBusinessId(businessId);
 
         log.info("메뉴 목록 조회 완료: businessId={}, count={}", businessId, menus.size());
@@ -46,11 +51,15 @@ public class MenuQueryService {
 
     /**
      * 메뉴 상세 조회
+     *
+     * @param businessId 업체 ID
+     * @param menuId 메뉴 ID
+     * @return 메뉴 상세 정보
      */
     public MenuResponse getMenu(UUID businessId, UUID menuId) {
         log.info("메뉴 상세 조회 시작: businessId={}, menuId={}", businessId, menuId);
 
-        // Menu 조회 및 검증 (MenuValidator 사용)
+        // Menu 조회 및 검증
         Menu menu = menuValidator.validateMenuOfBusiness(menuId, businessId);
 
         log.info("메뉴 상세 조회 완료: menuId={}, serviceName={}",

@@ -8,7 +8,6 @@ import timefit.business.entity.BusinessTypeCode;
 import timefit.common.entity.BusinessRole;
 
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Business Request DTO
@@ -53,6 +52,7 @@ public class BusinessRequest {
         private String contactPhone;
         private String description;
         private String logoUrl;
+        private String businessNotice;
     }
 
     /**
