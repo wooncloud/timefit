@@ -10,7 +10,7 @@ import timefit.booking.entity.BookingSlot;
 import timefit.booking.repository.BookingSlotRepository;
 import timefit.booking.service.validator.BookingSlotValidator;
 import timefit.business.entity.Business;
-import timefit.business.entity.DayOfWeek;
+import timefit.common.entity.DayOfWeek;
 import timefit.business.entity.OperatingHours;
 import timefit.business.repository.OperatingHoursRepository;
 import timefit.business.service.validator.BusinessValidator;

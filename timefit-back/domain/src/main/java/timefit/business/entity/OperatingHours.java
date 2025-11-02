@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import timefit.common.entity.DayOfWeek;
 
 import java.time.LocalTime;
 

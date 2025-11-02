@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.business.entity.Business;
-import timefit.business.entity.DayOfWeek;
+import timefit.common.entity.DayOfWeek;
 import timefit.business.entity.OperatingHours;
 import timefit.business.entity.UserBusinessRole;
 import timefit.business.repository.OperatingHoursRepository;

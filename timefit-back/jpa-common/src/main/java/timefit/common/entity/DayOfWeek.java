@@ -1,4 +1,4 @@
-package timefit.business.entity;
+package timefit.common.entity;
 
 import lombok.Getter;
 

@@ -3,7 +3,7 @@ package timefit.business.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import timefit.business.entity.OperatingHours;
-import timefit.business.entity.DayOfWeek;
+import timefit.common.entity.DayOfWeek;
 
 import java.util.List;
 import java.util.UUID;
