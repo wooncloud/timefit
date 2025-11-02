@@ -11,7 +11,16 @@ import java.util.UUID;
 public interface BusinessRepositoryCustom {
 
     /**
-     * 키워드 통합 검색 (업체명, 업종, 주소)
+     * 통합 검색 - 모든 조건
+     * @param keyword 업체명 또는 주소 검색어
+     * @param businessTypeCode 업종 코드
+     * @param region 지역 검색어
+     */
+    Page<Business> searchBusinesses(String keyword, BusinessTypeCode businessTypeCode, String region, Pageable pageable);
+
+
+    /**
+     * 키워드 통합 검색 (업체명, 주소)
      */
     Page<Business> findByKeyword(String keyword, Pageable pageable);
 
@@ -40,14 +49,6 @@ public interface BusinessRepositoryCustom {
      * 복합 검색 - 업종과 지역
      */
     Page<Business> findByBusinessTypeAndRegion(BusinessTypeCode businessTypeCode, String region, Pageable pageable);
-
-    /**
-     * 통합 검색 - 모든 조건
-     * @param keyword 업체명 또는 주소 검색어
-     * @param businessTypeCode 업종 코드 (Enum 또는 String 으로 변환 가능)
-     * @param region 지역 검색어
-     */
-    Page<Business> searchBusinesses(String keyword, BusinessTypeCode businessTypeCode, String region, Pageable pageable);
 
     /**
      * 업체 통계 조회
