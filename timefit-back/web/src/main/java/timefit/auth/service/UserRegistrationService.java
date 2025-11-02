@@ -4,16 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import timefit.business.repository.BusinessRepository;
-import timefit.business.repository.UserBusinessRoleRepository;
-import timefit.exception.auth.AuthException;
-import timefit.exception.auth.AuthErrorCode;
+import timefit.auth.dto.AuthRequestDto;
+import timefit.auth.dto.AuthResponseDto;
+import timefit.auth.service.util.AuthTokenHelper;
+import timefit.auth.service.validator.AuthValidator;
 import timefit.user.entity.User;
 import timefit.user.repository.UserRepository;
-import timefit.auth.dto.AuthRequestDto;
-import timefit.auth.factory.UserFactory;
 
+/**
+ * 사용자 등록 전담 서비스
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -21,37 +21,40 @@ import timefit.auth.factory.UserFactory;
 public class UserRegistrationService {
 
     private final UserRepository userRepository;
+    private final AuthValidator authValidator;
+    private final AuthTokenHelper authTokenHelper;
 
     /**
-     * 사용자 등록 (User만 생성 (role: USER))
+     * 사용자 등록 (User 생성 + 토큰 발급)
+     *
+     * @return 회원가입 응답 DTO
      */
     @Transactional
-    public UserRegistrationResult registerUser(AuthRequestDto.UserSignUp request) {
+    public AuthResponseDto.UserSignUp registerUser(AuthRequestDto.UserSignUp request) {
 
-        // 1. 중복 체크
-        validateEmailDuplication(request);
+        // 1. 중복 체크 (Validator 사용)
+        authValidator.validateEmailNotDuplicated(request.getEmail());
 
-        // 2. User 생성 (role: USER)
-        User user = UserFactory.createUser(
+        // 2. User 생성 (Entity 정적 팩토리)
+        User user = User.createUser(
                 request.getEmail(),
                 request.getPassword(),
                 request.getName(),
                 request.getPhoneNumber()
         );
+
         User savedUser = userRepository.save(user);
 
-        log.info("순수 사용자 등록 완료: userId={}, role={}", savedUser.getId(), savedUser.getRole());
+        // 3. 토큰 생성 (Helper 사용)
+        AuthTokenHelper.TokenPair tokenPair = authTokenHelper.generateTokenPair(savedUser.getId());
 
-        return UserRegistrationResult.of(savedUser);
-    }
+        // 4. DTO 변환 및 반환
+        log.info("사용자 등록 완료: userId={}, role={}", savedUser.getId(), savedUser.getRole());
 
-    /**
-     * 중복 검증
-     */
-    private void validateEmailDuplication(AuthRequestDto.UserSignUp request) {
-        // 이메일 중복 체크
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new AuthException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
-        }
+        return AuthResponseDto.UserSignUp.of(
+                savedUser,
+                tokenPair.getAccessToken(),
+                tokenPair.getRefreshToken()
+        );
     }
 }

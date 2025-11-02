@@ -1,44 +1,90 @@
 package timefit.business.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import timefit.business.dto.BusinessRequestDto;
-import timefit.business.dto.BusinessResponseDto;
+import timefit.business.dto.BusinessRequest;
+import timefit.business.dto.BusinessResponse;
+import timefit.business.entity.BusinessTypeCode;
 import timefit.business.service.BusinessService;
 import timefit.common.ResponseData;
+import timefit.common.auth.CurrentUserId;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
 /**
+ * Business Controller
+ *
+ * 권한:
  * - OWNER: 모든 권한 (생성, 조회, 수정, 삭제, 구성원 관리)
  * - MANAGER: 업체 정보 조회/수정, 구성원 조회/초대 (삭제/권한변경 불가)
  * - MEMBER: 업체 정보 조회만 가능
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/business")
+@RequestMapping("/api/businesses")  // ✅ 복수형
 @RequiredArgsConstructor
 public class BusinessController {
 
     private final BusinessService businessService;
 
+    // ========================================
+    // 공개 API (인증 불필요)
+    // ========================================
+
+    /**
+     * 업체 상세 정보 조회 (공개)
+     * 권한: 누구나 조회 가능
+     */
+    @GetMapping("/{businessId}")
+    public ResponseData<BusinessResponse.PublicBusinessDetail> getBusinessDetail(
+            @PathVariable UUID businessId) {
+
+        log.info("업체 상세 조회 요청: businessId={}", businessId);
+
+        BusinessResponse.PublicBusinessDetail response = businessService.getBusinessDetail(businessId);
+        return ResponseData.of(response);
+    }
+
+    /**
+     * 업체 검색 (페이징)
+     * 권한: 누구나 검색 가능
+     */
+    @GetMapping("/search")
+    public ResponseData<BusinessResponse.BusinessSearchResult> searchBusinesses(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) BusinessTypeCode businessType,
+            @RequestParam(required = false) String region,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        log.info("업체 검색 요청: keyword={}, businessType={}, region={}, page={}, size={}",
+                keyword, businessType, region, page, size);
+
+        BusinessResponse.BusinessSearchResult response = businessService.searchBusinesses(
+                keyword, businessType, region, page, size);
+        return ResponseData.of(response);
+    }
+
+    // ========================================
+    // 인증 필요 API
+    // ========================================
+
     /**
      * 내가 속한 업체 목록 조회
      * 권한: 로그인한 사용자 본인 (모든 권한)
-     * + 근데 "나" 의 비즈니스 리스트를 보여주는거라 추가 url을 달아야될 것 같기도?
      */
-    @GetMapping
-    public ResponseData<List<BusinessResponseDto.BusinessSummary>> getMyBusinesses(HttpServletRequest request) {
-        UUID currentUserId = getCurrentUserId(request);
+    @GetMapping("/my")
+    public ResponseData<List<BusinessResponse.BusinessSummary>> getMyBusinesses(
+            @CurrentUserId UUID currentUserId) {  // ✅ @CurrentUserId 사용
 
         log.info("내 업체 목록 조회 요청: userId={}", currentUserId);
 
-        return businessService.getMyBusinesses(currentUserId);
+        List<BusinessResponse.BusinessSummary> response = businessService.getMyBusinesses(currentUserId);
+        return ResponseData.of(response);
     }
 
     /**
@@ -47,26 +93,14 @@ public class BusinessController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<BusinessResponseDto.BusinessDetail> createBusiness(
-            @Valid @RequestBody BusinessRequestDto.CreateBusiness request,
-            HttpServletRequest httpRequest) {
-        UUID currentUserId = getCurrentUserId(httpRequest);
+    public ResponseData<BusinessResponse.BusinessDetail> createBusiness(
+            @Valid @RequestBody BusinessRequest.CreateBusiness request,
+            @CurrentUserId UUID ownerId) {  // ✅ @CurrentUserId 사용
 
-        log.info("업체 생성 요청: userId={}, businessName={}", currentUserId, request.getBusinessName());
+        log.info("업체 생성 요청: ownerId={}, businessName={}", ownerId, request.getBusinessName());
 
-        return businessService.createBusiness(request, currentUserId);
-    }
-
-    /**
-     * 업체 상세 정보 조회
-     * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
-     */
-    @GetMapping("/{businessId}")
-    public ResponseData<BusinessResponseDto.PublicBusinessDetail> getBusinessDetail (
-            @PathVariable UUID businessId) {
-
-        log.info("업체 상세 조회 요청: businessId={},", businessId);
-        return businessService.getBusinessDetail(businessId);
+        BusinessResponse.BusinessDetail response = businessService.createBusiness(request, ownerId);
+        return ResponseData.of(response);
     }
 
     /**
@@ -74,81 +108,72 @@ public class BusinessController {
      * 권한: OWNER, MANAGER만 가능
      */
     @PutMapping("/{businessId}")
-    public ResponseData<BusinessResponseDto.BusinessProfile> updateBusiness (
+    public ResponseData<BusinessResponse.BusinessProfile> updateBusiness(
             @PathVariable UUID businessId,
-            @Valid @RequestBody BusinessRequestDto.UpdateBusiness request,
-            HttpServletRequest httpRequest) {
-        UUID currentUserId = getCurrentUserId(httpRequest);
+            @Valid @RequestBody BusinessRequest.UpdateBusiness request,
+            @CurrentUserId UUID currentUserId) {  // ✅ @CurrentUserId 사용
 
         log.info("업체 정보 수정 요청: businessId={}, userId={}", businessId, currentUserId);
 
-        return businessService.updateBusiness(businessId, request, currentUserId);
+        BusinessResponse.BusinessProfile response = businessService.updateBusiness(
+                businessId, request, currentUserId);
+        return ResponseData.of(response);
     }
-
 
     /**
      * 업체 삭제 (비활성화)
      * 권한: OWNER만 가능
      */
     @DeleteMapping("/{businessId}")
-    public ResponseData<BusinessResponseDto.DeleteResult> deleteBusiness(
+    public ResponseData<BusinessResponse.DeleteResult> deleteBusiness(
             @PathVariable UUID businessId,
-            @Valid @RequestBody BusinessRequestDto.DeleteBusiness request,
-            HttpServletRequest httpRequest) {
-        UUID currentUserId = getCurrentUserId(httpRequest);
+            @Valid @RequestBody BusinessRequest.DeleteBusiness request,
+            @CurrentUserId UUID currentUserId) {  // ✅ @CurrentUserId 사용
 
         log.info("업체 삭제 요청: businessId={}, userId={}", businessId, currentUserId);
 
-        return businessService.deleteBusiness(businessId, request, currentUserId);
+        BusinessResponse.DeleteResult response = businessService.deleteBusiness(
+                businessId, request, currentUserId);
+        return ResponseData.of(response);
     }
 
-    /**
-     * 업체 활성화/비활성화 토글
-     * 권한: OWNER만 가능
-     * 특징: 단순 상태 변경 (성공/실패만 반환)
-     */
-    @PostMapping("/{businessId}/toggle-status")
-    public ResponseData<String> toggleBusinessStatus(
-            @PathVariable UUID businessId,
-            HttpServletRequest httpRequest) {
-        UUID currentUserId = getCurrentUserId(httpRequest);
-
-        log.info("업체 상태 토글 요청: businessId={}, userId={}", businessId, currentUserId);
-
-        return businessService.toggleBusinessStatus(businessId, currentUserId);
-    }
+    // ========================================
+    // 구성원 관리 API
+    // ========================================
 
     /**
      * 업체 구성원 목록 조회
-     * 권한: OWNER, MANAGER만 가능
+     * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
      */
     @GetMapping("/{businessId}/members")
-    public ResponseData<List<BusinessResponseDto.BusinessMember>> getBusinessMembers(
+    public ResponseData<BusinessResponse.MembersListResult> getMembersList(
             @PathVariable UUID businessId,
-            HttpServletRequest request) {
-        UUID currentUserId = getCurrentUserId(request);
+            @CurrentUserId UUID currentUserId) {  // ✅ @CurrentUserId 사용
 
-        log.info("업체 구성원 목록 조회 요청: businessId={}, userId={}", businessId, currentUserId);
+        log.info("구성원 목록 조회 요청: businessId={}, userId={}", businessId, currentUserId);
 
-        return businessService.getBusinessMembers(businessId, currentUserId);
+        BusinessResponse.MembersListResult response = businessService.getMembersList(
+                businessId, currentUserId);
+        return ResponseData.of(response);
     }
 
     /**
      * 구성원 초대
-     * 권한: OWNER, MANAGER만 가능
+     * 권한: OWNER, MANAGER (MANAGER는 MANAGER/MEMBER만 초대 가능)
      */
-    @PostMapping("/{businessId}/members/invite")
+    @PostMapping("/{businessId}/members")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<BusinessResponseDto.InvitationResult> inviteUser(
+    public ResponseData<BusinessResponse.InvitationResult> inviteUser(
             @PathVariable UUID businessId,
-            @Valid @RequestBody BusinessRequestDto.InviteUser request,
-            HttpServletRequest httpRequest) {
-        UUID currentUserId = getCurrentUserId(httpRequest);
+            @Valid @RequestBody BusinessRequest.InviteUser request,
+            @CurrentUserId UUID inviterUserId) {  // ✅ @CurrentUserId 사용
 
-        log.info("구성원 초대 요청: businessId={}, inviterUserId={}, inviteeEmail={}",
-                businessId, currentUserId, request.getEmail());
+        log.info("구성원 초대 요청: businessId={}, inviterUserId={}, email={}, role={}",
+                businessId, inviterUserId, request.getEmail(), request.getRole());
 
-        return businessService.inviteUser(businessId, request, currentUserId);
+        BusinessResponse.InvitationResult response = businessService.inviteUser(
+                businessId, request, inviterUserId);
+        return ResponseData.of(response);
     }
 
     /**
@@ -159,65 +184,30 @@ public class BusinessController {
     public ResponseData<Void> changeUserRole(
             @PathVariable UUID businessId,
             @PathVariable UUID targetUserId,
-            @Valid @RequestBody BusinessRequestDto.ChangeRole request,
-            HttpServletRequest httpRequest) {
-        UUID currentUserId = getCurrentUserId(httpRequest);
+            @Valid @RequestBody BusinessRequest.ChangeRole request,
+            @CurrentUserId UUID currentUserId) {  // ✅ @CurrentUserId 사용
 
         log.info("구성원 권한 변경 요청: businessId={}, targetUserId={}, newRole={}, requesterUserId={}",
                 businessId, targetUserId, request.getNewRole(), currentUserId);
 
-        return businessService.changeUserRole(businessId, targetUserId, request, currentUserId);
+        businessService.changeUserRole(businessId, targetUserId, request, currentUserId);
+        return ResponseData.of(null);
     }
 
     /**
      * 구성원 제거
-     * 권한: OWNER만 가능
+     * 권한: OWNER는 모든 구성원 제거 가능, MANAGER는 MEMBER만 제거 가능
      */
     @DeleteMapping("/{businessId}/members/{targetUserId}")
-    public ResponseData<Void> removeBusinessMember(
+    public ResponseData<Void> removeMember(
             @PathVariable UUID businessId,
             @PathVariable UUID targetUserId,
-            HttpServletRequest httpRequest) {
-        UUID currentUserId = getCurrentUserId(httpRequest);
+            @CurrentUserId UUID requesterUserId) {  // ✅ @CurrentUserId 사용
 
         log.info("구성원 제거 요청: businessId={}, targetUserId={}, requesterUserId={}",
-                businessId, targetUserId, currentUserId);
+                businessId, targetUserId, requesterUserId);
 
-        return businessService.removeBusinessMember(businessId, targetUserId, currentUserId);
-    }
-
-    /**
-     * 업체 검색 (공개 API - 인증 불필요)
-     * 권한: 모든 사용자 (로그인 불필요)
-     */
-    @GetMapping("/search")
-    public ResponseData<BusinessResponseDto.BusinessSearchResult> searchBusinesses(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String businessType,
-            @RequestParam(required = false) String region,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-
-        log.info("업체 검색 요청: keyword={}, businessType={}, region={}, page={}, size={}",
-                keyword, businessType, region, page, size);
-
-        return businessService.searchBusinesses(keyword, businessType, region, page, size);
-    }
-
-
-
-
-    /**
-     * 현재 사용자 ID 추출 (AuthFilter 에서 설정)
-     */
-    private UUID getCurrentUserId(HttpServletRequest request) {
-        // AuthFilter 에서 request.setAttribute("userId", userId) 설정
-        Object userId = request.getAttribute("userId");
-
-        if (userId == null) {
-            throw new RuntimeException("사용자 인증 정보가 없습니다. AuthFilter 확인 필요");
-        }
-
-        return (UUID) userId;
+        businessService.removeMember(businessId, targetUserId, requesterUserId);
+        return ResponseData.of(null);
     }
 }

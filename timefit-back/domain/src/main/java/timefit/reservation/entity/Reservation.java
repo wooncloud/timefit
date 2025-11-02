@@ -1,22 +1,27 @@
 package timefit.reservation.entity;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import timefit.business.entity.Business;
+import timefit.booking.entity.BookingSlot;
+import timefit.menu.entity.Menu;
+import timefit.user.entity.User;
+import timefit.common.entity.BaseEntity;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import timefit.business.entity.Business;
-import timefit.common.entity.BaseEntity;
-import timefit.service.entity.Service;
-import timefit.user.entity.User;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+/**
+ * - BookingSlot 참조로 변경
+ * - 스냅샷 필드 추가 (예약 시점의 가격, 소요시간 보존)
+ * - ONDEMAND 와 RESERVATION 모두 지원
+ */
 @Entity
 @Table(name = "reservation")
 @Getter
@@ -33,13 +38,18 @@ public class Reservation extends BaseEntity {
     @JoinColumn(name = "business_id", nullable = false)
     private Business business;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id")
-    private Service service;
+    @JoinColumn(name = "menu_id", nullable = false)
+    private Menu menu;
 
+    /**
+     * 변경: slot → bookingSlot
+     * ONDEMAND_BASED일 때는 null, RESERVATION_BASED일 때는 필수
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "slot_id")
-    private ReservationTimeSlot slot;
+    @JoinColumn(name = "booking_slot_id")  // slot_id → booking_slot_id
+    private BookingSlot bookingSlot;  // slot → bookingSlot
 
     @NotNull(message = "예약 날짜는 필수입니다")
     @Column(name = "reservation_date", nullable = false)
@@ -52,29 +62,37 @@ public class Reservation extends BaseEntity {
     @Column(name = "reservation_number", length = 50)
     private String reservationNumber;
 
+    /**
+     * 예약 시점의 가격 스냅샷
+     * 메뉴 가격이 변경되어도 예약 시점 가격 유지
+     */
+    @NotNull(message = "총 금액은 필수입니다")
+    @Column(name = "reservation_price", nullable = false)
+    private Integer reservationPrice;
+
+    /**
+     * 예약 시점의 소요 시간 스냅샷 (분)
+     * 메뉴 소요시간이 변경되어도 예약 시점 소요시간 유지
+     */
     @NotNull(message = "소요 시간은 필수입니다")
     @Min(value = 1, message = "소요 시간은 1분 이상이어야 합니다")
-    @Column(name = "duration_minutes", nullable = false)
-    private Integer durationMinutes;
+    @Column(name = "reservation_duration", nullable = false)
+    private Integer reservationDuration;
 
-    @NotNull(message = "총 금액은 필수입니다")
-    @Min(value = 0, message = "총 금액은 0원 이상이어야 합니다")
-    @Column(name = "total_price", nullable = false)
-    private Integer totalPrice;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ReservationStatus status = ReservationStatus.PENDING;
-
-    @NotBlank(message = "고객명은 필수입니다")
+    @NotNull(message = "고객명은 필수입니다")
     @Size(max = 50, message = "고객명은 50자 이하로 입력해주세요")
     @Column(name = "customer_name", nullable = false, length = 50)
     private String customerName;
 
-    @NotBlank(message = "고객 연락처는 필수입니다")
+    @NotNull(message = "고객 연락처는 필수입니다")
     @Size(max = 20, message = "연락처는 20자 이하로 입력해주세요")
     @Column(name = "customer_phone", nullable = false, length = 20)
     private String customerPhone;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ReservationStatus status;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
@@ -82,19 +100,21 @@ public class Reservation extends BaseEntity {
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
 
-    // 정적 팩토리 메써드
-    public static Reservation createReservation(User customer, Business business, ReservationTimeSlot slot,
-                                                LocalDate reservationDate, LocalTime reservationTime,
-                                                Integer durationMinutes, Integer totalPrice,
-                                                String customerName, String customerPhone, String notes) {
+    // RESERVATION_BASED 예약 생성 (슬롯 기반)
+    public static Reservation createReservationBased(User customer, Business business, Menu menu,
+                                                     BookingSlot bookingSlot, String customerName,
+                                                     String customerPhone, String notes) {
+        validateReservationBasedFields(menu, bookingSlot);
+
         Reservation reservation = new Reservation();
         reservation.customer = customer;
         reservation.business = business;
-        reservation.slot = slot;
-        reservation.reservationDate = reservationDate;
-        reservation.reservationTime = reservationTime;
-        reservation.durationMinutes = durationMinutes;
-        reservation.totalPrice = totalPrice;
+        reservation.menu = menu;
+        reservation.bookingSlot = bookingSlot;
+        reservation.reservationDate = bookingSlot.getSlotDate();
+        reservation.reservationTime = bookingSlot.getStartTime();
+        reservation.reservationPrice = menu.getPrice();
+        reservation.reservationDuration = menu.getDurationMinutes();
         reservation.status = ReservationStatus.PENDING;
         reservation.customerName = customerName;
         reservation.customerPhone = customerPhone;
@@ -102,6 +122,46 @@ public class Reservation extends BaseEntity {
         return reservation;
     }
 
+    // ONDEMAND_BASED 예약 생성 (즉시 주문)
+    public static Reservation createOnDemandBased(User customer, Business business, Menu menu,
+                                                  LocalDate reservationDate, LocalTime reservationTime,
+                                                  String customerName, String customerPhone, String notes) {
+        validateOnDemandBasedFields(menu);
+
+        Reservation reservation = new Reservation();
+        reservation.customer = customer;
+        reservation.business = business;
+        reservation.menu = menu;
+        reservation.bookingSlot = null;  // ONDEMAND 는 슬롯 없음
+        reservation.reservationDate = reservationDate;
+        reservation.reservationTime = reservationTime;
+        reservation.reservationPrice = menu.getPrice();
+        reservation.reservationDuration = menu.getDurationMinutes();
+        reservation.status = ReservationStatus.PENDING;
+        reservation.customerName = customerName;
+        reservation.customerPhone = customerPhone;
+        reservation.notes = notes;
+        return reservation;
+    }
+
+    // RESERVATION_BASED 검증
+    private static void validateReservationBasedFields(Menu menu, BookingSlot bookingSlot) {
+        if (!menu.isReservationBased()) {
+            throw new IllegalArgumentException("예약형 메뉴만 슬롯 기반 예약이 가능합니다");
+        }
+        if (bookingSlot == null) {
+            throw new IllegalArgumentException("예약형은 BookingSlot이 필수입니다");
+        }
+    }
+
+    // ONDEMAND_BASED 검증
+    private static void validateOnDemandBasedFields(Menu menu) {
+        if (!menu.isOnDemandBased()) {
+            throw new IllegalArgumentException("주문형 메뉴만 즉시 예약이 가능합니다");
+        }
+    }
+
+    // 예약 번호 설정
     public void updateReservationNumber(String reservationNumber) {
         this.reservationNumber = reservationNumber;
     }
@@ -112,92 +172,101 @@ public class Reservation extends BaseEntity {
         this.reservationTime = newTime;
     }
 
+    // 고객 정보 수정
+    public void updateCustomerInfo(String customerName, String customerPhone) {
+        if (customerName != null) {
+            this.customerName = customerName;
+        }
+        if (customerPhone != null) {
+            this.customerPhone = customerPhone;
+        }
+    }
+
     // 예약 메모 수정
     public void updateNotes(String newNotes) {
         this.notes = newNotes;
     }
 
-    // 예약 취소
-    public void cancelReservation(String reason) {
-        if (this.status == ReservationStatus.CANCELLED) {
-            throw new IllegalStateException("이미 취소된 예약입니다");
-        }
-
-        if (this.status == ReservationStatus.COMPLETED || this.status == ReservationStatus.NO_SHOW) {
-            throw new IllegalStateException("완료되거나 노쇼 처리된 예약은 취소할 수 없습니다");
-        }
-
-        this.status = ReservationStatus.CANCELLED;
-        this.notes = (this.notes != null ? this.notes + "\n" : "") + "[취소사유] " + reason;
-    }
-
-    /**
-     * 예약 상태 변경 (승인/거절)
-     */
-    public void updateStatus(ReservationStatus newStatus, String reason) {
-        // 상태 변경 검증
-        if (newStatus == null) {
-            throw new IllegalArgumentException("변경할 상태는 필수입니다");
-        }
-
-        // 동일한 상태로 변경 방지
-        if (this.status == newStatus) {
-            throw new IllegalStateException("이미 " + newStatus + " 상태입니다");
-        }
-
-        // 상태 변경
+    // 예약 상태 변경
+    public void updateStatus(ReservationStatus newStatus) {
         this.status = newStatus;
 
-        // 사유가 있으면 메모에 추가
-        if (reason != null && !reason.trim().isEmpty()) {
-            String statusMessage = getStatusMessage(newStatus);
-            this.notes = (this.notes != null ? this.notes + "\n" : "") +
-                    "[" + statusMessage + "] " + reason;
+        // 취소 시 취소 시간 기록
+        if (ReservationStatus.CANCELLED == newStatus) {
+            this.cancelledAt = LocalDateTime.now();
         }
     }
 
-    /**
-     * 예약 완료/노쇼 처리
-     */
-    public void completeReservation(ReservationStatus completionStatus, String completionNotes) {
-        // 완료 상태 검증
-        if (completionStatus != ReservationStatus.COMPLETED &&
-                completionStatus != ReservationStatus.NO_SHOW) {
-            throw new IllegalArgumentException("완료 상태는 COMPLETED 또는 NO_SHOW만 가능합니다");
+    // 예약 확정
+    public void confirm() {
+        if (status != ReservationStatus.PENDING) {
+            throw new IllegalStateException("대기 중인 예약만 확정할 수 있습니다");
         }
-
-        // 현재 상태 검증
-        if (this.status != ReservationStatus.CONFIRMED) {
-            throw new IllegalStateException("확정된 예약만 완료 처리할 수 있습니다");
-        }
-
-        // 상태 변경
-        this.status = completionStatus;
-
-        // 완료 메모 추가 (기존 getStatusMessage 메서드 재사용)
-        if (completionNotes != null && !completionNotes.trim().isEmpty()) {
-            String statusMessage = getStatusMessage(completionStatus);
-            this.notes = (this.notes != null ? this.notes + "\n" : "") +
-                    "[" + statusMessage + "] " + completionNotes;
-        }
+        this.status = ReservationStatus.CONFIRMED;
     }
 
-    /**
-     * 상태별 메시지 생성
-     */
-    private String getStatusMessage(ReservationStatus status) {
-        switch (status) {
-            case CONFIRMED:
-                return "승인";
-            case CANCELLED:
-                return "거절";
-            case COMPLETED:
-                return "완료";
-            case NO_SHOW:
-                return "노쇼";
-            default:
-                return "상태변경";
+    // 예약 완료
+    public void complete() {
+        if (status != ReservationStatus.CONFIRMED) {
+            throw new IllegalStateException("확정된 예약만 완료할 수 있습니다");
         }
+        this.status = ReservationStatus.COMPLETED;
     }
 
+    // 예약 취소
+    public void cancel() {
+        if (status == ReservationStatus.COMPLETED) {
+            throw new IllegalStateException("완료된 예약은 취소할 수 없습니다");
+        }
+        this.status = ReservationStatus.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
+    }
+
+    // 노쇼 처리
+    public void markAsNoShow() {
+        if (status != ReservationStatus.CONFIRMED) {
+            throw new IllegalStateException("확정된 예약만 노쇼 처리할 수 있습니다");
+        }
+        this.status = ReservationStatus.NO_SHOW;
+    }
+
+    // 예약형(슬롯 기반) 예약인지 확인
+    public boolean isReservationBased() {
+        return bookingSlot != null;
+    }
+
+    // 주문형(즉시) 예약인지 확인
+    public boolean isOnDemandBased() {
+        return bookingSlot == null;
+    }
+
+    // 활성 예약인지 확인 (취소/노쇼 제외)
+    public boolean isActiveReservation() {
+        return status != ReservationStatus.CANCELLED && status != ReservationStatus.NO_SHOW;
+    }
+
+    // 취소 가능한 상태인지 확인
+    public boolean isCancellable() {
+        return status == ReservationStatus.PENDING || status == ReservationStatus.CONFIRMED;
+    }
+
+    // 과거 예약인지 확인
+    public boolean isPastReservation() {
+        return reservationDate.isBefore(LocalDate.now());
+    }
+
+    // 오늘 예약인지 확인
+    public boolean isTodayReservation() {
+        return reservationDate.equals(LocalDate.now());
+    }
+
+    // 예약 시점 가격 반환 (스냅샷)
+    public Integer getSnapshotPrice() {
+        return reservationPrice;
+    }
+
+    // 예약 시점 소요시간 반환 (스냅샷)
+    public Integer getSnapshotDuration() {
+        return reservationDuration;
+    }
 }

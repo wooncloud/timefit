@@ -1,60 +1,87 @@
 package timefit.reservation.dto;
 
+import jakarta.validation.constraints.*;
 import lombok.Getter;
-import timefit.reservation.entity.ReservationStatus;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Reservation Request DTO
+ * 예약 관련 모든 요청 DTO를 포함
+ */
 public class ReservationRequestDto {
 
     /**
-     * 예약 신청 요청
+     * 예약 생성 요청 (고객용)
+     * RESERVATION_BASED와 ONDEMAND_BASED 모두 지원
      */
     @Getter
     public static class CreateReservation {
+
+        @NotNull(message = "업체 ID는 필수입니다")
         private final UUID businessId;
-        private final UUID customerId;
-        private final UUID availableSlotId;
-        private final Integer totalPrice;
+
+        @NotNull(message = "메뉴 ID는 필수입니다")
+        private final UUID menuId;
+
+        // RESERVATION_BASED 예약 시 필수 (슬롯 기반)
+        private final UUID bookingSlotId;
+
+        // ONDEMAND_BASED 예약 시 필수 (즉시 예약)
+        private final LocalDate reservationDate;
+        private final LocalTime reservationTime;
+
+        @NotNull(message = "서비스 시간은 필수입니다")
+        @Min(value = 10, message = "최소 10분 이상이어야 합니다")
+        @Max(value = 480, message = "최대 8시간을 초과할 수 없습니다")
         private final Integer durationMinutes;
-        private final List<SelectedOption> selectedOptions;
-        private final String notes;
+
+        @NotNull(message = "예약 금액은 필수입니다")
+        @Min(value = 0, message = "금액은 0원 이상이어야 합니다")
+        private final Integer totalPrice;
+
+        @NotBlank(message = "예약자 이름은 필수입니다")
+        @Size(max = 50, message = "이름은 50자를 초과할 수 없습니다")
         private final String customerName;
+
+        @NotBlank(message = "연락처는 필수입니다")
+        @Pattern(regexp = "^\\d{10,11}$", message = "올바른 전화번호 형식이 아닙니다")
         private final String customerPhone;
 
-        private CreateReservation(UUID businessId, UUID customerId, UUID availableSlotId, Integer totalPrice,
-                                    Integer durationMinutes, List<SelectedOption> selectedOptions,
-                                    String notes, String customerName, String customerPhone) {
+        @Size(max = 500, message = "메모는 500자를 초과할 수 없습니다")
+        private final String notes;
+
+        private CreateReservation(UUID businessId, UUID menuId, UUID bookingSlotId,
+                                  LocalDate reservationDate, LocalTime reservationTime,
+                                  Integer durationMinutes, Integer totalPrice,
+                                  String customerName, String customerPhone, String notes) {
             this.businessId = businessId;
-            this.customerId = customerId;
-            this.availableSlotId = availableSlotId;
-            this.totalPrice = totalPrice;
+            this.menuId = menuId;
+            this.bookingSlotId = bookingSlotId;
+            this.reservationDate = reservationDate;
+            this.reservationTime = reservationTime;
             this.durationMinutes = durationMinutes;
-            this.selectedOptions = selectedOptions;
-            this.notes = notes;
+            this.totalPrice = totalPrice;
             this.customerName = customerName;
             this.customerPhone = customerPhone;
+            this.notes = notes;
         }
 
-        public static CreateReservation of(UUID businessId, UUID customerId, UUID availableSlotId, Integer totalPrice,
-                                            Integer durationMinutes, List<SelectedOption> selectedOptions,
-                                            String notes, String customerName, String customerPhone) {
-            return new CreateReservation(businessId, customerId, availableSlotId, durationMinutes, totalPrice,
-                    selectedOptions, notes, customerName, customerPhone);
+        /**
+         * RESERVATION_BASED 예약인지 확인
+         */
+        public boolean isReservationBased() {
+            return bookingSlotId != null;
         }
 
-        // 총 금액 계산
-        public Integer getTotalPrice() {
-            if (selectedOptions == null || selectedOptions.isEmpty()) {
-                return this.totalPrice;
-            }
-            return selectedOptions.stream()
-                    .mapToInt(SelectedOption::getPrice)
-                    .sum();
+        /**
+         * ONDEMAND_BASED 예약인지 확인
+         */
+        public boolean isOnDemandBased() {
+            return bookingSlotId == null && reservationDate != null && reservationTime != null;
         }
 
         @Override
@@ -63,121 +90,52 @@ public class ReservationRequestDto {
             if (other == null || getClass() != other.getClass()) return false;
             CreateReservation that = (CreateReservation) other;
             return Objects.equals(businessId, that.businessId) &&
-                    Objects.equals(customerId, that.customerId) &&
-                    Objects.equals(availableSlotId, that.availableSlotId) &&
-                    Objects.equals(totalPrice, that.totalPrice) &&
-                    Objects.equals(durationMinutes, that.durationMinutes) &&
-                    Objects.equals(selectedOptions, that.selectedOptions) &&
-                    Objects.equals(notes, that.notes) &&
-                    Objects.equals(customerName, that.customerName) &&
-                    Objects.equals(customerPhone, that.customerPhone);
+                    Objects.equals(menuId, that.menuId) &&
+                    Objects.equals(bookingSlotId, that.bookingSlotId) &&
+                    Objects.equals(reservationDate, that.reservationDate) &&
+                    Objects.equals(reservationTime, that.reservationTime);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(businessId, customerId, availableSlotId, durationMinutes, totalPrice,
-                    selectedOptions, notes, customerName, customerPhone);
+            return Objects.hash(businessId, menuId, bookingSlotId, reservationDate, reservationTime);
         }
     }
 
     /**
-     * 선택된 서비스 옵션
-     */
-    @Getter
-    public static class SelectedOption {
-        private final UUID optionId;
-        private final String optionName;
-        private final Integer price;
-
-        private SelectedOption(UUID optionId, String optionName, Integer price) {
-            this.optionId = optionId;
-            this.optionName = optionName;
-            this.price = price;
-        }
-
-        public static SelectedOption of(UUID optionId, String optionName, Integer price) {
-            return new SelectedOption(optionId, optionName, price);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-            SelectedOption that = (SelectedOption) other;
-            return Objects.equals(optionId, that.optionId) &&
-                    Objects.equals(optionName, that.optionName) &&
-                    Objects.equals(price, that.price);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(optionId, optionName, price);
-        }
-    }
-
-    /**
-     * 내 예약 목록 조회 요청
-     */
-    @Getter
-    public static class GetMyReservations {
-        private final String status;
-        private final String startDate;
-        private final String endDate;
-        private final UUID businessId;
-        private final Integer page;
-        private final Integer size;
-
-        private GetMyReservations(String status, String startDate, String endDate, UUID businessId, Integer page, Integer size) {
-            this.status = status;
-            this.startDate = startDate;
-            this.endDate = endDate;
-            this.businessId = businessId;
-            this.page = page != null ? page : 0;
-            this.size = size != null ? size : 20;
-        }
-
-        public static GetMyReservations of(String status, String startDate, String endDate, UUID businessId, Integer page, Integer size) {
-            return new GetMyReservations(status, startDate, endDate, businessId, page, size);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-            GetMyReservations that = (GetMyReservations) other;
-            return Objects.equals(status, that.status) &&
-                    Objects.equals(startDate, that.startDate) &&
-                    Objects.equals(endDate, that.endDate) &&
-                    Objects.equals(businessId, that.businessId) &&
-                    Objects.equals(page, that.page) &&
-                    Objects.equals(size, that.size);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(status, startDate, endDate, businessId, page, size);
-        }
-    }
-
-    /**
-     * 예약 수정 요청
+     * 예약 수정 요청 (고객용)
      */
     @Getter
     public static class UpdateReservation {
+
         private final LocalDate reservationDate;
         private final LocalTime reservationTime;
+        private final String customerName;
+        private final String customerPhone;
+
+        @Size(max = 500, message = "메모는 500자를 초과할 수 없습니다")
         private final String notes;
+
+        @NotBlank(message = "수정 사유는 필수입니다")
+        @Size(max = 200, message = "수정 사유는 200자를 초과할 수 없습니다")
         private final String reason;
 
-        private UpdateReservation(LocalDate reservationDate, LocalTime reservationTime, String notes, String reason) {
+        private UpdateReservation(LocalDate reservationDate, LocalTime reservationTime,
+                                  String customerName, String customerPhone,
+                                  String notes, String reason) {
             this.reservationDate = reservationDate;
             this.reservationTime = reservationTime;
+            this.customerName = customerName;
+            this.customerPhone = customerPhone;
             this.notes = notes;
             this.reason = reason;
         }
 
-        public static UpdateReservation of(LocalDate reservationDate, LocalTime reservationTime, String notes, String reason) {
-            return new UpdateReservation(reservationDate, reservationTime, notes, reason);
+        public static UpdateReservation of(LocalDate reservationDate, LocalTime reservationTime,
+                                           String customerName, String customerPhone,
+                                           String notes, String reason) {
+            return new UpdateReservation(reservationDate, reservationTime, customerName,
+                    customerPhone, notes, reason);
         }
 
         @Override
@@ -187,21 +145,23 @@ public class ReservationRequestDto {
             UpdateReservation that = (UpdateReservation) other;
             return Objects.equals(reservationDate, that.reservationDate) &&
                     Objects.equals(reservationTime, that.reservationTime) &&
-                    Objects.equals(notes, that.notes) &&
                     Objects.equals(reason, that.reason);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(reservationDate, reservationTime, notes, reason);
+            return Objects.hash(reservationDate, reservationTime, reason);
         }
     }
 
     /**
-     * 예약 취소 요청
+     * 예약 취소 요청 (고객용)
      */
     @Getter
     public static class CancelReservation {
+
+        @NotBlank(message = "취소 사유는 필수입니다")
+        @Size(max = 200, message = "취소 사유는 200자를 초과할 수 없습니다")
         private final String reason;
 
         private CancelReservation(String reason) {
@@ -225,64 +185,4 @@ public class ReservationRequestDto {
             return Objects.hash(reason);
         }
     }
-
-    /**
-     * 예약 상태 변경 요청 (승인/거절)
-     */
-    @Getter
-    public static class ChangeReservationStatus {
-        private final ReservationStatus status;
-        private final String reason;
-
-        private ChangeReservationStatus(ReservationStatus status, String reason) {
-            this.status = status;
-            this.reason = reason;
-        }
-
-        public static ChangeReservationStatus of(ReservationStatus status, String reason) {
-            return new ChangeReservationStatus(status, reason);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-            ChangeReservationStatus that = (ChangeReservationStatus) other;
-            return Objects.equals(status, that.status) && Objects.equals(reason, that.reason);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(status, reason);
-        }
-    }
-
-    @Getter
-    public static class CompleteReservation {
-        private final ReservationStatus status;
-        private final String notes;
-
-        private CompleteReservation(ReservationStatus status, String notes) {
-            this.status = status;
-            this.notes = notes;
-        }
-
-        public static CompleteReservation of(ReservationStatus status, String notes) {
-            return new CompleteReservation(status, notes);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-            CompleteReservation that = (CompleteReservation) other;
-            return Objects.equals(status, that.status) && Objects.equals(notes, that.notes);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(status, notes);
-        }
-    }
-
 }

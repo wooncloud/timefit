@@ -3,6 +3,7 @@ package timefit.business.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import timefit.business.entity.Business;
+import timefit.business.entity.BusinessTypeCode;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,7 +11,16 @@ import java.util.UUID;
 public interface BusinessRepositoryCustom {
 
     /**
-     * 키워드 통합 검색 (업체명, 업종, 주소)
+     * 통합 검색 - 모든 조건
+     * @param keyword 업체명 또는 주소 검색어
+     * @param businessTypeCode 업종 코드
+     * @param region 지역 검색어
+     */
+    Page<Business> searchBusinesses(String keyword, BusinessTypeCode businessTypeCode, String region, Pageable pageable);
+
+
+    /**
+     * 키워드 통합 검색 (업체명, 주소)
      */
     Page<Business> findByKeyword(String keyword, Pageable pageable);
 
@@ -21,8 +31,9 @@ public interface BusinessRepositoryCustom {
 
     /**
      * 업종별 조회 (페이징)
+     * @param businessTypeCode Enum 코드로 검색
      */
-    Page<Business> findByBusinessType(String businessType, Pageable pageable);
+    Page<Business> findByBusinessType(BusinessTypeCode businessTypeCode, Pageable pageable);
 
     /**
      * 지역별 검색 (페이징)
@@ -32,22 +43,17 @@ public interface BusinessRepositoryCustom {
     /**
      * 복합 검색 - 업체명과 업종
      */
-    Page<Business> findByBusinessNameAndType(String businessName, String businessType, Pageable pageable);
+    Page<Business> findByBusinessNameAndType(String businessName, BusinessTypeCode businessTypeCode, Pageable pageable);
 
     /**
      * 복합 검색 - 업종과 지역
      */
-    Page<Business> findByBusinessTypeAndRegion(String businessType, String region, Pageable pageable);
-
-    /**
-     * 통합 검색 - 모든 조건 (DTO 의존성 제거)
-     */
-    Page<Business> searchBusinesses(String keyword, String businessType, String region, Pageable pageable);
+    Page<Business> findByBusinessTypeAndRegion(BusinessTypeCode businessTypeCode, String region, Pageable pageable);
 
     /**
      * 업체 통계 조회
      */
-    long countByBusinessType(String businessType);
+    long countByBusinessType(BusinessTypeCode businessTypeCode);
     long countByRegion(String region);
 
     /**
