@@ -4,7 +4,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
-import timefit.business.entity.BusinessTypeCode;
 import timefit.menu.entity.Menu;
 import timefit.menu.entity.QMenu;
 
@@ -55,13 +54,18 @@ public class MenuQueryRepositoryImpl implements MenuQueryRepository {
                 .fetch();
     }
 
+    /**
+     * BusinessCategory별 메뉴 조회
+     * - menu.businessCategory.id로 조인 및 필터링
+     */
     @Override
-    public List<Menu> findMenusByCategory(UUID businessId, BusinessTypeCode category) {
+    public List<Menu> findMenusByBusinessCategory(UUID businessId, UUID businessCategoryId) {
         return queryFactory
                 .selectFrom(menu)
                 .where(
                         menu.business.id.eq(businessId)
-                                .and(category != null ? menu.category.eq(category) : null)
+                                .and(businessCategoryId != null ?
+                                        menu.businessCategory.id.eq(businessCategoryId) : null)
                 )
                 .orderBy(menu.serviceName.asc())
                 .fetch();

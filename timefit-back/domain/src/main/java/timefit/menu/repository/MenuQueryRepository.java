@@ -1,6 +1,5 @@
 package timefit.menu.repository;
 
-import timefit.business.entity.BusinessTypeCode;
 import timefit.menu.entity.Menu;
 
 import java.util.List;
@@ -17,7 +16,13 @@ public interface MenuQueryRepository {
     // 가격 범위로 검색 (업체 내)
     List<Menu> findMenusByPriceRange(UUID businessId, Integer minPrice, Integer maxPrice);
 
-    // 카테고리별 메뉴 조회 (업체 내)
-    // 수정: String → BusinessTypeCode enum
-    List<Menu> findMenusByCategory(UUID businessId, BusinessTypeCode category);
+    /**
+     * BusinessCategory별 메뉴 조회
+     * - 특정 업체의 특정 카테고리에 속한 메뉴 조회
+     *
+     * @param businessId 업체 ID
+     * @param businessCategoryId BusinessCategory ID
+     * @return 해당 카테고리의 메뉴 목록
+     */
+    List<Menu> findMenusByBusinessCategory(UUID businessId, UUID businessCategoryId);
 }
