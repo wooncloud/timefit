@@ -33,11 +33,16 @@ clean {
     delete file(querydslDir)
 }
 
+
 jar {
     enabled = true
     archiveClassifier = ''
 }
 
 bootJar {
+    enabled = false
+}
+
+bootRun {
     enabled = false
 }

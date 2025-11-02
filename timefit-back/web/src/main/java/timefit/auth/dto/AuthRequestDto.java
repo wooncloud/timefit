@@ -136,6 +136,35 @@ public class AuthRequestDto {
         }
     }
 
+
+    @Getter
+    public static class TokenRefresh {
+        private final String refreshToken;
+
+        private TokenRefresh(String refreshToken) {
+            this.refreshToken = refreshToken;
+        }
+
+        public static TokenRefresh of(String refreshToken) {
+            return new TokenRefresh(refreshToken);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (other == null || getClass() != other.getClass()) return false;
+
+            TokenRefresh that = (TokenRefresh) other;
+
+            return Objects.equals(refreshToken, that.refreshToken);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(refreshToken);
+        }
+    }
+
     @Getter
     public static class OAuthUserInfo {
         private final String email;

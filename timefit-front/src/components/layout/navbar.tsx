@@ -1,6 +1,11 @@
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { getCurrentUserFromSession } from '@/lib/session/server';
 
-export function Navbar() {
+export async function Navbar() {
+  const user = await getCurrentUserFromSession();
+  const isAuthenticated = Boolean(user);
+
   return (
     <nav className="sticky top-0 z-50 border-b bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -16,12 +21,20 @@ export function Navbar() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden items-center space-x-4 md:flex">
-            <Link
-              href="/signin"
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              로그인
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/business">
+                <Button>사업자 페이지</Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/signin">
+                  <Button>로그인</Button>
+                </Link>
+                <Link href="/signup">
+                  <Button variant="outline">회원가입</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

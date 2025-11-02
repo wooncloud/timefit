@@ -12,9 +12,15 @@ import java.util.UUID;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
 
-    // 예약 번호 생성용 - 특정 날짜의 예약 개수 조회
+    List<Reservation> findByCustomerIdOrderByReservationDateDesc(UUID customerId);
+
+    List<Reservation> findByBusinessIdOrderByReservationDateDesc(UUID businessId);
+
+    List<Reservation> findByCustomerIdAndStatus(UUID customerId, ReservationStatus status);
+
+    List<Reservation> findByBusinessIdAndStatus(UUID businessId, ReservationStatus status);
+
+    List<Reservation> findByBookingSlotIdAndStatusNotIn(UUID bookingSlotId, List<ReservationStatus> excludedStatuses);
+
     long countByReservationDate(LocalDate reservationDate);
-
-    Long countBySlotIdAndStatusNotIn(UUID slotId, List<ReservationStatus> excludedStatuses);
-
 }

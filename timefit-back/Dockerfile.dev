@@ -1,0 +1,28 @@
+# Development Dockerfile with hot reload support
+FROM openjdk:21-jdk-slim
+
+WORKDIR /workspace
+
+# Gradle Wrapper 복사 및 권한 설정
+COPY gradlew .
+COPY gradle gradle/
+RUN chmod +x ./gradlew
+
+# 기본 설정 파일들 복사
+COPY build.gradle .
+COPY settings.gradle .
+
+# 서브모듈 build.gradle 파일들 복사
+COPY domain/build.gradle domain/
+COPY jpa-common/build.gradle jpa-common/
+COPY user/build.gradle user/
+COPY web/build.gradle web/
+
+# 의존성 미리 다운로드 (캐시 최적화)
+RUN ./gradlew dependencies --no-daemon || true
+
+# 포트 노출
+EXPOSE 8080
+
+# 개발 서버 실행 (volume mount된 코드 사용)
+CMD ["./gradlew", ":web:bootRun", "--no-daemon"]

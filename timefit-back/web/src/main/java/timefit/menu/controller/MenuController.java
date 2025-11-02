@@ -1,0 +1,115 @@
+package timefit.menu.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import timefit.common.ResponseData;
+import timefit.common.auth.CurrentUserId;
+import timefit.menu.dto.MenuRequest;
+import timefit.menu.dto.MenuResponse;
+import timefit.menu.dto.MenuListResponse;
+import timefit.menu.service.MenuService;
+
+import java.util.UUID;
+
+/**
+ * Menu Controller
+ * - 메뉴 CRUD 관리
+ * - 업체별 메뉴 조회 (공개 API)
+ * - 메뉴 생성/수정/삭제 (인증 필요)
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/businesses/{businessId}/menus")
+@RequiredArgsConstructor
+public class MenuController {
+
+    private final MenuService menuService;
+
+    /**
+     * 메뉴 목록 조회
+     * 권한: 불필요 (공개 API)
+     */
+    @GetMapping
+    public ResponseEntity<ResponseData<MenuListResponse>> getMenuList(
+            @PathVariable UUID businessId) {
+
+        log.info("메뉴 목록 조회 요청: businessId={}", businessId);
+
+        MenuListResponse response = menuService.getMenuList(businessId);
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
+    /**
+     * 메뉴 상세 조회
+     * 권한: 불필요 (공개 API)
+     */
+    @GetMapping("/{menuId}")
+    public ResponseEntity<ResponseData<MenuResponse>> getMenu(
+            @PathVariable UUID businessId,
+            @PathVariable UUID menuId) {
+
+        log.info("메뉴 상세 조회 요청: businessId={}, menuId={}", businessId, menuId);
+
+        MenuResponse response = menuService.getMenu(businessId, menuId);
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
+    /**
+     * 메뉴 생성
+     * 권한: OWNER, MANAGER
+     */
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<ResponseData<MenuResponse>> createMenu(
+            @PathVariable UUID businessId,
+            @Valid @RequestBody MenuRequest.CreateMenu request,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("메뉴 생성 요청: businessId={}, userId={}, serviceName={}",
+                businessId, currentUserId, request.getServiceName());
+
+        MenuResponse response = menuService.createMenu(businessId, request, currentUserId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseData.of(response));
+    }
+
+    /**
+     * 메뉴 수정
+     * 권한: OWNER, MANAGER
+     */
+    @PutMapping("/{menuId}")
+    public ResponseEntity<ResponseData<MenuResponse>> updateMenu(
+            @PathVariable UUID businessId,
+            @PathVariable UUID menuId,
+            @Valid @RequestBody MenuRequest.UpdateMenu request,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("메뉴 수정 요청: businessId={}, menuId={}, userId={}",
+                businessId, menuId, currentUserId);
+
+        MenuResponse response = menuService.updateMenu(businessId, menuId, request, currentUserId);
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
+    /**
+     * 메뉴 삭제 (비활성화)
+     * 권한: OWNER, MANAGER
+     */
+    @DeleteMapping("/{menuId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public ResponseEntity<Void> deleteMenu(
+            @PathVariable UUID businessId,
+            @PathVariable UUID menuId,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("메뉴 삭제 요청: businessId={}, menuId={}, userId={}",
+                businessId, menuId, currentUserId);
+
+        menuService.deleteMenu(businessId, menuId, currentUserId);
+        return ResponseEntity.noContent().build();
+    }
+
+}

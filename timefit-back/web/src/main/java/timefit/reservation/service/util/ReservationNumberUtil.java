@@ -1,31 +1,39 @@
 package timefit.reservation.service.util;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import timefit.reservation.entity.Reservation;
-import timefit.reservation.repository.ReservationRepository;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
+/**
+ * 예약 번호 생성 유틸리티
+ *
+ * 형식: RES-20251020143052-A1B2C3
+ * - RES: 예약 식별자
+ * - 20251020143052: 생성 시각 (yyyyMMddHHmmss)
+ * - A1B2C3: 랜덤 6자리 (충돌 방지)
+ */
 @Component
-@RequiredArgsConstructor
 public class ReservationNumberUtil {
 
-    private final ReservationRepository reservationRepository;
+    private static final String PREFIX = "RES";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    private static final int RANDOM_LENGTH = 6;
 
     /**
-     * 예약 번호 생성 (RES-20240615-001 형식)
+     * 예약 번호 생성
+     *
+     * @return 생성된 예약 번호 (예: RES-20251020143052-A1B2C3)
      */
-    public String generateReservationNumber(Reservation reservation) {
-        return this.generateReservationNumber(reservation.getReservationDate());
-    }
+    public String generate() {
+        String datePart = LocalDateTime.now().format(DATE_FORMATTER);
+        String randomPart = UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, RANDOM_LENGTH)
+                .toUpperCase();
 
-    /**
-     * 특정 날짜의 예약 번호 생성
-     */
-    private String generateReservationNumber(LocalDate reservationDate) {
-        String dateStr = reservationDate.toString().replace("-", "");
-        long sequence = reservationRepository.countByReservationDate(reservationDate) + 1;
-        return String.format("RES-%s-%03d", dateStr, sequence);
+        return String.format("%s-%s-%s", PREFIX, datePart, randomPart);
     }
 }

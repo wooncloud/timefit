@@ -1,0 +1,167 @@
+### 토큰 갱신 API 테스트
+
+### 1. 회원가입 (토큰 획득용)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "refresh-test@timefit.com",
+  "password": "SecureP@ss123!",
+  "name": "김토큰",
+  "phoneNumber": "010-1234-5678"
+}
+> {%
+    client.test("회원가입 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+        client.assert(response.headers.valueOf("Authorization"), "Authorization 헤더가 있어야 함");
+        client.assert(response.body.data.accessToken, "accessToken이 응답에 있어야 함");
+        client.assert(response.body.data.refreshToken, "refreshToken이 응답에 있어야 함");
+    });
+
+    const authHeader = response.headers.valueOf("Authorization");
+    const accessToken = response.body.data.accessToken;
+    const refreshToken = response.body.data.refreshToken;
+
+    client.global.set("authHeader", authHeader);
+    client.global.set("accessToken", accessToken);
+    client.global.set("refreshToken", refreshToken);
+
+    console.log("=== 회원가입 성공 ===");
+    console.log("Authorization:", authHeader?.substring(0, 30) + "...");
+    console.log("AccessToken:", accessToken?.substring(0, 30) + "...");
+    console.log("RefreshToken:", refreshToken?.substring(0, 30) + "...");
+%}
+
+### 2. 로그인 (새로운 토큰 쌍 획득)
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "refresh-test@timefit.com",
+  "password": "SecureP@ss123!"
+}
+> {%
+    client.test("로그인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.headers.valueOf("Authorization"), "Authorization 헤더가 있어야 함");
+        client.assert(response.body.data.accessToken, "accessToken이 응답에 있어야 함");
+        client.assert(response.body.data.refreshToken, "refreshToken이 응답에 있어야 함");
+    });
+
+    const authHeader = response.headers.valueOf("Authorization");
+    const accessToken = response.body.data.accessToken;
+    const refreshToken = response.body.data.refreshToken;
+
+    client.global.set("loginAuthHeader", authHeader);
+    client.global.set("loginAccessToken", accessToken);
+    client.global.set("loginRefreshToken", refreshToken);
+
+    console.log("=== 로그인 성공 ===");
+    console.log("사용자:", response.body.data.name, response.body.data.email);
+    console.log("AccessToken:", accessToken?.substring(0, 30) + "...");
+    console.log("RefreshToken:", refreshToken?.substring(0, 30) + "...");
+%}
+
+### 3. JWT 토큰 유효성 확인 (디버깅용)
+GET http://localhost:8080/api/auth/status-test
+Authorization: {{loginAuthHeader}}
+
+> {%
+    console.log("=== JWT 토큰 유효성 테스트 ===");
+    console.log("Status:", response.status);
+    console.log("Response:", JSON.stringify(response.body, null, 2));
+
+    if (response.status !== 200) {
+        console.log("토큰 검증 실패!");
+    } else {
+        console.log("토큰 검증 성공!");
+    }
+%}
+
+### 4. 토큰 갱신 테스트 - 성공 케이스
+POST http://localhost:8080/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{loginRefreshToken}}"
+}
+
+> {%
+    console.log("=== 토큰 갱신 테스트 ===");
+    console.log("갱신 요청 상태:", response.status);
+    console.log("갱신 응답:", JSON.stringify(response.body, null, 2));
+
+    client.test("토큰 갱신 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+        client.assert(response.body.success === true, "success가 true여야 함");
+        client.assert(response.body.data.accessToken, "새로운 accessToken이 있어야 함");
+        client.assert(response.body.data.refreshToken, "새로운 refreshToken이 있어야 함");
+        client.assert(response.body.data.tokenType === "Bearer", "tokenType이 Bearer여야 함");
+        client.assert(response.body.data.expiresIn > 0, "expiresIn이 0보다 커야 함");
+    });
+
+    if (response.body.data) {
+        const newAccessToken = response.body.data.accessToken;
+        const newRefreshToken = response.body.data.refreshToken;
+        const expiresIn = response.body.data.expiresIn;
+
+        client.global.set("newAccessToken", newAccessToken);
+        client.global.set("newRefreshToken", newRefreshToken);
+        client.global.set("newAuthHeader", "Bearer " + newAccessToken);
+
+        console.log("새로운 AccessToken:", newAccessToken?.substring(0, 30) + "...");
+        console.log("새로운 RefreshToken:", newRefreshToken?.substring(0, 30) + "...");
+        console.log("만료 시간(초):", expiresIn);
+
+        // 토큰이 실제로 다른지 확인
+        console.log("토큰 변경 확인:");
+        console.log("- AccessToken 변경됨:", newAccessToken !== client.global.get("loginAccessToken"));
+        console.log("- RefreshToken 변경됨:", newRefreshToken !== client.global.get("loginRefreshToken"));
+    }
+%}
+
+### 5. 갱신된 토큰으로 API 호출 테스트
+GET http://localhost:8080/api/auth/status-test
+Authorization: {{newAuthHeader}}
+
+> {%
+    console.log("=== 갱신된 토큰 유효성 테스트 ===");
+    console.log("Status:", response.status);
+    console.log("Response:", JSON.stringify(response.body, null, 2));
+
+    client.test("갱신된 토큰 사용 가능", function() {
+        client.assert(response.status === 200, "갱신된 토큰으로 API 호출 성공해야 함");
+    });
+
+    if (response.status === 200) {
+        console.log("✅ 갱신된 토큰이 정상적으로 작동합니다!");
+    } else {
+        console.log("❌ 갱신된 토큰이 작동하지 않습니다.");
+    }
+%}
+
+### 6. 갱신된 RefreshToken으로 다시 갱신 테스트
+POST http://localhost:8080/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{newRefreshToken}}"
+}
+
+> {%
+    console.log("=== 2차 토큰 갱신 테스트 ===");
+    console.log("2차 갱신 요청 상태:", response.status);
+    console.log("2차 갱신 응답:", JSON.stringify(response.body, null, 2));
+
+    client.test("2차 토큰 갱신 성공", function() {
+        client.assert(response.status === 200, "2차 토큰 갱신도 성공해야 함");
+        client.assert(response.body.data.accessToken, "2차 갱신 accessToken이 있어야 함");
+        client.assert(response.body.data.refreshToken, "2차 갱신 refreshToken이 있어야 함");
+    });
+
+    if (response.body.data) {
+        console.log("✅ 2차 토큰 갱신도 성공!");
+        console.log("최종 AccessToken:", response.body.data.accessToken?.substring(0, 30) + "...");
+        console.log("최종 RefreshToken:", response.body.data.refreshToken?.substring(0, 30) + "...");
+    }
+%}
