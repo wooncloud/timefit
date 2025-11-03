@@ -21,7 +21,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/businesses/{businessId}/booking-slots")
+@RequestMapping("/api/business/{businessId}/booking-slots")
 @RequiredArgsConstructor
 public class BookingSlotController {
 
