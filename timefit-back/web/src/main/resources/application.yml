@@ -79,3 +79,15 @@ spring:
 
 ---
 
+# SpringDoc 최소 설정 추가
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha          # 태그(컨트롤러) 알파벳 순 정렬
+    operations-sorter: method   # API 메서드별 정렬 (GET, POST, PUT...)
+  paths-to-match:
+    - /api/**                   # /api/** 경로만 문서화
