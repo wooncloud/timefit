@@ -23,7 +23,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/businesses/{businessId}/menus")
+@RequestMapping("/api/businesses/{businessId}/menu")
 @RequiredArgsConstructor
 public class MenuController {
 
