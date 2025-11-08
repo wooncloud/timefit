@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const response = await fetch(`${BACKEND_API_URL}/api/business`, {
+    const response = await fetch(`${BACKEND_API_URL}/api/businesses`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
