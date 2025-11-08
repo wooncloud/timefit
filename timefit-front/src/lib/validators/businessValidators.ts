@@ -16,7 +16,7 @@ const contactPhonePattern = /^(0\d{1,2})-\d{3,4}-\d{4}$/;
  */
 export const initialBusinessSignupForm: BusinessSignupFormData = {
   businessName: '',
-  businessType: '',
+  businessTypes: [],
   businessNumber: '',
   address: '',
   contactPhone: '',
@@ -35,8 +35,8 @@ export function validateBusinessSignupForm(
     errors.businessName = '회사명을 입력해주세요.';
   }
 
-  if (!formData.businessType) {
-    errors.businessType = '업종을 선택해주세요.';
+  if (!formData.businessTypes || formData.businessTypes.length === 0) {
+    errors.businessTypes = '업종을 선택해주세요.';
   }
 
   const businessNumber = formData.businessNumber.trim();

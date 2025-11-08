@@ -30,11 +30,11 @@ export function useBusinessSignup(options: UseBusinessSignupOptions = {}) {
     process.env.NODE_ENV === 'development'
       ? {
           businessName: '타임핏 주식회사',
-          businessType: 'BD002',
+          businessTypes: ['BD005'],
           businessNumber: '123-45-67890',
           address: '서울시 강남구 테헤란로 123',
           contactPhone: '02-1234-5678',
-          description: '헬스/피트니스 사업을 운영하고 있습니다.',
+          description: '피트니스/스포츠 사업을 운영하고 있습니다.',
         }
       : initialBusinessSignupForm
   );
@@ -70,16 +70,16 @@ export function useBusinessSignup(options: UseBusinessSignupOptions = {}) {
     }
   };
 
-  const handleBusinessTypeChange = (value: string) => {
+  const handleBusinessTypesChange = (values: string[]) => {
     setFormData((prev) => ({
       ...prev,
-      businessType: value,
+      businessTypes: values,
     }));
 
-    if (errors.businessType) {
+    if (errors.businessTypes) {
       setErrors((prev) => ({
         ...prev,
-        businessType: undefined,
+        businessTypes: undefined,
       }));
     }
   };
@@ -102,7 +102,7 @@ export function useBusinessSignup(options: UseBusinessSignupOptions = {}) {
     try {
       const requestBody: CreateBusinessRequestBody = {
         businessName: formData.businessName.trim(),
-        businessType: formData.businessType,
+        businessTypes: formData.businessTypes,
         businessNumber: formData.businessNumber,
         address: formData.address.trim(),
         contactPhone: formData.contactPhone,
@@ -146,7 +146,7 @@ export function useBusinessSignup(options: UseBusinessSignupOptions = {}) {
     isLoading,
     message,
     handleInputChange,
-    handleBusinessTypeChange,
+    handleBusinessTypesChange,
     handleSubmit,
   };
 }
