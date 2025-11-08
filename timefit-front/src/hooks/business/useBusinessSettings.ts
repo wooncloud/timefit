@@ -30,9 +30,9 @@ export function useBusinessSettings() {
   });
 
   useEffect(() => {
-    const fetchMyBusinesses = async () => {
+    const fetchMyBusiness = async () => {
       try {
-        const result = await businessService.getMyBusinesses();
+        const result = await businessService.getMyBusiness();
         if (result.success && result.data && result.data[0]) {
           const businessData = result.data[0];
           setBusiness(businessData);
@@ -54,7 +54,7 @@ export function useBusinessSettings() {
       }
     };
 
-    fetchMyBusinesses();
+    fetchMyBusiness();
   }, []);
 
   const handleInputChange = (

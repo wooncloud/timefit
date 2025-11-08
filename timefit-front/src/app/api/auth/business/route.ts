@@ -41,13 +41,13 @@ export async function POST(request: NextRequest) {
     }
 
     // console.log('[Business API] Backend 요청:', {
-    //   url: `${BACKEND_API_URL}/api/businesses`,
+    //   url: `${BACKEND_API_URL}/api/business`,
     //   method: 'POST',
     //   hasAuthHeader: true,
     //   body: body,
     // });
 
-    const response = await fetch(`${BACKEND_API_URL}/api/businesses`, {
+    const response = await fetch(`${BACKEND_API_URL}/api/business`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

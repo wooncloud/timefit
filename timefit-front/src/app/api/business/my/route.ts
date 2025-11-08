@@ -37,7 +37,7 @@ export async function GET(): Promise<NextResponse<GetMyBusinessHandlerResponse>>
       );
     }
 
-    const url = `${BACKEND_API_URL}/api/businesses/my?CurrentUserId=${userId}`;
+    const url = `${BACKEND_API_URL}/api/business/my?CurrentUserId=${userId}`;
     console.log('Fetching:', url);
 
     const response = await fetch(url, {

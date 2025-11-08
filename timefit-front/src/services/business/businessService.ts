@@ -34,7 +34,7 @@ class BusinessService {
   /**
    * 내 사업자 목록 조회
    */
-  async getMyBusinesses(): Promise<GetMyBusinessHandlerResponse> {
+  async getMyBusiness(): Promise<GetMyBusinessHandlerResponse> {
     const response = await fetch(`${this.businessApiUrl}/my`, {
       method: 'GET',
       headers: {
