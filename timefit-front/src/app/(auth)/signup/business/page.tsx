@@ -14,148 +14,18 @@ import {
 } from '@/components/ui/select';
 import { CalendarClock } from 'lucide-react';
 import Link from 'next/link';
-import { ChangeEvent, FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  initialBusinessSignupForm,
-  validateBusinessSignupForm,
-  formatBusinessNumber,
-  formatContactPhone,
-} from './business';
-import {
-  BusinessSignupFormData,
-  BusinessSignupFormErrors,
-  CreateBusinessHandlerResponse,
-  CreateBusinessRequestBody,
-} from '@/types/auth/business/createBusiness';
-
-/*
-[RESPONSE]
-businessId
-businessName
-businessType
-businessNumber
-address
-contactPhone
-description
-logoUrl
-myRole
-totalMembers
-createdAt
-updatedAt
- */
+import { useBusinessSignup } from '@/hooks/business/useBusinessSignup';
 
 export default function BusinessSignUpPage() {
-  const [formData, setFormData] = useState<BusinessSignupFormData>(
-    process.env.NODE_ENV === 'development'
-      ? {
-          businessName: '타임핏 주식회사',
-          businessType: 'BD002',
-          businessNumber: '123-45-67890',
-          address: '서울시 강남구 테헤란로 123',
-          contactPhone: '02-1234-5678',
-          description: '헬스/피트니스 사업을 운영하고 있습니다.',
-        }
-      : initialBusinessSignupForm
-  );
-  const [errors, setErrors] = useState<BusinessSignupFormErrors>({});
-  const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-
-  const handleInputChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = event.target;
-    const fieldName = name as keyof BusinessSignupFormData;
-
-    let nextValue = value;
-    if (fieldName === 'businessNumber') {
-      nextValue = formatBusinessNumber(value);
-    } else if (fieldName === 'contactPhone') {
-      nextValue = formatContactPhone(value);
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: nextValue,
-    }));
-
-    if (errors[fieldName]) {
-      setErrors(prev => ({
-        ...prev,
-        [fieldName]: undefined,
-      }));
-    }
-  };
-
-  const handleBusinessTypeChange = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      businessType: value,
-    }));
-
-    if (errors.businessType) {
-      setErrors(prev => ({
-        ...prev,
-        businessType: undefined,
-      }));
-    }
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const { isValid, errors: validationErrors } =
-      validateBusinessSignupForm(formData);
-    setErrors(validationErrors);
-
-    if (!isValid) {
-      return;
-    }
-
-    setIsLoading(true);
-    setMessage('');
-
-    try {
-      const requestBody: CreateBusinessRequestBody = {
-        businessName: formData.businessName.trim(),
-        businessType: formData.businessType,
-        businessNumber: formData.businessNumber,
-        address: formData.address.trim(),
-        contactPhone: formData.contactPhone,
-        ...(formData.description.trim()
-          ? { description: formData.description.trim() }
-          : {}),
-      };
-
-      const response = await fetch('/api/auth/business', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = (await response.json()) as CreateBusinessHandlerResponse;
-
-      if (data.success) {
-        setMessage('사업자 등록이 완료되었습니다. 사업자 페이지로 이동합니다.');
-        setFormData(() => ({ ...initialBusinessSignupForm }));
-        setErrors({});
-        setTimeout(() => {
-          router.replace('/business');
-        }, 1500);
-      } else {
-        setMessage(data.message || '사업자 등록에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('사업자 등록 요청 오류:', error);
-      setMessage('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    formData,
+    errors,
+    isLoading,
+    message,
+    handleInputChange,
+    handleBusinessTypeChange,
+    handleSubmit,
+  } = useBusinessSignup();
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
