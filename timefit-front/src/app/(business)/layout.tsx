@@ -5,7 +5,7 @@ import { BusinessHeader } from '@/components/business/business-header';
 import { getCurrentUserFromSession } from '@/lib/session/server';
 
 export const metadata: Metadata = {
-  title: '%s | TimeFit',
+  title: 'TimeFit - 예약 관리 시스템',
   description: '비즈니스를 위한 스마트한 예약 관리 솔루션',
 };
 
