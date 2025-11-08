@@ -6,86 +6,11 @@ import { CalendarClock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChangeEvent, FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { initialSigninForm, validateSigninForm } from './signin';
-import {
-  SigninFormData,
-  SigninFormErrors,
-  SigninHandlerResponse,
-  SigninRequestBody,
-} from '@/types/auth/signin';
+import { useSignin } from '@/hooks/auth/useSignin';
 
 export default function BusinessSignInPage() {
-  const [formData, setFormData] = useState<SigninFormData>(initialSigninForm);
-  const [errors, setErrors] = useState<SigninFormErrors>({});
-  const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'user' | 'business'>('user');
-  const router = useRouter();
-
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    const fieldName = name as keyof SigninFormData;
-
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: value,
-    }));
-
-    if (errors[fieldName]) {
-      setErrors(prev => ({
-        ...prev,
-        [fieldName]: undefined,
-      }));
-    }
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const { isValid, errors: validationErrors } = validateSigninForm(formData);
-    setErrors(validationErrors);
-
-    if (!isValid) {
-      return;
-    }
-
-    setIsLoading(true);
-    setMessage('');
-
-    try {
-      const requestBody: SigninRequestBody = {
-        email: formData.email,
-        password: formData.password,
-      };
-
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = (await response.json()) as SigninHandlerResponse;
-
-      if (data.success) {
-        setMessage('로그인에 성공했습니다. 메인 페이지로 이동합니다.');
-        setTimeout(() => {
-          router.replace('/');
-        }, 1500);
-      } else {
-        setMessage(data.message || '로그인에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('로그인 요청 오류:', error);
-      setMessage('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { formData, errors, isLoading, message, handleInputChange, handleSubmit } =
+    useSignin();
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
