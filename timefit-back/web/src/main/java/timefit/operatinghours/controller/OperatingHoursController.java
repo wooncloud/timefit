@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/businesses/{businessId}/operating-hours")
+@RequestMapping("/api/business/{businessId}/operating-hours")
 @RequiredArgsConstructor
 public class OperatingHoursController {
 
