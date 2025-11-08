@@ -5,13 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
 import { CalendarClock } from 'lucide-react';
 import Link from 'next/link';
 import { useBusinessSignup } from '@/hooks/business/useBusinessSignup';
@@ -79,29 +73,11 @@ export default function BusinessSignUpPage() {
           </div>
           <div className="grid gap-1">
             <Label htmlFor="businessTypes">업종</Label>
-            <Select
+            <BusinessTypeSelect
               value={formData.businessTypes[0] || ''}
               onValueChange={(value) => handleBusinessTypesChange([value])}
-            >
-              <SelectTrigger
-                id="businessTypes"
-                className={errors.businessTypes ? 'border-red-500' : ''}
-              >
-                <SelectValue placeholder="업종 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="BD000">음식점업</SelectItem>
-                <SelectItem value="BD001">숙박업</SelectItem>
-                <SelectItem value="BD002">소매/유통업</SelectItem>
-                <SelectItem value="BD003">미용/뷰티업</SelectItem>
-                <SelectItem value="BD004">의료업</SelectItem>
-                <SelectItem value="BD005">피트니스/스포츠업</SelectItem>
-                <SelectItem value="BD006">교육/문화업</SelectItem>
-                <SelectItem value="BD007">전문서비스업</SelectItem>
-                <SelectItem value="BD008">생활서비스업</SelectItem>
-                <SelectItem value="BD009">제조/생산업</SelectItem>
-              </SelectContent>
-            </Select>
+              className={errors.businessTypes ? 'border-red-500' : ''}
+            />
             {errors.businessTypes && (
               <span className="text-sm text-red-500">
                 {errors.businessTypes}
