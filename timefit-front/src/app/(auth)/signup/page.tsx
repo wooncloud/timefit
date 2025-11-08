@@ -19,11 +19,11 @@ import {
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState<SignupFormData>({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    name: '',
-    phoneNumber: '',
+    email: process.env.NODE_ENV === 'development' ? 'test@example.com' : '',
+    password: process.env.NODE_ENV === 'development' ? 'Test1234!' : '',
+    confirmPassword: process.env.NODE_ENV === 'development' ? 'Test1234!' : '',
+    name: process.env.NODE_ENV === 'development' ? '홍길동' : '',
+    phoneNumber: process.env.NODE_ENV === 'development' ? '010-1234-5678' : '',
   });
   const [isBusiness, setIsBusiness] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

@@ -47,7 +47,16 @@ updatedAt
 
 export default function BusinessSignUpPage() {
   const [formData, setFormData] = useState<BusinessSignupFormData>(
-    initialBusinessSignupForm
+    process.env.NODE_ENV === 'development'
+      ? {
+          businessName: '타임핏 주식회사',
+          businessType: 'BD002',
+          businessNumber: '123-45-67890',
+          address: '서울시 강남구 테헤란로 123',
+          contactPhone: '02-1234-5678',
+          description: '헬스/피트니스 사업을 운영하고 있습니다.',
+        }
+      : initialBusinessSignupForm
   );
   const [errors, setErrors] = useState<BusinessSignupFormErrors>({});
   const [message, setMessage] = useState('');
