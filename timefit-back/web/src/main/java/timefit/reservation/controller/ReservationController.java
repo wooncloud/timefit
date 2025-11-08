@@ -37,7 +37,7 @@ public class ReservationController {
      * 예약 생성
      * POST /api/reservations
      */
-    @PostMapping("/api/reservations")
+    @PostMapping("/api/reservation")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseData<ReservationResponseDto.ReservationDetail> createReservation(
             @Valid @RequestBody ReservationRequestDto.CreateReservation request,
@@ -84,7 +84,7 @@ public class ReservationController {
      * 예약 상세 조회
      * GET /api/reservations/{reservationId}
      */
-    @GetMapping("/api/reservations/{reservationId}")
+    @GetMapping("/api/reservation/{reservationId}")
     public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> getReservationDetail(
             @PathVariable UUID reservationId,
             @CurrentUserId UUID customerId) {
@@ -99,7 +99,7 @@ public class ReservationController {
      * 예약 수정
      * PUT /api/reservations/{reservationId}
      */
-    @PutMapping("/api/reservations/{reservationId}")
+    @PutMapping("/api/reservation/{reservationId}")
     public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> updateReservation(
             @PathVariable UUID reservationId,
             @Valid @RequestBody ReservationRequestDto.UpdateReservation request,
@@ -115,7 +115,7 @@ public class ReservationController {
      * 예약 취소
      * DELETE /api/reservations/{reservationId}
      */
-    @DeleteMapping("/api/reservations/{reservationId}")
+    @DeleteMapping("/api/reservation/{reservationId}")
     public ResponseData<ReservationResponseDto.ReservationCancelResult> cancelReservation(
             @PathVariable UUID reservationId,
             @Valid @RequestBody ReservationRequestDto.CancelReservation request,
@@ -135,7 +135,7 @@ public class ReservationController {
      * 업체 예약 목록 조회
      * GET /api/businesses/{businessId}/reservations
      */
-    @GetMapping("/api/businesses/{businessId}/reservations")
+    @GetMapping("/api/business/{businessId}/reservations")
     public ResponseData<ReservationResponseDto.BusinessReservationListResult> getBusinessReservations(
             @PathVariable UUID businessId,
             @RequestParam(required = false) String status,
@@ -156,7 +156,7 @@ public class ReservationController {
      * 예약 승인
      * POST /api/businesses/{businessId}/reservations/{reservationId}/approve
      */
-    @PostMapping("/api/businesses/{businessId}/reservations/{reservationId}/approve")
+    @PostMapping("/api/business/{businessId}/reservation/{reservationId}/approve")
     public ResponseData<ReservationResponseDto.ReservationStatusChangeResult> approveReservation(
             @PathVariable UUID businessId,
             @PathVariable UUID reservationId,
@@ -172,7 +172,7 @@ public class ReservationController {
      * 예약 거절
      * POST /api/businesses/{businessId}/reservations/{reservationId}/reject
      */
-    @PostMapping("/api/businesses/{businessId}/reservations/{reservationId}/reject")
+    @PostMapping("/api/business/{businessId}/reservation/{reservationId}/reject")
     public ResponseData<ReservationResponseDto.ReservationStatusChangeResult> rejectReservation(
             @PathVariable UUID businessId,
             @PathVariable UUID reservationId,
@@ -190,7 +190,7 @@ public class ReservationController {
      * 예약 완료 처리
      * POST /api/businesses/{businessId}/reservations/{reservationId}/complete
      */
-    @PostMapping("/api/businesses/{businessId}/reservations/{reservationId}/complete")
+    @PostMapping("/api/business/{businessId}/reservation/{reservationId}/complete")
     public ResponseData<ReservationResponseDto.ReservationCompletionResult> completeReservation(
             @PathVariable UUID businessId,
             @PathVariable UUID reservationId,
@@ -208,7 +208,7 @@ public class ReservationController {
      * 노쇼 처리
      * POST /api/businesses/{businessId}/reservations/{reservationId}/no-show
      */
-    @PostMapping("/api/businesses/{businessId}/reservations/{reservationId}/no-show")
+    @PostMapping("/api/business/{businessId}/reservation/{reservationId}/no-show")
     public ResponseData<ReservationResponseDto.ReservationCompletionResult> markAsNoShow(
             @PathVariable UUID businessId,
             @PathVariable UUID reservationId,

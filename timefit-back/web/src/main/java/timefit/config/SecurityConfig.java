@@ -54,6 +54,7 @@ public class SecurityConfig {
                         // 개발/모니터링 도구
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
 

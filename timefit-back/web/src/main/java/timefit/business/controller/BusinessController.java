@@ -17,7 +17,6 @@ import java.util.UUID;
 
 /**
  * Business Controller
- *
  * 권한:
  * - OWNER: 모든 권한 (생성, 조회, 수정, 삭제, 구성원 관리)
  * - MANAGER: 업체 정보 조회/수정, 구성원 조회/초대 (삭제/권한변경 불가)
@@ -25,7 +24,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/businesses")  // ✅ 복수형
+@RequestMapping("/api/business")
 @RequiredArgsConstructor
 public class BusinessController {
 
@@ -79,7 +78,7 @@ public class BusinessController {
      */
     @GetMapping("/my")
     public ResponseData<List<BusinessResponse.BusinessSummary>> getMyBusinesses(
-            @CurrentUserId UUID currentUserId) {  // ✅ @CurrentUserId 사용
+            @CurrentUserId UUID currentUserId) {
 
         log.info("내 업체 목록 조회 요청: userId={}", currentUserId);
 
@@ -95,7 +94,7 @@ public class BusinessController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseData<BusinessResponse.BusinessDetail> createBusiness(
             @Valid @RequestBody BusinessRequest.CreateBusiness request,
-            @CurrentUserId UUID ownerId) {  // ✅ @CurrentUserId 사용
+            @CurrentUserId UUID ownerId) {
 
         log.info("업체 생성 요청: ownerId={}, businessName={}", ownerId, request.getBusinessName());
 
@@ -111,7 +110,7 @@ public class BusinessController {
     public ResponseData<BusinessResponse.BusinessProfile> updateBusiness(
             @PathVariable UUID businessId,
             @Valid @RequestBody BusinessRequest.UpdateBusiness request,
-            @CurrentUserId UUID currentUserId) {  // ✅ @CurrentUserId 사용
+            @CurrentUserId UUID currentUserId) {
 
         log.info("업체 정보 수정 요청: businessId={}, userId={}", businessId, currentUserId);
 
@@ -128,7 +127,7 @@ public class BusinessController {
     public ResponseData<BusinessResponse.DeleteResult> deleteBusiness(
             @PathVariable UUID businessId,
             @Valid @RequestBody BusinessRequest.DeleteBusiness request,
-            @CurrentUserId UUID currentUserId) {  // ✅ @CurrentUserId 사용
+            @CurrentUserId UUID currentUserId) {
 
         log.info("업체 삭제 요청: businessId={}, userId={}", businessId, currentUserId);
 
@@ -148,7 +147,7 @@ public class BusinessController {
     @GetMapping("/{businessId}/members")
     public ResponseData<BusinessResponse.MembersListResult> getMembersList(
             @PathVariable UUID businessId,
-            @CurrentUserId UUID currentUserId) {  // ✅ @CurrentUserId 사용
+            @CurrentUserId UUID currentUserId) {
 
         log.info("구성원 목록 조회 요청: businessId={}, userId={}", businessId, currentUserId);
 
@@ -161,12 +160,12 @@ public class BusinessController {
      * 구성원 초대
      * 권한: OWNER, MANAGER (MANAGER는 MANAGER/MEMBER만 초대 가능)
      */
-    @PostMapping("/{businessId}/members")
+    @PostMapping("/{businessId}/member")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseData<BusinessResponse.InvitationResult> inviteUser(
             @PathVariable UUID businessId,
             @Valid @RequestBody BusinessRequest.InviteUser request,
-            @CurrentUserId UUID inviterUserId) {  // ✅ @CurrentUserId 사용
+            @CurrentUserId UUID inviterUserId) {
 
         log.info("구성원 초대 요청: businessId={}, inviterUserId={}, email={}, role={}",
                 businessId, inviterUserId, request.getEmail(), request.getRole());
@@ -180,12 +179,12 @@ public class BusinessController {
      * 구성원 권한 변경
      * 권한: OWNER만 가능
      */
-    @PatchMapping("/{businessId}/members/{targetUserId}/role")
+    @PatchMapping("/{businessId}/member/{targetUserId}/role")
     public ResponseData<Void> changeUserRole(
             @PathVariable UUID businessId,
             @PathVariable UUID targetUserId,
             @Valid @RequestBody BusinessRequest.ChangeRole request,
-            @CurrentUserId UUID currentUserId) {  // ✅ @CurrentUserId 사용
+            @CurrentUserId UUID currentUserId) {
 
         log.info("구성원 권한 변경 요청: businessId={}, targetUserId={}, newRole={}, requesterUserId={}",
                 businessId, targetUserId, request.getNewRole(), currentUserId);
@@ -198,11 +197,11 @@ public class BusinessController {
      * 구성원 제거
      * 권한: OWNER는 모든 구성원 제거 가능, MANAGER는 MEMBER만 제거 가능
      */
-    @DeleteMapping("/{businessId}/members/{targetUserId}")
+    @DeleteMapping("/{businessId}/member/{targetUserId}")
     public ResponseData<Void> removeMember(
             @PathVariable UUID businessId,
             @PathVariable UUID targetUserId,
-            @CurrentUserId UUID requesterUserId) {  // ✅ @CurrentUserId 사용
+            @CurrentUserId UUID requesterUserId) {
 
         log.info("구성원 제거 요청: businessId={}, targetUserId={}, requesterUserId={}",
                 businessId, targetUserId, requesterUserId);
