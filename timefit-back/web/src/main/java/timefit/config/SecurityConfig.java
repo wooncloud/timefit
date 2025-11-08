@@ -47,8 +47,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 공개 API (인증 불필요)
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/businesses/search/**").permitAll()
-                        .requestMatchers("/api/businesses/**").permitAll()
+                        .requestMatchers("/api/business/search/**").permitAll()
+                        .requestMatchers("/api/business/**").permitAll()
                         .requestMatchers("/api/validation/**").permitAll()
 
                         // 개발/모니터링 도구

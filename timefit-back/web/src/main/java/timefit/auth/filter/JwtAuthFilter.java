@@ -57,7 +57,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private boolean requiresAuthentication(String requestURI) {
         // 공개 API (인증 불필요)
         if (requestURI.startsWith("/api/auth/") ||
-                requestURI.startsWith("/api/businesses/search") ||
+                requestURI.startsWith("/api/business/search") ||
                 requestURI.startsWith("/api/validation/") ||
                 requestURI.startsWith("/actuator/") ||
                 requestURI.startsWith("/swagger-ui/") ||
