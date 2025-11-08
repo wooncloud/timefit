@@ -23,8 +23,8 @@ export function useSignup(options: UseSignupOptions = {}) {
 
   const [formData, setFormData] = useState<SignupFormData>({
     email: process.env.NODE_ENV === 'development' ? 'test@example.com' : '',
-    password: process.env.NODE_ENV === 'development' ? 'Test1234!' : '',
-    confirmPassword: process.env.NODE_ENV === 'development' ? 'Test1234!' : '',
+    password: process.env.NODE_ENV === 'development' ? 'qwer1234!' : '',
+    confirmPassword: process.env.NODE_ENV === 'development' ? 'qwer1234!' : '',
     name: process.env.NODE_ENV === 'development' ? '홍길동' : '',
     phoneNumber: process.env.NODE_ENV === 'development' ? '010-1234-5678' : '',
   });
