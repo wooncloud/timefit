@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { AppSidebar } from '@/components/business/sidebar/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { BusinessHeader } from '@/components/business/business-header';
+import { BusinessDataProvider } from '@/components/business/business-data-provider';
 import { getCurrentUserFromSession } from '@/lib/session/server';
 
 export const metadata: Metadata = {
@@ -29,7 +30,9 @@ export default async function BusinessLayout({
       />
       <SidebarInset>
         <BusinessHeader />
-        <div className="p-4">{children}</div>
+        <BusinessDataProvider>
+          <div className="p-4">{children}</div>
+        </BusinessDataProvider>
       </SidebarInset>
     </SidebarProvider>
   );

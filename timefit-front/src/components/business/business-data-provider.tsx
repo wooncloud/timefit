@@ -1,0 +1,13 @@
+'use client';
+
+import { useBusinessData } from '@/hooks/business/useBusinessData';
+
+export function BusinessDataProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  useBusinessData();
+
+  return <>{children}</>;
+}
