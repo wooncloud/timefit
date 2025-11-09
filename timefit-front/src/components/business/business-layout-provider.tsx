@@ -2,7 +2,7 @@
 
 import { useBusinessData } from '@/hooks/business/useBusinessData';
 
-export function BusinessDataProvider({
+export function BusinessLayoutProvider({
   children,
 }: {
   children: React.ReactNode;

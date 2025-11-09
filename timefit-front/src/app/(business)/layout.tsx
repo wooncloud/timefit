@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { AppSidebar } from '@/components/business/sidebar/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { BusinessHeader } from '@/components/business/business-header';
-import { BusinessDataProvider } from '@/components/business/business-data-provider';
+import { BusinessLayoutProvider } from '@/components/business/business-layout-provider';
 import { getCurrentUserFromSession } from '@/lib/session/server';
 
 export const metadata: Metadata = {
@@ -18,22 +18,22 @@ export default async function BusinessLayout({
   const sessionUser = await getCurrentUserFromSession();
 
   return (
-    <SidebarProvider>
-      <AppSidebar
-        user={
-          sessionUser && {
-            name: sessionUser.name,
-            email: sessionUser.email,
-            avatar: sessionUser.profileImageUrl ?? null,
+    <BusinessLayoutProvider>
+      <SidebarProvider>
+        <AppSidebar
+          user={
+            sessionUser && {
+              name: sessionUser.name,
+              email: sessionUser.email,
+              avatar: sessionUser.profileImageUrl ?? null,
+            }
           }
-        }
-      />
-      <SidebarInset>
-        <BusinessHeader />
-        <BusinessDataProvider>
+        />
+        <SidebarInset>
+          <BusinessHeader />
           <div className="p-4">{children}</div>
-        </BusinessDataProvider>
-      </SidebarInset>
-    </SidebarProvider>
+        </SidebarInset>
+      </SidebarProvider>
+    </BusinessLayoutProvider>
   );
 }

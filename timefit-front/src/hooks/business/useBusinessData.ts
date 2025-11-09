@@ -9,10 +9,13 @@ import { businessService } from '@/services/business/businessService';
  * 비즈니스 섹션 진입 시 데이터 로드
  */
 export function useBusinessData() {
-  const { business, setBusiness, setLoading } =
+  const { business, _hasHydrated, setBusiness, setLoading } =
     useBusinessStore();
 
   useEffect(() => {
+    // Hydration이 완료될 때까지 대기
+    if (!_hasHydrated) return;
+
     const fetchData = async () => {
       // Store에 이미 데이터가 있으면 스킵
       if (business) return;
@@ -31,5 +34,5 @@ export function useBusinessData() {
     };
 
     fetchData();
-  }, [business, setBusiness, setLoading]);
+  }, [_hasHydrated, setBusiness, setLoading]);
 }

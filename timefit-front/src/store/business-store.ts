@@ -6,6 +6,7 @@ interface BusinessState {
   business: MyBusinessItem | null;
   businesses: MyBusinessItem[];
   loading: boolean;
+  _hasHydrated: boolean;
 }
 
 interface BusinessActions {
@@ -18,6 +19,7 @@ const initialState: BusinessState = {
   business: null,
   businesses: [],
   loading: false,
+  _hasHydrated: false,
 };
 
 export const useBusinessStore = create<BusinessState & BusinessActions>()(
@@ -34,6 +36,9 @@ export const useBusinessStore = create<BusinessState & BusinessActions>()(
       }),
       {
         name: 'business-store',
+        onRehydrateStorage: () => (state) => {
+          state && (state._hasHydrated = true);
+        },
       }
     )
   )
