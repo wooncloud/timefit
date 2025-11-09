@@ -6,6 +6,7 @@ import type { AuthUserProfile } from '@/types/auth/user';
 interface UserState {
   user: AuthUserProfile | null;
   isAuthenticated: boolean;
+  _hasHydrated: boolean;
 }
 
 interface UserActions {
@@ -16,6 +17,7 @@ interface UserActions {
 const initialState: UserState = {
   user: null,
   isAuthenticated: false,
+  _hasHydrated: false,
 };
 
 export const useUserStore = create<UserState & UserActions>()(
@@ -26,6 +28,7 @@ export const useUserStore = create<UserState & UserActions>()(
       set({
         user,
         isAuthenticated: !!user,
+        _hasHydrated: true,
       }),
 
     logout: () => {

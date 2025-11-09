@@ -13,22 +13,14 @@ import {
 } from '@/components/ui/sidebar';
 import type { AppSidebarProps } from '@/types/sidebar/appSidebar';
 import { navItems } from '@/lib/data/sidebar/sidebarMenu';
-
-const defaultUser = {
-  name: '운구름',
-  email: 'wooncloud@example.com',
-  avatar: '/avatars/shadcn.jpg',
-};
-
-const defaultTeams = [
+const defaultTeamsMock = [
   { name: 'Acme Inc', plan: 'Enterprise' },
   { name: 'Acme Corp.', plan: 'Startup' },
   { name: 'Evil Corp.', plan: 'Free' },
 ];
 
-export function AppSidebar({ user, teams, ...props }: AppSidebarProps) {
-  const sidebarUser = user ?? defaultUser;
-  const sidebarTeams = teams ?? defaultTeams;
+export function AppSidebar({ teams, ...props }: AppSidebarProps) {
+  const sidebarTeams = teams ?? defaultTeamsMock;
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -39,7 +31,7 @@ export function AppSidebar({ user, teams, ...props }: AppSidebarProps) {
         <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarUser} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

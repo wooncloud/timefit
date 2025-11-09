@@ -18,17 +18,9 @@ export default async function BusinessLayout({
   const sessionUser = await getCurrentUserFromSession();
 
   return (
-    <BusinessLayoutProvider>
+    <BusinessLayoutProvider sessionUser={sessionUser}>
       <SidebarProvider>
-        <AppSidebar
-          user={
-            sessionUser && {
-              name: sessionUser.name,
-              email: sessionUser.email,
-              avatar: sessionUser.profileImageUrl ?? null,
-            }
-          }
-        />
+        <AppSidebar/>
         <SidebarInset>
           <BusinessHeader />
           <div className="p-4">{children}</div>

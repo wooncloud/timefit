@@ -30,8 +30,9 @@ export default function Page() {
               <FormLabel text="상호명" required />
               <Input
                 name="businessName"
-                defaultValue={business.businessName}
+                value={business.businessName}
                 placeholder="홍길동의 카페"
+                onChange={() => {}}
               />
             </div>
             <div className="space-y-2">
@@ -46,14 +47,14 @@ export default function Page() {
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <FormLabel text="사업자등록번호" required />
-              <Input placeholder="123-45-67890" disabled />
+              <Input placeholder="123-45-67890" disabled onChange={() => {}} />
               <p className="text-xs text-muted-foreground">
                 사업자등록번호는 변경할 수 없습니다
               </p>
             </div>
             <div className="space-y-2">
               <FormLabel text="대표자명" />
-              <Input placeholder="홍길동" />
+              <Input placeholder="홍길동" onChange={() => {}} />
             </div>
           </div>
 
@@ -65,11 +66,11 @@ export default function Page() {
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <FormLabel text="연락처" required />
-              <Input placeholder="02-1234-5678" />
+              <Input placeholder="02-1234-5678" value={business.contactPhone} onChange={() => {}} />
             </div>
             <div className="space-y-2">
               <FormLabel text="이메일" />
-              <Input type="email" placeholder="cafe@example.com" />
+              <Input type="email" placeholder="cafe@example.com" onChange={() => {}} />
             </div>
           </div>
 
@@ -78,6 +79,8 @@ export default function Page() {
             <Textarea
               placeholder="맛있는 커피와 디저트를 제공하는 아늑한 카페입니다. 신선한 원두와 수제 디저트로 고객님께 특별한 경험을 선사합니다."
               className="min-h-[120px]"
+              value={business.description}
+              onChange={() => {}}
             />
           </div>
         </CardContent>

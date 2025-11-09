@@ -4,7 +4,6 @@ import type { MyBusinessItem } from '@/types/business/myBusiness';
 
 interface BusinessState {
   business: MyBusinessItem | null;
-  businesses: MyBusinessItem[];
   loading: boolean;
   _hasHydrated: boolean;
 }
@@ -17,7 +16,6 @@ interface BusinessActions {
 
 const initialState: BusinessState = {
   business: null,
-  businesses: [],
   loading: false,
   _hasHydrated: false,
 };

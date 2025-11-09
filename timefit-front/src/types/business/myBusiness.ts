@@ -8,7 +8,10 @@ export interface MyBusinessItem {
   address: string;
   logoUrl?: string;
   myRole: string;
+  contactPhone: string;
+  description: string;
   isActive: boolean;
+  joinedAt: string;
 }
 
 /**
