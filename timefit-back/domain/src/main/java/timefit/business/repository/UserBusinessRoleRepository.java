@@ -1,5 +1,6 @@
 package timefit.business.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import timefit.business.entity.UserBusinessRole;
@@ -15,15 +16,30 @@ public interface UserBusinessRoleRepository extends JpaRepository<UserBusinessRo
     // 권한 조회
     Optional<UserBusinessRole> findByUserIdAndBusinessIdAndIsActive(UUID userId, UUID businessId, Boolean isActive);
 
-    // 사용자의 비즈니스 목록
+    /**
+     * 사용자의 비즈니스 목록 조회 (Business 정보 필요)
+     * - Sidebar용
+     * - N+1 방지: Business Fetch Join
+     */
+    @EntityGraph(attributePaths = {"business"})
     List<UserBusinessRole> findByUserIdAndIsActive(UUID userId, Boolean isActive);
 
-    // 비즈니스의 구성원 목록
+    /**
+     * 비즈니스의 구성원 목록 조회 (User 정보 필요)
+     * - 팀 관리 화면용
+     * - N+1 방지: User Fetch Join
+     */
+    @EntityGraph(attributePaths = {"user"})
     List<UserBusinessRole> findByBusinessIdAndIsActive(UUID businessId, Boolean isActive);
 
     // 중복 체크
     boolean existsByUserIdAndBusinessIdAndIsActive(UUID userId, UUID businessId, Boolean isActive);
 
-    // 역할별 조회
+    /**
+     * 역할별 조회 (User 정보 필요)
+     * - 특정 역할의 구성원 조회 시
+     * - N+1 방지: User Fetch Join
+     */
+    @EntityGraph(attributePaths = {"user"})
     List<UserBusinessRole> findByBusinessIdAndRoleAndIsActive(UUID businessId, BusinessRole role, Boolean isActive);
 }
