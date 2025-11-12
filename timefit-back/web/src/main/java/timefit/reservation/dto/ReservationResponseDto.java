@@ -1,9 +1,10 @@
 package timefit.reservation.dto;
 
 import lombok.Getter;
-import timefit.common.entity.BusinessRole;
+import timefit.menu.entity.OrderType;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
+import timefit.user.entity.User;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,184 +12,94 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Reservation Response DTO
- * 예약 관련 모든 응답 DTO를 포함
- */
 public class ReservationResponseDto {
 
     // ========================================
-    // 1. 주요 응답 DTO
+    // 1. 고객용 DTO
     // ========================================
 
     /**
-     * 예약 상세 정보 응답 (생성 시 사용)
+     * 고객용 예약 상세 (단일)
      */
-    @Getter
-    public static class ReservationDetail {
-        private final UUID reservationId;
-        private final String reservationNumber;
-        private final ReservationStatus status;
-        private final BusinessInfo businessInfo;
-        private final ReservationDetails reservationDetails;
-        private final CustomerInfo customerInfo;
-        private final LocalDateTime createdAt;
-        private final LocalDateTime updatedAt;
+    public record CustomerReservation(
+            // 예약 기본 정보
+            UUID reservationId,
+            String reservationNumber,
+            ReservationStatus status,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt,
+            LocalDateTime cancelledAt,
 
-        private ReservationDetail(UUID reservationId, String reservationNumber, ReservationStatus status,
-                                  BusinessInfo businessInfo, ReservationDetails reservationDetails,
-                                  CustomerInfo customerInfo, LocalDateTime createdAt, LocalDateTime updatedAt) {
-            this.reservationId = reservationId;
-            this.reservationNumber = reservationNumber;
-            this.status = status;
-            this.businessInfo = businessInfo;
-            this.reservationDetails = reservationDetails;
-            this.customerInfo = customerInfo;
-            this.createdAt = createdAt;
-            this.updatedAt = updatedAt;
-        }
+            // 업체 정보
+            UUID businessId,
+            String businessName,
+            String businessAddress,
+            String businessContactPhone,
+            String businessLogoUrl,
 
-        public static ReservationDetail of(UUID reservationId, String reservationNumber, ReservationStatus status,
-                                           BusinessInfo businessInfo, ReservationDetails reservationDetails,
-                                           CustomerInfo customerInfo, LocalDateTime createdAt, LocalDateTime updatedAt) {
-            return new ReservationDetail(reservationId, reservationNumber, status, businessInfo,
-                    reservationDetails, customerInfo, createdAt, updatedAt);
-        }
+            // 예약 상세
+            LocalDate reservationDate,
+            LocalTime reservationTime,
+            Integer reservationPrice,
+            Integer reservationDuration,
+            String menuServiceName,
+            String notes,
 
-        /**
-         * Entity로부터 DTO 생성
-         */
-        public static ReservationDetail from(Reservation reservation) {
-            return ReservationDetail.of(
+            // 고객 정보 스냅샷
+            String customerNameSnapshot,
+            String customerPhoneSnapshot
+    ) {
+        public static CustomerReservation from(Reservation reservation) {
+            return new CustomerReservation(
                     reservation.getId(),
                     reservation.getReservationNumber(),
                     reservation.getStatus(),
-                    BusinessInfo.of(
-                            reservation.getBusiness().getId(),
-                            reservation.getBusiness().getBusinessName(),
-                            reservation.getBusiness().getAddress(),
-                            reservation.getBusiness().getContactPhone()
-                    ),
-                    ReservationDetails.of(
-                            reservation.getReservationDate(),
-                            reservation.getReservationTime(),
-                            reservation.getReservationDuration(),
-                            List.of(), // selectedOptions - 추후 구현
-                            reservation.getReservationPrice(),
-                            reservation.getNotes()
-                    ),
-                    CustomerInfo.of(
-                            reservation.getCustomer().getId(),
-                            reservation.getCustomerName(),
-                            reservation.getCustomerPhone()
-                    ),
                     reservation.getCreatedAt(),
-                    reservation.getUpdatedAt()
+                    reservation.getUpdatedAt(),
+                    reservation.getCancelledAt(),
+
+                    reservation.getBusiness().getId(),
+                    reservation.getBusiness().getBusinessName(),
+                    reservation.getBusiness().getAddress(),
+                    reservation.getBusiness().getContactPhone(),
+                    reservation.getBusiness().getLogoUrl(),
+
+                    reservation.getReservationDate(),
+                    reservation.getReservationTime(),
+                    reservation.getReservationPrice(),
+                    reservation.getReservationDuration(),
+                    reservation.getMenu().getServiceName(),
+                    reservation.getNotes(),
+
+                    reservation.getCustomerName(),
+                    reservation.getCustomerPhone()
             );
         }
     }
 
     /**
-     * 예약 상세 정보 + 수정/취소 가능 여부 (조회 시 사용)
+     * 고객 예약 목록 응답
      */
     @Getter
-    public static class ReservationDetailWithHistory {
-        private final UUID reservationId;
-        private final String reservationNumber;
-        private final ReservationStatus status;
-        private final BusinessInfo businessInfo;
-        private final ReservationDetails reservationDetails;
-        private final CustomerInfo customerInfo;
-        private final Boolean canModify;
-        private final Boolean canCancel;
-        private final LocalDateTime cancelDeadline;
-        private final LocalDateTime createdAt;
-        private final LocalDateTime updatedAt;
-
-        private ReservationDetailWithHistory(UUID reservationId, String reservationNumber, ReservationStatus status,
-                                             BusinessInfo businessInfo, ReservationDetails reservationDetails,
-                                             CustomerInfo customerInfo, Boolean canModify, Boolean canCancel,
-                                             LocalDateTime cancelDeadline, LocalDateTime createdAt, LocalDateTime updatedAt) {
-            this.reservationId = reservationId;
-            this.reservationNumber = reservationNumber;
-            this.status = status;
-            this.businessInfo = businessInfo;
-            this.reservationDetails = reservationDetails;
-            this.customerInfo = customerInfo;
-            this.canModify = canModify;
-            this.canCancel = canCancel;
-            this.cancelDeadline = cancelDeadline;
-            this.createdAt = createdAt;
-            this.updatedAt = updatedAt;
-        }
-
-        public static ReservationDetailWithHistory of(UUID reservationId, String reservationNumber, ReservationStatus status,
-                                                      BusinessInfo businessInfo, ReservationDetails reservationDetails,
-                                                      CustomerInfo customerInfo, Boolean canModify, Boolean canCancel,
-                                                      LocalDateTime cancelDeadline, LocalDateTime createdAt, LocalDateTime updatedAt) {
-            return new ReservationDetailWithHistory(reservationId, reservationNumber, status, businessInfo,
-                    reservationDetails, customerInfo, canModify, canCancel, cancelDeadline, createdAt, updatedAt);
-        }
-
-        /**
-         * Entity로부터 DTO 생성
-         */
-        public static ReservationDetailWithHistory from(Reservation reservation) {
-            return ReservationDetailWithHistory.of(
-                    reservation.getId(),
-                    reservation.getReservationNumber(),
-                    reservation.getStatus(),
-                    BusinessInfo.of(
-                            reservation.getBusiness().getId(),
-                            reservation.getBusiness().getBusinessName(),
-                            reservation.getBusiness().getAddress(),
-                            reservation.getBusiness().getContactPhone()
-                    ),
-                    ReservationDetails.of(
-                            reservation.getReservationDate(),
-                            reservation.getReservationTime(),
-                            reservation.getReservationDuration(),
-                            List.of(), // selectedOptions - 추후 구현
-                            reservation.getReservationPrice(),
-                            reservation.getNotes()
-                    ),
-                    CustomerInfo.of(
-                            reservation.getCustomer().getId(),
-                            reservation.getCustomerName(),
-                            reservation.getCustomerPhone()
-                    ),
-                    reservation.isCancellable(), // canModify
-                    reservation.isCancellable(), // canCancel
-                    null, // cancelDeadline - 추후 구현
-                    reservation.getCreatedAt(),
-                    reservation.getUpdatedAt()
-            );
-        }
-    }
-
-    /**
-     * 고객 예약 목록 조회 결과
-     */
-    @Getter
-    public static class ReservationListResult {
-        private final List<ReservationSummary> reservations;
+    public static class CustomerReservationList {
+        private final List<CustomerReservationItem> reservations;
         private final PaginationInfo pagination;
 
-        private ReservationListResult(List<ReservationSummary> reservations, PaginationInfo pagination) {
+        private CustomerReservationList(List<CustomerReservationItem> reservations, PaginationInfo pagination) {
             this.reservations = reservations;
             this.pagination = pagination;
         }
 
-        public static ReservationListResult of(List<ReservationSummary> reservations, PaginationInfo pagination) {
-            return new ReservationListResult(reservations, pagination);
+        public static CustomerReservationList of(List<CustomerReservationItem> reservations, PaginationInfo pagination) {
+            return new CustomerReservationList(reservations, pagination);
         }
     }
 
     /**
-     * 예약 요약 정보 (고객 목록용)
+     * 고객 예약 목록 아이템
      */
     @Getter
-    public static class ReservationSummary {
+    public static class CustomerReservationItem {
         private final UUID reservationId;
         private final String reservationNumber;
         private final ReservationStatus status;
@@ -197,9 +108,9 @@ public class ReservationResponseDto {
         private final LocalDateTime createdAt;
         private final LocalDateTime updatedAt;
 
-        private ReservationSummary(UUID reservationId, String reservationNumber, ReservationStatus status,
-                                   BusinessSummaryInfo businessInfo, ReservationSummaryDetails reservationDetails,
-                                   LocalDateTime createdAt, LocalDateTime updatedAt) {
+        private CustomerReservationItem(UUID reservationId, String reservationNumber, ReservationStatus status,
+                                        BusinessSummaryInfo businessInfo, ReservationSummaryDetails reservationDetails,
+                                        LocalDateTime createdAt, LocalDateTime updatedAt) {
             this.reservationId = reservationId;
             this.reservationNumber = reservationNumber;
             this.status = status;
@@ -209,43 +120,133 @@ public class ReservationResponseDto {
             this.updatedAt = updatedAt;
         }
 
-        public static ReservationSummary of(UUID reservationId, String reservationNumber, ReservationStatus status,
-                                            BusinessSummaryInfo businessInfo, ReservationSummaryDetails reservationDetails,
-                                            LocalDateTime createdAt, LocalDateTime updatedAt) {
-            return new ReservationSummary(reservationId, reservationNumber, status, businessInfo,
+        public static CustomerReservationItem of(UUID reservationId, String reservationNumber, ReservationStatus status,
+                                                 BusinessSummaryInfo businessInfo, ReservationSummaryDetails reservationDetails,
+                                                 LocalDateTime createdAt, LocalDateTime updatedAt) {
+            return new CustomerReservationItem(reservationId, reservationNumber, status, businessInfo,
                     reservationDetails, createdAt, updatedAt);
         }
     }
 
+    // ========================================
+    // 2. 업체용 DTO
+    // ========================================
+
     /**
-     * 업체용 예약 목록 조회 결과
+     * 업체용 예약 상세
+     */
+    public record BusinessReservation(
+            // 예약 기본 정보
+            UUID reservationId,
+            String reservationNumber,
+            ReservationStatus status,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt,
+            LocalDateTime cancelledAt,
+
+            // 업체 정보
+            UUID businessId,
+            String businessName,
+            String businessAddress,
+            String businessContactPhone,
+
+            // 고객 정보
+            UUID customerId,
+            String customerName,
+            String customerPhone,
+            String customerEmail,
+
+            // 메뉴 정보
+            UUID menuId,
+            String menuServiceName,
+            String menuCategoryCode,
+            Integer menuPrice,
+            String menuDescription,
+            OrderType menuOrderType,
+            Integer menuDurationMinutes,
+            String menuImageUrl,
+            Boolean menuIsActive,
+
+            // 예약 상세
+            LocalDate reservationDate,
+            LocalTime reservationTime,
+            UUID bookingSlotId,
+            Integer reservationPrice,
+            Integer reservationDuration,
+            String customerNameSnapshot,
+            String customerPhoneSnapshot,
+            String notes
+    ) {
+        public static BusinessReservation from(Reservation reservation) {
+            User customer = reservation.getCustomer();
+
+            return new BusinessReservation(
+                    reservation.getId(),
+                    reservation.getReservationNumber(),
+                    reservation.getStatus(),
+                    reservation.getCreatedAt(),
+                    reservation.getUpdatedAt(),
+                    reservation.getCancelledAt(),
+
+                    reservation.getBusiness().getId(),
+                    reservation.getBusiness().getBusinessName(),
+                    reservation.getBusiness().getAddress(),
+                    reservation.getBusiness().getContactPhone(),
+
+                    customer.getId(),
+                    customer.getName(),
+                    customer.getPhoneNumber(),
+                    customer.getEmail(),
+
+                    reservation.getMenu().getId(),
+                    reservation.getMenu().getServiceName(),
+                    reservation.getMenu().getBusinessCategory().getCategoryCode().name(),
+                    reservation.getMenu().getPrice(),
+                    reservation.getMenu().getDescription(),
+                    reservation.getMenu().getOrderType(),
+                    reservation.getMenu().getDurationMinutes(),
+                    reservation.getMenu().getImageUrl(),
+                    reservation.getMenu().getIsActive(),
+
+                    reservation.getReservationDate(),
+                    reservation.getReservationTime(),
+                    reservation.getBookingSlot() != null ? reservation.getBookingSlot().getId() : null,
+                    reservation.getReservationPrice(),
+                    reservation.getReservationDuration(),
+                    reservation.getCustomerName(),
+                    reservation.getCustomerPhone(),
+                    reservation.getNotes()
+            );
+        }
+    }
+
+    /**
+     * 업체 예약 목록 응답
      */
     @Getter
-    public static class BusinessReservationListResult {
+    public static class BusinessReservationList {
         private final BusinessInfo businessInfo;
-        private final List<BusinessReservationSummary> reservations;
+        private final List<BusinessReservationItem> reservations;
         private final PaginationInfo pagination;
 
-        private BusinessReservationListResult(BusinessInfo businessInfo,
-                                              List<BusinessReservationSummary> reservations,
-                                              PaginationInfo pagination) {
+        private BusinessReservationList(BusinessInfo businessInfo, List<BusinessReservationItem> reservations,
+                                        PaginationInfo pagination) {
             this.businessInfo = businessInfo;
             this.reservations = reservations;
             this.pagination = pagination;
         }
 
-        public static BusinessReservationListResult of(BusinessInfo businessInfo,
-                                                       List<BusinessReservationSummary> reservations,
-                                                       PaginationInfo pagination) {
-            return new BusinessReservationListResult(businessInfo, reservations, pagination);
+        public static BusinessReservationList of(BusinessInfo businessInfo, List<BusinessReservationItem> reservations,
+                                                 PaginationInfo pagination) {
+            return new BusinessReservationList(businessInfo, reservations, pagination);
         }
     }
 
     /**
-     * 업체용 예약 요약 정보
+     * 업체 예약 목록 아이템
      */
     @Getter
-    public static class BusinessReservationSummary {
+    public static class BusinessReservationItem {
         private final UUID reservationId;
         private final String reservationNumber;
         private final ReservationStatus status;
@@ -254,10 +255,9 @@ public class ReservationResponseDto {
         private final LocalDateTime createdAt;
         private final Boolean requiresAction;
 
-        private BusinessReservationSummary(UUID reservationId, String reservationNumber,
-                                           ReservationStatus status, CustomerSummaryInfo customerInfo,
-                                           ReservationSummaryDetails reservationDetails, LocalDateTime createdAt,
-                                           Boolean requiresAction) {
+        private BusinessReservationItem(UUID reservationId, String reservationNumber, ReservationStatus status,
+                                        CustomerSummaryInfo customerInfo, ReservationSummaryDetails reservationDetails,
+                                        LocalDateTime createdAt, Boolean requiresAction) {
             this.reservationId = reservationId;
             this.reservationNumber = reservationNumber;
             this.status = status;
@@ -267,198 +267,60 @@ public class ReservationResponseDto {
             this.requiresAction = requiresAction;
         }
 
-        public static BusinessReservationSummary of(UUID reservationId, String reservationNumber,
-                                                    ReservationStatus status, CustomerSummaryInfo customerInfo,
-                                                    ReservationSummaryDetails reservationDetails, LocalDateTime createdAt,
-                                                    Boolean requiresAction) {
-            return new BusinessReservationSummary(reservationId, reservationNumber, status, customerInfo,
+        public static BusinessReservationItem of(UUID reservationId, String reservationNumber,
+                                                 ReservationStatus status, CustomerSummaryInfo customerInfo,
+                                                 ReservationSummaryDetails reservationDetails, LocalDateTime createdAt,
+                                                 Boolean requiresAction) {
+            return new BusinessReservationItem(reservationId, reservationNumber, status, customerInfo,
                     reservationDetails, createdAt, requiresAction);
         }
     }
 
+    // ========================================
+    // 3. 액션 결과 DTO
+    // ========================================
+
     /**
-     * 예약 취소 결과
+     * 예약 액션 결과 (승인/거절/취소/완료/노쇼)
      */
-    @Getter
-    public static class ReservationCancelResult {
-        private final UUID reservationId;
-        private final ReservationStatus previousStatus;
-        private final ReservationStatus currentStatus;
-        private final String reason;
-        private final LocalDateTime cancelledAt;
+    public record ReservationActionResult(
+            UUID reservationId,
+            ReservationStatus previousStatus,
+            ReservationStatus currentStatus,
+            String message,
+            LocalDateTime actionAt
+    ) {
+        public static ReservationActionResult of(
+                Reservation reservation,
+                ReservationStatus previousStatus,
+                String message) {
 
-        private ReservationCancelResult(UUID reservationId, ReservationStatus previousStatus,
-                                        ReservationStatus currentStatus, String reason, LocalDateTime cancelledAt) {
-            this.reservationId = reservationId;
-            this.previousStatus = previousStatus;
-            this.currentStatus = currentStatus;
-            this.reason = reason;
-            this.cancelledAt = cancelledAt;
-        }
-
-        public static ReservationCancelResult of(UUID reservationId, ReservationStatus previousStatus,
-                                                 ReservationStatus currentStatus, String reason, LocalDateTime cancelledAt) {
-            return new ReservationCancelResult(reservationId, previousStatus, currentStatus, reason, cancelledAt);
-        }
-
-        /**
-         * Entity로부터 DTO 생성
-         */
-        public static ReservationCancelResult from(Reservation reservation, String reason) {
-            return ReservationCancelResult.of(
+            return new ReservationActionResult(
                     reservation.getId(),
-                    ReservationStatus.CONFIRMED, // previousStatus - 추후 개선
+                    previousStatus,
                     reservation.getStatus(),
-                    reason,
+                    message,
+                    reservation.getUpdatedAt()
+            );
+        }
+
+        public static ReservationActionResult ofCancel(
+                Reservation reservation,
+                ReservationStatus previousStatus,
+                String message) {
+
+            return new ReservationActionResult(
+                    reservation.getId(),
+                    previousStatus,
+                    reservation.getStatus(),
+                    message,
                     reservation.getCancelledAt()
             );
         }
     }
 
-    /**
-     * 예약 상태 변경 결과 (승인/거절)
-     */
-    @Getter
-    public static class ReservationStatusChangeResult {
-        private final UUID reservationId;
-        private final ReservationStatus previousStatus;
-        private final ReservationStatus currentStatus;
-        private final String message;
-        private final UpdatedByInfo updatedBy;
-        private final LocalDateTime updatedAt;
-
-        private ReservationStatusChangeResult(UUID reservationId, ReservationStatus previousStatus,
-                                              ReservationStatus currentStatus, String message,
-                                              UpdatedByInfo updatedBy, LocalDateTime updatedAt) {
-            this.reservationId = reservationId;
-            this.previousStatus = previousStatus;
-            this.currentStatus = currentStatus;
-            this.message = message;
-            this.updatedBy = updatedBy;
-            this.updatedAt = updatedAt;
-        }
-
-        public static ReservationStatusChangeResult of(UUID reservationId, ReservationStatus previousStatus,
-                                                       ReservationStatus currentStatus, String message,
-                                                       UpdatedByInfo updatedBy, LocalDateTime updatedAt) {
-            return new ReservationStatusChangeResult(reservationId, previousStatus, currentStatus,
-                    message, updatedBy, updatedAt);
-        }
-
-        /**
-         * Entity로부터 DTO 생성
-         */
-        public static ReservationStatusChangeResult from(Reservation reservation, String message) {
-            return ReservationStatusChangeResult.of(
-                    reservation.getId(),
-                    ReservationStatus.PENDING, // previousStatus - 추후 개선
-                    reservation.getStatus(),
-                    message,
-                    null, // updatedBy - 추후 구현
-                    reservation.getUpdatedAt()
-            );
-        }
-    }
-
-    /**
-     * 예약 완료/노쇼 처리 결과 (업체용)
-     */
-    @Getter
-    public static class ReservationCompletionResult {
-        private final UUID reservationId;
-        private final ReservationStatus previousStatus;
-        private final ReservationStatus currentStatus;
-        private final String message;
-        private final LocalDateTime completedAt;
-
-        private ReservationCompletionResult(UUID reservationId, ReservationStatus previousStatus,
-                                            ReservationStatus currentStatus, String message,
-                                            LocalDateTime completedAt) {
-            this.reservationId = reservationId;
-            this.previousStatus = previousStatus;
-            this.currentStatus = currentStatus;
-            this.message = message;
-            this.completedAt = completedAt;
-        }
-
-        public static ReservationCompletionResult of(UUID reservationId, ReservationStatus previousStatus,
-                                                     ReservationStatus currentStatus, String message,
-                                                     LocalDateTime completedAt) {
-            return new ReservationCompletionResult(reservationId, previousStatus, currentStatus,
-                    message, completedAt);
-        }
-
-        /**
-         * Entity로부터 DTO 생성
-         */
-        public static ReservationCompletionResult from(Reservation reservation, String message) {
-            return ReservationCompletionResult.of(
-                    reservation.getId(),
-                    ReservationStatus.CONFIRMED, // previousStatus - 추후 개선
-                    reservation.getStatus(),
-                    message,
-                    reservation.getUpdatedAt()
-            );
-        }
-    }
-
-    /**
-     * 예약 캘린더 조회 결과
-     */
-    @Getter
-    public static class ReservationCalendarResult {
-        private final BusinessInfo businessInfo;
-        private final LocalDate startDate;
-        private final LocalDate endDate;
-        private final List<DailyReservationSummary> dailyReservations;
-
-        private ReservationCalendarResult(BusinessInfo businessInfo, LocalDate startDate, LocalDate endDate,
-                                          List<DailyReservationSummary> dailyReservations) {
-            this.businessInfo = businessInfo;
-            this.startDate = startDate;
-            this.endDate = endDate;
-            this.dailyReservations = dailyReservations;
-        }
-
-        public static ReservationCalendarResult of(BusinessInfo businessInfo, LocalDate startDate, LocalDate endDate,
-                                                   List<DailyReservationSummary> dailyReservations) {
-            return new ReservationCalendarResult(businessInfo, startDate, endDate, dailyReservations);
-        }
-    }
-
-    /**
-     * 일별 예약 요약 (캘린더용)
-     */
-    @Getter
-    public static class DailyReservationSummary {
-        private final LocalDate date;
-        private final Integer totalCount;
-        private final Integer pendingCount;
-        private final Integer confirmedCount;
-        private final Integer completedCount;
-        private final List<ReservationSummary> reservations;
-
-        private DailyReservationSummary(LocalDate date, Integer totalCount, Integer pendingCount,
-                                        Integer confirmedCount, Integer completedCount,
-                                        List<ReservationSummary> reservations) {
-            this.date = date;
-            this.totalCount = totalCount;
-            this.pendingCount = pendingCount;
-            this.confirmedCount = confirmedCount;
-            this.completedCount = completedCount;
-            this.reservations = reservations;
-        }
-
-        public static DailyReservationSummary of(LocalDate date, Integer totalCount, Integer pendingCount,
-                                                 Integer confirmedCount, Integer completedCount,
-                                                 List<ReservationSummary> reservations) {
-            return new DailyReservationSummary(date, totalCount, pendingCount, confirmedCount,
-                    completedCount, reservations);
-        }
-    }
-
     // ========================================
-    // 2. 내부 정보 DTO (재사용)
+    // 4. 공통 내부 DTO
     // ========================================
 
     /**
@@ -484,7 +346,7 @@ public class ReservationResponseDto {
     }
 
     /**
-     * 업체 요약 정보 (목록용)
+     * 업체 정보 (간략)
      */
     @Getter
     public static class BusinessSummaryInfo {
@@ -504,27 +366,7 @@ public class ReservationResponseDto {
     }
 
     /**
-     * 고객 정보 (상세)
-     */
-    @Getter
-    public static class CustomerInfo {
-        private final UUID customerId;
-        private final String customerName;
-        private final String customerPhone;
-
-        private CustomerInfo(UUID customerId, String customerName, String customerPhone) {
-            this.customerId = customerId;
-            this.customerName = customerName;
-            this.customerPhone = customerPhone;
-        }
-
-        public static CustomerInfo of(UUID customerId, String customerName, String customerPhone) {
-            return new CustomerInfo(customerId, customerName, customerPhone);
-        }
-    }
-
-    /**
-     * 고객 요약 정보 (목록용)
+     * 고객 정보 (간략)
      */
     @Getter
     public static class CustomerSummaryInfo {
@@ -544,76 +386,25 @@ public class ReservationResponseDto {
     }
 
     /**
-     * 예약 세부 정보 (상세)
-     */
-    @Getter
-    public static class ReservationDetails {
-        private final LocalDate date;
-        private final LocalTime time;
-        private final Integer durationMinutes;
-        private final List<SelectedOptionInfo> selectedOptions;
-        private final Integer totalPrice;
-        private final String notes;
-
-        private ReservationDetails(LocalDate date, LocalTime time, Integer durationMinutes,
-                                   List<SelectedOptionInfo> selectedOptions, Integer totalPrice, String notes) {
-            this.date = date;
-            this.time = time;
-            this.durationMinutes = durationMinutes;
-            this.selectedOptions = selectedOptions;
-            this.totalPrice = totalPrice;
-            this.notes = notes;
-        }
-
-        public static ReservationDetails of(LocalDate date, LocalTime time, Integer durationMinutes,
-                                            List<SelectedOptionInfo> selectedOptions, Integer totalPrice, String notes) {
-            return new ReservationDetails(date, time, durationMinutes, selectedOptions, totalPrice, notes);
-        }
-    }
-
-    /**
-     * 예약 요약 세부 정보 (목록용 - notes 없음)
+     * 예약 상세 정보
      */
     @Getter
     public static class ReservationSummaryDetails {
         private final LocalDate date;
         private final LocalTime time;
         private final Integer durationMinutes;
-        private final List<SelectedOptionInfo> selectedOptions;
         private final Integer totalPrice;
 
-        private ReservationSummaryDetails(LocalDate date, LocalTime time, Integer durationMinutes,
-                                          List<SelectedOptionInfo> selectedOptions, Integer totalPrice) {
+        private ReservationSummaryDetails(LocalDate date, LocalTime time, Integer durationMinutes, Integer totalPrice) {
             this.date = date;
             this.time = time;
             this.durationMinutes = durationMinutes;
-            this.selectedOptions = selectedOptions;
             this.totalPrice = totalPrice;
         }
 
         public static ReservationSummaryDetails of(LocalDate date, LocalTime time, Integer durationMinutes,
-                                                   List<SelectedOptionInfo> selectedOptions, Integer totalPrice) {
-            return new ReservationSummaryDetails(date, time, durationMinutes, selectedOptions, totalPrice);
-        }
-    }
-
-    /**
-     * 선택된 옵션 정보
-     */
-    @Getter
-    public static class SelectedOptionInfo {
-        private final UUID optionId;
-        private final String optionName;
-        private final Integer price;
-
-        private SelectedOptionInfo(UUID optionId, String optionName, Integer price) {
-            this.optionId = optionId;
-            this.optionName = optionName;
-            this.price = price;
-        }
-
-        public static SelectedOptionInfo of(UUID optionId, String optionName, Integer price) {
-            return new SelectedOptionInfo(optionId, optionName, price);
+                                                   Integer totalPrice) {
+            return new ReservationSummaryDetails(date, time, durationMinutes, totalPrice);
         }
     }
 
@@ -642,26 +433,6 @@ public class ReservationResponseDto {
         public static PaginationInfo of(Integer currentPage, Integer totalPages, Long totalElements, Integer size,
                                         Boolean hasNext, Boolean hasPrevious) {
             return new PaginationInfo(currentPage, totalPages, totalElements, size, hasNext, hasPrevious);
-        }
-    }
-
-    /**
-     * 상태 변경자 정보 (업체 직원)
-     */
-    @Getter
-    public static class UpdatedByInfo {
-        private final UUID userId;
-        private final String userName;
-        private final BusinessRole role;
-
-        private UpdatedByInfo(UUID userId, String userName, BusinessRole role) {
-            this.userId = userId;
-            this.userName = userName;
-            this.role = role;
-        }
-
-        public static UpdatedByInfo of(UUID userId, String userName, BusinessRole role) {
-            return new UpdatedByInfo(userId, userName, role);
         }
     }
 }
