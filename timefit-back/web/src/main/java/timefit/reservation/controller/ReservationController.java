@@ -35,11 +35,11 @@ public class ReservationController {
 
     /**
      * 예약 생성
-     * POST /api/reservations
+     * POST /api/reservation
      */
     @PostMapping("/api/reservation")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<ReservationResponseDto.ReservationDetail> createReservation(
+    public ResponseData<ReservationResponseDto.CustomerReservation> createReservation(
             @Valid @RequestBody ReservationRequestDto.CreateReservation request,
             @CurrentUserId UUID customerId) {
 
@@ -47,7 +47,7 @@ public class ReservationController {
                 customerId, request.getBusinessId(), request.getMenuId());
 
         // 예약 타입에 따라 분기
-        ReservationResponseDto.ReservationDetail response;
+        ReservationResponseDto.CustomerReservation response;
         if (request.isReservationBased()) {
             response = reservationService.createReservationBased(request, customerId);
         } else if (request.isOnDemandBased()) {
@@ -64,7 +64,7 @@ public class ReservationController {
      * GET /api/reservations
      */
     @GetMapping("/api/reservations")
-    public ResponseData<ReservationResponseDto.ReservationListResult> getMyReservations(
+    public ResponseData<ReservationResponseDto.CustomerReservationList> getMyReservations(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
@@ -82,10 +82,10 @@ public class ReservationController {
 
     /**
      * 예약 상세 조회
-     * GET /api/reservations/{reservationId}
+     * GET /api/reservation/{reservationId}
      */
     @GetMapping("/api/reservation/{reservationId}")
-    public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> getReservationDetail(
+    public ResponseData<ReservationResponseDto.CustomerReservation> getReservationDetail(
             @PathVariable UUID reservationId,
             @CurrentUserId UUID customerId) {
 
@@ -97,10 +97,10 @@ public class ReservationController {
 
     /**
      * 예약 수정
-     * PUT /api/reservations/{reservationId}
+     * PUT /api/reservation/{reservationId}
      */
     @PutMapping("/api/reservation/{reservationId}")
-    public ResponseData<ReservationResponseDto.ReservationDetailWithHistory> updateReservation(
+    public ResponseData<ReservationResponseDto.CustomerReservation> updateReservation(
             @PathVariable UUID reservationId,
             @Valid @RequestBody ReservationRequestDto.UpdateReservation request,
             @CurrentUserId UUID customerId) {
@@ -113,10 +113,10 @@ public class ReservationController {
 
     /**
      * 예약 취소
-     * DELETE /api/reservations/{reservationId}
+     * DELETE /api/reservation/{reservationId}
      */
     @DeleteMapping("/api/reservation/{reservationId}")
-    public ResponseData<ReservationResponseDto.ReservationCancelResult> cancelReservation(
+    public ResponseData<ReservationResponseDto.ReservationActionResult> cancelReservation(
             @PathVariable UUID reservationId,
             @Valid @RequestBody ReservationRequestDto.CancelReservation request,
             @CurrentUserId UUID customerId) {
@@ -128,15 +128,15 @@ public class ReservationController {
     }
 
     // ========================================
-    // 업체용 API: /api/businesses/{businessId}/reservations
+    // 업체용 API: /api/business/{businessId}/reservations
     // ========================================
 
     /**
      * 업체 예약 목록 조회
-     * GET /api/businesses/{businessId}/reservations
+     * GET /api/business/{businessId}/reservations
      */
     @GetMapping("/api/business/{businessId}/reservations")
-    public ResponseData<ReservationResponseDto.BusinessReservationListResult> getBusinessReservations(
+    public ResponseData<ReservationResponseDto.BusinessReservationList> getBusinessReservations(
             @PathVariable UUID businessId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -153,11 +153,30 @@ public class ReservationController {
     }
 
     /**
+     * 업체용 예약 상세 조회
+     * GET /api/business/{businessId}/reservation/{reservationId}
+     */
+    @GetMapping("/api/business/{businessId}/reservation/{reservationId}")
+    public ResponseData<ReservationResponseDto.BusinessReservation> getBusinessReservationDetail(
+            @PathVariable UUID businessId,
+            @PathVariable UUID reservationId,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("업체 예약 상세 조회 요청: businessId={}, reservationId={}, userId={}",
+                businessId, reservationId, currentUserId);
+
+        ReservationResponseDto.BusinessReservation response = reservationService
+                .getBusinessReservationDetail(businessId, reservationId, currentUserId);
+
+        return ResponseData.of(response);
+    }
+
+    /**
      * 예약 승인
-     * POST /api/businesses/{businessId}/reservations/{reservationId}/approve
+     * POST /api/business/{businessId}/reservation/{reservationId}/approve
      */
     @PostMapping("/api/business/{businessId}/reservation/{reservationId}/approve")
-    public ResponseData<ReservationResponseDto.ReservationStatusChangeResult> approveReservation(
+    public ResponseData<ReservationResponseDto.ReservationActionResult> approveReservation(
             @PathVariable UUID businessId,
             @PathVariable UUID reservationId,
             @CurrentUserId UUID currentUserId) {
@@ -170,10 +189,10 @@ public class ReservationController {
 
     /**
      * 예약 거절
-     * POST /api/businesses/{businessId}/reservations/{reservationId}/reject
+     * POST /api/business/{businessId}/reservation/{reservationId}/reject
      */
     @PostMapping("/api/business/{businessId}/reservation/{reservationId}/reject")
-    public ResponseData<ReservationResponseDto.ReservationStatusChangeResult> rejectReservation(
+    public ResponseData<ReservationResponseDto.ReservationActionResult> rejectReservation(
             @PathVariable UUID businessId,
             @PathVariable UUID reservationId,
             @RequestBody(required = false) String reason,
@@ -188,10 +207,10 @@ public class ReservationController {
 
     /**
      * 예약 완료 처리
-     * POST /api/businesses/{businessId}/reservations/{reservationId}/complete
+     * POST /api/business/{businessId}/reservation/{reservationId}/complete
      */
     @PostMapping("/api/business/{businessId}/reservation/{reservationId}/complete")
-    public ResponseData<ReservationResponseDto.ReservationCompletionResult> completeReservation(
+    public ResponseData<ReservationResponseDto.ReservationActionResult> completeReservation(
             @PathVariable UUID businessId,
             @PathVariable UUID reservationId,
             @RequestBody(required = false) String notes,
@@ -206,10 +225,10 @@ public class ReservationController {
 
     /**
      * 노쇼 처리
-     * POST /api/businesses/{businessId}/reservations/{reservationId}/no-show
+     * POST /api/business/{businessId}/reservation/{reservationId}/no-show
      */
     @PostMapping("/api/business/{businessId}/reservation/{reservationId}/no-show")
-    public ResponseData<ReservationResponseDto.ReservationCompletionResult> markAsNoShow(
+    public ResponseData<ReservationResponseDto.ReservationActionResult> markAsNoShow(
             @PathVariable UUID businessId,
             @PathVariable UUID reservationId,
             @RequestBody(required = false) String notes,

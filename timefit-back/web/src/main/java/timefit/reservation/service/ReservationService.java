@@ -33,7 +33,7 @@ public class ReservationService {
      * 슬롯 기반 예약 생성 (RESERVATION_BASED)
      */
     @Transactional
-    public ReservationResponseDto.ReservationDetail createReservationBased(
+    public ReservationResponseDto.CustomerReservation createReservationBased(
             ReservationRequestDto.CreateReservation request, UUID customerId) {
         return commandService.createReservationBased(request, customerId);
     }
@@ -42,7 +42,7 @@ public class ReservationService {
      * 즉시 주문 예약 생성 (ONDEMAND_BASED)
      */
     @Transactional
-    public ReservationResponseDto.ReservationDetail createOnDemandBased(
+    public ReservationResponseDto.CustomerReservation createOnDemandBased(
             ReservationRequestDto.CreateReservation request, UUID customerId) {
         return commandService.createOnDemandBased(request, customerId);
     }
@@ -53,7 +53,7 @@ public class ReservationService {
      * 예약 수정
      */
     @Transactional
-    public ReservationResponseDto.ReservationDetailWithHistory updateReservation(
+    public ReservationResponseDto.CustomerReservation updateReservation(
             UUID reservationId, UUID customerId, ReservationRequestDto.UpdateReservation request) {
         return commandService.updateReservation(reservationId, customerId, request);
     }
@@ -62,7 +62,7 @@ public class ReservationService {
      * 예약 취소
      */
     @Transactional
-    public ReservationResponseDto.ReservationCancelResult cancelReservation(
+    public ReservationResponseDto.ReservationActionResult cancelReservation(
             UUID reservationId, UUID customerId, ReservationRequestDto.CancelReservation request) {
         return commandService.cancelReservation(reservationId, customerId, request);
     }
@@ -72,16 +72,16 @@ public class ReservationService {
     /**
      * 내 예약 목록 조회
      */
-    public ReservationResponseDto.ReservationListResult getMyReservations(
+    public ReservationResponseDto.CustomerReservationList getMyReservations(
             UUID customerId, String status, String startDate, String endDate,
             UUID businessId, int page, int size) {
         return queryService.getMyReservations(customerId, status, startDate, endDate, businessId, page, size);
     }
 
     /**
-     * 예약 상세 조회
+     * 예약 상세 조회 (고객용)
      */
-    public ReservationResponseDto.ReservationDetailWithHistory getReservationDetail(
+    public ReservationResponseDto.CustomerReservation getReservationDetail(
             UUID reservationId, UUID customerId) {
         return queryService.getReservationDetail(reservationId, customerId);
     }
@@ -91,17 +91,25 @@ public class ReservationService {
     /**
      * 업체 예약 목록 조회
      */
-    public ReservationResponseDto.BusinessReservationListResult getBusinessReservations(
+    public ReservationResponseDto.BusinessReservationList getBusinessReservations(
             UUID businessId, UUID currentUserId, String status,
             LocalDate startDate, LocalDate endDate, int page, int size) {
         return queryService.getBusinessReservations(businessId, currentUserId, status, startDate, endDate, page, size);
     }
 
     /**
+     * 업체용 예약 상세 조회 (신규)
+     */
+    public ReservationResponseDto.BusinessReservation getBusinessReservationDetail(
+            UUID businessId, UUID reservationId, UUID currentUserId) {
+        return queryService.getBusinessReservationDetail(businessId, reservationId, currentUserId);
+    }
+
+    /**
      * 예약 승인
      */
     @Transactional
-    public ReservationResponseDto.ReservationStatusChangeResult approveReservation(
+    public ReservationResponseDto.ReservationActionResult approveReservation(
             UUID businessId, UUID reservationId, UUID currentUserId) {
         return commandService.approveReservation(businessId, reservationId, currentUserId);
     }
@@ -110,7 +118,7 @@ public class ReservationService {
      * 예약 거절
      */
     @Transactional
-    public ReservationResponseDto.ReservationStatusChangeResult rejectReservation(
+    public ReservationResponseDto.ReservationActionResult rejectReservation(
             UUID businessId, UUID reservationId, UUID currentUserId, String reason) {
         return commandService.rejectReservation(businessId, reservationId, currentUserId, reason);
     }
@@ -119,7 +127,7 @@ public class ReservationService {
      * 예약 완료 처리
      */
     @Transactional
-    public ReservationResponseDto.ReservationCompletionResult completeReservation(
+    public ReservationResponseDto.ReservationActionResult completeReservation(
             UUID businessId, UUID reservationId, UUID currentUserId, String notes) {
         return commandService.completeReservation(businessId, reservationId, currentUserId, notes);
     }
@@ -128,7 +136,7 @@ public class ReservationService {
      * 노쇼 처리
      */
     @Transactional
-    public ReservationResponseDto.ReservationCompletionResult markAsNoShow(
+    public ReservationResponseDto.ReservationActionResult markAsNoShow(
             UUID businessId, UUID reservationId, UUID currentUserId, String notes) {
         return commandService.markAsNoShow(businessId, reservationId, currentUserId, notes);
     }
