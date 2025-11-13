@@ -1,6 +1,5 @@
 package timefit.reservation.dto;
 
-import lombok.Getter;
 import timefit.menu.entity.OrderType;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
@@ -80,17 +79,13 @@ public class ReservationResponseDto {
     /**
      * 고객 예약 목록 응답
      */
-    @Getter
-    public static class CustomerReservationList {
-        private final List<CustomerReservationItem> reservations;
-        private final PaginationInfo pagination;
-
-        private CustomerReservationList(List<CustomerReservationItem> reservations, PaginationInfo pagination) {
-            this.reservations = reservations;
-            this.pagination = pagination;
-        }
-
-        public static CustomerReservationList of(List<CustomerReservationItem> reservations, PaginationInfo pagination) {
+    public record CustomerReservationList(
+            List<CustomerReservationItem> reservations,
+            PaginationInfo pagination
+    ) {
+        public static CustomerReservationList of(
+                List<CustomerReservationItem> reservations,
+                PaginationInfo pagination) {
             return new CustomerReservationList(reservations, pagination);
         }
     }
@@ -98,33 +93,28 @@ public class ReservationResponseDto {
     /**
      * 고객 예약 목록 아이템
      */
-    @Getter
-    public static class CustomerReservationItem {
-        private final UUID reservationId;
-        private final String reservationNumber;
-        private final ReservationStatus status;
-        private final BusinessSummaryInfo businessInfo;
-        private final ReservationSummaryDetails reservationDetails;
-        private final LocalDateTime createdAt;
-        private final LocalDateTime updatedAt;
-
-        private CustomerReservationItem(UUID reservationId, String reservationNumber, ReservationStatus status,
-                                        BusinessSummaryInfo businessInfo, ReservationSummaryDetails reservationDetails,
-                                        LocalDateTime createdAt, LocalDateTime updatedAt) {
-            this.reservationId = reservationId;
-            this.reservationNumber = reservationNumber;
-            this.status = status;
-            this.businessInfo = businessInfo;
-            this.reservationDetails = reservationDetails;
-            this.createdAt = createdAt;
-            this.updatedAt = updatedAt;
-        }
-
-        public static CustomerReservationItem of(UUID reservationId, String reservationNumber, ReservationStatus status,
-                                                 BusinessSummaryInfo businessInfo, ReservationSummaryDetails reservationDetails,
-                                                 LocalDateTime createdAt, LocalDateTime updatedAt) {
-            return new CustomerReservationItem(reservationId, reservationNumber, status, businessInfo,
-                    reservationDetails, createdAt, updatedAt);
+    public record CustomerReservationItem(
+            UUID reservationId,
+            String reservationNumber,
+            ReservationStatus status,
+            BusinessSummaryInfo businessInfo,
+            ReservationSummaryDetails reservationDetails,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        public static CustomerReservationItem of(
+                UUID reservationId,
+                String reservationNumber,
+                ReservationStatus status,
+                BusinessSummaryInfo businessInfo,
+                ReservationSummaryDetails reservationDetails,
+                LocalDateTime createdAt,
+                LocalDateTime updatedAt) {
+            return new CustomerReservationItem(
+                    reservationId, reservationNumber, status,
+                    businessInfo, reservationDetails,
+                    createdAt, updatedAt
+            );
         }
     }
 
@@ -223,21 +213,15 @@ public class ReservationResponseDto {
     /**
      * 업체 예약 목록 응답
      */
-    @Getter
-    public static class BusinessReservationList {
-        private final BusinessInfo businessInfo;
-        private final List<BusinessReservationItem> reservations;
-        private final PaginationInfo pagination;
-
-        private BusinessReservationList(BusinessInfo businessInfo, List<BusinessReservationItem> reservations,
-                                        PaginationInfo pagination) {
-            this.businessInfo = businessInfo;
-            this.reservations = reservations;
-            this.pagination = pagination;
-        }
-
-        public static BusinessReservationList of(BusinessInfo businessInfo, List<BusinessReservationItem> reservations,
-                                                 PaginationInfo pagination) {
+    public record BusinessReservationList(
+            BusinessInfo businessInfo,
+            List<BusinessReservationItem> reservations,
+            PaginationInfo pagination
+    ) {
+        public static BusinessReservationList of(
+                BusinessInfo businessInfo,
+                List<BusinessReservationItem> reservations,
+                PaginationInfo pagination) {
             return new BusinessReservationList(businessInfo, reservations, pagination);
         }
     }
@@ -245,34 +229,28 @@ public class ReservationResponseDto {
     /**
      * 업체 예약 목록 아이템
      */
-    @Getter
-    public static class BusinessReservationItem {
-        private final UUID reservationId;
-        private final String reservationNumber;
-        private final ReservationStatus status;
-        private final CustomerSummaryInfo customerInfo;
-        private final ReservationSummaryDetails reservationDetails;
-        private final LocalDateTime createdAt;
-        private final Boolean requiresAction;
-
-        private BusinessReservationItem(UUID reservationId, String reservationNumber, ReservationStatus status,
-                                        CustomerSummaryInfo customerInfo, ReservationSummaryDetails reservationDetails,
-                                        LocalDateTime createdAt, Boolean requiresAction) {
-            this.reservationId = reservationId;
-            this.reservationNumber = reservationNumber;
-            this.status = status;
-            this.customerInfo = customerInfo;
-            this.reservationDetails = reservationDetails;
-            this.createdAt = createdAt;
-            this.requiresAction = requiresAction;
-        }
-
-        public static BusinessReservationItem of(UUID reservationId, String reservationNumber,
-                                                 ReservationStatus status, CustomerSummaryInfo customerInfo,
-                                                 ReservationSummaryDetails reservationDetails, LocalDateTime createdAt,
-                                                 Boolean requiresAction) {
-            return new BusinessReservationItem(reservationId, reservationNumber, status, customerInfo,
-                    reservationDetails, createdAt, requiresAction);
+    public record BusinessReservationItem(
+            UUID reservationId,
+            String reservationNumber,
+            ReservationStatus status,
+            CustomerSummaryInfo customerInfo,
+            ReservationSummaryDetails reservationDetails,
+            LocalDateTime createdAt,
+            Boolean requiresAction
+    ) {
+        public static BusinessReservationItem of(
+                UUID reservationId,
+                String reservationNumber,
+                ReservationStatus status,
+                CustomerSummaryInfo customerInfo,
+                ReservationSummaryDetails reservationDetails,
+                LocalDateTime createdAt,
+                Boolean requiresAction) {
+            return new BusinessReservationItem(
+                    reservationId, reservationNumber, status,
+                    customerInfo, reservationDetails,
+                    createdAt, requiresAction
+            );
         }
     }
 
@@ -326,21 +304,17 @@ public class ReservationResponseDto {
     /**
      * 업체 정보 (상세)
      */
-    @Getter
-    public static class BusinessInfo {
-        private final UUID businessId;
-        private final String businessName;
-        private final String address;
-        private final String contactPhone;
-
-        private BusinessInfo(UUID businessId, String businessName, String address, String contactPhone) {
-            this.businessId = businessId;
-            this.businessName = businessName;
-            this.address = address;
-            this.contactPhone = contactPhone;
-        }
-
-        public static BusinessInfo of(UUID businessId, String businessName, String address, String contactPhone) {
+    public record BusinessInfo(
+            UUID businessId,
+            String businessName,
+            String address,
+            String contactPhone
+    ) {
+        public static BusinessInfo of(
+                UUID businessId,
+                String businessName,
+                String address,
+                String contactPhone) {
             return new BusinessInfo(businessId, businessName, address, contactPhone);
         }
     }
@@ -348,19 +322,15 @@ public class ReservationResponseDto {
     /**
      * 업체 정보 (간략)
      */
-    @Getter
-    public static class BusinessSummaryInfo {
-        private final UUID businessId;
-        private final String businessName;
-        private final String logoUrl;
-
-        private BusinessSummaryInfo(UUID businessId, String businessName, String logoUrl) {
-            this.businessId = businessId;
-            this.businessName = businessName;
-            this.logoUrl = logoUrl;
-        }
-
-        public static BusinessSummaryInfo of(UUID businessId, String businessName, String logoUrl) {
+    public record BusinessSummaryInfo(
+            UUID businessId,
+            String businessName,
+            String logoUrl
+    ) {
+        public static BusinessSummaryInfo of(
+                UUID businessId,
+                String businessName,
+                String logoUrl) {
             return new BusinessSummaryInfo(businessId, businessName, logoUrl);
         }
     }
@@ -368,71 +338,55 @@ public class ReservationResponseDto {
     /**
      * 고객 정보 (간략)
      */
-    @Getter
-    public static class CustomerSummaryInfo {
-        private final UUID customerId;
-        private final String customerName;
-        private final String customerPhone;
-
-        private CustomerSummaryInfo(UUID customerId, String customerName, String customerPhone) {
-            this.customerId = customerId;
-            this.customerName = customerName;
-            this.customerPhone = customerPhone;
-        }
-
-        public static CustomerSummaryInfo of(UUID customerId, String customerName, String customerPhone) {
+    public record CustomerSummaryInfo(
+            UUID customerId,
+            String customerName,
+            String customerPhone
+    ) {
+        public static CustomerSummaryInfo of(
+                UUID customerId,
+                String customerName,
+                String customerPhone) {
             return new CustomerSummaryInfo(customerId, customerName, customerPhone);
         }
     }
 
-    /**
-     * 예약 상세 정보
-     */
-    @Getter
-    public static class ReservationSummaryDetails {
-        private final LocalDate date;
-        private final LocalTime time;
-        private final Integer durationMinutes;
-        private final Integer totalPrice;
-
-        private ReservationSummaryDetails(LocalDate date, LocalTime time, Integer durationMinutes, Integer totalPrice) {
-            this.date = date;
-            this.time = time;
-            this.durationMinutes = durationMinutes;
-            this.totalPrice = totalPrice;
-        }
-
-        public static ReservationSummaryDetails of(LocalDate date, LocalTime time, Integer durationMinutes,
-                                                   Integer totalPrice) {
+    // 예약 상세 정보
+    public record ReservationSummaryDetails(
+            LocalDate date,
+            LocalTime time,
+            Integer durationMinutes,
+            Integer totalPrice
+    ) {
+        public static ReservationSummaryDetails of(
+                LocalDate date,
+                LocalTime time,
+                Integer durationMinutes,
+                Integer totalPrice) {
             return new ReservationSummaryDetails(date, time, durationMinutes, totalPrice);
         }
     }
 
-    /**
-     * 페이지네이션 정보
-     */
-    @Getter
-    public static class PaginationInfo {
-        private final Integer currentPage;
-        private final Integer totalPages;
-        private final Long totalElements;
-        private final Integer size;
-        private final Boolean hasNext;
-        private final Boolean hasPrevious;
-
-        private PaginationInfo(Integer currentPage, Integer totalPages, Long totalElements, Integer size,
-                               Boolean hasNext, Boolean hasPrevious) {
-            this.currentPage = currentPage;
-            this.totalPages = totalPages;
-            this.totalElements = totalElements;
-            this.size = size;
-            this.hasNext = hasNext;
-            this.hasPrevious = hasPrevious;
-        }
-
-        public static PaginationInfo of(Integer currentPage, Integer totalPages, Long totalElements, Integer size,
-                                        Boolean hasNext, Boolean hasPrevious) {
-            return new PaginationInfo(currentPage, totalPages, totalElements, size, hasNext, hasPrevious);
+    // 페이지네이션 정보
+    public record PaginationInfo(
+            Integer currentPage,
+            Integer totalPages,
+            Long totalElements,
+            Integer size,
+            Boolean hasNext,
+            Boolean hasPrevious
+    ) {
+        public static PaginationInfo of(
+                Integer currentPage,
+                Integer totalPages,
+                Long totalElements,
+                Integer size,
+                Boolean hasNext,
+                Boolean hasPrevious) {
+            return new PaginationInfo(
+                    currentPage, totalPages, totalElements,
+                    size, hasNext, hasPrevious
+            );
         }
     }
 }
