@@ -11,7 +11,7 @@ import timefit.common.entity.DayOfWeek;
 import java.time.LocalTime;
 
 /**
- * 영업시간 Entity
+ * 예약 슬롯 시간 관리 Entity
  * - 기존 BusinessOperatingHours -> OperatingHours로 변경
  * - sequence 필드 추가로 같은 요일 여러 시간대 지원 (런치 브레이크 등)
  */
@@ -71,43 +71,5 @@ public class OperatingHours extends BaseEntity {
     // 휴무일 생성
     public static OperatingHours createClosedDay(Business business, DayOfWeek dayOfWeek) {
         return createOperatingHours(business, dayOfWeek, null, null, true, 0);
-    }
-
-    // 영업시간 수정
-    public void updateOperatingHours(LocalTime openTime, LocalTime closeTime, Boolean isClosed) {
-        this.openTime = openTime;
-        this.closeTime = closeTime;
-        this.isClosed = isClosed;
-    }
-
-    // 휴무일로 설정
-    public void setClosed() {
-        this.isClosed = true;
-        this.openTime = null;
-        this.closeTime = null;
-    }
-
-    // 영업일로 설정
-    public void setOpen(LocalTime openTime, LocalTime closeTime) {
-        this.isClosed = false;
-        this.openTime = openTime;
-        this.closeTime = closeTime;
-    }
-
-    // 특정 시간이 영업시간 내인지 확인
-    public boolean isTimeWithinOperatingHours(LocalTime time) {
-        if (Boolean.TRUE.equals(isClosed) || openTime == null || closeTime == null) {
-            return false;
-        }
-        return !time.isBefore(openTime) && !time.isAfter(closeTime);
-    }
-
-    // 시간대 겹침 확인 (같은 요일 내에서)
-    public boolean isOverlapping(LocalTime otherOpenTime, LocalTime otherCloseTime) {
-        if (Boolean.TRUE.equals(isClosed) || openTime == null || closeTime == null) {
-            return false;
-        }
-
-        return !(closeTime.isBefore(otherOpenTime) || otherCloseTime.isBefore(openTime));
     }
 }
