@@ -3,6 +3,7 @@ package timefit.reservation.repository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,64 +28,9 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
     private final QReservation reservation = QReservation.reservation;
 
     @Override
-    public List<Reservation> findByBusinessIdAndReservationDate(UUID businessId, LocalDate reservationDate) {
-        return queryFactory
-                .selectFrom(reservation)
-                .where(
-                        reservation.business.id.eq(businessId)
-                                .and(reservation.reservationDate.eq(reservationDate))
-                )
-                .orderBy(reservation.reservationTime.asc())
-                .fetch();
-    }
-
-    @Override
-    public List<Reservation> findByBusinessIdAndDateRange(UUID businessId, LocalDate startDate, LocalDate endDate) {
-        return queryFactory
-                .selectFrom(reservation)
-                .where(
-                        reservation.business.id.eq(businessId)
-                                .and(reservation.reservationDate.between(startDate, endDate))
-                )
-                .orderBy(
-                        reservation.reservationDate.asc(),
-                        reservation.reservationTime.asc()
-                )
-                .fetch();
-    }
-
-    @Override
-    public List<Reservation> findTodayReservationsByBusinessAndStatus(UUID businessId, LocalDate today, ReservationStatus status) {
-        return queryFactory
-                .selectFrom(reservation)
-                .where(
-                        reservation.business.id.eq(businessId)
-                                .and(reservation.reservationDate.eq(today))
-                                .and(reservation.status.eq(status))
-                )
-                .orderBy(reservation.reservationTime.asc())
-                .fetch();
-    }
-
-    @Override
-    public Long countActiveReservationsBySlot(UUID slotId) {
-        return queryFactory
-                .select(reservation.count())
-                .from(reservation)
-                .where(
-                        reservation.bookingSlot.id.eq(slotId)
-                                .and(reservation.status.notIn(
-                                        ReservationStatus.CANCELLED,
-                                        ReservationStatus.NO_SHOW
-                                ))
-                )
-                .fetchOne();
-    }
-
-    @Override
     public Page<Reservation> findMyReservationsWithFilters(UUID customerId, ReservationStatus status,
-                                                           LocalDate startDate, LocalDate endDate, UUID businessId,
-                                                           Pageable pageable) {
+                                                            LocalDate startDate, LocalDate endDate, UUID businessId,
+                                                            Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
         // 기본 조건: 내 예약만
@@ -132,81 +78,68 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
     }
 
     @Override
-    public Page<Reservation> findBusinessReservationsWithFilters(UUID businessId, ReservationStatus status,
-                                                                 LocalDate startDate, LocalDate endDate,
-                                                                 Pageable pageable) {
-        BooleanBuilder builder = new BooleanBuilder();
+    public Page<Reservation> findBusinessReservationsWithFilters(
+            UUID businessId, ReservationStatus status, String customerName,
+            LocalDate startDate, LocalDate endDate, Pageable pageable) {
 
-        // 필수 조건: 해당 업체의 예약
-        builder.and(reservation.business.id.eq(businessId));
 
-        // 상태 필터
-        if (status != null) {
-            builder.and(reservation.status.eq(status));
-        }
-
-        // 날짜 범위 필터
-        if (startDate != null) {
-            builder.and(reservation.reservationDate.goe(startDate));
-        }
-        if (endDate != null) {
-            builder.and(reservation.reservationDate.loe(endDate));
-        }
-
-        // 정렬 조건 생성
-        List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
-
-        if (pageable.getSort().isSorted()) {
-            for (Sort.Order order : pageable.getSort()) {
-                Order direction = order.getDirection().isAscending() ? Order.ASC : Order.DESC;
-
-                switch (order.getProperty()) {
-                    case "reservationDate":
-                        orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.reservationDate));
-                        break;
-                    case "reservationTime":
-                        orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.reservationTime));
-                        break;
-                    case "createdAt":
-                        orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.createdAt));
-                        break;
-                    case "status":
-                        orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.status));
-                        break;
-                    default:
-                        orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.createdAt));
-                }
-            }
-        } else {
-            // 기본 정렬: 예약일 내림차순, 예약시간 내림차순
-            orderSpecifiers.add(new OrderSpecifier<>(Order.DESC, reservation.reservationDate));
-            orderSpecifiers.add(new OrderSpecifier<>(Order.DESC, reservation.reservationTime));
-        }
-
-        // 쿼리 실행
-        List<Reservation> results = queryFactory
+        List<Reservation> reservations = queryFactory
                 .selectFrom(reservation)
-                .leftJoin(reservation.customer).fetchJoin()
-                .leftJoin(reservation.business).fetchJoin()
-                .where(builder)
-                .orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]))
+                .where(
+                        businessIdEq(businessId),
+                        statusEq(status),
+                        customerNameContains(customerName),
+                        reservationDateGoe(startDate),
+                        reservationDateLoe(endDate)
+                )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
+                .orderBy(
+                        reservation.reservationDate.desc(),
+                        reservation.reservationTime.desc()
+                )
                 .fetch();
 
-        // 전체 개수 조회
         Long total = queryFactory
                 .select(reservation.count())
                 .from(reservation)
-                .where(builder)
+                .where(
+                        businessIdEq(businessId),
+                        statusEq(status),
+                        customerNameContains(customerName),
+                        reservationDateGoe(startDate),
+                        reservationDateLoe(endDate)
+                )
                 .fetchOne();
 
-        return new PageImpl<>(results, pageable, total != null ? total : 0L);
+        return new PageImpl<>(reservations, pageable, total != null ? total : 0);
     }
 
-    /**
-     * 정렬 조건 변환
-     */
+    // -----------  private (BooleanExpression)
+
+    private BooleanExpression businessIdEq(UUID businessId) {
+        return businessId != null ? reservation.business.id.eq(businessId) : null;
+    }
+
+    private BooleanExpression statusEq(ReservationStatus status) {
+        return status != null ? reservation.status.eq(status) : null;
+    }
+
+    // 고객명 검색 (대소문자 무시)
+    private BooleanExpression customerNameContains(String customerName) {
+        return customerName != null ?
+                reservation.customerName.containsIgnoreCase(customerName) : null;
+    }
+
+    private BooleanExpression reservationDateGoe(LocalDate startDate) {
+        return startDate != null ? reservation.reservationDate.goe(startDate) : null;
+    }
+
+    private BooleanExpression reservationDateLoe(LocalDate endDate) {
+        return endDate != null ? reservation.reservationDate.loe(endDate) : null;
+    }
+
+    // 정렬 조건 변환
     private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {
         List<OrderSpecifier<?>> orders = new ArrayList<>();
 
