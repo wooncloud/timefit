@@ -24,6 +24,8 @@ public class OperatingHoursController {
     /**
      * 영업시간 조회
      * 권한: 없음 (공개 API)
+     * @param businessId 업체 ID
+     * @return 영업시간 조회 결과
      */
     @GetMapping
     public ResponseEntity<ResponseData<OperatingHoursResponse.OperatingHoursResult>> getOperatingHours(
@@ -38,8 +40,12 @@ public class OperatingHoursController {
     }
 
     /**
-     * 영업시간 설정 (완전 교체)
+     * 영업시간 설정
      * 권한: OWNER, MANAGER
+     * @param businessId 업체 ID
+     * @param request 영업시간 설정 요청
+     * @param currentUserId 현재 사용자 ID
+     * @return 영업시간 설정 결과
      */
     @PutMapping
     public ResponseEntity<ResponseData<OperatingHoursResponse.OperatingHoursResult>> setOperatingHours(
@@ -47,11 +53,29 @@ public class OperatingHoursController {
             @Valid @RequestBody OperatingHoursRequest.SetOperatingHours request,
             @CurrentUserId UUID currentUserId) {
 
-        log.info("영업시간 설정 요청: businessId={}, userId={}, hoursCount={}",
-                businessId, currentUserId, request.getBusinessHours().size());
+        log.info("영업시간 설정 요청: businessId={}, userId={}", businessId, currentUserId);
 
         OperatingHoursResponse.OperatingHoursResult response =
                 operatingHoursService.setOperatingHours(businessId, request, currentUserId);
+
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
+    /**
+     * 영업시간 리셋 (디폴트 값으로)
+     * @param businessId 업체 ID
+     * @param currentUserId 현재 사용자 ID
+     * @return 영업시간 리셋 결과
+     */
+    @PatchMapping("/reset")
+    public ResponseEntity<ResponseData<OperatingHoursResponse.OperatingHoursResult>> resetToDefault(
+            @PathVariable UUID businessId,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("영업시간 리셋 요청: businessId={}, userId={}", businessId, currentUserId);
+
+        OperatingHoursResponse.OperatingHoursResult response =
+                operatingHoursService.resetToDefault(businessId, currentUserId);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
