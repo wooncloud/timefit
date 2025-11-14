@@ -13,7 +13,6 @@ import timefit.business.service.validator.BusinessValidator;
 import timefit.common.entity.DayOfWeek;
 import timefit.operatinghours.dto.OperatingHoursRequest;
 import timefit.operatinghours.dto.OperatingHoursResponse;
-import timefit.operatinghours.service.util.BusinessFinder;
 import timefit.operatinghours.service.util.BusinessHoursDefaultConfig;
 import timefit.operatinghours.service.util.OperatingHoursConverter;
 
@@ -36,8 +35,7 @@ public class OperatingHoursCommandService {
 
     private final BusinessHoursRepository businessHoursRepository;
     private final OperatingHoursRepository operatingHoursRepository;
-    private final BusinessValidator businessValidator;  // ✅ Validator 주입
-    private final BusinessFinder businessFinder;
+    private final BusinessValidator businessValidator;
 
     /**
      * 영업시간 설정 (BusinessHours + OperatingHours 통합)
@@ -57,7 +55,7 @@ public class OperatingHoursCommandService {
         log.info("영업시간 설정 시작: businessId={}, userId={}", businessId, currentUserId);
 
         // 1. Business 조회
-        Business business = businessFinder.getBusinessEntity(businessId);
+        Business business = businessValidator.validateBusinessExists(businessId);
 
         // 2. 권한 검증
         businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
@@ -94,9 +92,9 @@ public class OperatingHoursCommandService {
         log.info("영업시간 리셋 시작: businessId={}, userId={}", businessId, currentUserId);
 
         // 1. Business 조회
-        Business business = businessFinder.getBusinessEntity(businessId);
+        Business business = businessValidator.validateBusinessExists(businessId);
 
-        // 2. 권한 검증 (✅ BusinessValidator 활용)
+        // 2. 권한 검증
         businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
 
         // 3. BusinessHours 업데이트 (디폴트 값으로)

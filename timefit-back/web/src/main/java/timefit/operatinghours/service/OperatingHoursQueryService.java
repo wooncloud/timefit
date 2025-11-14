@@ -9,8 +9,8 @@ import timefit.business.entity.BusinessHours;
 import timefit.business.entity.OperatingHours;
 import timefit.business.repository.BusinessHoursRepository;
 import timefit.business.repository.OperatingHoursRepository;
+import timefit.business.service.validator.BusinessValidator;
 import timefit.operatinghours.dto.OperatingHoursResponse;
-import timefit.operatinghours.service.util.BusinessFinder;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,17 +23,15 @@ public class OperatingHoursQueryService {
 
     private final BusinessHoursRepository businessHoursRepository;
     private final OperatingHoursRepository operatingHoursRepository;
-    private final BusinessFinder businessFinder;
+    private final BusinessValidator businessValidator;
 
-    /**
-     * 영업시간 조회 (BusinessHours + OperatingHours 통합)
-     */
+    // 영업시간 조회 (BusinessHours + OperatingHours 통합)
     public OperatingHoursResponse.OperatingHoursResult getOperatingHours(UUID businessId) {
 
         log.info("영업시간 조회 시작: businessId={}", businessId);
 
         // 1. Business 조회
-        Business business = businessFinder.getBusinessEntity(businessId);
+        Business business = businessValidator.validateBusinessExists(businessId);
 
         // 2. BusinessHours 조회
         List<BusinessHours> businessHours =
