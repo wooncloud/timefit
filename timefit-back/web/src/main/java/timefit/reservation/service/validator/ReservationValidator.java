@@ -9,6 +9,7 @@ import timefit.reservation.entity.Reservation;
 import timefit.reservation.repository.ReservationRepository;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 /**
@@ -23,6 +24,8 @@ import java.util.UUID;
 public class ReservationValidator {
 
     private final ReservationRepository reservationRepository;
+
+    private static final int MAX_SEARCH_YEARS = 5;
 
     /**
      * 예약 존재 여부 검증 및 조회
@@ -124,5 +127,35 @@ public class ReservationValidator {
         validateOwner(reservation, customerId);
         validateCancellable(reservation);
         return reservation;
+    }
+
+    /**
+     * 날짜 범위 검증 (5년 상한선)
+     *
+     * @param startDate 시작 날짜
+     * @param endDate 종료 날짜
+     * @throws ReservationException 날짜 범위가 5년을 초과하는 경우
+     */
+    public void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            return; // null인 경우는 Service 에서 디폴트 처리
+        }
+
+        // 시작일이 종료일보다 미래인 경우
+        if (startDate.isAfter(endDate)) {
+            throw new ReservationException(
+                    ReservationErrorCode.INVALID_DATE_FORMAT,
+                    "시작 날짜는 종료 날짜보다 이전이어야 합니다.");
+        }
+
+        // 5년 상한선 검증
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        if (daysBetween > (MAX_SEARCH_YEARS * 365)) {
+            throw new ReservationException(
+                    ReservationErrorCode.INVALID_DATE_FORMAT,
+                    "검색 가능한 최대 기간은 " + MAX_SEARCH_YEARS + "년입니다.");
+        }
+
+        log.debug("날짜 범위 검증 통과: {} ~ {} ({} 일)", startDate, endDate, daysBetween);
     }
 }
