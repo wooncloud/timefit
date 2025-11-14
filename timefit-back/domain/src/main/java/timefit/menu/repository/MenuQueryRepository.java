@@ -7,22 +7,20 @@ import java.util.UUID;
 
 public interface MenuQueryRepository {
 
-    // 업체의 활성 메뉴만 조회
+    /*
+    *   업체의 활성 메뉴만 조회
+    *   BooleanExpression은 null 이면 자동으로 조건 무시합니다.
+    *   우선 where 절에 여러 필터 조건 (category, name, price, active) 묶어서 보내는 방식으로 작성함.
+    */
+
+
     List<Menu> findActiveMenusByBusinessId(UUID businessId);
 
-    // 메뉴명으로 검색 (업체 내, 대소문자 무시)
-    List<Menu> searchMenusByName(UUID businessId, String serviceName);
-
-    // 가격 범위로 검색 (업체 내)
-    List<Menu> findMenusByPriceRange(UUID businessId, Integer minPrice, Integer maxPrice);
-
-    /**
-     * BusinessCategory별 메뉴 조회
-     * - 특정 업체의 특정 카테고리에 속한 메뉴 조회
-     *
-     * @param businessId 업체 ID
-     * @param businessCategoryId BusinessCategory ID
-     * @return 해당 카테고리의 메뉴 목록
-     */
-    List<Menu> findMenusByBusinessCategory(UUID businessId, UUID businessCategoryId);
+    // 종합 검색 필터 (모든 조건 AND 결합)
+    List<Menu> findMenusWithFilters(
+            UUID businessId, String serviceName,
+            UUID businessCategoryId,
+            Integer minPrice, Integer maxPrice,
+            Boolean isActive
+    );
 }
