@@ -8,7 +8,6 @@ import timefit.business.entity.Business;
 import timefit.business.entity.BusinessCategory;
 import timefit.business.entity.BusinessTypeCode;
 import timefit.business.entity.ServiceCategoryCode;
-import timefit.business.repository.BusinessCategoryRepository;
 import timefit.business.service.validator.BusinessCategoryValidator;
 import timefit.business.service.validator.BusinessValidator;
 import timefit.exception.businesscategory.BusinessCategoryErrorCode;
@@ -22,6 +21,10 @@ import timefit.menu.service.validator.MenuValidator;
 
 import java.util.UUID;
 
+/**
+ * Menu CUD 전담 서비스
+ * - 생성, 수정, 삭제 (논리 삭제)
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,17 +32,12 @@ import java.util.UUID;
 public class MenuCommandService {
 
     private final MenuRepository menuRepository;
-    private final BusinessCategoryRepository businessCategoryRepository;
     private final BusinessValidator businessValidator;
     private final BusinessCategoryValidator businessCategoryValidator;
     private final MenuValidator menuValidator;
 
     /**
      * 메뉴 생성
-     * 1. businessType 검증 (Business.businessTypes에 포함)
-     * 2. categoryCode 검증 (businessType에 속하는지)
-     * 3. BusinessCategory 자동 생성/조회
-     * 4. Menu 생성 시 BusinessCategory 전달
      */
     public MenuResponse createMenu(
             UUID businessId,
@@ -49,29 +47,17 @@ public class MenuCommandService {
         log.info("메뉴 생성 시작: businessId={}, userId={}, serviceName={}",
                 businessId, currentUserId, request.getServiceName());
 
-        // 1. 권한 검증 및 Business 조회
+        // 1. 권한 검증
         Business business = businessValidator.validateBusinessAccess(currentUserId, businessId);
 
-        // 2. businessType 검증: Business.businessTypes에 포함되는지 확인
-        if (!business.getBusinessTypes().contains(request.getBusinessType())) {
-            throw new BusinessCategoryException(
-                    BusinessCategoryErrorCode.CATEGORY_NOT_FOUND);
-        }
-
-        // 3. categoryCode 검증: businessType에 속하는지 확인
-        businessCategoryValidator.validateCategoryCodeBelongsToBusinessType(
-                request.getBusinessType(),
-                request.getCategoryCode()
-        );
-
-        // 4. BusinessCategory 찾기 또는 자동 생성 (핵심!)
+        // 2. BusinessCategory 조회 및 검증
         BusinessCategory businessCategory = getBusinessCategory(
                 business,
                 request.getBusinessType(),
                 request.getCategoryCode()
         );
 
-        // 5. Menu Entity 생성 (businessCategory 전달)
+        // 3. Menu Entity 생성 (정적 팩토리)
         Menu menu;
         if (OrderType.RESERVATION_BASED.equals(request.getOrderType())) {
             menu = Menu.createReservationBased(
@@ -95,14 +81,12 @@ public class MenuCommandService {
             );
         }
 
-        // 6. 저장
+        // 4. 저장
         Menu savedMenu = menuRepository.save(menu);
 
-        log.info("메뉴 생성 완료: menuId={}, serviceName={}, businessCategoryId={}",
-                savedMenu.getId(), savedMenu.getServiceName(), businessCategory.getId());
+        log.info("메뉴 생성 완료: menuId={}, serviceName={}", savedMenu.getId(), savedMenu.getServiceName());
 
-        // 7. DTO 변환
-        return MenuResponse.of(savedMenu);
+        return MenuResponse.from(savedMenu);
     }
 
     /**
@@ -202,10 +186,58 @@ public class MenuCommandService {
             menu.updateImageUrl(request.getImageUrl());
         }
 
+        // 7. 활성/비활성 상태 변경 (추가됨)
+        if (request.getIsActive() != null &&
+                !request.getIsActive().equals(menu.getIsActive())) {
+            if (request.getIsActive()) {
+                menu.activate();
+            } else {
+                menu.deactivate();
+            }
+        }
+
         log.info("메뉴 수정 완료: menuId={}", menuId);
 
-        // 7. DTO 변환 (save 불필요, 영속성 컨텍스트가 관리)
-        return MenuResponse.of(menu);
+        // 8. DTO 변환 ( from() 사용, save 불필요 - 영속성 컨텍스트가 관리)
+        return MenuResponse.from(menu);
+    }
+
+    /**
+     * 메뉴 활성/비활성 토글
+     * 현재 상태의 반대로 전환
+     *
+     * @param businessId 업체 ID
+     * @param menuId 메뉴 ID
+     * @param currentUserId 현재 사용자 ID
+     * @return MenuResponse
+     */
+    public MenuResponse toggleMenuActive(
+            UUID businessId,
+            UUID menuId,
+            UUID currentUserId) {
+
+        log.info("메뉴 활성상태 토글 시작: businessId={}, menuId={}, userId={}",
+                businessId, menuId, currentUserId);
+
+        // 1. 권한 검증
+        businessValidator.validateBusinessAccess(currentUserId, businessId);
+
+        // 2. Menu 조회 및 검증
+        Menu menu = menuValidator.validateMenuOfBusiness(menuId, businessId);
+
+        // 3. 활성상태 토글
+        if (menu.getIsActive()) {
+            menu.deactivate();
+            log.info("메뉴 비활성화: menuId={}", menuId);
+        } else {
+            menu.activate();
+            log.info("메뉴 활성화: menuId={}", menuId);
+        }
+
+        log.info("메뉴 활성상태 토글 완료: menuId={}, isActive={}", menuId, menu.getIsActive());
+
+        // 4. DTO 변환
+        return MenuResponse.from(menu);
     }
 
     /**

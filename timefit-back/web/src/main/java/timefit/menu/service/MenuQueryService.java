@@ -16,8 +16,7 @@ import java.util.UUID;
 
 /**
  * Menu 조회 전담 서비스
- * - MenuResponse, MenuSummary가 BusinessCategory 정보 포함
- * - 기존 조회 로직은 변경 불필요 (DTO의 of() 메서드가 처리)
+ * - MenuResponse, MenuListResponse가 BusinessCategory 정보 포함
  */
 @Slf4j
 @Service
@@ -65,6 +64,6 @@ public class MenuQueryService {
         log.info("메뉴 상세 조회 완료: menuId={}, serviceName={}",
                 menu.getId(), menu.getServiceName());
 
-        return MenuResponse.of(menu);
+        return MenuResponse.from(menu);
     }
 }

@@ -95,6 +95,25 @@ public class MenuController {
     }
 
     /**
+     *  메뉴 활성/비활성 토글
+     * 권한: OWNER, MANAGER
+     * - 현재 활성 상태 → 비활성
+     * - 현재 비활성 상태 → 활성
+     */
+    @PatchMapping("/{menuId}/toggle")
+    public ResponseEntity<ResponseData<MenuResponse>> toggleMenuActive(
+            @PathVariable UUID businessId,
+            @PathVariable UUID menuId,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("메뉴 활성상태 토글 요청: businessId={}, menuId={}, userId={}",
+                businessId, menuId, currentUserId);
+
+        MenuResponse response = menuService.toggleMenuActive(businessId, menuId, currentUserId);
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
+    /**
      * 메뉴 삭제 (비활성화)
      * 권한: OWNER, MANAGER
      */
