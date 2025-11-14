@@ -59,6 +59,33 @@ public class MenuController {
     }
 
     /**
+     * 메뉴 목록 조회 (검색/필터링)
+     * 권한: 불필요 (공개 API)
+     * - serviceName: 서비스명 검색 (부분 일치, 대소문자 무시)
+     * - businessCategoryId: 카테고리 ID 필터
+     * - minPrice: 최소 가격
+     * - maxPrice: 최대 가격
+     * - isActive: 활성 상태
+     */
+    @GetMapping
+    public ResponseEntity<ResponseData<MenuListResponse>> getMenuList(
+            @PathVariable UUID businessId,
+            @RequestParam(required = false) String serviceName,
+            @RequestParam(required = false) UUID businessCategoryId,
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice,
+            @RequestParam(required = false) Boolean isActive) {
+
+        log.info("메뉴 목록 조회: businessId={}, filters=[name={}, category={}, price={}-{}, active={}]",
+                businessId, serviceName, businessCategoryId, minPrice, maxPrice, isActive);
+
+        MenuListResponse response = menuService.getMenuListWithFilters(
+                businessId, serviceName, businessCategoryId, minPrice, maxPrice, isActive);
+
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
+    /**
      * 메뉴 생성
      * 권한: OWNER, MANAGER
      */
@@ -80,7 +107,7 @@ public class MenuController {
      * 메뉴 수정
      * 권한: OWNER, MANAGER
      */
-    @PutMapping("/{menuId}")
+    @PatchMapping("/{menuId}")
     public ResponseEntity<ResponseData<MenuResponse>> updateMenu(
             @PathVariable UUID businessId,
             @PathVariable UUID menuId,

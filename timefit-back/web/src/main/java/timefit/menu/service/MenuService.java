@@ -41,6 +41,22 @@ public class MenuService {
     }
 
     /**
+     * 메뉴 목록 조회 (검색/필터링)
+     * 권한: 불필요 (공개 API)
+     */
+    public MenuListResponse getMenuListWithFilters(
+            UUID businessId,
+            String serviceName,
+            UUID businessCategoryId,
+            Integer minPrice,
+            Integer maxPrice,
+            Boolean isActive) {
+
+        return menuQueryService.getMenuListWithFilters(
+                businessId, serviceName, businessCategoryId, minPrice, maxPrice, isActive);
+    }
+
+    /**
      * 메뉴 생성
      * 권한: OWNER, MANAGER
      */
