@@ -124,6 +124,7 @@ public class ReservationController {
     public ResponseEntity<ResponseData<ReservationResponseDto.BusinessReservationList>> getBusinessReservations(
             @PathVariable UUID businessId,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String customerName,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "0") int page,
@@ -134,7 +135,8 @@ public class ReservationController {
                 businessId, currentUserId, status);
 
         ReservationResponseDto.BusinessReservationList response = reservationService.getBusinessReservations(
-                businessId, currentUserId, status, startDate, endDate, page, size);
+                businessId, currentUserId, status, customerName,
+                startDate, endDate, page, size);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }

@@ -18,6 +18,7 @@ import timefit.reservation.dto.ReservationResponseDto;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
 import timefit.reservation.repository.ReservationQueryRepository;
+import timefit.reservation.service.util.ReservationTimeUtil;
 import timefit.reservation.service.validator.ReservationValidator;
 
 import java.time.LocalDate;
@@ -97,26 +98,60 @@ public class ReservationQueryService {
 
     /**
      * 업체 예약 목록 조회 (업체)
+     *
+     * @param businessId 업체 ID
+     * @param currentUserId 현재 사용자 ID
+     * @param status 예약 상태 필터 (선택)
+     * @param customerName 고객명 검색 (선택) - 대소문자 무시
+     * @param startDate 시작 날짜 (선택, 기본값: 30일 전)
+     * @param endDate 종료 날짜 (선택, 기본값: 오늘)
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기 (1-100)
+     * @return 업체 예약 목록 및 페이징 정보
      */
     public ReservationResponseDto.BusinessReservationList getBusinessReservations(
-            UUID businessId, UUID currentUserId, String status,
-            LocalDate startDate, LocalDate endDate, int page, int size) {
+            UUID businessId,
+            UUID currentUserId,
+            String status,
+            String customerName,
+            LocalDate startDate,
+            LocalDate endDate,
+            int page,
+            int size) {
 
-        log.info("업체 예약 목록 조회 시작: businessId={}, userId={}, status={}",
-                businessId, currentUserId, status);
+        log.info("업체 예약 목록 조회 시작: businessId={}, userId={}, status={}, customerName={}",
+                businessId, currentUserId, status, customerName);
 
+        // 1. 업체 조회
         Business business = getBusinessEntity(businessId);
 
+        // 2. 페이징 파라미터 검증
         validatePagingParameters(page, size);
 
+        // 3. 상태 파싱
         ReservationStatus reservationStatus = parseStatus(status);
 
+        // 4. 날짜 범위 결정 (디폴트: 시작일 30일 전, 종료일 오늘)
+        LocalDate queryStartDate = ReservationTimeUtil.determineStartDate(startDate);
+        LocalDate queryEndDate = ReservationTimeUtil.determineEndDate(endDate);
+
+        // 5. 날짜 범위 검증 (5년 상한선, 시작/종료일 순서 체크)
+        reservationValidator.validateDateRange(queryStartDate, queryEndDate);
+
+        // 6. 페이징 설정 (최신 순)
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "reservationDate", "reservationTime"));
 
+        // 7. 예약 목록 조회 (필터링 적용)
         Page<Reservation> reservationPage = reservationQueryRepository.findBusinessReservationsWithFilters(
-                businessId, reservationStatus, startDate, endDate, pageable);
+                businessId,
+                reservationStatus,
+                customerName,
+                queryStartDate,
+                queryEndDate,
+                pageable);
 
+        // 8. 업체 정보 DTO 생성
         ReservationResponseDto.BusinessInfo businessInfo = ReservationResponseDto.BusinessInfo.of(
                 business.getId(),
                 business.getBusinessName(),
@@ -124,18 +159,25 @@ public class ReservationQueryService {
                 business.getContactPhone()
         );
 
+        // 9. 예약 목록 DTO 변환
         List<ReservationResponseDto.BusinessReservationItem> reservationItems = reservationPage.getContent()
                 .stream()
                 .map(this::convertToBusinessReservationItem)
                 .collect(Collectors.toList());
 
+        // 10. 페이징 정보 DTO 생성
         ReservationResponseDto.PaginationInfo paginationInfo = createPaginationInfo(reservationPage);
 
-        log.info("업체 예약 목록 조회 완료: businessId={}, totalElements={}",
-                businessId, reservationPage.getTotalElements());
+        log.info("업체 예약 목록 조회 완료: businessId={}, totalElements={}, currentPage={}, customerFilter={}",
+                businessId, reservationPage.getTotalElements(), page,
+                customerName != null ? "적용됨" : "없음");
 
+        // 11. 최종 응답 생성
         return ReservationResponseDto.BusinessReservationList.of(
-                businessInfo, reservationItems, paginationInfo);
+                businessInfo,
+                reservationItems,
+                paginationInfo
+        );
     }
 
     /**
