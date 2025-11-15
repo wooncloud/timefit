@@ -49,11 +49,11 @@ const getStatusBadgeVariant = (status: TeamMember['status']) => {
 const getRoleLabel = (role: TeamMember['role']) => {
   switch (role) {
     case 'OWNER':
-      return 'OWNER';
+      return '관리자';
     case 'MANAGER':
-      return 'MANAGER';
+      return '매니저';
     case 'MEMBER':
-      return 'MEMBER';
+      return '멤버(직원)';
     default:
       return role;
   }

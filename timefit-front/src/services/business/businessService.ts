@@ -5,7 +5,6 @@ import type {
 
 class BusinessService {
   private apiUrl = '/api/auth/business';
-  private businessApiUrl = '/api/business';
 
   /**
    * 사업자 등록 API 호출

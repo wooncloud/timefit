@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table } from '@/components/ui/table';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Loader2, AlertCircle } from 'lucide-react';
 import { TeamTableHeader } from '@/components/business/settings/team/team-table-header';
 import { TeamTableBody } from '@/components/business/settings/team/team-table-body';
 import {
@@ -14,16 +14,39 @@ import {
 import { ChangeRoleDialog } from '@/components/business/settings/team/change-role-dialog';
 import { ChangeStatusDialog } from '@/components/business/settings/team/change-status-dialog';
 import type { TeamMember } from '@/components/business/settings/team/team-table-row';
-import { mockTeamMembers } from '@/lib/mock';
+import { useTeamMembers } from '@/hooks/business/useTeamMembers';
+import { useBusinessStore } from '@/store/business-store';
+import type { TeamMemberDetail } from '@/types/business/teamMember';
+
+// 백엔드 TeamMemberDetail을 프론트엔드 TeamMember로 변환
+const convertToTeamMember = (member: TeamMemberDetail): TeamMember => {
+  // isActive에 따라 상태 결정
+  const status: TeamMember['status'] = member.isActive ? 'active' : 'inactive';
+
+  return {
+    id: member.userId,
+    name: member.name,
+    email: member.email,
+    role: member.role,
+    joinDate: new Date(member.joinedAt).toLocaleDateString('ko-KR'),
+    status,
+  };
+};
 
 export default function Page() {
+  const { business } = useBusinessStore();
+  const businessId = business?.businessId || '';
+  const { data, loading, error } = useTeamMembers(businessId);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
   const [changeStatusDialogOpen, setChangeStatusDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
 
+  // 백엔드 데이터를 프론트엔드 형식으로 변환
+  const teamMembers = data?.members.map(convertToTeamMember) || [];
+
   const handleChangeRole = (memberId: string) => {
-    const member = mockTeamMembers.find((m) => m.id === memberId);
+    const member = teamMembers.find((m) => m.id === memberId);
     if (member) {
       setSelectedMember(member);
       setChangeRoleDialogOpen(true);
@@ -31,7 +54,7 @@ export default function Page() {
   };
 
   const handleChangeStatus = (memberId: string) => {
-    const member = mockTeamMembers.find((m) => m.id === memberId);
+    const member = teamMembers.find((m) => m.id === memberId);
     if (member) {
       // 초대중 상태인 경우 상태 변경 불가
       if (member.status === 'invited') {
@@ -69,6 +92,25 @@ export default function Page() {
     // TODO: API 호출로 상태 변경 로직 구현
   };
 
+  // 로딩 상태
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-8">
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <p className="text-sm text-muted-foreground">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <Card>
@@ -83,7 +125,7 @@ export default function Page() {
           <Table>
             <TeamTableHeader />
             <TeamTableBody
-              members={mockTeamMembers}
+              members={teamMembers}
               onChangeRole={handleChangeRole}
               onChangeStatus={handleChangeStatus}
               onDelete={handleDelete}
