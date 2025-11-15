@@ -5,21 +5,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import timefit.business.dto.BusinessRequest;
-import timefit.business.dto.BusinessResponse;
+import timefit.business.dto.BusinessRequestDto;
+import timefit.business.dto.BusinessResponseDto;
 import timefit.business.entity.BusinessTypeCode;
 import timefit.business.service.BusinessService;
 import timefit.common.ResponseData;
 import timefit.common.auth.CurrentUserId;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
  * Business Controller
  * 권한:
- * - OWNER: 모든 권한 (생성, 조회, 수정, 삭제, 구성원 관리)
- * - MANAGER: 업체 정보 조회/수정, 구성원 조회/초대 (삭제/권한변경 불가)
+ * - OWNER: 모든 권한
+ * - MANAGER: 업체 정보 조회/수정, 구성원 조회/초대
  * - MEMBER: 업체 정보 조회만 가능
  */
 @Slf4j
@@ -39,12 +38,12 @@ public class BusinessController {
      * 권한: 누구나 조회 가능
      */
     @GetMapping("/{businessId}")
-    public ResponseData<BusinessResponse.PublicBusinessDetail> getBusinessDetail(
+    public ResponseData<BusinessResponseDto.PublicBusinessResponse> getBusinessDetail(
             @PathVariable UUID businessId) {
 
         log.info("업체 상세 조회 요청: businessId={}", businessId);
 
-        BusinessResponse.PublicBusinessDetail response = businessService.getBusinessDetail(businessId);
+        BusinessResponseDto.PublicBusinessResponse response = businessService.getPublicBusinessDetail(businessId);
         return ResponseData.of(response);
     }
 
@@ -53,7 +52,7 @@ public class BusinessController {
      * 권한: 누구나 검색 가능
      */
     @GetMapping("/search")
-    public ResponseData<BusinessResponse.BusinessSearchResult> searchBusinesses(
+    public ResponseData<BusinessResponseDto.BusinessListResponse> searchBusinesses(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) BusinessTypeCode businessType,
             @RequestParam(required = false) String region,
@@ -63,7 +62,7 @@ public class BusinessController {
         log.info("업체 검색 요청: keyword={}, businessType={}, region={}, page={}, size={}",
                 keyword, businessType, region, page, size);
 
-        BusinessResponse.BusinessSearchResult response = businessService.searchBusinesses(
+        BusinessResponseDto.BusinessListResponse response = businessService.searchBusinesses(
                 keyword, businessType, region, page, size);
         return ResponseData.of(response);
     }
@@ -74,15 +73,32 @@ public class BusinessController {
 
     /**
      * 내가 속한 업체 목록 조회
-     * 권한: 로그인한 사용자 본인 (모든 권한)
+     * 권한: 로그인한 사용자 본인
+     * TODO: rename 고려
      */
-    @GetMapping("/my")
-    public ResponseData<List<BusinessResponse.BusinessSummary>> getMyBusinesses(
+    @GetMapping("/my-businesses")
+    public ResponseData<BusinessResponseDto.BusinessListResponse> getMyBusinesses(
             @CurrentUserId UUID currentUserId) {
 
         log.info("내 업체 목록 조회 요청: userId={}", currentUserId);
 
-        List<BusinessResponse.BusinessSummary> response = businessService.getMyBusinesses(currentUserId);
+        BusinessResponseDto.BusinessListResponse response = businessService.getMyBusinesses(currentUserId);
+        return ResponseData.of(response);
+    }
+
+    /**
+     * 사업자용 업체 상세 조회 (민감 정보 포함)
+     * 권한: OWNER/MANAGER/MEMBER
+     */
+    @GetMapping("/{businessId}/profile")
+    public ResponseData<BusinessResponseDto.BusinessResponse> getBusinessProfile(
+            @PathVariable UUID businessId,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("사업자용 업체 상세 조회 요청: businessId={}, userId={}", businessId, currentUserId);
+
+        BusinessResponseDto.BusinessResponse response = businessService.getBusinessProfile(
+                businessId, currentUserId);
         return ResponseData.of(response);
     }
 
@@ -92,13 +108,13 @@ public class BusinessController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<BusinessResponse.BusinessDetail> createBusiness(
-            @Valid @RequestBody BusinessRequest.CreateBusiness request,
+    public ResponseData<BusinessResponseDto.BusinessResponse> createBusiness(
+            @Valid @RequestBody BusinessRequestDto.CreateBusinessRequest request,
             @CurrentUserId UUID ownerId) {
 
-        log.info("업체 생성 요청: ownerId={}, businessName={}", ownerId, request.getBusinessName());
+        log.info("업체 생성 요청: ownerId={}, businessName={}", ownerId, request.businessName());
 
-        BusinessResponse.BusinessDetail response = businessService.createBusiness(request, ownerId);
+        BusinessResponseDto.BusinessResponse response = businessService.createBusiness(request, ownerId);
         return ResponseData.of(response);
     }
 
@@ -107,14 +123,14 @@ public class BusinessController {
      * 권한: OWNER, MANAGER만 가능
      */
     @PutMapping("/{businessId}")
-    public ResponseData<BusinessResponse.BusinessProfile> updateBusiness(
+    public ResponseData<BusinessResponseDto.BusinessResponse> updateBusiness(
             @PathVariable UUID businessId,
-            @Valid @RequestBody BusinessRequest.UpdateBusiness request,
+            @Valid @RequestBody BusinessRequestDto.UpdateBusinessRequest request,
             @CurrentUserId UUID currentUserId) {
 
         log.info("업체 정보 수정 요청: businessId={}, userId={}", businessId, currentUserId);
 
-        BusinessResponse.BusinessProfile response = businessService.updateBusiness(
+        BusinessResponseDto.BusinessResponse response = businessService.updateBusiness(
                 businessId, request, currentUserId);
         return ResponseData.of(response);
     }
@@ -124,14 +140,14 @@ public class BusinessController {
      * 권한: OWNER만 가능
      */
     @DeleteMapping("/{businessId}")
-    public ResponseData<BusinessResponse.DeleteResult> deleteBusiness(
+    public ResponseData<BusinessResponseDto.DeleteBusinessResponse> deleteBusiness(
             @PathVariable UUID businessId,
-            @Valid @RequestBody BusinessRequest.DeleteBusiness request,
+            @Valid @RequestBody BusinessRequestDto.DeleteBusinessRequest request,
             @CurrentUserId UUID currentUserId) {
 
         log.info("업체 삭제 요청: businessId={}, userId={}", businessId, currentUserId);
 
-        BusinessResponse.DeleteResult response = businessService.deleteBusiness(
+        BusinessResponseDto.DeleteBusinessResponse response = businessService.deleteBusiness(
                 businessId, request, currentUserId);
         return ResponseData.of(response);
     }
@@ -145,32 +161,33 @@ public class BusinessController {
      * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
      */
     @GetMapping("/{businessId}/members")
-    public ResponseData<BusinessResponse.MembersListResult> getMembersList(
+    public ResponseData<BusinessResponseDto.MemberListResponse> getMembersList(
             @PathVariable UUID businessId,
             @CurrentUserId UUID currentUserId) {
 
         log.info("구성원 목록 조회 요청: businessId={}, userId={}", businessId, currentUserId);
 
-        BusinessResponse.MembersListResult response = businessService.getMembersList(
+        BusinessResponseDto.MemberListResponse response = businessService.getMembersList(
                 businessId, currentUserId);
         return ResponseData.of(response);
     }
 
     /**
      * 구성원 초대
-     * 권한: OWNER, MANAGER (MANAGER는 MANAGER/MEMBER만 초대 가능)
+     * 권한: OWNER, MANAGER
+     * 변경사항: 신규 초대는 무조건 MEMBER로 생성
      */
     @PostMapping("/{businessId}/member")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<BusinessResponse.InvitationResult> inviteUser(
+    public ResponseData<BusinessResponseDto.MemberListResponse.MemberResponse> inviteMember(
             @PathVariable UUID businessId,
-            @Valid @RequestBody BusinessRequest.InviteUser request,
+            @Valid @RequestBody BusinessRequestDto.InviteMemberRequest request,
             @CurrentUserId UUID inviterUserId) {
 
-        log.info("구성원 초대 요청: businessId={}, inviterUserId={}, email={}, role={}",
-                businessId, inviterUserId, request.getEmail(), request.getRole());
+        log.info("구성원 초대 요청: businessId={}, inviterUserId={}, email={}",
+                businessId, inviterUserId, request.email());
 
-        BusinessResponse.InvitationResult response = businessService.inviteUser(
+        BusinessResponseDto.MemberListResponse.MemberResponse response = businessService.inviteMember(
                 businessId, request, inviterUserId);
         return ResponseData.of(response);
     }
@@ -179,17 +196,17 @@ public class BusinessController {
      * 구성원 권한 변경
      * 권한: OWNER만 가능
      */
-    @PatchMapping("/{businessId}/member/{targetUserId}/role")
-    public ResponseData<Void> changeUserRole(
+    @PatchMapping("/{businessId}/member/{userId}/role")
+    public ResponseData<Void> changeMemberRole(
             @PathVariable UUID businessId,
-            @PathVariable UUID targetUserId,
-            @Valid @RequestBody BusinessRequest.ChangeRole request,
+            @PathVariable UUID userId,
+            @Valid @RequestBody BusinessRequestDto.ChangeMemberRoleRequest request,
             @CurrentUserId UUID currentUserId) {
 
-        log.info("구성원 권한 변경 요청: businessId={}, targetUserId={}, newRole={}, requesterUserId={}",
-                businessId, targetUserId, request.getNewRole(), currentUserId);
+        log.info("구성원 권한 변경 요청: businessId={}, targetUserId={}, newRole={}, requesterId={}",
+                businessId, userId, request.newRole(), currentUserId);
 
-        businessService.changeUserRole(businessId, targetUserId, request, currentUserId);
+        businessService.changeMemberRole(businessId, userId, request, currentUserId);
         return ResponseData.of(null);
     }
 
@@ -197,16 +214,51 @@ public class BusinessController {
      * 구성원 제거
      * 권한: OWNER는 모든 구성원 제거 가능, MANAGER는 MEMBER만 제거 가능
      */
-    @DeleteMapping("/{businessId}/member/{targetUserId}")
+    @DeleteMapping("/{businessId}/member/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseData<Void> removeMember(
             @PathVariable UUID businessId,
-            @PathVariable UUID targetUserId,
+            @PathVariable UUID userId,
             @CurrentUserId UUID requesterUserId) {
 
-        log.info("구성원 제거 요청: businessId={}, targetUserId={}, requesterUserId={}",
-                businessId, targetUserId, requesterUserId);
+        log.info("구성원 제거 요청: businessId={}, targetUserId={}, requesterId={}",
+                businessId, userId, requesterUserId);
 
-        businessService.removeMember(businessId, targetUserId, requesterUserId);
+        businessService.removeMember(businessId, userId, requesterUserId);
+        return ResponseData.of(null);
+    }
+
+    /**
+     * 구성원 활성화
+     * 권한: OWNER, MANAGER
+     */
+    @PatchMapping("/{businessId}/member/{userId}/activate")
+    public ResponseData<Void> activateMember(
+            @PathVariable UUID businessId,
+            @PathVariable UUID userId,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("구성원 활성화 요청: businessId={}, targetUserId={}, requesterId={}",
+                businessId, userId, currentUserId);
+
+        businessService.activateMember(businessId, userId, currentUserId);
+        return ResponseData.of(null);
+    }
+
+    /**
+     * 구성원 비활성화
+     * 권한: OWNER, MANAGER
+     */
+    @PatchMapping("/{businessId}/member/{userId}/deactivate")
+    public ResponseData<Void> deactivateMember(
+            @PathVariable UUID businessId,
+            @PathVariable UUID userId,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("구성원 비활성화 요청: businessId={}, targetUserId={}, requesterId={}",
+                businessId, userId, currentUserId);
+
+        businessService.deactivateMember(businessId, userId, currentUserId);
         return ResponseData.of(null);
     }
 }
