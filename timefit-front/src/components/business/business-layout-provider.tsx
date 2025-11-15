@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useUserStore } from '@/store/user-store';
 import { useBusinessStore } from '@/store/business-store';
-import { useBusinessData } from '@/hooks/business/useBusinessData';
 import type { SessionUser } from '@/lib/session/options';
 
 interface BusinessLayoutProviderProps {
@@ -51,9 +50,6 @@ export function BusinessLayoutProvider({
       setBusiness(firstBusiness);
     }
   }, [sessionUser, setUser, setBusiness]);
-
-  // 세션에 없는 경우 API에서 비즈니스 데이터 로드
-  useBusinessData();
 
   return <>{children}</>;
 }
