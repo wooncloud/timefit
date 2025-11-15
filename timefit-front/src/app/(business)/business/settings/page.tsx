@@ -8,17 +8,29 @@ import { FormLabel } from '@/components/business/settings/form-label';
 import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
 import { AddressSearch } from '@/components/business/settings/address-search';
 import { useBusinessStore } from '@/store';
+import { useBusinessDetail } from '@/hooks/business/useBusinessDetail';
 
 export default function Page() {
-  const { business, loading } = useBusinessStore();
+  const { business: storedBusiness } = useBusinessStore();
+  const {
+    business: detailBusiness,
+    loading,
+    error,
+  } = useBusinessDetail(storedBusiness?.businessId || '');
 
   if (loading) {
     return <div>로딩 중...</div>;
   }
 
-  if (!business) {
+  if (error) {
+    return <div>오류: {error}</div>;
+  }
+
+  if (!detailBusiness) {
     return <div>사업자 정보가 없습니다.</div>;
   }
+
+  const business = detailBusiness;
 
   return (
     <div>

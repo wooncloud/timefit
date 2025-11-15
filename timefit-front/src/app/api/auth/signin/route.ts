@@ -56,6 +56,9 @@ export async function POST(request: NextRequest) {
     const payloadAccessToken = responseData.data?.accessToken;
     const accessToken = payloadAccessToken || headerAccessToken;
 
+    // refreshToken 추출 (백엔드 응답에서)
+    const refreshToken = responseData.data?.refreshToken;
+
     if (!accessToken) {
       const errorPayload: SigninHandlerErrorResponse = {
         success: false,
@@ -96,6 +99,7 @@ export async function POST(request: NextRequest) {
     session.user = {
       ...(userProfile as SessionUser),
       accessToken,
+      refreshToken, // refreshToken도 세션에 저장
     };
     await session.save();
     return responseJson;

@@ -1,15 +1,15 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { MyBusinessItem } from '@/types/business/myBusiness';
+import type { AuthBusinessInfo } from '@/types/auth/user';
 
 interface BusinessState {
-  business: MyBusinessItem | null;
+  business: AuthBusinessInfo | null;
   loading: boolean;
   _hasHydrated: boolean;
 }
 
 interface BusinessActions {
-  setBusiness: (business: MyBusinessItem | null) => void;
+  setBusiness: (business: AuthBusinessInfo | null) => void;
   setLoading: (loading: boolean) => void;
   reset: () => void;
 }

@@ -21,6 +21,7 @@ export interface SigninApiResponse {
  */
 export interface SigninSuccessPayload extends AuthUserProfile {
   accessToken?: string;
+  refreshToken?: string;
 }
 
 /**

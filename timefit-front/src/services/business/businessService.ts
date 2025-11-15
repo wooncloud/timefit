@@ -2,7 +2,6 @@ import type {
   CreateBusinessRequestBody,
   CreateBusinessHandlerResponse,
 } from '@/types/auth/business/createBusiness';
-import type { GetMyBusinessHandlerResponse } from '@/types/business/myBusiness';
 
 class BusinessService {
   private apiUrl = '/api/auth/business';
@@ -26,25 +25,6 @@ class BusinessService {
 
     if (!response.ok) {
       throw new Error(result.message || '사업자 등록에 실패했습니다.');
-    }
-
-    return result;
-  }
-
-  /**
-   * 내 사업자 목록 조회
-   */
-  async getMyBusiness(): Promise<GetMyBusinessHandlerResponse> {
-    const response = await fetch(`${this.businessApiUrl}/my`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const result = (await response.json()) as GetMyBusinessHandlerResponse;
-
-    if (!response.ok) {
-      throw new Error(result.message || '사업자 목록 조회 실패');
     }
 
     return result;
