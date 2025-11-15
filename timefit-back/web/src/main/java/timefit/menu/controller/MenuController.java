@@ -29,19 +29,19 @@ public class MenuController {
 
     private final MenuService menuService;
 
-    /**
-     * 메뉴 목록 조회
-     * 권한: 불필요 (공개 API)
-     */
-    @GetMapping
-    public ResponseEntity<ResponseData<MenuListResponse>> getMenuList(
-            @PathVariable UUID businessId) {
+//     /**
+//      * 메뉴 목록 조회
+//      * 권한: 불필요 (공개 API)
+//      */
+//     @GetMapping
+//     public ResponseEntity<ResponseData<MenuListResponse>> getMenuList(
+//             @PathVariable UUID businessId) {
 
-        log.info("메뉴 목록 조회 요청: businessId={}", businessId);
+//         log.info("메뉴 목록 조회 요청: businessId={}", businessId);
 
-        MenuListResponse response = menuService.getMenuList(businessId);
-        return ResponseEntity.ok(ResponseData.of(response));
-    }
+//         MenuListResponse response = menuService.getMenuList(businessId);
+//         return ResponseEntity.ok(ResponseData.of(response));
+//     }
 
     /**
      * 메뉴 상세 조회
