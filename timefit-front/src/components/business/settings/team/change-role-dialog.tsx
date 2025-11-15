@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -46,7 +47,7 @@ export function ChangeRoleDialog({
     if (!member) return;
 
     if (selectedRole === member.role) {
-      alert('현재 역할과 동일합니다.');
+      toast.error('현재 역할과 동일합니다.');
       return;
     }
 

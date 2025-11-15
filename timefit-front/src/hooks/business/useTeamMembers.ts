@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { handleAuthError } from '@/lib/api/handle-auth-error';
 import type {
   MemberListResponse,
@@ -66,7 +67,7 @@ export function useTeamMembers(businessId: string) {
       }
 
       if (!result.success) {
-        alert(result.message || '권한 변경에 실패했습니다.');
+        toast.error(result.message || '권한 변경에 실패했습니다.');
         return false;
       }
 
@@ -75,7 +76,7 @@ export function useTeamMembers(businessId: string) {
       return true;
     } catch (err) {
       console.error('Failed to change member role:', err);
-      alert('권한 변경 중 오류가 발생했습니다.');
+      toast.error('권한 변경 중 오류가 발생했습니다.');
       return false;
     } finally {
       setUpdating(false);
@@ -100,7 +101,7 @@ export function useTeamMembers(businessId: string) {
       }
 
       if (!result.success) {
-        alert(result.message || '활성화에 실패했습니다.');
+        toast.error(result.message || '활성화에 실패했습니다.');
         return false;
       }
 
@@ -109,7 +110,7 @@ export function useTeamMembers(businessId: string) {
       return true;
     } catch (err) {
       console.error('Failed to activate member:', err);
-      alert('활성화 중 오류가 발생했습니다.');
+      toast.error('활성화 중 오류가 발생했습니다.');
       return false;
     } finally {
       setUpdating(false);
@@ -134,7 +135,7 @@ export function useTeamMembers(businessId: string) {
       }
 
       if (!result.success) {
-        alert(result.message || '비활성화에 실패했습니다.');
+        toast.error(result.message || '비활성화에 실패했습니다.');
         return false;
       }
 
@@ -143,7 +144,7 @@ export function useTeamMembers(businessId: string) {
       return true;
     } catch (err) {
       console.error('Failed to deactivate member:', err);
-      alert('비활성화 중 오류가 발생했습니다.');
+      toast.error('비활성화 중 오류가 발생했습니다.');
       return false;
     } finally {
       setUpdating(false);
@@ -168,7 +169,7 @@ export function useTeamMembers(businessId: string) {
       }
 
       if (!result.success) {
-        alert(result.message || '구성원 삭제에 실패했습니다.');
+        toast.error(result.message || '구성원 삭제에 실패했습니다.');
         return false;
       }
 
@@ -177,7 +178,7 @@ export function useTeamMembers(businessId: string) {
       return true;
     } catch (err) {
       console.error('Failed to delete member:', err);
-      alert('구성원 삭제 중 오류가 발생했습니다.');
+      toast.error('구성원 삭제 중 오류가 발생했습니다.');
       return false;
     } finally {
       setUpdating(false);

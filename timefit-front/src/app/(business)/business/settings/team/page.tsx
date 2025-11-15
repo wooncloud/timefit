@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table } from '@/components/ui/table';
@@ -13,6 +14,7 @@ import {
 } from '@/components/business/settings/team/invite-member-dialog';
 import { ChangeRoleDialog } from '@/components/business/settings/team/change-role-dialog';
 import { ChangeStatusDialog } from '@/components/business/settings/team/change-status-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { TeamMember } from '@/components/business/settings/team/team-table-row';
 import { useTeamMembers } from '@/hooks/business/useTeamMembers';
 import { useBusinessStore } from '@/store/business-store';
@@ -48,6 +50,7 @@ export default function Page() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
   const [changeStatusDialogOpen, setChangeStatusDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
 
   // 백엔드 데이터를 프론트엔드 형식으로 변환
@@ -66,7 +69,7 @@ export default function Page() {
     if (member) {
       // 초대중 상태인 경우 상태 변경 불가
       if (member.status === 'invited') {
-        alert('초대중인 팀원은 상태를 변경할 수 없습니다.');
+        toast.error('초대중인 팀원은 상태를 변경할 수 없습니다.');
         return;
       }
       setSelectedMember(member);
@@ -74,14 +77,20 @@ export default function Page() {
     }
   };
 
-  const handleDelete = async (memberId: string) => {
-    if (!confirm('정말로 이 구성원을 삭제하시겠습니까?')) {
-      return;
+  const handleDelete = (memberId: string) => {
+    const member = teamMembers.find((m) => m.id === memberId);
+    if (member) {
+      setSelectedMember(member);
+      setDeleteDialogOpen(true);
     }
+  };
 
-    const success = await deleteMember(memberId);
+  const handleConfirmDelete = async () => {
+    if (!selectedMember) return;
+
+    const success = await deleteMember(selectedMember.id);
     if (success) {
-      alert('구성원이 삭제되었습니다.');
+      toast.success('구성원이 삭제되었습니다.');
     }
   };
 
@@ -96,7 +105,7 @@ export default function Page() {
   ) => {
     const success = await changeMemberRole(memberId, newRole);
     if (success) {
-      alert('권한이 변경되었습니다.');
+      toast.success('권한이 변경되었습니다.');
     }
   };
 
@@ -110,7 +119,7 @@ export default function Page() {
         : await deactivateMember(memberId);
 
     if (success) {
-      alert('상태가 변경되었습니다.');
+      toast.success('상태가 변경되었습니다.');
     }
   };
 
@@ -174,6 +183,17 @@ export default function Page() {
         onOpenChange={setChangeStatusDialogOpen}
         member={selectedMember}
         onConfirm={handleConfirmStatusChange}
+      />
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="구성원 삭제"
+        description={`정말로 ${selectedMember?.name}님을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmText="삭제"
+        cancelText="취소"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

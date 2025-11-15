@@ -11,6 +11,7 @@ import { AddressSearch } from '@/components/business/settings/address-search';
 import { useBusinessStore } from '@/store';
 import { useBusinessDetail } from '@/hooks/business/useBusinessDetail';
 import type { UpdateBusinessRequest } from '@/types/business/businessDetail';
+import { toast } from 'sonner';
 
 export default function Page() {
   const { business: storedBusiness } = useBusinessStore();
@@ -51,7 +52,7 @@ export default function Page() {
   const handleSave = async () => {
     const success = await updateBusiness(formData);
     if (success) {
-      alert('업체 정보가 수정되었습니다.');
+      toast('업체 정보가 수정되었습니다.');
       setFormData({}); // 폼 초기화
     }
   };

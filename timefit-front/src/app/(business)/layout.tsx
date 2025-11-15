@@ -4,6 +4,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { BusinessHeader } from '@/components/business/business-header';
 import { BusinessLayoutProvider } from '@/components/business/business-layout-provider';
 import { getCurrentUserFromSession } from '@/lib/session/server';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: 'TimeFit - 예약 관리 시스템',
@@ -26,6 +27,7 @@ export default async function BusinessLayout({
           <div className="p-4">{children}</div>
         </SidebarInset>
       </SidebarProvider>
+      <Toaster position="top-center" />
     </BusinessLayoutProvider>
   );
 }

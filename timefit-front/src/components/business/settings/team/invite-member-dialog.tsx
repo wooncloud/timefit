@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -44,7 +45,7 @@ export function InviteMemberDialog({
 
   const handleInvite = () => {
     if (!email.trim()) {
-      alert('이메일을 입력해주세요.');
+      toast.error('이메일을 입력해주세요.');
       return;
     }
 

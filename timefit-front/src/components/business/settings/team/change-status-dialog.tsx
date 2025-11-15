@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -60,7 +61,7 @@ export function ChangeStatusDialog({
     if (!member) return;
 
     if (selectedStatus === member.status) {
-      alert('현재 상태와 동일합니다.');
+      toast.error('현재 상태와 동일합니다.');
       return;
     }
 
