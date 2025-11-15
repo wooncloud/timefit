@@ -22,7 +22,11 @@ export function useSignin(options: UseSigninOptions = {}) {
   const { onSuccess, onError } = options;
   const router = useRouter();
 
-  const [formData, setFormData] = useState<SigninFormData>(initialSigninForm);
+  const [formData, setFormData] = useState<SigninFormData>({
+    email: process.env.NODE_ENV === 'development' ? 'test@example.com' : '',
+    password: process.env.NODE_ENV === 'development' ? 'qwer1234!' : '',
+  });
+
   const [errors, setErrors] = useState<SigninFormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
