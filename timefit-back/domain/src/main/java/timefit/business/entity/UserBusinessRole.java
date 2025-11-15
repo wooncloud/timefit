@@ -52,11 +52,12 @@ public class UserBusinessRole extends BaseEntity {
     /**
      * OWNER 권한으로 UserBusinessRole 생성
      */
-    public static UserBusinessRole createOwner(User user, Business business) {
+    public static UserBusinessRole createOwner(User user, Business business, User invitedBy) {
         UserBusinessRole userBusinessRole = new UserBusinessRole();
         userBusinessRole.user = user;
         userBusinessRole.business = business;
         userBusinessRole.role = BusinessRole.OWNER;
+        userBusinessRole.invitedBy = invitedBy;
         userBusinessRole.joinedAt = LocalDateTime.now();
         userBusinessRole.isActive = true;
         return userBusinessRole;
