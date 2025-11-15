@@ -12,15 +12,4 @@ import java.util.UUID;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
 
-    List<Reservation> findByCustomerIdOrderByReservationDateDesc(UUID customerId);
-
-    List<Reservation> findByBusinessIdOrderByReservationDateDesc(UUID businessId);
-
-    List<Reservation> findByCustomerIdAndStatus(UUID customerId, ReservationStatus status);
-
-    List<Reservation> findByBusinessIdAndStatus(UUID businessId, ReservationStatus status);
-
-    List<Reservation> findByBookingSlotIdAndStatusNotIn(UUID bookingSlotId, List<ReservationStatus> excludedStatuses);
-
-    long countByReservationDate(LocalDate reservationDate);
 }

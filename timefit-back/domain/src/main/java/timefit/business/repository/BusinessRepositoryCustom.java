@@ -16,53 +16,7 @@ public interface BusinessRepositoryCustom {
      * @param businessTypeCode 업종 코드
      * @param region 지역 검색어
      */
-    Page<Business> searchBusinesses(String keyword, BusinessTypeCode businessTypeCode, String region, Pageable pageable);
-
-
-    /**
-     * 키워드 통합 검색 (업체명, 주소)
-     */
-    Page<Business> findByKeyword(String keyword, Pageable pageable);
-
-    /**
-     * 업체명으로 검색 (페이징)
-     */
-    Page<Business> findByBusinessNameContaining(String businessName, Pageable pageable);
-
-    /**
-     * 업종별 조회 (페이징)
-     * @param businessTypeCode Enum 코드로 검색
-     */
-    Page<Business> findByBusinessType(BusinessTypeCode businessTypeCode, Pageable pageable);
-
-    /**
-     * 지역별 검색 (페이징)
-     */
-    Page<Business> findByRegion(String region, Pageable pageable);
-
-    /**
-     * 복합 검색 - 업체명과 업종
-     */
-    Page<Business> findByBusinessNameAndType(String businessName, BusinessTypeCode businessTypeCode, Pageable pageable);
-
-    /**
-     * 복합 검색 - 업종과 지역
-     */
-    Page<Business> findByBusinessTypeAndRegion(BusinessTypeCode businessTypeCode, String region, Pageable pageable);
-
-    /**
-     * 업체 통계 조회
-     */
-    long countByBusinessType(BusinessTypeCode businessTypeCode);
-    long countByRegion(String region);
-
-    /**
-     * 추천 업체 조회 (활성화된 업체 중 랜덤 또는 인기순)
-     */
-    List<Business> findRecommendedBusinesses(int limit);
-
-    /**
-     * 특정 사용자가 속한 업체들 조회 (권한 테이블 조인)
-     */
-    List<Business> findBusinessesByUserId(UUID userId);
+    Page<Business> searchBusinesses(
+            String keyword, BusinessTypeCode businessTypeCode,
+            String region, Pageable pageable);
 }
