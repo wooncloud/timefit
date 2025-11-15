@@ -17,6 +17,7 @@ export async function clearSessionAndLogout(message = '인증이 만료되었습
       success: false,
       message,
       requiresLogout: true, // 클라이언트에서 로그아웃 처리를 위한 플래그
+      redirectTo: '/', // 리다이렉트 경로
     },
     { status: 401 }
   );

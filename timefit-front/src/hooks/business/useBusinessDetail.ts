@@ -5,6 +5,7 @@ import type {
   PublicBusinessDetail,
   UpdateBusinessRequest,
 } from '@/types/business/businessDetail';
+import { handleAuthError } from '@/lib/api/handle-auth-error';
 
 interface UseBusinessDetailResult {
   business: PublicBusinessDetail | null;
@@ -43,6 +44,11 @@ export function useBusinessDetail(businessId: string): UseBusinessDetailResult {
     try {
       const response = await fetch(`/api/business/${businessId}`);
       const result = await response.json();
+
+      // 인증 에러 체크 및 자동 리다이렉트
+      if (handleAuthError(result)) {
+        return;
+      }
 
       if (!response.ok) {
         setError(result.message || '업체 정보 조회에 실패했습니다.');
@@ -86,6 +92,11 @@ export function useBusinessDetail(businessId: string): UseBusinessDetailResult {
       });
 
       const result = await response.json();
+
+      // 인증 에러 체크 및 자동 리다이렉트
+      if (handleAuthError(result)) {
+        return false;
+      }
 
       if (!response.ok) {
         setError(result.message || '업체 정보 수정에 실패했습니다.');
