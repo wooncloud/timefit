@@ -36,7 +36,15 @@ const convertToTeamMember = (member: TeamMemberDetail): TeamMember => {
 export default function Page() {
   const { business } = useBusinessStore();
   const businessId = business?.businessId || '';
-  const { data, loading, error } = useTeamMembers(businessId);
+  const {
+    data,
+    loading,
+    error,
+    changeMemberRole,
+    activateMember,
+    deactivateMember,
+    deleteMember,
+  } = useTeamMembers(businessId);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
   const [changeStatusDialogOpen, setChangeStatusDialogOpen] = useState(false);
@@ -66,9 +74,15 @@ export default function Page() {
     }
   };
 
-  const handleDelete = (memberId: string) => {
-    console.log('Delete member:', memberId);
-    // TODO: 삭제 확인 다이얼로그 및 API 호출
+  const handleDelete = async (memberId: string) => {
+    if (!confirm('정말로 이 구성원을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    const success = await deleteMember(memberId);
+    if (success) {
+      alert('구성원이 삭제되었습니다.');
+    }
   };
 
   const handleInvite = (data: InviteMemberData) => {
@@ -76,20 +90,28 @@ export default function Page() {
     // TODO: API 호출로 팀원 초대 로직 구현
   };
 
-  const handleConfirmRoleChange = (
+  const handleConfirmRoleChange = async (
     memberId: string,
     newRole: TeamMember['role']
   ) => {
-    console.log('Change role:', memberId, newRole);
-    // TODO: API 호출로 권한 변경 로직 구현
+    const success = await changeMemberRole(memberId, newRole);
+    if (success) {
+      alert('권한이 변경되었습니다.');
+    }
   };
 
-  const handleConfirmStatusChange = (
+  const handleConfirmStatusChange = async (
     memberId: string,
     newStatus: TeamMember['status']
   ) => {
-    console.log('Change status:', memberId, newStatus);
-    // TODO: API 호출로 상태 변경 로직 구현
+    const success =
+      newStatus === 'active'
+        ? await activateMember(memberId)
+        : await deactivateMember(memberId);
+
+    if (success) {
+      alert('상태가 변경되었습니다.');
+    }
   };
 
   // 로딩 상태

@@ -37,3 +37,46 @@ export interface GetTeamMembersHandlerResponse {
   requiresLogout?: boolean;
   redirectTo?: string;
 }
+
+// Member role change types
+export interface ChangeMemberRoleRequest {
+  newRole: BusinessRole;
+}
+
+export interface ChangeMemberRoleApiResponse {
+  data?: void;
+  message?: string;
+}
+
+export interface ChangeMemberRoleHandlerResponse {
+  success: boolean;
+  message?: string;
+  requiresLogout?: boolean;
+  redirectTo?: string;
+}
+
+// Member status change (activate/deactivate) types
+export interface MemberStatusChangeApiResponse {
+  data?: void;
+  message?: string;
+}
+
+export interface MemberStatusChangeHandlerResponse {
+  success: boolean;
+  message?: string;
+  requiresLogout?: boolean;
+  redirectTo?: string;
+}
+
+// Member deletion types
+export interface DeleteMemberApiResponse {
+  data?: void;
+  message?: string;
+}
+
+export interface DeleteMemberHandlerResponse {
+  success: boolean;
+  message?: string;
+  requiresLogout?: boolean;
+  redirectTo?: string;
+}
