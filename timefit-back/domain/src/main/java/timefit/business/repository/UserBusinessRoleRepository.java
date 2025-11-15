@@ -13,8 +13,11 @@ import java.util.UUID;
 @Repository
 public interface UserBusinessRoleRepository extends JpaRepository<UserBusinessRole, UUID> {
 
-    // 권한 조회
+    // 권한 조회 (only 활성)
     Optional<UserBusinessRole> findByUserIdAndBusinessIdAndIsActive(UUID userId, UUID businessId, Boolean isActive);
+
+    // 권한 조회 (활성/비활성 모두)
+    Optional<UserBusinessRole> findByUserIdAndBusinessId(UUID userId, UUID businessId);
 
     /**
      * 사용자의 비즈니스 목록 조회 (Business 정보 필요)
@@ -29,11 +32,11 @@ public interface UserBusinessRoleRepository extends JpaRepository<UserBusinessRo
      * - 팀 관리 화면용
      * - N+1 방지: User Fetch Join
      */
-    @EntityGraph(attributePaths = {"user"})
-    List<UserBusinessRole> findByBusinessIdAndIsActive(UUID businessId, Boolean isActive);
+    @EntityGraph(attributePaths = {"user", "invitedBy"})
+    List<UserBusinessRole> findByBusinessIdAndIsActiveOrderByJoinedAtAsc(
+            UUID businessId, Boolean isActive);
 
-    // 중복 체크
-    boolean existsByUserIdAndBusinessIdAndIsActive(UUID userId, UUID businessId, Boolean isActive);
+
 
     /**
      * 역할별 조회 (User 정보 필요)
