@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import timefit.business.dto.BusinessRequestDto;
 import timefit.business.dto.BusinessResponseDto;
@@ -38,13 +39,13 @@ public class BusinessController {
      * 권한: 누구나 조회 가능
      */
     @GetMapping("/{businessId}")
-    public ResponseData<BusinessResponseDto.PublicBusinessResponse> getBusinessDetail(
+    public ResponseEntity<ResponseData<BusinessResponseDto.PublicBusinessResponse>> getBusinessDetail(
             @PathVariable UUID businessId) {
 
         log.info("업체 상세 조회 요청: businessId={}", businessId);
 
         BusinessResponseDto.PublicBusinessResponse response = businessService.getPublicBusinessDetail(businessId);
-        return ResponseData.of(response);
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 
     /**
@@ -52,7 +53,7 @@ public class BusinessController {
      * 권한: 누구나 검색 가능
      */
     @GetMapping("/search")
-    public ResponseData<BusinessResponseDto.BusinessListResponse> searchBusinesses(
+    public ResponseEntity<ResponseData<BusinessResponseDto.BusinessListResponse>> searchBusinesses(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) BusinessTypeCode businessType,
             @RequestParam(required = false) String region,
@@ -64,7 +65,7 @@ public class BusinessController {
 
         BusinessResponseDto.BusinessListResponse response = businessService.searchBusinesses(
                 keyword, businessType, region, page, size);
-        return ResponseData.of(response);
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 
     // ========================================
@@ -77,13 +78,13 @@ public class BusinessController {
      * TODO: rename 고려
      */
     @GetMapping("/my-businesses")
-    public ResponseData<BusinessResponseDto.BusinessListResponse> getMyBusinesses(
+    public ResponseEntity<ResponseData<BusinessResponseDto.BusinessListResponse>> getMyBusinesses(
             @CurrentUserId UUID currentUserId) {
 
         log.info("내 업체 목록 조회 요청: userId={}", currentUserId);
 
         BusinessResponseDto.BusinessListResponse response = businessService.getMyBusinesses(currentUserId);
-        return ResponseData.of(response);
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 
     /**
@@ -91,7 +92,7 @@ public class BusinessController {
      * 권한: OWNER/MANAGER/MEMBER
      */
     @GetMapping("/{businessId}/profile")
-    public ResponseData<BusinessResponseDto.BusinessResponse> getBusinessProfile(
+    public ResponseEntity<ResponseData<BusinessResponseDto.BusinessResponse>> getBusinessProfile(
             @PathVariable UUID businessId,
             @CurrentUserId UUID currentUserId) {
 
@@ -99,7 +100,7 @@ public class BusinessController {
 
         BusinessResponseDto.BusinessResponse response = businessService.getBusinessProfile(
                 businessId, currentUserId);
-        return ResponseData.of(response);
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 
     /**
@@ -108,14 +109,14 @@ public class BusinessController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<BusinessResponseDto.BusinessResponse> createBusiness(
+    public ResponseEntity<ResponseData<BusinessResponseDto.BusinessResponse>> createBusiness(
             @Valid @RequestBody BusinessRequestDto.CreateBusinessRequest request,
             @CurrentUserId UUID ownerId) {
 
         log.info("업체 생성 요청: ownerId={}, businessName={}", ownerId, request.businessName());
 
         BusinessResponseDto.BusinessResponse response = businessService.createBusiness(request, ownerId);
-        return ResponseData.of(response);
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 
     /**
@@ -123,7 +124,7 @@ public class BusinessController {
      * 권한: OWNER, MANAGER만 가능
      */
     @PutMapping("/{businessId}")
-    public ResponseData<BusinessResponseDto.BusinessResponse> updateBusiness(
+    public ResponseEntity<ResponseData<BusinessResponseDto.BusinessResponse>> updateBusiness(
             @PathVariable UUID businessId,
             @Valid @RequestBody BusinessRequestDto.UpdateBusinessRequest request,
             @CurrentUserId UUID currentUserId) {
@@ -132,7 +133,7 @@ public class BusinessController {
 
         BusinessResponseDto.BusinessResponse response = businessService.updateBusiness(
                 businessId, request, currentUserId);
-        return ResponseData.of(response);
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 
     /**
@@ -140,7 +141,7 @@ public class BusinessController {
      * 권한: OWNER만 가능
      */
     @DeleteMapping("/{businessId}")
-    public ResponseData<BusinessResponseDto.DeleteBusinessResponse> deleteBusiness(
+    public ResponseEntity<ResponseData<BusinessResponseDto.DeleteBusinessResponse>> deleteBusiness(
             @PathVariable UUID businessId,
             @Valid @RequestBody BusinessRequestDto.DeleteBusinessRequest request,
             @CurrentUserId UUID currentUserId) {
@@ -149,7 +150,7 @@ public class BusinessController {
 
         BusinessResponseDto.DeleteBusinessResponse response = businessService.deleteBusiness(
                 businessId, request, currentUserId);
-        return ResponseData.of(response);
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 
     // ========================================
@@ -161,7 +162,7 @@ public class BusinessController {
      * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
      */
     @GetMapping("/{businessId}/members")
-    public ResponseData<BusinessResponseDto.MemberListResponse> getMembersList(
+    public ResponseEntity<ResponseData<BusinessResponseDto.MemberListResponse>> getMembersList(
             @PathVariable UUID businessId,
             @CurrentUserId UUID currentUserId) {
 
@@ -169,7 +170,7 @@ public class BusinessController {
 
         BusinessResponseDto.MemberListResponse response = businessService.getMembersList(
                 businessId, currentUserId);
-        return ResponseData.of(response);
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 
     /**
@@ -179,7 +180,7 @@ public class BusinessController {
      */
     @PostMapping("/{businessId}/member")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<BusinessResponseDto.MemberListResponse.MemberResponse> inviteMember(
+    public ResponseEntity<ResponseData<BusinessResponseDto.MemberListResponse.MemberResponse>> inviteMember(
             @PathVariable UUID businessId,
             @Valid @RequestBody BusinessRequestDto.InviteMemberRequest request,
             @CurrentUserId UUID inviterUserId) {
@@ -189,7 +190,7 @@ public class BusinessController {
 
         BusinessResponseDto.MemberListResponse.MemberResponse response = businessService.inviteMember(
                 businessId, request, inviterUserId);
-        return ResponseData.of(response);
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 
     /**
@@ -197,7 +198,7 @@ public class BusinessController {
      * 권한: OWNER만 가능
      */
     @PatchMapping("/{businessId}/member/{userId}/role")
-    public ResponseData<Void> changeMemberRole(
+    public ResponseEntity<ResponseData<Void>> changeMemberRole(
             @PathVariable UUID businessId,
             @PathVariable UUID userId,
             @Valid @RequestBody BusinessRequestDto.ChangeMemberRoleRequest request,
@@ -207,7 +208,7 @@ public class BusinessController {
                 businessId, userId, request.newRole(), currentUserId);
 
         businessService.changeMemberRole(businessId, userId, request, currentUserId);
-        return ResponseData.of(null);
+        return ResponseEntity.ok(ResponseData.of(null));
     }
 
     /**
@@ -216,7 +217,7 @@ public class BusinessController {
      */
     @DeleteMapping("/{businessId}/member/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseData<Void> removeMember(
+    public ResponseEntity<ResponseData<Void>> removeMember(
             @PathVariable UUID businessId,
             @PathVariable UUID userId,
             @CurrentUserId UUID requesterUserId) {
@@ -225,7 +226,7 @@ public class BusinessController {
                 businessId, userId, requesterUserId);
 
         businessService.removeMember(businessId, userId, requesterUserId);
-        return ResponseData.of(null);
+        return ResponseEntity.ok(ResponseData.of(null));
     }
 
     /**
@@ -233,7 +234,7 @@ public class BusinessController {
      * 권한: OWNER, MANAGER
      */
     @PatchMapping("/{businessId}/member/{userId}/activate")
-    public ResponseData<Void> activateMember(
+    public ResponseEntity<ResponseData<Void>> activateMember(
             @PathVariable UUID businessId,
             @PathVariable UUID userId,
             @CurrentUserId UUID currentUserId) {
@@ -242,7 +243,7 @@ public class BusinessController {
                 businessId, userId, currentUserId);
 
         businessService.activateMember(businessId, userId, currentUserId);
-        return ResponseData.of(null);
+        return ResponseEntity.ok(ResponseData.of(null));
     }
 
     /**
@@ -250,7 +251,7 @@ public class BusinessController {
      * 권한: OWNER, MANAGER
      */
     @PatchMapping("/{businessId}/member/{userId}/deactivate")
-    public ResponseData<Void> deactivateMember(
+    public ResponseEntity<ResponseData<Void>> deactivateMember(
             @PathVariable UUID businessId,
             @PathVariable UUID userId,
             @CurrentUserId UUID currentUserId) {
@@ -259,6 +260,6 @@ public class BusinessController {
                 businessId, userId, currentUserId);
 
         businessService.deactivateMember(businessId, userId, currentUserId);
-        return ResponseData.of(null);
+        return ResponseEntity.ok(ResponseData.of(null));
     }
 }
