@@ -31,7 +31,7 @@ public enum ReservationErrorCode {
 
     // 권한 관련
     NOT_BUSINESS_MEMBER("업체 구성원만 접근할 수 있습니다", HttpStatus.FORBIDDEN),
-    NOT_RESERVATION_OWNER("예약 소유자만 접근할 수 없습니다", HttpStatus.FORBIDDEN),
+    NOT_RESERVATION_OWNER("예약 소유자만 접근할 수 있습니다", HttpStatus.FORBIDDEN),
 
     // 유효성 검사
     INVALID_DATE_FORMAT("날짜 형식이 올바르지 않습니다", HttpStatus.BAD_REQUEST),
