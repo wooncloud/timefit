@@ -42,6 +42,10 @@ public class Business extends BaseEntity {
     @Column(name = "business_number", nullable = false)
     private String businessNumber;
 
+    @Size(max = 50, message = "대표자명은 50자 이하로 입력해주세요")
+    @Column(name = "owner_name", length = 50)
+    private String ownerName;
+
     @Size(max = 200, message = "주소는 200자 이하로 입력해주세요")
     private String address;
 
@@ -68,16 +72,23 @@ public class Business extends BaseEntity {
             String businessName,
             Set<BusinessTypeCode> businessTypes,
             String businessNumber,
+            String ownerName,
             String address,
             String contactPhone,
-            String description) {
+            String description,
+            String logoUrl,
+            String businessNotice
+    ) {
         Business business = new Business();
         business.businessName = businessName;
         business.businessTypes = businessTypes;
         business.businessNumber = businessNumber;
+        business.ownerName = ownerName;
         business.address = address;
         business.contactPhone = contactPhone;
         business.description = description;
+        business.logoUrl = logoUrl;
+        business.businessNotice = businessNotice;
         business.isActive = true;
         return business;
     }
@@ -88,6 +99,7 @@ public class Business extends BaseEntity {
     public void updateBusinessInfo(
             String businessName,
             Set<BusinessTypeCode> businessTypes,
+            String ownerName,
             String address,
             String contactPhone,
             String description,
@@ -99,6 +111,9 @@ public class Business extends BaseEntity {
         }
         if (businessTypes != null) {
             this.businessTypes = businessTypes;
+        }
+        if (ownerName != null) {
+            this.ownerName = ownerName;
         }
         if (address != null) {
             this.address = address;
@@ -117,39 +132,6 @@ public class Business extends BaseEntity {
         }
     }
 
-    // 업체 로고 업데이트
-    public void updateLogo(String logoUrl) {
-        this.logoUrl = logoUrl;
-    }
-
-    // 업체 기본 정보만 업데이트 (상호명, 업종, 주소)
-    public void updateBasicInfo(String businessName, Set<BusinessTypeCode> businessTypes, String address) {
-        if (businessName != null) {
-            this.businessName = businessName;
-        }
-        if (businessTypes != null) {
-            this.businessTypes = businessTypes;
-        }
-        if (address != null) {
-            this.address = address;
-        }
-    }
-
-    // 연락처 정보만 업데이트
-    public void updateContactInfo(String contactPhone, String description) {
-        if (contactPhone != null) {
-            this.contactPhone = contactPhone;
-        }
-        if (description != null) {
-            this.description = description;
-        }
-    }
-
-    // 업체 공지사항 업데이트
-    public void updateBusinessNotice(String businessNotice) {
-        this.businessNotice = businessNotice;
-    }
-
     // 업체 비활성화 (논리적 삭제)
     public void deactivate() {
         this.isActive = false;
@@ -158,5 +140,13 @@ public class Business extends BaseEntity {
     // 업체 활성화 (복구)
     public void activate() {
         this.isActive = true;
+    }
+
+    public boolean hasBusinessType(BusinessTypeCode businessType) {
+        return this.businessTypes != null && this.businessTypes.contains(businessType);
+    }
+
+    public boolean isActive() {
+        return this.isActive;
     }
 }
