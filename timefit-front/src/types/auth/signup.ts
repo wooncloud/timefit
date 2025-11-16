@@ -21,6 +21,7 @@ export interface SignupApiResponse {
  */
 export interface SignupSuccessPayload extends AuthUserProfile {
   accessToken?: string;
+  refreshToken?: string;
 }
 
 /**

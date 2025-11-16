@@ -2,7 +2,10 @@ import { SessionOptions } from 'iron-session';
 
 import type { AuthUserProfile } from '@/types/auth/user';
 
-export type SessionUser = AuthUserProfile & { accessToken?: string };
+export type SessionUser = AuthUserProfile & {
+  accessToken?: string;
+  refreshToken?: string;
+};
 export type SessionData = {
   user?: SessionUser | null;
 };

@@ -100,10 +100,11 @@ export async function POST(request: NextRequest) {
       responseJson,
       sessionOptions
     );
-    const { accessToken: _, ...userProfile } = successData;
+    const { accessToken: _, refreshToken: __, ...userProfile } = successData;
     session.user = {
       ...(userProfile as SessionUser),
       accessToken,
+      refreshToken: successData.refreshToken,
     };
     await session.save();
     return responseJson;
