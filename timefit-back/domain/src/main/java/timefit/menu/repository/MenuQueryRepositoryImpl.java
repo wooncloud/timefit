@@ -1,9 +1,9 @@
 package timefit.menu.repository;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 import timefit.menu.entity.Menu;
 import timefit.menu.entity.QMenu;
 
@@ -30,44 +30,47 @@ public class MenuQueryRepositoryImpl implements MenuQueryRepository {
     }
 
     @Override
-    public List<Menu> searchMenusByName(UUID businessId, String serviceName) {
+    public List<Menu> findMenusWithFilters(
+            UUID businessId,
+            String serviceName,
+            UUID businessCategoryId,
+            Integer minPrice,
+            Integer maxPrice,
+            Boolean isActive) {
+
         return queryFactory
                 .selectFrom(menu)
                 .where(
-                        menu.business.id.eq(businessId)
-                                .and(StringUtils.hasText(serviceName) ?
-                                        menu.serviceName.containsIgnoreCase(serviceName) : null)
+                        menu.business.id.eq(businessId),
+                        serviceNameContains(serviceName),
+                        businessCategoryIdEq(businessCategoryId),
+                        priceGoe(minPrice),
+                        priceLoe(maxPrice),
+                        isActiveEq(isActive)
                 )
                 .orderBy(menu.serviceName.asc())
                 .fetch();
     }
 
-    @Override
-    public List<Menu> findMenusByPriceRange(UUID businessId, Integer minPrice, Integer maxPrice) {
-        return queryFactory
-                .selectFrom(menu)
-                .where(
-                        menu.business.id.eq(businessId)
-                                .and(menu.price.between(minPrice, maxPrice))
-                )
-                .orderBy(menu.price.asc())
-                .fetch();
+    private BooleanExpression serviceNameContains(String serviceName) {
+        return serviceName != null ?
+                menu.serviceName.containsIgnoreCase(serviceName) : null;
     }
 
-    /**
-     * BusinessCategory별 메뉴 조회
-     * - menu.businessCategory.id로 조인 및 필터링
-     */
-    @Override
-    public List<Menu> findMenusByBusinessCategory(UUID businessId, UUID businessCategoryId) {
-        return queryFactory
-                .selectFrom(menu)
-                .where(
-                        menu.business.id.eq(businessId)
-                                .and(businessCategoryId != null ?
-                                        menu.businessCategory.id.eq(businessCategoryId) : null)
-                )
-                .orderBy(menu.serviceName.asc())
-                .fetch();
+    private BooleanExpression businessCategoryIdEq(UUID categoryId) {
+        return categoryId != null ?
+                menu.businessCategory.id.eq(categoryId) : null;
+    }
+
+    private BooleanExpression priceGoe(Integer minPrice) {
+        return minPrice != null ? menu.price.goe(minPrice) : null;
+    }
+
+    private BooleanExpression priceLoe(Integer maxPrice) {
+        return maxPrice != null ? menu.price.loe(maxPrice) : null;
+    }
+
+    private BooleanExpression isActiveEq(Boolean isActive) {
+        return isActive != null ? menu.isActive.eq(isActive) : null;
     }
 }

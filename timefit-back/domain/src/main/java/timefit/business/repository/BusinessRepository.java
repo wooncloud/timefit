@@ -15,13 +15,6 @@ public interface BusinessRepository extends JpaRepository<Business, UUID> {
 
     // 사업자번호 관련
     boolean existsByBusinessNumber(String businessNumber);
-    Optional<Business> findByBusinessNumber(String businessNumber);
-
-    // 업체명 검색
-    List<Business> findByBusinessNameContaining(String businessName);
-
-    // 주소 기반 검색
-    List<Business> findByAddressContaining(String address);
 
     // 통계용 기본 메서드들
     long count();

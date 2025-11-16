@@ -29,4 +29,12 @@ public class OperatingHoursService {
             UUID currentUserId) {
         return commandService.setOperatingHours(businessId, request, currentUserId);
     }
+
+    // 영업시간 리셋 (디폴트 값으로)
+    @Transactional
+    public OperatingHoursResponse.OperatingHoursResult resetToDefault(
+            UUID businessId,
+            UUID currentUserId) {
+        return commandService.resetToDefault(businessId, currentUserId);
+    }
 }

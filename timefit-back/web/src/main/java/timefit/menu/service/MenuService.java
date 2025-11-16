@@ -41,6 +41,22 @@ public class MenuService {
     }
 
     /**
+     * 메뉴 목록 조회 (검색/필터링)
+     * 권한: 불필요 (공개 API)
+     */
+    public MenuListResponse getMenuListWithFilters(
+            UUID businessId,
+            String serviceName,
+            UUID businessCategoryId,
+            Integer minPrice,
+            Integer maxPrice,
+            Boolean isActive) {
+
+        return menuQueryService.getMenuListWithFilters(
+                businessId, serviceName, businessCategoryId, minPrice, maxPrice, isActive);
+    }
+
+    /**
      * 메뉴 생성
      * 권한: OWNER, MANAGER
      */
@@ -56,6 +72,15 @@ public class MenuService {
     @Transactional
     public MenuResponse updateMenu(UUID businessId, UUID menuId, MenuRequest.UpdateMenu request, UUID currentUserId) {
         return menuCommandService.updateMenu(businessId, menuId, request, currentUserId);
+    }
+
+    /**
+     * 메뉴 활성/비활성 토글
+     * 권한: OWNER, MANAGER
+     */
+    @Transactional
+    public MenuResponse toggleMenuActive(UUID businessId, UUID menuId, UUID currentUserId) {
+        return menuCommandService.toggleMenuActive(businessId, menuId, currentUserId);
     }
 
     /**

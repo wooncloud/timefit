@@ -1,76 +1,44 @@
 package timefit.operatinghours.dto;
 
-import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Objects;
 
 public class OperatingHoursRequest {
 
-    // 영업시간 설정 요청
+    // 영업시간 + 예약 가능 시간대 통합 설정
     @Getter
     public static class SetOperatingHours {
-
-        @NotNull(message = "영업시간 목록은 필수입니다")
-        @Valid
-        private final List<DaySchedule> businessHours;
-
-        public SetOperatingHours(List<DaySchedule> businessHours) {
-            this.businessHours = businessHours;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            SetOperatingHours that = (SetOperatingHours) o;
-            return Objects.equals(businessHours, that.businessHours);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(businessHours);
-        }
+        @NotNull
+        private List<DaySchedule> schedules;
     }
 
-    // 요일별 일정
+    // 요일별 스케줄
     @Getter
     public static class DaySchedule {
+        @NotNull
+        @Min(0) @Max(6)
+        private Integer dayOfWeek;
 
-        @NotNull(message = "요일은 필수입니다")
-        private final Integer dayOfWeek;  // 0~6
+        // 총 영업시간 (BusinessHours)
+        private String openTime;        // "09:00"
+        private String closeTime;       // "22:00"
+        private Boolean isClosed;       // 휴무일 여부
 
-        private final String openTime;    // "HH:mm"
+        // 예약 가능 시간대 (OperatingHours)
+        private List<TimeRange> bookingTimeRanges;
+    }
 
-        private final String closeTime;   // "HH:mm"
+    // 예약 가능 시간대 범위
+    @Getter
+    public static class TimeRange {
+        @NotNull
+        private String startTime;  // "09:00"
 
-        @NotNull(message = "휴무 여부는 필수입니다")
-        private final Boolean isClosed;
-
-        public DaySchedule(Integer dayOfWeek, String openTime,
-                           String closeTime, Boolean isClosed) {
-            this.dayOfWeek = dayOfWeek;
-            this.openTime = openTime;
-            this.closeTime = closeTime;
-            this.isClosed = isClosed;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            DaySchedule that = (DaySchedule) o;
-            return Objects.equals(dayOfWeek, that.dayOfWeek) &&
-                    Objects.equals(openTime, that.openTime) &&
-                    Objects.equals(closeTime, that.closeTime) &&
-                    Objects.equals(isClosed, that.isClosed);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(dayOfWeek, openTime, closeTime, isClosed);
-        }
+        @NotNull
+        private String endTime;    // "10:00"
     }
 }

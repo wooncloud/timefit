@@ -5,10 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.business.entity.Business;
+import timefit.business.entity.BusinessHours;
 import timefit.business.entity.OperatingHours;
+import timefit.business.repository.BusinessHoursRepository;
 import timefit.business.repository.OperatingHoursRepository;
+import timefit.business.service.validator.BusinessValidator;
 import timefit.operatinghours.dto.OperatingHoursResponse;
-import timefit.operatinghours.service.util.BusinessFinder;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,28 +21,35 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class OperatingHoursQueryService {
 
+    private final BusinessHoursRepository businessHoursRepository;
     private final OperatingHoursRepository operatingHoursRepository;
-    private final BusinessFinder businessFinder;
+    private final BusinessValidator businessValidator;
 
-    // 영업시간 조회
+    // 영업시간 조회 (BusinessHours + OperatingHours 통합)
     public OperatingHoursResponse.OperatingHoursResult getOperatingHours(UUID businessId) {
 
         log.info("영업시간 조회 시작: businessId={}", businessId);
 
         // 1. Business 조회
-        Business business = businessFinder.getBusinessEntity(businessId);
+        Business business = businessValidator.validateBusinessExists(businessId);
 
-        // 2. 영업시간 조회 (요일순 정렬)
-        List<OperatingHours> hours =
+        // 2. BusinessHours 조회
+        List<BusinessHours> businessHours =
+                businessHoursRepository.findByBusinessIdOrderByDayOfWeekAsc(businessId);
+
+        // 3. OperatingHours 조회
+        List<OperatingHours> operatingHours =
                 operatingHoursRepository.findByBusinessIdOrderByDayOfWeekAsc(businessId);
 
-        log.info("영업시간 조회 완료: businessId={}, count={}", businessId, hours.size());
+        log.info("영업시간 조회 완료: businessId={}, businessHours={}, operatingHours={}",
+                businessId, businessHours.size(), operatingHours.size());
 
-        // 3. DTO 변환
+        // 4. DTO 변환
         return OperatingHoursResponse.OperatingHoursResult.of(
                 businessId,
                 business.getBusinessName(),
-                hours
+                businessHours,
+                operatingHours
         );
     }
 }

@@ -1,7 +1,7 @@
 export interface AuthBusinessInfo {
   businessId?: string;
   businessName?: string;
-  businessType?: string;
+  businessTypes?: string[];
   address?: string;
   contactPhone?: string;
   description?: string;

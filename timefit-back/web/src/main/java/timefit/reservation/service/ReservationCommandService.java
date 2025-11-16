@@ -69,7 +69,7 @@ public class ReservationCommandService {
     /**
      * RESERVATION_BASED 예약 생성 (슬롯 기반)
      */
-    public ReservationResponseDto.ReservationDetail createReservationBased(
+    public ReservationResponseDto.CustomerReservation createReservationBased(
             ReservationRequestDto.CreateReservation request, UUID customerId) {
 
         log.info("슬롯 기반 예약 생성 시작: customerId={}, businessId={}, menuId={}, bookingSlotId={}",
@@ -121,13 +121,13 @@ public class ReservationCommandService {
                 savedReservation.getId(), reservationNumber);
 
         // 6. DTO 변환
-        return ReservationResponseDto.ReservationDetail.from(savedReservation);
+        return ReservationResponseDto.CustomerReservation.from(savedReservation);
     }
 
     /**
      * ONDEMAND_BASED 예약 생성 (즉시 주문)
      */
-    public ReservationResponseDto.ReservationDetail createOnDemandBased(
+    public ReservationResponseDto.CustomerReservation createOnDemandBased(
             ReservationRequestDto.CreateReservation request, UUID customerId) {
 
         log.info("즉시 주문 예약 생성 시작: customerId={}, businessId={}, menuId={}",
@@ -165,7 +165,7 @@ public class ReservationCommandService {
                 savedReservation.getId(), reservationNumber);
 
         // 6. DTO 변환
-        return ReservationResponseDto.ReservationDetail.from(savedReservation);
+        return ReservationResponseDto.CustomerReservation.from(savedReservation);
     }
 
     // ========== 예약 수정 ==========
@@ -173,7 +173,7 @@ public class ReservationCommandService {
     /**
      * 예약 수정 (고객)
      */
-    public ReservationResponseDto.ReservationDetailWithHistory updateReservation(
+    public ReservationResponseDto.CustomerReservation updateReservation(
             UUID reservationId, UUID customerId, ReservationRequestDto.UpdateReservation request) {
 
         log.info("예약 수정 시작: reservationId={}, customerId={}", reservationId, customerId);
@@ -206,7 +206,7 @@ public class ReservationCommandService {
         log.info("예약 수정 완료: reservationId={}", reservationId);
 
         // 6. DTO 변환
-        return ReservationResponseDto.ReservationDetailWithHistory.from(reservation);
+        return ReservationResponseDto.CustomerReservation.from(reservation);
     }
 
     // ========== 예약 취소 ==========
@@ -214,7 +214,7 @@ public class ReservationCommandService {
     /**
      * 예약 취소 (고객)
      */
-    public ReservationResponseDto.ReservationCancelResult cancelReservation(
+    public ReservationResponseDto.ReservationActionResult cancelReservation(
             UUID reservationId, UUID customerId, ReservationRequestDto.CancelReservation request) {
 
         log.info("예약 취소 시작: reservationId={}, customerId={}", reservationId, customerId);
@@ -222,13 +222,21 @@ public class ReservationCommandService {
         // 1. 예약 조회 및 취소 가능 검증 (Validator 사용)
         Reservation reservation = reservationValidator.validateForCancel(reservationId, customerId);
 
-        // 2. 취소 처리 (Entity 메서드)
+        // 2. 이전 상태 저장
+        ReservationStatus previousStatus = reservation.getStatus();
+
+        // 3. 취소 처리 (Entity 메서드)
         reservation.cancel();
 
         log.info("예약 취소 완료: reservationId={}", reservationId);
 
-        // 3. DTO 변환
-        return ReservationResponseDto.ReservationCancelResult.from(reservation, request.getReason());
+        // 4. DTO 변환
+        String message = request.getReason() != null && !request.getReason().trim().isEmpty()
+                ? "취소되었습니다: " + request.getReason()
+                : "취소되었습니다";
+
+        return ReservationResponseDto.ReservationActionResult.ofCancel(
+                reservation, previousStatus, message);
     }
 
     // ========== 예약 승인/거절 (업체) ==========
@@ -236,7 +244,7 @@ public class ReservationCommandService {
     /**
      * 예약 승인 (업체)
      */
-    public ReservationResponseDto.ReservationStatusChangeResult approveReservation(
+    public ReservationResponseDto.ReservationActionResult approveReservation(
             UUID businessId, UUID reservationId, UUID currentUserId) {
 
         log.info("예약 승인 시작: businessId={}, reservationId={}, userId={}",
@@ -253,19 +261,23 @@ public class ReservationCommandService {
             throw new ReservationException(ReservationErrorCode.RESERVATION_INVALID_STATUS);
         }
 
-        // 4. 승인 처리 (Entity 메서드)
+        // 4. 이전 상태 저장
+        ReservationStatus previousStatus = reservation.getStatus();
+
+        // 5. 승인 처리 (Entity 메서드)
         reservation.confirm();
 
         log.info("예약 승인 완료: reservationId={}", reservationId);
 
-        // 5. DTO 변환
-        return ReservationResponseDto.ReservationStatusChangeResult.from(reservation, "승인되었습니다");
+        // 6. DTO 변환
+        return ReservationResponseDto.ReservationActionResult.of(
+                reservation, previousStatus, "승인되었습니다");
     }
 
     /**
      * 예약 거절 (업체)
      */
-    public ReservationResponseDto.ReservationStatusChangeResult rejectReservation(
+    public ReservationResponseDto.ReservationActionResult rejectReservation(
             UUID businessId, UUID reservationId, UUID currentUserId, String reason) {
 
         log.info("예약 거절 시작: businessId={}, reservationId={}, userId={}",
@@ -282,14 +294,21 @@ public class ReservationCommandService {
             throw new ReservationException(ReservationErrorCode.RESERVATION_INVALID_STATUS);
         }
 
-        // 4. 거절 처리 (취소와 동일)
+        // 4. 이전 상태 저장
+        ReservationStatus previousStatus = reservation.getStatus();
+
+        // 5. 거절 처리 (취소와 동일)
         reservation.cancel();
 
         log.info("예약 거절 완료: reservationId={}", reservationId);
 
-        // 5. DTO 변환
-        return ReservationResponseDto.ReservationStatusChangeResult.from(
-                reservation, "거절되었습니다: " + (reason != null ? reason : ""));
+        // 6. DTO 변환
+        String message = reason != null && !reason.trim().isEmpty()
+                ? "거절되었습니다: " + reason
+                : "거절되었습니다";
+
+        return ReservationResponseDto.ReservationActionResult.ofCancel(
+                reservation, previousStatus, message);
     }
 
     // ========== 예약 완료/노쇼 (업체) ==========
@@ -297,7 +316,7 @@ public class ReservationCommandService {
     /**
      * 예약 완료 처리 (업체)
      */
-    public ReservationResponseDto.ReservationCompletionResult completeReservation(
+    public ReservationResponseDto.ReservationActionResult completeReservation(
             UUID businessId, UUID reservationId, UUID currentUserId, String notes) {
 
         log.info("예약 완료 처리 시작: businessId={}, reservationId={}, userId={}",
@@ -309,24 +328,28 @@ public class ReservationCommandService {
         // 2. 예약 조회 및 업체 소속 확인
         Reservation reservation = reservationValidator.validateOfBusiness(reservationId, businessId);
 
-        // 3. 완료 처리 (Entity 메서드)
+        // 3. 이전 상태 저장
+        ReservationStatus previousStatus = reservation.getStatus();
+
+        // 4. 완료 처리 (Entity 메서드)
         reservation.complete();
 
-        // 4. 메모 추가
+        // 5. 메모 추가
         if (notes != null && !notes.trim().isEmpty()) {
             reservation.updateNotes(notes);
         }
 
         log.info("예약 완료 처리 완료: reservationId={}", reservationId);
 
-        // 5. DTO 변환
-        return ReservationResponseDto.ReservationCompletionResult.from(reservation, "서비스가 완료되었습니다");
+        // 6. DTO 변환
+        return ReservationResponseDto.ReservationActionResult.of(
+                reservation, previousStatus, "서비스가 완료되었습니다");
     }
 
     /**
      * 노쇼 처리 (업체)
      */
-    public ReservationResponseDto.ReservationCompletionResult markAsNoShow(
+    public ReservationResponseDto.ReservationActionResult markAsNoShow(
             UUID businessId, UUID reservationId, UUID currentUserId, String notes) {
 
         log.info("노쇼 처리 시작: businessId={}, reservationId={}, userId={}",
@@ -338,18 +361,22 @@ public class ReservationCommandService {
         // 2. 예약 조회 및 업체 소속 확인
         Reservation reservation = reservationValidator.validateOfBusiness(reservationId, businessId);
 
-        // 3. 노쇼 처리 (Entity 메서드)
+        // 3. 이전 상태 저장
+        ReservationStatus previousStatus = reservation.getStatus();
+
+        // 4. 노쇼 처리 (Entity 메서드)
         reservation.markAsNoShow();
 
-        // 4. 메모 추가
+        // 5. 메모 추가
         if (notes != null && !notes.trim().isEmpty()) {
             reservation.updateNotes(notes);
         }
 
         log.info("노쇼 처리 완료: reservationId={}", reservationId);
 
-        // 5. DTO 변환
-        return ReservationResponseDto.ReservationCompletionResult.from(reservation, "고객이 나타나지 않았습니다");
+        // 6. DTO 변환
+        return ReservationResponseDto.ReservationActionResult.of(
+                reservation, previousStatus, "고객이 나타나지 않았습니다");
     }
 
     // ========== Private Helper Methods ==========

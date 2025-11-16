@@ -4,10 +4,11 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid'; // a plugin!
 import interactionPlugin from '@fullcalendar/interaction'; // needed for dayClick
 import koLocale from '@fullcalendar/core/locales/ko';
+import { toast } from 'sonner';
 
 export default function Calendar() {
   const handleDateClick = (arg: any) => {
-    alert('date click! ' + arg.dateStr);
+    toast('date click! ' + arg.dateStr);
   };
 
   return (

@@ -23,25 +23,25 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/businesses/{businessId}/menus")
+@RequestMapping("/api/business/{businessId}/menu")
 @RequiredArgsConstructor
 public class MenuController {
 
     private final MenuService menuService;
 
-    /**
-     * 메뉴 목록 조회
-     * 권한: 불필요 (공개 API)
-     */
-    @GetMapping
-    public ResponseEntity<ResponseData<MenuListResponse>> getMenuList(
-            @PathVariable UUID businessId) {
+//     /**
+//      * 메뉴 목록 조회
+//      * 권한: 불필요 (공개 API)
+//      */
+//     @GetMapping
+//     public ResponseEntity<ResponseData<MenuListResponse>> getMenuList(
+//             @PathVariable UUID businessId) {
 
-        log.info("메뉴 목록 조회 요청: businessId={}", businessId);
+//         log.info("메뉴 목록 조회 요청: businessId={}", businessId);
 
-        MenuListResponse response = menuService.getMenuList(businessId);
-        return ResponseEntity.ok(ResponseData.of(response));
-    }
+//         MenuListResponse response = menuService.getMenuList(businessId);
+//         return ResponseEntity.ok(ResponseData.of(response));
+//     }
 
     /**
      * 메뉴 상세 조회
@@ -55,6 +55,33 @@ public class MenuController {
         log.info("메뉴 상세 조회 요청: businessId={}, menuId={}", businessId, menuId);
 
         MenuResponse response = menuService.getMenu(businessId, menuId);
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
+    /**
+     * 메뉴 목록 조회 (검색/필터링)
+     * 권한: 불필요 (공개 API)
+     * - serviceName: 서비스명 검색 (부분 일치, 대소문자 무시)
+     * - businessCategoryId: 카테고리 ID 필터
+     * - minPrice: 최소 가격
+     * - maxPrice: 최대 가격
+     * - isActive: 활성 상태
+     */
+    @GetMapping
+    public ResponseEntity<ResponseData<MenuListResponse>> getMenuList(
+            @PathVariable UUID businessId,
+            @RequestParam(required = false) String serviceName,
+            @RequestParam(required = false) UUID businessCategoryId,
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice,
+            @RequestParam(required = false) Boolean isActive) {
+
+        log.info("메뉴 목록 조회: businessId={}, filters=[name={}, category={}, price={}-{}, active={}]",
+                businessId, serviceName, businessCategoryId, minPrice, maxPrice, isActive);
+
+        MenuListResponse response = menuService.getMenuListWithFilters(
+                businessId, serviceName, businessCategoryId, minPrice, maxPrice, isActive);
+
         return ResponseEntity.ok(ResponseData.of(response));
     }
 
@@ -80,7 +107,7 @@ public class MenuController {
      * 메뉴 수정
      * 권한: OWNER, MANAGER
      */
-    @PutMapping("/{menuId}")
+    @PatchMapping("/{menuId}")
     public ResponseEntity<ResponseData<MenuResponse>> updateMenu(
             @PathVariable UUID businessId,
             @PathVariable UUID menuId,
@@ -91,6 +118,25 @@ public class MenuController {
                 businessId, menuId, currentUserId);
 
         MenuResponse response = menuService.updateMenu(businessId, menuId, request, currentUserId);
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
+    /**
+     *  메뉴 활성/비활성 토글
+     * 권한: OWNER, MANAGER
+     * - 현재 활성 상태 → 비활성
+     * - 현재 비활성 상태 → 활성
+     */
+    @PatchMapping("/{menuId}/toggle")
+    public ResponseEntity<ResponseData<MenuResponse>> toggleMenuActive(
+            @PathVariable UUID businessId,
+            @PathVariable UUID menuId,
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("메뉴 활성상태 토글 요청: businessId={}, menuId={}, userId={}",
+                businessId, menuId, currentUserId);
+
+        MenuResponse response = menuService.toggleMenuActive(businessId, menuId, currentUserId);
         return ResponseEntity.ok(ResponseData.of(response));
     }
 

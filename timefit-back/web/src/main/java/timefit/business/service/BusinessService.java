@@ -4,19 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import timefit.business.dto.BusinessRequest;
-import timefit.business.dto.BusinessResponse;
+import timefit.business.dto.BusinessRequestDto;
+import timefit.business.dto.BusinessResponseDto;
 import timefit.business.entity.BusinessTypeCode;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
  * BusinessService Facade
  * - 단순 위임만 수행
  * - 트랜잭션 경계 설정
- * - 조회 작업 -> BusinessQueryService
- * - CUD 작업 -> BusinessCommandService
  */
 @Slf4j
 @Service
@@ -32,34 +29,36 @@ public class BusinessService {
     // ========================================
 
     /**
+     * 공개 업체 상세 조회
+     * 권한: 누구나 조회 가능
+     */
+    public BusinessResponseDto.PublicBusinessResponse getPublicBusinessDetail(UUID businessId) {
+        return businessQueryService.getPublicBusinessDetail(businessId);
+    }
+
+    /**
+     * 사업자용 업체 상세 조회
+     * 권한: OWNER/MANAGER/MEMBER
+     */
+    public BusinessResponseDto.BusinessResponse getBusinessProfile(
+            UUID businessId,
+            UUID currentUserId) {
+        return businessQueryService.getBusinessProfile(businessId, currentUserId);
+    }
+
+    /**
      * 내가 속한 업체 목록 조회
      * 권한: 로그인한 사용자 본인
      */
-    public List<BusinessResponse.BusinessSummary> getMyBusinesses(UUID userId) {
-        return businessQueryService.getMyBusinesses(userId);
-    }
-
-    /**
-     * 업체 상세 정보 조회 (공개)
-     * 권한: 누구나 조회 가능
-     */
-    public BusinessResponse.PublicBusinessDetail getBusinessDetail(UUID businessId) {
-        return businessQueryService.getBusinessDetail(businessId);
-    }
-
-    /**
-     * 업체 구성원 목록 조회
-     * 권한: OWNER, MANAGER, MEMBER (해당 업체에 속한 사용자만)
-     */
-    public BusinessResponse.MembersListResult getMembersList(UUID businessId, UUID currentUserId) {
-        return businessQueryService.getMembersList(businessId, currentUserId);
+    public BusinessResponseDto.BusinessListResponse getMyBusinesses(UUID currentUserId) {
+        return businessQueryService.getMyBusinesses(currentUserId);
     }
 
     /**
      * 업체 검색 (페이징)
      * 권한: 누구나 검색 가능
      */
-    public BusinessResponse.BusinessSearchResult searchBusinesses(
+    public BusinessResponseDto.BusinessListResponse searchBusinesses(
             String keyword,
             BusinessTypeCode businessType,
             String region,
@@ -68,8 +67,18 @@ public class BusinessService {
         return businessQueryService.searchBusinesses(keyword, businessType, region, page, size);
     }
 
+    /**
+     * 구성원 목록 조회
+     * 권한: OWNER, MANAGER, MEMBER
+     */
+    public BusinessResponseDto.MemberListResponse getMembersList(
+            UUID businessId,
+            UUID currentUserId) {
+        return businessQueryService.getMembersList(businessId, currentUserId);
+    }
+
     // ========================================
-    // CUD 작업 (Command)
+    // 변경 작업 (Command)
     // ========================================
 
     /**
@@ -77,8 +86,8 @@ public class BusinessService {
      * 권한: 로그인한 사용자 누구나
      */
     @Transactional
-    public BusinessResponse.BusinessDetail createBusiness(
-            BusinessRequest.CreateBusiness request,
+    public BusinessResponseDto.BusinessResponse createBusiness(
+            BusinessRequestDto.CreateBusinessRequest request,
             UUID ownerId) {
         return businessCommandService.createBusiness(request, ownerId);
     }
@@ -88,9 +97,9 @@ public class BusinessService {
      * 권한: OWNER, MANAGER만 가능
      */
     @Transactional
-    public BusinessResponse.BusinessProfile updateBusiness(
+    public BusinessResponseDto.BusinessResponse updateBusiness(
             UUID businessId,
-            BusinessRequest.UpdateBusiness request,
+            BusinessRequestDto.UpdateBusinessRequest request,
             UUID currentUserId) {
         return businessCommandService.updateBusiness(businessId, request, currentUserId);
     }
@@ -100,9 +109,9 @@ public class BusinessService {
      * 권한: OWNER만 가능
      */
     @Transactional
-    public BusinessResponse.DeleteResult deleteBusiness(
+    public BusinessResponseDto.DeleteBusinessResponse deleteBusiness(
             UUID businessId,
-            BusinessRequest.DeleteBusiness request,
+            BusinessRequestDto.DeleteBusinessRequest request,
             UUID currentUserId) {
         return businessCommandService.deleteBusiness(businessId, request, currentUserId);
     }
@@ -110,13 +119,14 @@ public class BusinessService {
     /**
      * 구성원 초대
      * 권한: OWNER, MANAGER
+     * 변경사항: role 파라미터 제거 (MEMBER로 고정)
      */
     @Transactional
-    public BusinessResponse.InvitationResult inviteUser(
+    public BusinessResponseDto.MemberListResponse.MemberResponse inviteMember(
             UUID businessId,
-            BusinessRequest.InviteUser request,
+            BusinessRequestDto.InviteMemberRequest request,
             UUID inviterUserId) {
-        return businessCommandService.inviteUser(businessId, request, inviterUserId);
+        return businessCommandService.inviteMember(businessId, request, inviterUserId);
     }
 
     /**
@@ -124,12 +134,12 @@ public class BusinessService {
      * 권한: OWNER만 가능
      */
     @Transactional
-    public void changeUserRole(
+    public void changeMemberRole(
             UUID businessId,
             UUID targetUserId,
-            BusinessRequest.ChangeRole request,
+            BusinessRequestDto.ChangeMemberRoleRequest request,
             UUID currentUserId) {
-        businessCommandService.changeUserRole(businessId, targetUserId, request, currentUserId);
+        businessCommandService.changeMemberRole(businessId, targetUserId, request, currentUserId);
     }
 
     /**
@@ -137,7 +147,34 @@ public class BusinessService {
      * 권한: OWNER는 모든 구성원 제거 가능, MANAGER는 MEMBER만 제거 가능
      */
     @Transactional
-    public void removeMember(UUID businessId, UUID targetUserId, UUID requesterUserId) {
+    public void removeMember(
+            UUID businessId,
+            UUID targetUserId,
+            UUID requesterUserId) {
         businessCommandService.removeMember(businessId, targetUserId, requesterUserId);
+    }
+
+    /**
+     * 구성원 활성화
+     * 권한: OWNER, MANAGER
+     */
+    @Transactional
+    public void activateMember(
+            UUID businessId,
+            UUID targetUserId,
+            UUID currentUserId) {
+        businessCommandService.activateMember(businessId, targetUserId, currentUserId);
+    }
+
+    /**
+     * 구성원 비활성화
+     * 권한: OWNER, MANAGER
+     */
+    @Transactional
+    public void deactivateMember(
+            UUID businessId,
+            UUID targetUserId,
+            UUID currentUserId) {
+        businessCommandService.deactivateMember(businessId, targetUserId, currentUserId);
     }
 }

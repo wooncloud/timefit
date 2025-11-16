@@ -8,98 +8,18 @@ import { Switch } from '@/components/ui/switch';
 import { CalendarClock } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { formatPhoneNumber, validateSignupForm } from './signup';
-import {
-  SignupFormData,
-  SignupFormErrors,
-  SignupHandlerResponse,
-  SignupRequestBody,
-} from '@/types/auth/signup';
+import { useSignup } from '@/hooks/auth/useSignup';
 
 export default function SignUpPage() {
-  const [formData, setFormData] = useState<SignupFormData>({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    name: '',
-    phoneNumber: '',
-  });
   const [isBusiness, setIsBusiness] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<SignupFormErrors>({});
-  const [message, setMessage] = useState('');
-  const router = useRouter();
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const fieldName = name as keyof SignupFormData;
-    const nextValue =
-      fieldName === 'phoneNumber' ? formatPhoneNumber(value) : value;
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: nextValue,
-    }));
-    // 입력시 해당 필드의 에러 메시지 제거
-    if (errors[fieldName]) {
-      setErrors(prev => ({
-        ...prev,
-        [fieldName]: undefined,
-      }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const { isValid, errors: validationErrors } = validateSignupForm(formData);
-    setErrors(validationErrors);
-
-    if (!isValid) {
-      return;
-    }
-
-    setIsLoading(true);
-    setMessage('');
-
-    try {
-      const requestBody: SignupRequestBody = {
-        email: formData.email,
-        password: formData.password,
-        name: formData.name,
-        phoneNumber: formData.phoneNumber,
-      };
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = (await response.json()) as SignupHandlerResponse;
-
-      if (data.success) {
-        if (isBusiness) {
-          router.push('/signup/business');
-        } else {
-          setMessage('회원가입이 완료되었습니다. 메인 페이지로 이동합니다.');
-          // 성공시 메인 페이지로 리다이렉트
-          setTimeout(() => {
-            router.push('/');
-          }, 2000);
-        }
-      } else {
-        setMessage(data.message || '회원가입에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('회원가입 오류:', error);
-      setMessage('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    formData,
+    errors,
+    isLoading,
+    message,
+    handleInputChange,
+    handleSubmit,
+  } = useSignup({ isBusiness });
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">

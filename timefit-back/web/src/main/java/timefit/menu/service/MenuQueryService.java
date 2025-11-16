@@ -16,8 +16,7 @@ import java.util.UUID;
 
 /**
  * Menu 조회 전담 서비스
- * - MenuResponse, MenuSummary가 BusinessCategory 정보 포함
- * - 기존 조회 로직은 변경 불필요 (DTO의 of() 메서드가 처리)
+ * - MenuResponse, MenuListResponse가 BusinessCategory 정보 포함
  */
 @Slf4j
 @Service
@@ -38,33 +37,59 @@ public class MenuQueryService {
     public MenuListResponse getMenuList(UUID businessId) {
         log.info("메뉴 목록 조회 시작: businessId={}", businessId);
 
-        // 업체 존재 확인
         businessValidator.validateBusinessExists(businessId);
-
-        // 활성화된 메뉴만 조회
         List<Menu> menus = menuQueryRepository.findActiveMenusByBusinessId(businessId);
 
         log.info("메뉴 목록 조회 완료: businessId={}, count={}", businessId, menus.size());
+        return MenuListResponse.of(menus);
+    }
 
+    /**
+     * 메뉴 목록 조회 (검색/필터링)
+     *
+     * @param businessId 업체 ID
+     * @param serviceName 서비스명 검색 (부분 일치)
+     * @param businessCategoryId 카테고리 필터
+     * @param minPrice 최소 가격
+     * @param maxPrice 최대 가격
+     * @param isActive 활성 상태 (null 이면 전체)
+     * @return 필터링된 메뉴 목록
+     */
+    public MenuListResponse getMenuListWithFilters(
+            UUID businessId,
+            String serviceName,
+            UUID businessCategoryId,
+            Integer minPrice,
+            Integer maxPrice,
+            Boolean isActive) {
+
+        log.info("메뉴 목록 필터링 조회: businessId={}, serviceName={}, categoryId={}, price={}-{}, isActive={}",
+                businessId, serviceName, businessCategoryId, minPrice, maxPrice, isActive);
+
+        // 업체 존재 확인
+        businessValidator.validateBusinessExists(businessId);
+
+        // 검색
+        List<Menu> menus = menuQueryRepository.findMenusWithFilters(
+                businessId, serviceName, businessCategoryId,
+                minPrice, maxPrice, isActive
+        );
+
+        log.info("메뉴 목록 필터링 완료: businessId={}, count={}", businessId, menus.size());
         return MenuListResponse.of(menus);
     }
 
     /**
      * 메뉴 상세 조회
-     *
-     * @param businessId 업체 ID
-     * @param menuId 메뉴 ID
-     * @return 메뉴 상세 정보
      */
     public MenuResponse getMenu(UUID businessId, UUID menuId) {
         log.info("메뉴 상세 조회 시작: businessId={}, menuId={}", businessId, menuId);
 
-        // Menu 조회 및 검증
         Menu menu = menuValidator.validateMenuOfBusiness(menuId, businessId);
 
         log.info("메뉴 상세 조회 완료: menuId={}, serviceName={}",
                 menu.getId(), menu.getServiceName());
 
-        return MenuResponse.of(menu);
+        return MenuResponse.from(menu);
     }
 }

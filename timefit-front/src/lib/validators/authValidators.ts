@@ -1,30 +1,22 @@
 import { SignupFormData, SignupFormErrors } from '@/types/auth/signup';
+import { SigninFormData, SigninFormErrors } from '@/types/auth/signin';
 
 interface SignupValidationResult {
   isValid: boolean;
   errors: SignupFormErrors;
 }
 
+interface SigninValidationResult {
+  isValid: boolean;
+  errors: SigninFormErrors;
+}
+
 const emailPattern = /\S+@\S+\.\S+/;
 const phoneNumberPattern = /^010-\d{4}-\d{4}$/;
 
 /**
- * 숫자만 입력된 전화번호 문자열에 010-XXXX-XXXX 형식을 적용.
+ * 회원가입 폼 데이터 유효성 검증
  */
-export function formatPhoneNumber(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
-
-  if (digits.length <= 3) {
-    return digits;
-  }
-
-  if (digits.length <= 7) {
-    return `${digits.slice(0, 3)}-${digits.slice(3)}`;
-  }
-
-  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
-}
-
 export function validateSignupForm(
   formData: SignupFormData
 ): SignupValidationResult {
@@ -63,3 +55,35 @@ export function validateSignupForm(
     errors,
   };
 }
+
+/**
+ * 로그인 폼 데이터 유효성 검증
+ */
+export function validateSigninForm(
+  formData: SigninFormData
+): SigninValidationResult {
+  const errors: SigninFormErrors = {};
+
+  if (!formData.email) {
+    errors.email = '이메일을 입력해주세요.';
+  } else if (!emailPattern.test(formData.email)) {
+    errors.email = '올바른 이메일 형식을 입력해주세요.';
+  }
+
+  if (!formData.password) {
+    errors.password = '비밀번호를 입력해주세요.';
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
+}
+
+/**
+ * 초기 로그인 폼 데이터
+ */
+export const initialSigninForm: SigninFormData = {
+  email: '',
+  password: '',
+};

@@ -4,8 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import timefit.business.dto.BusinessRequest;
-import timefit.business.dto.BusinessResponse;
+import timefit.auth.service.validator.AuthValidator;
+import timefit.business.dto.BusinessRequestDto;
+import timefit.business.dto.BusinessResponseDto;
 import timefit.business.entity.Business;
 import timefit.business.entity.UserBusinessRole;
 import timefit.business.repository.BusinessRepository;
@@ -17,14 +18,8 @@ import timefit.exception.business.BusinessException;
 import timefit.user.entity.User;
 import timefit.user.repository.UserRepository;
 
-import java.util.List;
 import java.util.UUID;
 
-/**
- * Business CUD 전담 서비스
- * - 모든 생성/수정/삭제(CUD) 작업 처리
- * - @Transactional 적용
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -32,63 +27,62 @@ import java.util.UUID;
 public class BusinessCommandService {
 
     private final BusinessRepository businessRepository;
-    private final UserRepository userRepository;
     private final UserBusinessRoleRepository userBusinessRoleRepository;
+    private final UserRepository userRepository;
     private final BusinessValidator businessValidator;
+    private final AuthValidator authValidator;
 
     /**
      * 업체 생성
      * 권한: 로그인한 사용자 누구나 (생성자는 자동으로 OWNER가 됨)
      */
-    public BusinessResponse.BusinessDetail createBusiness(
-            BusinessRequest.CreateBusiness request,
+    public BusinessResponseDto.BusinessResponse createBusiness(
+            BusinessRequestDto.CreateBusinessRequest request,
             UUID ownerId) {
 
-        log.info("업체 생성 시작: ownerId={}, businessName={}", ownerId, request.getBusinessName());
+        log.info("업체 생성 시작: ownerId={}, businessName={}", ownerId, request.businessName());
 
-        // 1. 사업자번호 중복 체크
-        if (businessRepository.existsByBusinessNumber(request.getBusinessNumber())) {
-            throw new BusinessException(BusinessErrorCode.BUSINESS_ALREADY_EXISTS);
-        }
+        // 1. 사용자 존재 확인
+        User owner = authValidator.validateUserExists(ownerId);
 
-        // 2. 소유자 사용자 존재 확인
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new BusinessException(BusinessErrorCode.USER_NOT_FOUND));
+        // 2. 사업자번호 중복 검증
+        businessValidator.validateBusinessNumberUnique(request.businessNumber());
 
-        // 3. 업체 생성 (Entity 정적 팩토리 사용)
+        // 3. Business 생성
         Business business = Business.createBusiness(
-                request.getBusinessName(),
-                request.getBusinessTypes(),
-                request.getBusinessNumber(),
-                request.getAddress(),
-                request.getContactPhone(),
-                request.getDescription()
+                request.businessName(),
+                request.businessTypes(),
+                request.businessNumber(),
+                request.ownerName(),
+                request.address(),
+                request.contactPhone(),
+                request.description(),
+                request.logoUrl(),
+                request.businessNotice()
         );
+
         Business savedBusiness = businessRepository.save(business);
+        log.info("업체 생성 완료: businessId={}", savedBusiness.getId());
 
-        // 4. 소유자 권한 부여
-        UserBusinessRole ownerRole = UserBusinessRole.createOwner(owner, savedBusiness);
-        userBusinessRoleRepository.save(ownerRole);
-
-        // 5. 응답 생성 (DTO 정적 팩토리 사용)
-        BusinessResponse.BusinessDetail response = BusinessResponse.BusinessDetail.of(
-                savedBusiness,
-                ownerRole,
-                1  // 멤버 수 (생성 시점에는 소유자만 존재)
+        // 4. 생성자를 OWNER로 등록
+        UserBusinessRole ownerRole = UserBusinessRole.createOwner(
+                owner, savedBusiness, owner
         );
 
-        log.info("업체 생성 완료: businessId={}, ownerId={}", savedBusiness.getId(), ownerId);
+        UserBusinessRole savedOwnerRole = userBusinessRoleRepository.save(ownerRole);
+        log.info("OWNER 권한 부여 완료: userId={}, businessId={}, role=OWNER",
+                ownerId, savedBusiness.getId());
 
-        return response;
+        return BusinessResponseDto.BusinessResponse.of(savedBusiness, savedOwnerRole);
     }
 
     /**
      * 업체 정보 수정
      * 권한: OWNER, MANAGER만 가능
      */
-    public BusinessResponse.BusinessProfile updateBusiness(
+    public BusinessResponseDto.BusinessResponse updateBusiness(
             UUID businessId,
-            BusinessRequest.UpdateBusiness request,
+            BusinessRequestDto.UpdateBusinessRequest request,
             UUID currentUserId) {
 
         log.info("업체 정보 수정 시작: businessId={}, userId={}", businessId, currentUserId);
@@ -96,45 +90,44 @@ public class BusinessCommandService {
         // 1. 업체 존재 확인
         Business business = businessValidator.validateBusinessExists(businessId);
 
-        // 2. 권한 확인 (Manager 또는 Owner)
-        UserBusinessRole userRole = businessValidator.validateUserBusinessRole(currentUserId, businessId);
-        businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+        // 2. 권한 확인 (OWNER 또는 MANAGER)
+        UserBusinessRole userRole = businessValidator.getManagerOrOwnerRole(currentUserId, businessId);
+        log.info("권한 확인 완료: userId={}, role={}", currentUserId, userRole.getRole());
 
-        // 3. 사업자번호 변경 시 중복 체크
-        if (request.getBusinessNumber() != null &&
-                !request.getBusinessNumber().equals(business.getBusinessNumber())) {
-            if (businessRepository.existsByBusinessNumber(request.getBusinessNumber())) {
-                throw new BusinessException(BusinessErrorCode.BUSINESS_ALREADY_EXISTS);
-            }
+        // 3. 사업자번호 변경 시 중복 검증
+        if (request.businessNumber() != null &&
+                !request.businessNumber().equals(business.getBusinessNumber())) {
+
+            log.info("사업자번호 변경 감지: {} -> {}",
+                    business.getBusinessNumber(), request.businessNumber());
+
+            businessValidator.validateBusinessNumberUnique(request.businessNumber());
         }
 
-        // 4. 업체 정보 수정 (Entity 비즈니스 메서드 사용)
+        // 4. 업체 정보 업데이트
         business.updateBusinessInfo(
-                request.getBusinessName(),
-                request.getBusinessTypes(),
-                request.getAddress(),
-                request.getContactPhone(),
-                request.getDescription(),
-                request.getLogoUrl(),
-                request.getBusinessNotice()
+                request.businessName(),
+                request.businessTypes(),
+                request.ownerName(),
+                request.address(),
+                request.contactPhone(),
+                request.description(),
+                request.logoUrl(),
+                request.businessNotice()
         );
 
-        // 5. 응답 생성 (DTO 정적 팩토리 사용)
-        BusinessResponse.BusinessProfile response = BusinessResponse.BusinessProfile.of(business, userRole);
+        log.info("업체 정보 수정 완료: businessId={}", businessId);
 
-        log.info("업체 정보 수정 완료: businessId={}, userId={}, role={}",
-                businessId, currentUserId, userRole.getRole());
-
-        return response;
+        return BusinessResponseDto.BusinessResponse.of(business, userRole);
     }
 
     /**
      * 업체 삭제 (비활성화)
      * 권한: OWNER만 가능
      */
-    public BusinessResponse.DeleteResult deleteBusiness(
+    public BusinessResponseDto.DeleteBusinessResponse deleteBusiness(
             UUID businessId,
-            BusinessRequest.DeleteBusiness request,
+            BusinessRequestDto.DeleteBusinessRequest request,
             UUID currentUserId) {
 
         log.info("업체 삭제 시작: businessId={}, userId={}", businessId, currentUserId);
@@ -142,141 +135,107 @@ public class BusinessCommandService {
         // 1. 업체 존재 확인
         Business business = businessValidator.validateBusinessExists(businessId);
 
-        if (!business.getIsActive()) {
-            throw new BusinessException(BusinessErrorCode.BUSINESS_ALREADY_DELETED);
-        }
-
-        // 2. OWNER 권한 확인 (OWNER만 삭제 가능)
+        // 2. 권한 확인 (OWNER만 가능)
         businessValidator.validateOwnerRole(currentUserId, businessId);
 
-        // 3. 삭제 확인 검증
-        if (!Boolean.TRUE.equals(request.getConfirmDelete())) {
-            throw new BusinessException(BusinessErrorCode.DELETE_CONFIRMATION_REQUIRED);
-        }
-
-        // 4. 비활성화 (Entity 비즈니스 메서드 사용)
+        // 3. 업체 비활성화
         business.deactivate();
 
-        // 5. 모든 구성원 비활성화
-        List<UserBusinessRole> activeMembers = userBusinessRoleRepository
-                .findByBusinessIdAndIsActive(businessId, true);
+        log.info("업체 삭제 완료: businessId={}, deleteReason={}", businessId, request.deleteReason());
 
-        activeMembers.forEach(UserBusinessRole::deactivate);
-
-        // 6. 응답 생성 (DTO 정적 팩토리 사용)
-        BusinessResponse.DeleteResult response = BusinessResponse.DeleteResult.of(business);
-
-        log.info("업체 삭제 완료: businessId={}, deactivatedMemberCount={}",
-                businessId, activeMembers.size());
-
-        return response;
+        return BusinessResponseDto.DeleteBusinessResponse.of(business, request.deleteReason());
     }
 
     /**
      * 구성원 초대
-     * 권한: OWNER, MANAGER (MANAGER는 MANAGER/MEMBER만 초대 가능)
+     * 권한: OWNER, MANAGER
+     * 신규 초대는 무조건 MEMBER로 생성
      */
-    public BusinessResponse.InvitationResult inviteUser(
+    public BusinessResponseDto.MemberListResponse.MemberResponse inviteMember(
             UUID businessId,
-            BusinessRequest.InviteUser request,
+            BusinessRequestDto.InviteMemberRequest request,
             UUID inviterUserId) {
 
-        log.info("구성원 초대 시작: businessId={}, inviterUserId={}, email={}, role={}",
-                businessId, inviterUserId, request.getEmail(), request.getRole());
+        log.info("구성원 초대 시작: businessId={}, inviterUserId={}, email={}",
+                businessId, inviterUserId, request.email());
 
         // 1. 업체 존재 확인
-        Business business = businessValidator.validateActiveBusinessExists(businessId);
+        businessValidator.validateBusinessExists(businessId);
 
-        // 2. 초대자 권한 확인
-        UserBusinessRole inviterRole = businessValidator.validateUserBusinessRole(inviterUserId, businessId);
+        // 2. 초대자 권한 확인 (OWNER 또는 MANAGER)
         businessValidator.validateManagerOrOwnerRole(inviterUserId, businessId);
 
-        // 3. MANAGER는 OWNER 권한 부여 불가
-        if (inviterRole.getRole() == BusinessRole.MANAGER && request.getRole() == BusinessRole.OWNER) {
-            throw new BusinessException(BusinessErrorCode.INSUFFICIENT_PERMISSION);
-        }
+        // 3. 초대할 사용자 조회 (이메일로)
+        User invitee = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> {
+                    log.warn("초대 실패 - 사용자 없음: email={}", request.email());
+                    return new BusinessException(BusinessErrorCode.USER_NOT_FOUND);
+                });
 
-        // 4. 초대할 사용자 조회
-        User inviteeUser = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException(BusinessErrorCode.USER_NOT_FOUND));
+        // 4. 이미 등록된 사용자인지 확인
+        userBusinessRoleRepository.findByUserIdAndBusinessId(invitee.getId(), businessId)
+                .ifPresent(existing -> {
+                    log.warn("초대 실패 - 이미 등록된 구성원: userId={}, businessId={}",
+                            invitee.getId(), businessId);
+                    throw new BusinessException(BusinessErrorCode.USER_ALREADY_MEMBER);
+                });
 
-        // 5. 이미 구성원인지 확인
-        boolean alreadyMember = userBusinessRoleRepository
-                .findByUserIdAndBusinessIdAndIsActive(inviteeUser.getId(), businessId, true)
-                .isPresent();
+        // 5. 초대자 조회
+        User inviter = authValidator.validateUserExists(inviterUserId);
 
-        if (alreadyMember) {
-            throw new BusinessException(BusinessErrorCode.USER_ALREADY_MEMBER);
-        }
-
-        // 6. 구성원 추가 (Entity 정적 팩토리 사용)
-        UserBusinessRole newMemberRole;
-
-        // 역할에 따라 적절한 정적 팩토리 메서드 호출
-        if (request.getRole() == BusinessRole.MANAGER) {
-            newMemberRole = UserBusinessRole.createManager(inviteeUser, business, inviterRole.getUser());
-        } else {
-            newMemberRole = UserBusinessRole.createMember(inviteeUser, business, inviterRole.getUser());
-        }
-
-        userBusinessRoleRepository.save(newMemberRole);
-
-        // 7. 응답 생성 (DTO 정적 팩토리 사용)
-        BusinessResponse.InvitationResult response = BusinessResponse.InvitationResult.of(
-                business,
-                inviteeUser,
-                newMemberRole
+        // 6. MEMBER 권한으로 생성
+        UserBusinessRole memberRole = UserBusinessRole.createMember(
+                invitee,
+                businessValidator.validateBusinessExists(businessId),
+                inviter
         );
 
-        log.info("구성원 초대 완료: businessId={}, inviterUserId={}, inviteeUserId={}, role={}",
-                businessId, inviterUserId, inviteeUser.getId(), request.getRole());
+        UserBusinessRole savedMemberRole = userBusinessRoleRepository.save(memberRole);
 
-        return response;
+        log.info("구성원 초대 완료: userId={}, businessId={}, role=MEMBER",
+                invitee.getId(), businessId);
+
+        return BusinessResponseDto.MemberListResponse.MemberResponse.of(savedMemberRole);
     }
 
     /**
      * 구성원 권한 변경
      * 권한: OWNER만 가능
      */
-    public void changeUserRole(
+    public void changeMemberRole(
             UUID businessId,
             UUID targetUserId,
-            BusinessRequest.ChangeRole request,
+            BusinessRequestDto.ChangeMemberRoleRequest request,
             UUID currentUserId) {
 
-        log.info("구성원 권한 변경 요청: businessId={}, targetUserId={}, newRole={}, requesterUserId={}",
-                businessId, targetUserId, request.getNewRole(), currentUserId);
+        log.info("구성원 권한 변경 시작: businessId={}, targetUserId={}, newRole={}",
+                businessId, targetUserId, request.newRole());
 
         // 1. 업체 존재 확인
-        Business business = businessValidator.validateBusinessExists(businessId);
+        businessValidator.validateBusinessExists(businessId);
 
-        if (!business.getIsActive()) {
-            throw new BusinessException(BusinessErrorCode.BUSINESS_NOT_ACTIVE);
-        }
-
-        // 2. OWNER 권한 확인
+        // 2. 요청자 권한 확인 (OWNER만 가능)
         businessValidator.validateOwnerRole(currentUserId, businessId);
 
-        // 3. 대상자 해당 업체의 활성 구성원인지 확인
-        UserBusinessRole targetRole = userBusinessRoleRepository
-                .findByUserIdAndBusinessIdAndIsActive(targetUserId, businessId, true)
-                .orElseThrow(() -> new BusinessException(BusinessErrorCode.USER_NOT_BUSINESS_MEMBER));
+        // 3. 대상 사용자 권한 조회
+        UserBusinessRole targetRole = businessValidator.validateUserBusinessRole(targetUserId, businessId);
 
-        // 4. 본인 권한 변경 시도 방지
-        if (currentUserId.equals(targetUserId)) {
+        // 4. OWNER 권한 변경 방지
+        if (targetRole.getRole() == BusinessRole.OWNER) {
+            log.warn("권한 변경 실패 - OWNER 권한 변경 불가: targetUserId={}", targetUserId);
             throw new BusinessException(BusinessErrorCode.CANNOT_CHANGE_OWN_ROLE);
         }
 
-        // 5. OWNER 권한으로 변경 시도 방지
-        if (request.getNewRole() == BusinessRole.OWNER) {
-            throw new BusinessException(BusinessErrorCode.CANNOT_CHANGE_TO_OWNER);
+        // 5. OWNER로 변경 방지
+        if (request.newRole() == BusinessRole.OWNER) {
+            log.warn("권한 변경 실패 - OWNER 권한 부여 불가: targetUserId={}", targetUserId);
+            throw new BusinessException(BusinessErrorCode.CANNOT_CHANGE_OWN_ROLE);
         }
 
-        // 6. 권한 변경 (Entity 비즈니스 메서드 사용)
-        targetRole.changeRole(request.getNewRole());
+        // 6. 권한 변경
+        targetRole.changeRole(request.newRole());
 
-        log.info("구성원 권한 변경 완료: businessId={}, targetUserId={}, oldRole={}, newRole={}",
-                businessId, targetUserId, targetRole.getRole(), request.getNewRole());
+        log.info("구성원 권한 변경 완료: targetUserId={}, newRole={}", targetUserId, request.newRole());
     }
 
     /**
@@ -288,45 +247,107 @@ public class BusinessCommandService {
             UUID targetUserId,
             UUID requesterUserId) {
 
-        log.info("구성원 제거 요청: businessId={}, targetUserId={}, requesterUserId={}",
+        log.info("구성원 제거 시작: businessId={}, targetUserId={}, requesterId={}",
                 businessId, targetUserId, requesterUserId);
 
         // 1. 업체 존재 확인
-        Business business = businessValidator.validateBusinessExists(businessId);
-
-        if (!business.getIsActive()) {
-            throw new BusinessException(BusinessErrorCode.BUSINESS_NOT_ACTIVE);
-        }
+        businessValidator.validateBusinessExists(businessId);
 
         // 2. 요청자 권한 확인
-        UserBusinessRole requesterRole = businessValidator.validateUserBusinessRole(requesterUserId, businessId);
-        businessValidator.validateManagerOrOwnerRole(requesterUserId, businessId);
+        UserBusinessRole requesterRole = businessValidator.getManagerOrOwnerRole(requesterUserId, businessId);
 
-        // 3. 대상자 조회
-        UserBusinessRole targetRole = userBusinessRoleRepository
-                .findByUserIdAndBusinessIdAndIsActive(targetUserId, businessId, true)
-                .orElseThrow(() -> new BusinessException(BusinessErrorCode.USER_NOT_BUSINESS_MEMBER));
+        // 3. 대상 사용자 권한 조회
+        UserBusinessRole targetRole = businessValidator.validateUserBusinessRole(targetUserId, businessId);
 
-        // 4. 본인 제거 시도 방지
+        // 4. 자기 자신 제거 방지
         if (requesterUserId.equals(targetUserId)) {
+            log.warn("구성원 제거 실패 - 자기 자신 제거 불가: userId={}", requesterUserId);
             throw new BusinessException(BusinessErrorCode.CANNOT_REMOVE_SELF);
         }
 
-        // 5. OWNER는 제거 불가
+        // 5. OWNER 제거 방지
         if (targetRole.getRole() == BusinessRole.OWNER) {
+            log.warn("구성원 제거 실패 - OWNER 제거 불가: targetUserId={}", targetUserId);
             throw new BusinessException(BusinessErrorCode.CANNOT_REMOVE_OWNER);
         }
 
-        // 6. MANAGER는 다른 MANAGER 제거 불가
+        // 6. MANAGER가 MANAGER 제거 시도 방지
         if (requesterRole.getRole() == BusinessRole.MANAGER &&
                 targetRole.getRole() == BusinessRole.MANAGER) {
+            log.warn("구성원 제거 실패 - MANAGER는 MANAGER 제거 불가: requesterId={}, targetId={}",
+                    requesterUserId, targetUserId);
             throw new BusinessException(BusinessErrorCode.INSUFFICIENT_PERMISSION);
         }
 
-        // 7. 구성원 비활성화 (Entity 비즈니스 메서드 사용)
+        // 7. 구성원 제거 (논리적 삭제)
         targetRole.deactivate();
 
-        log.info("구성원 제거 완료: businessId={}, targetUserId={}, targetRole={}",
-                businessId, targetUserId, targetRole.getRole());
+        log.info("구성원 제거 완료: targetUserId={}, businessId={}", targetUserId, businessId);
+    }
+
+    /**
+     * 구성원 활성화
+     * 권한: OWNER, MANAGER
+     */
+    public void activateMember(
+            UUID businessId,
+            UUID targetUserId,
+            UUID currentUserId) {
+
+        log.info("구성원 활성화 시작: businessId={}, targetUserId={}, requesterId={}",
+                businessId, targetUserId, currentUserId);
+
+        // 1. 업체 존재 확인
+        businessValidator.validateBusinessExists(businessId);
+
+        // 2. 요청자 권한 확인 (OWNER 또는 MANAGER)
+        businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+
+        // 3. 대상 사용자 권한 조회 (비활성 상태도 조회)
+        UserBusinessRole targetRole = userBusinessRoleRepository
+                .findByUserIdAndBusinessId(targetUserId, businessId)
+                .orElseThrow(() -> {
+                    log.warn("구성원 활성화 실패 - 권한 없음: userId={}, businessId={}",
+                            targetUserId, businessId);
+                    return new BusinessException(BusinessErrorCode.INSUFFICIENT_PERMISSION);
+                });
+
+        // 4. 활성화
+        targetRole.activate();
+
+        log.info("구성원 활성화 완료: targetUserId={}, businessId={}", targetUserId, businessId);
+    }
+
+    /**
+     * 구성원 비활성화
+     * 권한: OWNER, MANAGER
+     */
+    public void deactivateMember(
+            UUID businessId,
+            UUID targetUserId,
+            UUID currentUserId) {
+
+        log.info("구성원 비활성화 시작: businessId={}, targetUserId={}, requesterId={}",
+                businessId, targetUserId, currentUserId);
+
+        // 1. 업체 존재 확인
+        businessValidator.validateBusinessExists(businessId);
+
+        // 2. 요청자 권한 확인 (OWNER 또는 MANAGER)
+        businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+
+        // 3. 대상 사용자 권한 조회
+        UserBusinessRole targetRole = businessValidator.validateUserBusinessRole(targetUserId, businessId);
+
+        // 4. OWNER 비활성화 방지
+        if (targetRole.getRole() == BusinessRole.OWNER) {
+            log.warn("구성원 비활성화 실패 - OWNER 비활성화 불가: targetUserId={}", targetUserId);
+            throw new BusinessException(BusinessErrorCode.CANNOT_REMOVE_OWNER);
+        }
+
+        // 5. 비활성화
+        targetRole.deactivate();
+
+        log.info("구성원 비활성화 완료: targetUserId={}, businessId={}", targetUserId, businessId);
     }
 }

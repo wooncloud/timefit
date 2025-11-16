@@ -3,7 +3,7 @@
  */
 export interface CreateBusinessRequestBody {
   businessName: string;
-  businessType: string;
+  businessTypes: string[];
   businessNumber: string;
   address: string;
   contactPhone: string;
@@ -24,7 +24,7 @@ export interface CreateBusinessApiResponse {
 export interface CreateBusinessSuccessPayload extends Record<string, unknown> {
   businessId?: string;
   businessName?: string;
-  businessType?: string;
+  businessTypes?: string[];
   businessNumber?: string;
   address?: string;
   contactPhone?: string;
@@ -65,7 +65,7 @@ export type CreateBusinessHandlerResponse =
  */
 export interface BusinessSignupFormData {
   businessName: string;
-  businessType: string;
+  businessTypes: string[];
   businessNumber: string;
   address: string;
   contactPhone: string;

@@ -1,116 +1,98 @@
 package timefit.operatinghours.dto;
 
-import lombok.Getter;
+import timefit.business.entity.BusinessHours;
 import timefit.business.entity.OperatingHours;
+import timefit.common.entity.DayOfWeek;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class OperatingHoursResponse {
 
-    // 영업시간 조회 결과
-    @Getter
-    public static class OperatingHoursResult {
-        private final UUID businessId;
-        private final String businessName;
-        private final List<HourDetail> businessHours;
-        private final LocalDateTime updatedAt;
+    // 영업시간 + 예약 가능 시간대 통합 조회 결과
+    public record OperatingHoursResult(
+            UUID businessId,
+            String businessName,
+            List<DayScheduleResult> schedules
+    ) {
+        // BusinessHours + OperatingHours 조합하여 DTO 생성
+        public static OperatingHoursResult of(
+                UUID businessId,
+                String businessName,
+                List<BusinessHours> businessHours,
+                List<OperatingHours> operatingHours) {
 
-        private OperatingHoursResult(UUID businessId, String businessName,
-                                     List<HourDetail> businessHours,
-                                     LocalDateTime updatedAt) {
-            this.businessId = businessId;
-            this.businessName = businessName;
-            this.businessHours = businessHours;
-            this.updatedAt = updatedAt;
-        }
+            // 1. BusinessHours를 Map 으로 변환 (요일별)
+            Map<DayOfWeek, BusinessHours> businessHoursMap = businessHours.stream()
+                    .collect(Collectors.toMap(
+                            BusinessHours::getDayOfWeek,
+                            h -> h
+                    ));
 
-        public static OperatingHoursResult of(UUID businessId, String businessName,
-                                              List<OperatingHours> hours) {
-            return new OperatingHoursResult(
-                    businessId,
-                    businessName,
-                    hours.stream()
-                            .map(HourDetail::of)
-                            .collect(Collectors.toList()),
-                    hours.isEmpty() ? null : hours.get(0).getUpdatedAt()
-            );
-        }
+            // 2. OperatingHours를 요일별로 그룹화
+            Map<DayOfWeek, List<OperatingHours>> operatingHoursMap = operatingHours.stream()
+                    .collect(Collectors.groupingBy(OperatingHours::getDayOfWeek));
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            OperatingHoursResult that = (OperatingHoursResult) o;
-            return Objects.equals(businessId, that.businessId) &&
-                    Objects.equals(businessName, that.businessName) &&
-                    Objects.equals(businessHours, that.businessHours) &&
-                    Objects.equals(updatedAt, that.updatedAt);
-        }
+            // 3. 요일별로 DayScheduleResult 생성
+            List<DayScheduleResult> schedules = new ArrayList<>();
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(businessId, businessName, businessHours, updatedAt);
+            for (DayOfWeek day : DayOfWeek.values()) {
+                BusinessHours bizHours = businessHoursMap.get(day);
+                List<OperatingHours> opHours = operatingHoursMap.getOrDefault(day, List.of());
+
+                schedules.add(new DayScheduleResult(day.getValue(), bizHours, opHours));
+            }
+
+            // 4. 요일 순으로 정렬
+            schedules.sort(Comparator.comparing(DayScheduleResult::dayOfWeek));
+
+            return new OperatingHoursResult(businessId, businessName, schedules);
         }
     }
 
-    // 영업시간 상세
-    @Getter
-    public static class HourDetail {
-        private final UUID hourId;
-        private final Integer dayOfWeek;      // 0~6 그대로 전달
-        private final String openTime;        // "HH:mm" 그대로 전달
-        private final String closeTime;       // "HH:mm" 그대로 전달
-        private final Boolean isClosed;
-        private final Integer sequence;
-        private final LocalDateTime createdAt;
-        private final LocalDateTime updatedAt;
+    // 요일별 스케줄 결과
+    public record DayScheduleResult(
+            Integer dayOfWeek,
+            String openTime,
+            String closeTime,
+            Boolean isClosed,
+            List<TimeRangeResult> bookingTimeRanges
+    ) {
+        public DayScheduleResult(
+                Integer dayOfWeek,
+                BusinessHours businessHours,
+                List<OperatingHours> operatingHours) {
 
-        private HourDetail(UUID hourId, Integer dayOfWeek, String openTime,
-                           String closeTime, Boolean isClosed, Integer sequence,
-                           LocalDateTime createdAt, LocalDateTime updatedAt) {
-            this.hourId = hourId;
-            this.dayOfWeek = dayOfWeek;
-            this.openTime = openTime;
-            this.closeTime = closeTime;
-            this.isClosed = isClosed;
-            this.sequence = sequence;
-            this.createdAt = createdAt;
-            this.updatedAt = updatedAt;
-        }
-
-        public static HourDetail of(OperatingHours hours) {
-            return new HourDetail(
-                    hours.getId(),
-                    hours.getDayOfWeek().getValue(),  // 0~6 값만
-                    hours.getOpenTime() != null ? hours.getOpenTime().toString() : null,
-                    hours.getCloseTime() != null ? hours.getCloseTime().toString() : null,
-                    hours.getIsClosed(),
-                    hours.getSequence(),
-                    hours.getCreatedAt(),
-                    hours.getUpdatedAt()
+            this(
+                    dayOfWeek,
+                    // BusinessHours 정보
+                    (businessHours != null && !businessHours.getIsClosed())
+                            ? businessHours.getOpenTime().toString()
+                            : null,
+                    (businessHours != null && !businessHours.getIsClosed())
+                            ? businessHours.getCloseTime().toString()
+                            : null,
+                    (businessHours == null || businessHours.getIsClosed()),
+                    // OperatingHours → TimeRangeResult 변환
+                    operatingHours.stream()
+                            .filter(h -> !h.getIsClosed())
+                            .sorted(Comparator.comparing(OperatingHours::getSequence))
+                            .map(TimeRangeResult::from)
+                            .collect(Collectors.toList())
             );
         }
+    }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            HourDetail that = (HourDetail) o;
-            return Objects.equals(hourId, that.hourId) &&
-                    Objects.equals(dayOfWeek, that.dayOfWeek) &&
-                    Objects.equals(openTime, that.openTime) &&
-                    Objects.equals(closeTime, that.closeTime) &&
-                    Objects.equals(isClosed, that.isClosed) &&
-                    Objects.equals(sequence, that.sequence);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(hourId, dayOfWeek, openTime, closeTime, isClosed, sequence);
+    // 예약 가능 시간대 결과
+    public record TimeRangeResult(
+            String startTime,
+            String endTime
+    ) {
+        public static TimeRangeResult from(OperatingHours hours) {
+            return new TimeRangeResult(
+                    hours.getOpenTime().toString(),
+                    hours.getCloseTime().toString()
+            );
         }
     }
 }

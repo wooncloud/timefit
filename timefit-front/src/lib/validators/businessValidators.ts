@@ -11,9 +11,12 @@ interface BusinessSignupValidationResult {
 const businessNumberPattern = /^(\d{3})-(\d{2})-(\d{5})$/;
 const contactPhonePattern = /^(0\d{1,2})-\d{3,4}-\d{4}$/;
 
+/**
+ * 초기 사업자 회원가입 폼 데이터
+ */
 export const initialBusinessSignupForm: BusinessSignupFormData = {
   businessName: '',
-  businessType: '',
+  businessTypes: [],
   businessNumber: '',
   address: '',
   contactPhone: '',
@@ -21,55 +24,8 @@ export const initialBusinessSignupForm: BusinessSignupFormData = {
 };
 
 /**
- * 사업자 번호를 123-45-67890 형식으로 포맷.
+ * 사업자 회원가입 폼 데이터 유효성 검증
  */
-export function formatBusinessNumber(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 10);
-
-  if (digits.length <= 3) {
-    return digits;
-  }
-
-  if (digits.length <= 5) {
-    return `${digits.slice(0, 3)}-${digits.slice(3)}`;
-  }
-
-  return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
-}
-
-/**
- * 전화번호를 지역번호-국번호-가입자번호 형식으로 포맷.
- */
-export function formatContactPhone(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
-
-  if (digits.startsWith('02')) {
-    if (digits.length <= 2) {
-      return digits;
-    }
-
-    if (digits.length <= 6) {
-      return `${digits.slice(0, 2)}-${digits.slice(2)}`;
-    }
-
-    if (digits.length <= 10) {
-      return `${digits.slice(0, 2)}-${digits.slice(2, digits.length - 4)}-${digits.slice(-4)}`;
-    }
-
-    return `${digits.slice(0, 2)}-${digits.slice(2, 6)}-${digits.slice(6)}`;
-  }
-
-  if (digits.length <= 3) {
-    return digits;
-  }
-
-  if (digits.length <= 7) {
-    return `${digits.slice(0, 3)}-${digits.slice(3)}`;
-  }
-
-  return `${digits.slice(0, 3)}-${digits.slice(3, digits.length - 4)}-${digits.slice(-4)}`;
-}
-
 export function validateBusinessSignupForm(
   formData: BusinessSignupFormData
 ): BusinessSignupValidationResult {
@@ -79,8 +35,8 @@ export function validateBusinessSignupForm(
     errors.businessName = '회사명을 입력해주세요.';
   }
 
-  if (!formData.businessType) {
-    errors.businessType = '업종을 선택해주세요.';
+  if (!formData.businessTypes || formData.businessTypes.length === 0) {
+    errors.businessTypes = '업종을 선택해주세요.';
   }
 
   const businessNumber = formData.businessNumber.trim();

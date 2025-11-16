@@ -2,10 +2,12 @@ import type { Metadata } from 'next';
 import { AppSidebar } from '@/components/business/sidebar/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { BusinessHeader } from '@/components/business/business-header';
+import { BusinessLayoutProvider } from '@/components/business/business-layout-provider';
 import { getCurrentUserFromSession } from '@/lib/session/server';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
-  title: '%s | TimeFit',
+  title: 'TimeFit - 예약 관리 시스템',
   description: '비즈니스를 위한 스마트한 예약 관리 솔루션',
 };
 
@@ -17,20 +19,15 @@ export default async function BusinessLayout({
   const sessionUser = await getCurrentUserFromSession();
 
   return (
-    <SidebarProvider>
-      <AppSidebar
-        user={
-          sessionUser && {
-            name: sessionUser.name,
-            email: sessionUser.email,
-            avatar: sessionUser.profileImageUrl ?? null,
-          }
-        }
-      />
-      <SidebarInset>
-        <BusinessHeader />
-        <div className="p-4">{children}</div>
-      </SidebarInset>
-    </SidebarProvider>
+    <BusinessLayoutProvider sessionUser={sessionUser}>
+      <SidebarProvider>
+        <AppSidebar/>
+        <SidebarInset>
+          <BusinessHeader />
+          <div className="p-4">{children}</div>
+        </SidebarInset>
+      </SidebarProvider>
+      <Toaster position="top-center" />
+    </BusinessLayoutProvider>
   );
 }

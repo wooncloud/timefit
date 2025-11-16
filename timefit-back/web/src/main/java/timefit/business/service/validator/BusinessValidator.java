@@ -41,6 +41,18 @@ public class BusinessValidator {
     }
 
     /**
+     * 사업자번호 중복 검증 (TODO: validateBusinessExists 이랑 나중에 통합 고려)
+     * @param businessNumber 검증할 사업자번호
+     * @throws BusinessException 사업자번호가 이미 존재하는 경우
+     */
+    public void validateBusinessNumberUnique(String businessNumber) {
+        if (businessRepository.existsByBusinessNumber(businessNumber)) {
+            log.warn("사업자번호 중복: businessNumber={}", businessNumber);
+            throw new BusinessException(BusinessErrorCode.BUSINESS_ALREADY_EXISTS);
+        }
+    }
+
+    /**
      * Business가 활성 상태인지 검증
      *
      * @param business 검증할 Business 엔티티
@@ -67,6 +79,24 @@ public class BusinessValidator {
                     log.warn("업체 권한 없음: userId={}, businessId={}", userId, businessId);
                     return new BusinessException(BusinessErrorCode.INSUFFICIENT_PERMISSION);
                 });
+    }
+
+    /**
+     * MANAGER 또는 OWNER 권한 조회 후 반환
+     * @param userId 사용자 ID
+     * @param businessId 업체 ID
+     * @return UserBusinessRole 엔티티
+     * @throws BusinessException 권한이 없거나 MEMBER인 경우
+     */
+    public UserBusinessRole getManagerOrOwnerRole(UUID userId, UUID businessId) {
+        UserBusinessRole userRole = validateUserBusinessRole(userId, businessId);
+
+        if (userRole.getRole() == BusinessRole.MEMBER) {
+            log.warn("권한 부족 - MEMBER는 접근 불가: userId={}, businessId={}", userId, businessId);
+            throw new BusinessException(BusinessErrorCode.INSUFFICIENT_PERMISSION);
+        }
+
+        return userRole;
     }
 
     /**
