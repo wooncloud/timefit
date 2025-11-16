@@ -63,6 +63,9 @@ export async function POST(request: NextRequest) {
       responseData.data as SignupSuccessPayload | undefined
     )?.accessToken;
     const accessToken = payloadAccessToken || headerAccessToken;
+    const refreshToken = (
+      responseData.data as SignupSuccessPayload | undefined
+    )?.refreshToken;
 
     if (!accessToken) {
       const errorPayload: SignupHandlerErrorResponse = {
@@ -82,9 +85,28 @@ export async function POST(request: NextRequest) {
       return responseJson;
     }
 
+    if (!refreshToken) {
+      const errorPayload: SignupHandlerErrorResponse = {
+        success: false,
+        message: '리프레시 토큰이 응답에 포함되어 있지 않습니다.',
+      };
+      const responseJson = NextResponse.json<SignupHandlerResponse>(
+        errorPayload,
+        { status: 500 }
+      );
+      const session = await getIronSession<SessionData>(
+        request,
+        responseJson,
+        sessionOptions
+      );
+      session.destroy();
+      return responseJson;
+    }
+
     const successData = {
       ...(responseData.data ?? {}),
       accessToken,
+      refreshToken,
     } as SignupSuccessPayload;
 
     const successPayload: SignupHandlerSuccessResponse = {
@@ -100,10 +122,11 @@ export async function POST(request: NextRequest) {
       responseJson,
       sessionOptions
     );
-    const { accessToken: _, ...userProfile } = successData;
+    const { accessToken: _, refreshToken: __, ...userProfile } = successData;
     session.user = {
       ...(userProfile as SessionUser),
       accessToken,
+      refreshToken,
     };
     await session.save();
     return responseJson;

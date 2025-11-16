@@ -55,8 +55,6 @@ export async function POST(request: NextRequest) {
       ?.replace('Bearer ', '');
     const payloadAccessToken = responseData.data?.accessToken;
     const accessToken = payloadAccessToken || headerAccessToken;
-
-    // refreshToken 추출 (백엔드 응답에서)
     const refreshToken = responseData.data?.refreshToken;
 
     if (!accessToken) {
@@ -77,9 +75,28 @@ export async function POST(request: NextRequest) {
       return responseJson;
     }
 
+    if (!refreshToken) {
+      const errorPayload: SigninHandlerErrorResponse = {
+        success: false,
+        message: '리프레시 토큰이 응답에 포함되어 있지 않습니다.',
+      };
+      const responseJson = NextResponse.json<SigninHandlerResponse>(
+        errorPayload,
+        { status: 500 }
+      );
+      const session = await getIronSession<SessionData>(
+        request,
+        responseJson,
+        sessionOptions
+      );
+      session.destroy();
+      return responseJson;
+    }
+
     const successData = {
       ...(responseData.data ?? {}),
       accessToken,
+      refreshToken,
     } as SigninSuccessPayload;
 
     const successPayload: SigninHandlerSuccessResponse = {
@@ -95,7 +112,7 @@ export async function POST(request: NextRequest) {
       responseJson,
       sessionOptions
     );
-    const { accessToken: _, ...userProfile } = successData;
+    const { accessToken: _, refreshToken: __, ...userProfile } = successData;
     session.user = {
       ...(userProfile as SessionUser),
       accessToken,

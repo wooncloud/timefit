@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getIronSession } from 'iron-session';
 
 import {
   CreateBusinessApiResponse,
@@ -8,7 +9,8 @@ import {
   CreateBusinessRequestBody,
   CreateBusinessSuccessPayload,
 } from '@/types/auth/business/createBusiness';
-import { getServerSession } from '@/lib/session/server';
+import { sessionOptions, SessionData } from '@/lib/session/options';
+import { executeWithTokenRefresh } from '@/lib/auth/serverTokenManager';
 
 const BACKEND_API_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
@@ -17,10 +19,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as CreateBusinessRequestBody;
 
-    const session = await getServerSession();
+    const responseJson = NextResponse.json({ success: false });
+    const session = await getIronSession<SessionData>(
+      request,
+      responseJson,
+      sessionOptions
+    );
+
     const accessToken = session.user?.accessToken;
 
-    // // 디버깅 로그
+    // 디버깅 로그
     // console.log('[Business API] Session 확인:', {
     //   hasSession: !!session,
     //   hasUser: !!session.user,
@@ -47,14 +55,27 @@ export async function POST(request: NextRequest) {
     //   body: body,
     // });
 
-    const response = await fetch(`${BACKEND_API_URL}/api/business`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(body),
-    });
+    // 토큰 갱신을 포함한 API 호출
+    const response = await executeWithTokenRefresh(session, (accessToken) =>
+      fetch(`${BACKEND_API_URL}/api/business`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(body),
+      })
+    );
+
+    if (!response) {
+      const errorPayload: CreateBusinessHandlerErrorResponse = {
+        success: false,
+        message: '인증이 만료되었습니다. 다시 로그인해주세요.',
+      };
+      return NextResponse.json<CreateBusinessHandlerResponse>(errorPayload, {
+        status: 401,
+      });
+    }
 
     // console.log('[Business API] Backend 응답:', {
     //   status: response.status,
