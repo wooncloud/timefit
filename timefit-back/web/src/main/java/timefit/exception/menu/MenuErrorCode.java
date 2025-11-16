@@ -15,6 +15,7 @@ public enum MenuErrorCode {
     INVALID_MENU_DATA("잘못된 메뉴 정보입니다", HttpStatus.BAD_REQUEST),
     DURATION_REQUIRED_FOR_RESERVATION("예약형 서비스는 소요 시간(durationMinutes)이 필수입니다", HttpStatus.BAD_REQUEST),
     INVALID_SLOT_SETTINGS("슬롯 설정이 누락되었거나 필수 항목이 없습니다", HttpStatus.BAD_REQUEST),
+    CANNOT_DEACTIVATE_MENU_WITH_RESERVATIONS("이 메뉴에 미래 예약이 존재하여 삭제 / 비활성화할 수 없습니다.", HttpStatus.BAD_REQUEST),
 
     // 권한 관련
     MENU_ACCESS_DENIED("해당 메뉴에 대한 권한이 없습니다", HttpStatus.FORBIDDEN),
