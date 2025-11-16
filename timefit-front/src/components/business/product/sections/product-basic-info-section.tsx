@@ -8,8 +8,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Product, ProductCategory } from '@/types/product/product';
-import { productCategories } from '@/lib/mock';
+import type {
+  Product,
+  BusinessTypeCode,
+  ServiceCategoryCode,
+} from '@/types/product/product';
+import { useBusinessStore } from '@/store/business-store';
+import {
+  BUSINESS_TYPE_NAMES,
+  getCategoriesByBusinessType,
+} from '@/lib/constants/categories';
+import { useMemo } from 'react';
 
 interface ProductBasicInfoSectionProps {
   formData: Partial<Product>;
@@ -20,6 +29,41 @@ export function ProductBasicInfoSection({
   formData,
   onFormDataChange,
 }: ProductBasicInfoSectionProps) {
+  const business = useBusinessStore((state) => state.business);
+
+  // 업체의 첫 번째 businessType을 기본값으로 사용
+  const businessTypes = business?.businessTypes || [];
+  const availableBusinessTypes = businessTypes as BusinessTypeCode[];
+
+  // 선택된 businessType에 따라 카테고리 목록 필터링
+  const availableCategories = useMemo(() => {
+    if (!formData.businessType) return [];
+    return getCategoriesByBusinessType(formData.businessType);
+  }, [formData.businessType]);
+
+  // businessType 변경 시 카테고리도 리셋
+  const handleBusinessTypeChange = (businessType: BusinessTypeCode) => {
+    const categories = getCategoriesByBusinessType(businessType);
+    const firstCategory = categories[0];
+
+    onFormDataChange({
+      ...formData,
+      businessType,
+      categoryCode: firstCategory?.code || ('' as ServiceCategoryCode),
+      categoryName: firstCategory?.displayName || '',
+    });
+  };
+
+  // 카테고리 변경 시
+  const handleCategoryChange = (categoryCode: ServiceCategoryCode) => {
+    const category = availableCategories.find((cat) => cat.code === categoryCode);
+    onFormDataChange({
+      ...formData,
+      categoryCode,
+      categoryName: category?.displayName || '',
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -27,12 +71,12 @@ export function ProductBasicInfoSection({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="service_name">서비스명</Label>
+        <Label htmlFor="serviceName">서비스명</Label>
         <Input
-          id="service_name"
-          value={formData.service_name || ''}
+          id="serviceName"
+          value={formData.serviceName || ''}
           onChange={(e) =>
-            onFormDataChange({ ...formData, service_name: e.target.value })
+            onFormDataChange({ ...formData, serviceName: e.target.value })
           }
           placeholder="디자인 컷"
           required
@@ -40,24 +84,47 @@ export function ProductBasicInfoSection({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="category">카테고리</Label>
+        <Label htmlFor="businessType">업종 (대분류)</Label>
         <Select
-          value={formData.category}
-          onValueChange={(value: ProductCategory) =>
-            onFormDataChange({ ...formData, category: value })
-          }
+          value={formData.businessType}
+          onValueChange={handleBusinessTypeChange}
         >
-          <SelectTrigger id="category">
-            <SelectValue />
+          <SelectTrigger id="businessType">
+            <SelectValue placeholder="업종을 선택하세요" />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(productCategories).map(([key, label]) => (
-              <SelectItem key={key} value={key}>
-                {label}
+            {availableBusinessTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {BUSINESS_TYPE_NAMES[type]}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="categoryCode">카테고리 (중분류)</Label>
+        <Select
+          value={formData.categoryCode}
+          onValueChange={handleCategoryChange}
+          disabled={!formData.businessType || availableCategories.length === 0}
+        >
+          <SelectTrigger id="categoryCode">
+            <SelectValue placeholder="카테고리를 선택하세요" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableCategories.map((category) => (
+              <SelectItem key={category.code} value={category.code}>
+                {category.displayName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {!formData.businessType && (
+          <p className="text-xs text-muted-foreground">
+            먼저 업종을 선택해주세요.
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -70,11 +137,32 @@ export function ProductBasicInfoSection({
             onChange={(e) =>
               onFormDataChange({ ...formData, price: Number(e.target.value) })
             }
+            onFocus={(e) => e.target.select()}
             min="0"
-            step="1000"
             required
           />
           <span className="text-sm text-muted-foreground">원</span>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="durationMinutes">소요 시간</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            id="durationMinutes"
+            type="number"
+            value={formData.durationMinutes || 60}
+            onChange={(e) =>
+              onFormDataChange({
+                ...formData,
+                durationMinutes: Number(e.target.value),
+              })
+            }
+            onFocus={(e) => e.target.select()}
+            min="1"
+            required
+          />
+          <span className="text-sm text-muted-foreground">분</span>
         </div>
       </div>
 
@@ -93,7 +181,10 @@ export function ProductBasicInfoSection({
 
       <div className="space-y-2">
         <Label htmlFor="image">이미지</Label>
-        <Input id="image" type="file" accept="image/*" />
+        <Input id="image" type="file" accept="image/*" disabled />
+        <p className="text-xs text-muted-foreground">
+          이미지 업로드 기능은 곧 추가됩니다.
+        </p>
       </div>
     </div>
   );

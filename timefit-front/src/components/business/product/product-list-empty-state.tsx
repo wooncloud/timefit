@@ -1,27 +1,27 @@
-import { Package } from "lucide-react";
+import { PackagePlus } from "lucide-react";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
 
-export function ProductEmptyState() {
+export function ProductListEmptyState() {
   return (
     <Empty className="h-full border-0">
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <Package />
+          <PackagePlus />
         </EmptyMedia>
-        <EmptyTitle>서비스가 선택되지 않았습니다</EmptyTitle>
+        <EmptyTitle>등록된 서비스가 없습니다</EmptyTitle>
         <EmptyDescription>
-          왼쪽 목록에서 서비스를 선택하거나
+          새 서비스 버튼을 눌러
           <br />
-          새로운 서비스를 추가해주세요
+          첫 서비스를 추가해보세요
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
   );
 }
+
