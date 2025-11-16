@@ -61,7 +61,7 @@ public class MenuService {
      * 권한: OWNER, MANAGER
      */
     @Transactional
-    public MenuResponse createMenu(UUID businessId, MenuRequest.CreateMenu request, UUID currentUserId) {
+    public MenuResponse createMenu(UUID businessId, MenuRequest.CreateUpdateMenu request, UUID currentUserId) {
         return menuCommandService.createMenu(businessId, request, currentUserId);
     }
 
@@ -70,7 +70,7 @@ public class MenuService {
      * 권한: OWNER, MANAGER
      */
     @Transactional
-    public MenuResponse updateMenu(UUID businessId, UUID menuId, MenuRequest.UpdateMenu request, UUID currentUserId) {
+    public MenuResponse updateMenu(UUID businessId, UUID menuId, MenuRequest.CreateUpdateMenu request, UUID currentUserId) {
         return menuCommandService.updateMenu(businessId, menuId, request, currentUserId);
     }
 

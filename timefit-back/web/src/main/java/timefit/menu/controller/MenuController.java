@@ -29,19 +29,19 @@ public class MenuController {
 
     private final MenuService menuService;
 
-//     /**
-//      * 메뉴 목록 조회
-//      * 권한: 불필요 (공개 API)
-//      */
-//     @GetMapping
-//     public ResponseEntity<ResponseData<MenuListResponse>> getMenuList(
-//             @PathVariable UUID businessId) {
-
-//         log.info("메뉴 목록 조회 요청: businessId={}", businessId);
-
-//         MenuListResponse response = menuService.getMenuList(businessId);
-//         return ResponseEntity.ok(ResponseData.of(response));
-//     }
+//    /**
+//     * 메뉴 목록 조회
+//     * 권한: 불필요 (공개 API)
+//     */
+//    @GetMapping
+//    public ResponseEntity<ResponseData<MenuListResponse>> getMenuList(
+//            @PathVariable UUID businessId) {
+//
+//        log.info("메뉴 목록 조회 요청: businessId={}", businessId);
+//
+//        MenuListResponse response = menuService.getMenuList(businessId);
+//        return ResponseEntity.ok(ResponseData.of(response));
+//    }
 
     /**
      * 메뉴 상세 조회
@@ -68,7 +68,7 @@ public class MenuController {
      * - isActive: 활성 상태
      */
     @GetMapping
-    public ResponseEntity<ResponseData<MenuListResponse>> getMenuList(
+    public ResponseEntity<ResponseData<MenuListResponse>> getMenuListWithFilters(
             @PathVariable UUID businessId,
             @RequestParam(required = false) String serviceName,
             @RequestParam(required = false) UUID businessCategoryId,
@@ -93,11 +93,11 @@ public class MenuController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ResponseData<MenuResponse>> createMenu(
             @PathVariable UUID businessId,
-            @Valid @RequestBody MenuRequest.CreateMenu request,
+            @Valid @RequestBody MenuRequest.CreateUpdateMenu request,
             @CurrentUserId UUID currentUserId) {
 
-        log.info("메뉴 생성 요청: businessId={}, userId={}, serviceName={}",
-                businessId, currentUserId, request.getServiceName());
+        log.info("메뉴 생성 요청: businessId={}, userId={}, serviceName={}, orderType={}, autoGenerateSlots={}",
+                businessId, currentUserId, request.serviceName(), request.orderType(), request.autoGenerateSlots());
 
         MenuResponse response = menuService.createMenu(businessId, request, currentUserId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseData.of(response));
@@ -111,18 +111,18 @@ public class MenuController {
     public ResponseEntity<ResponseData<MenuResponse>> updateMenu(
             @PathVariable UUID businessId,
             @PathVariable UUID menuId,
-            @Valid @RequestBody MenuRequest.UpdateMenu request,
+            @Valid @RequestBody MenuRequest.CreateUpdateMenu request,
             @CurrentUserId UUID currentUserId) {
 
-        log.info("메뉴 수정 요청: businessId={}, menuId={}, userId={}",
-                businessId, menuId, currentUserId);
+        log.info("메뉴 수정 요청: businessId={}, menuId={}, userId={}, orderType={}, autoGenerateSlots={}",
+                businessId, menuId, currentUserId, request.orderType(), request.autoGenerateSlots());
 
         MenuResponse response = menuService.updateMenu(businessId, menuId, request, currentUserId);
         return ResponseEntity.ok(ResponseData.of(response));
     }
 
     /**
-     *  메뉴 활성/비활성 토글
+     * 메뉴 활성/비활성 토글
      * 권한: OWNER, MANAGER
      * - 현재 활성 상태 → 비활성
      * - 현재 비활성 상태 → 활성
@@ -157,5 +157,4 @@ public class MenuController {
         menuService.deleteMenu(businessId, menuId, currentUserId);
         return ResponseEntity.noContent().build();
     }
-
 }

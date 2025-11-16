@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
  * 1. 여러 영업시간대 지원 (휴게시간 처리)
  * 2. sequence 순서대로 정확한 검증
  * 3. isWithinAnyOperatingHours() 메서드 추가
+ * 4. 삭제/비활성화 시 예약 존재 검증 추가
  */
 @Slf4j
 @Service
@@ -61,43 +62,32 @@ public class BookingSlotCommandService {
         // 2. 메뉴 검증
         Menu menu = menuValidator.validateMenuOfBusiness(request.getMenuId(), businessId);
 
-        // 3. RESERVATION_BASED 확인
+        // 3. 메뉴 타입 검증 (RESERVATION_BASED만 가능)
         if (!menu.isReservationBased()) {
             throw new BookingException(BookingErrorCode.SLOT_INVALID_MENU_TYPE);
         }
 
         // 4. 슬롯 생성
-        List<BookingSlot> createdSlots = new ArrayList<>();
         int totalRequested = 0;
+        List<BookingSlot> createdSlots = new ArrayList<>();
 
+        // getDailySlots() → getDailyTimeSlots()
         for (BookingSlotRequest.DailyTimeSlot dailySlot : request.getDailyTimeSlots()) {
             LocalDate date = dailySlot.getDate();
+            int dayOfWeekValue = date.getDayOfWeek().getValue();
+            DayOfWeek dayOfWeek = DayOfWeek.fromValue(dayOfWeekValue);
 
-            // 과거 날짜 체크
-            if (date.isBefore(LocalDate.now())) {
-                log.warn("과거 날짜 건너뜀: {}", date);
-                continue;
-            }
+            // OrderBySequence → OrderBySequenceAsc
+            // 영업시간 조회 (sequence 순서대로)
+            List<OperatingHours> operatingHoursList = operatingHoursRepository
+                    .findByBusinessIdAndDayOfWeekOrderBySequenceAsc(business.getId(), dayOfWeek);
 
-            // java.time.DayOfWeek → 커스텀 DayOfWeek enum 변환
-            java.time.DayOfWeek standardDay = date.getDayOfWeek();
-            int dayValue = standardDay.getValue() % 7; // 월(1)~일(7) → 일(0)~토(6)
-            DayOfWeek customDayOfWeek = DayOfWeek.fromValue(dayValue);
-
-            // 해당 요일의 모든 영업시간을 sequence 순서로 조회
-            List<OperatingHours> operatingHoursList =
-                    operatingHoursRepository.findByBusinessIdAndDayOfWeekOrderBySequenceAsc(
-                            businessId,
-                            customDayOfWeek
-                    );
-
-            // 영업시간 없음 체크
             if (operatingHoursList.isEmpty()) {
-                log.warn("영업시간 미설정 건너뜀: date={}, dayOfWeek={}", date, customDayOfWeek);
+                log.warn("영업시간 미설정: businessId={}, date={}", businessId, date);
                 continue;
             }
 
-            // 휴무가 아닌 영업시간만 필터링
+            // 휴무일이 아닌 영업시간만 필터링
             List<OperatingHours> activeOperatingHours = operatingHoursList.stream()
                     .filter(oh -> !oh.getIsClosed())
                     .collect(Collectors.toList());
@@ -150,7 +140,7 @@ public class BookingSlotCommandService {
             count++;
             LocalTime endTime = current.plusMinutes(interval);
 
-            //  모든 영업시간대 중 하나라도 포함되는지 검증
+            // 모든 영업시간대 중 하나라도 포함되는지 검증
             if (!isWithinAnyOperatingHours(current, endTime, operatingHoursList)) {
                 log.warn("영업시간 외 슬롯 거부: date={}, time={}-{}",
                         date, current, endTime);
@@ -169,13 +159,11 @@ public class BookingSlotCommandService {
             // 슬롯 생성
             try {
                 BookingSlot slot = BookingSlot.create(
-                        business, menu, date, current, endTime
-                );
+                        business, menu, date, current, endTime);
                 result.add(slot);
-                log.debug("슬롯 생성: date={}, time={}-{}", date, current, endTime);
             } catch (Exception e) {
-                log.error("슬롯 생성 실패: date={}, time={}, error={}",
-                        date, current, e.getMessage());
+                log.warn("슬롯 생성 실패: date={}, time={}-{}, error={}",
+                        date, current, endTime, e.getMessage());
             }
 
             current = endTime;
@@ -184,31 +172,12 @@ public class BookingSlotCommandService {
         return count;
     }
 
-    /**
-     * 여러 영업시간대 중 하나라도 포함되는지 검증
-     * 휴게시간 처리 로직:
-     * - 슬롯이 여러 영업시간대 중 하나에 완전히 포함되면 OK
-     * - 어디에도 포함되지 않으면 거부 (휴게시간)
-     * -
-     * 예시:
-     * 영업시간: 09:00-12:00, 13:00-18:00
-     * - 11:00-12:00 → 09:00-12:00에 포함 ✅
-     * - 12:00-13:00 → 어디에도 포함 안 됨 ❌ (휴게시간)
-     * - 13:00-14:00 → 13:00-18:00에 포함 ✅
-     */
+    // 슬롯 시간이 여러 영업시간대 중 하나라도 포함되는지 검증
     private boolean isWithinAnyOperatingHours(
-            LocalTime slotStart,
-            LocalTime slotEnd,
-            List<OperatingHours> operatingHoursList) {
+            LocalTime slotStart, LocalTime slotEnd, List<OperatingHours> operatingHoursList) {
 
-        // 모든 영업시간대를 순회하며 하나라도 포함되면 true
         for (OperatingHours oh : operatingHoursList) {
-            // 휴무일은 건너뜀 (이미 필터링되었지만 안전장치)
-            if (oh.getIsClosed()) {
-                continue;
-            }
-
-            // 슬롯이 이 영업시간대에 완전히 포함되는가?
+            // 슬롯이 이 영업시간대 내에 완전히 포함되는가?
             boolean isWithin = !slotStart.isBefore(oh.getOpenTime()) &&
                     !slotEnd.isAfter(oh.getCloseTime());
 
@@ -225,25 +194,45 @@ public class BookingSlotCommandService {
         return false;
     }
 
-    // 슬롯 삭제
+    // 슬롯 삭제 - 예약 존재 검증 추가
     public void deleteSlot(UUID businessId, UUID slotId, UUID currentUserId) {
         log.info("슬롯 삭제: businessId={}, slotId={}", businessId, slotId);
 
+        // 1. 권한 검증
         businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+
+        // 2. 슬롯 조회
         BookingSlot slot = bookingSlotValidator.validateSlotOfBusiness(slotId, businessId);
 
+        // 3. 활성 예약 존재 검증
+        bookingSlotValidator.validateNoActiveReservations(slotId);
+
+        // 4. 삭제
         bookingSlotRepository.delete(slot);
+
+        log.info("슬롯 삭제 완료: slotId={}", slotId);
     }
 
-    // 슬롯 비활성화
+    // 슬롯 비활성화 - 예약 존재 검증 추가
     public BookingSlotResponse.SlotDetail deactivateSlot(
             UUID businessId, UUID slotId, UUID currentUserId) {
 
+        log.info("슬롯 비활성화 시작: slotId={}", slotId);
+
+        // 1. 권한 검증
         businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+
+        // 2. 슬롯 조회
         BookingSlot slot = bookingSlotValidator.validateSlotOfBusiness(slotId, businessId);
 
+        // 3. 활성 예약 존재 검증
+        bookingSlotValidator.validateNoActiveReservations(slotId);
+
+        // 4. 비활성화
         slot.markAsUnavailable();
         BookingSlot updated = bookingSlotRepository.save(slot);
+
+        log.info("슬롯 비활성화 완료: slotId={}", slotId);
 
         return BookingSlotResponse.SlotDetail.of(updated, 0);
     }
@@ -252,27 +241,41 @@ public class BookingSlotCommandService {
     public BookingSlotResponse.SlotDetail activateSlot(
             UUID businessId, UUID slotId, UUID currentUserId) {
 
+        log.info("슬롯 재활성화 시작: slotId={}", slotId);
+
+        // 1. 권한 검증
         businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+
+        // 2. 슬롯 조회
         BookingSlot slot = bookingSlotValidator.validateSlotOfBusiness(slotId, businessId);
 
+        // 3. 재활성화
         slot.markAsAvailable();
         BookingSlot updated = bookingSlotRepository.save(slot);
+
+        log.info("슬롯 재활성화 완료: slotId={}", slotId);
 
         return BookingSlotResponse.SlotDetail.of(updated, 0);
     }
 
     // 과거 슬롯 일괄 삭제
     public Integer deletePastSlots(UUID businessId, UUID currentUserId) {
+        log.info("과거 슬롯 일괄 삭제 시작: businessId={}", businessId);
+
+        // 1. 권한 검증
         businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
 
+        // 2. 과거 슬롯 조회
         LocalDate today = LocalDate.now();
         List<BookingSlot> pastSlots = bookingSlotRepository
                 .findByBusinessIdAndSlotDateBefore(businessId, today);
 
+        // 3. 삭제
         int count = pastSlots.size();
         bookingSlotRepository.deleteAll(pastSlots);
 
         log.info("과거 슬롯 삭제 완료: businessId={}, count={}", businessId, count);
+
         return count;
     }
 }
