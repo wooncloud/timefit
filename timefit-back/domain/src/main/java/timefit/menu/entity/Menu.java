@@ -167,6 +167,18 @@ public class Menu extends BaseEntity {
         this.durationMinutes = durationMinutes;
     }
 
+    public void updateOrderType(OrderType  orderType) {
+        if (this.orderType == OrderType.ONDEMAND_BASED) {
+            this.orderType = orderType;
+        }
+        else if (this.orderType == OrderType.RESERVATION_BASED) {
+            this.orderType = OrderType.ONDEMAND_BASED;
+        }
+        else {
+            throw new IllegalArgumentException("유효하지 못한 서비스 타입입니다.");
+        }
+    }
+
     // 메뉴 활성화
     public void activate() {
         this.isActive = true;
