@@ -10,7 +10,12 @@ import timefit.menu.dto.MenuRequest;
 import timefit.menu.entity.Menu;
 import timefit.menu.entity.OrderType;
 import timefit.menu.repository.MenuRepository;
+import timefit.reservation.entity.Reservation;
+import timefit.reservation.entity.ReservationStatus;
+import timefit.reservation.repository.ReservationRepository;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -23,6 +28,7 @@ public class MenuValidator {
 
     private final MenuRepository menuRepository;
     private final BookingSlotValidator bookingSlotValidator;
+    private final ReservationRepository reservationRepository;
 
     /**
      * Menu 존재 여부 검증 및 조회
@@ -97,6 +103,38 @@ public class MenuValidator {
 
 
     //   ---------- Menu , BookingSlot 생성 관련
+
+    /**
+     * Menu에 미래 활성 예약이 존재하지 않는지 검증
+     * - Menu 삭제/비활성화 전에 호출
+     * - 오늘 이후의 CANCELLED, NO_SHOW를 제외한 예약이 있으면 예외 발생
+     *
+     * @param menuId 검증할 메뉴 ID
+     * @throws MenuException 미래 활성 예약이 존재할 경우
+     */
+    public void validateNoFutureActiveReservations(UUID menuId) {
+        LocalDate today = LocalDate.now();
+
+        // 미래 예약 조회 (CANCELLED, NO_SHOW 제외)
+        List<Reservation> futureReservations = reservationRepository.findAll()
+                .stream()
+                .filter(r -> r.getMenu().getId().equals(menuId))
+                .filter(r -> !r.getReservationDate().isBefore(today))
+                .filter(r -> r.getStatus() != ReservationStatus.CANCELLED
+                        && r.getStatus() != ReservationStatus.NO_SHOW)
+                .toList();
+
+        if (!futureReservations.isEmpty()) {
+            log.warn("메뉴에 미래 활성 예약 존재: menuId={}, futureReservationsCount={}",
+                    menuId, futureReservations.size());
+            throw new MenuException(
+                    MenuErrorCode.CANNOT_DEACTIVATE_MENU_WITH_RESERVATIONS,
+                    String.format("이 메뉴에 %d개의 미래 예약이 존재하여 삭제/비활성화할 수 없습니다. " +
+                                    "예약을 먼저 취소하거나 완료 처리해주세요.",
+                            futureReservations.size())
+            );
+        }
+    }
 
     /**
      * Menu 생성 요청 검증

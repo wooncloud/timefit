@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import timefit.booking.entity.BookingSlot;
+import timefit.booking.repository.BookingSlotQueryRepository;
 import timefit.booking.repository.BookingSlotRepository;
 import timefit.exception.booking.BookingErrorCode;
 import timefit.exception.booking.BookingException;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class BookingSlotValidator {
 
     private final BookingSlotRepository bookingSlotRepository;
+    private final BookingSlotQueryRepository bookingSlotQueryRepository;
 
     /**
      * BookingSlot 존재 여부 검증 및 조회
@@ -141,7 +143,7 @@ public class BookingSlotValidator {
     }
 
     // ----- 메뉴 생성 시 사용되는 validator
-    
+
     /**
      * BookingSlot 생성 설정 검증
      * - 날짜 범위 검증
@@ -204,6 +206,29 @@ public class BookingSlotValidator {
                     String.format("잘못된 시간 형식입니다. HH:mm 형식을 사용하세요 (예: 09:00, 18:30). " +
                                     "입력값: startTime=%s, endTime=%s",
                             timeRange.startTime(), timeRange.endTime())
+            );
+        }
+    }
+
+    /**
+     * BookingSlot에 활성 예약이 존재하지 않는지 검증
+     * - 슬롯 삭제/비활성화 전에 호출
+     * - CANCELLED, NO_SHOW를 제외한 예약이 있으면 예외 발생
+     *
+     * @param slotId 검증할 슬롯 ID
+     * @throws BookingException 활성 예약이 존재할 경우
+     */
+    public void validateNoActiveReservations(UUID slotId) {
+        Integer activeReservations = bookingSlotQueryRepository
+                .countActiveReservationsBySlot(slotId);
+
+        if (activeReservations > 0) {
+            log.warn("슬롯에 활성 예약 존재: slotId={}, activeReservations={}",
+                    slotId, activeReservations);
+            throw new BookingException(
+                    BookingErrorCode.AVAILABLE_SLOT_NOT_MODIFIABLE,
+                    String.format("이 슬롯에 %d개의 활성 예약이 존재하여 삭제/비활성화할 수 없습니다",
+                            activeReservations)
             );
         }
     }
