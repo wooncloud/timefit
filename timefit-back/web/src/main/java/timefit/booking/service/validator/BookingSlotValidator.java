@@ -7,8 +7,11 @@ import timefit.booking.entity.BookingSlot;
 import timefit.booking.repository.BookingSlotRepository;
 import timefit.exception.booking.BookingErrorCode;
 import timefit.exception.booking.BookingException;
+import timefit.menu.dto.MenuRequest;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
 /**
@@ -136,4 +139,73 @@ public class BookingSlotValidator {
         validateSlotTimeFormat(slot);
         return slot;
     }
+
+    // ----- 메뉴 생성 시 사용되는 validator
+    
+    /**
+     * BookingSlot 생성 설정 검증
+     * - 날짜 범위 검증
+     * - 시간대 검증
+     *
+     * @param settings BookingSlot 생성 설정
+     * @throws BookingException 검증 실패 시
+     */
+    public void validateSlotSettings(MenuRequest.BookingSlotSettings settings) {
+        LocalDate startDate = settings.startDate();
+        LocalDate endDate = settings.endDate();
+
+        // 1. 날짜 순서 검증
+        if (startDate.isAfter(endDate)) {
+            throw new BookingException(
+                    BookingErrorCode.AVAILABLE_SLOT_INVALID_TIME,
+                    "시작 날짜는 종료 날짜보다 이전이어야 합니다"
+            );
+        }
+
+        // 2. 최대 기간 검증 (3개월)
+        if (startDate.plusMonths(3).isBefore(endDate)) {
+            throw new BookingException(
+                    BookingErrorCode.AVAILABLE_SLOT_DATE_RANGE_EXCEEDED,
+                    "슬롯 생성 기간은 최대 3개월입니다"
+            );
+        }
+
+        // 3. 특정 시간대 검증 (선택사항)
+        if (settings.specificTimeRanges() != null && !settings.specificTimeRanges().isEmpty()) {
+            for (MenuRequest.TimeRange timeRange : settings.specificTimeRanges()) {
+                validateTimeRange(timeRange);
+            }
+        }
+    }
+
+    /**
+     * TimeRange 검증
+     * - 시간 형식 검증 (HH:mm)
+     * - startTime < endTime 검증
+     *
+     * @param timeRange 검증할 시간대
+     * @throws BookingException 검증 실패 시
+     */
+    public void validateTimeRange(MenuRequest.TimeRange timeRange) {
+        try {
+            LocalTime start = LocalTime.parse(timeRange.startTime());
+            LocalTime end = LocalTime.parse(timeRange.endTime());
+
+            if (!start.isBefore(end)) {
+                throw new BookingException(
+                        BookingErrorCode.AVAILABLE_SLOT_INVALID_TIME,
+                        String.format("시작 시간(%s)은 종료 시간(%s)보다 이전이어야 합니다",
+                                timeRange.startTime(), timeRange.endTime())
+                );
+            }
+        } catch (DateTimeParseException e) {
+            throw new BookingException(
+                    BookingErrorCode.AVAILABLE_SLOT_TIME_FORMAT_INVALID,
+                    String.format("잘못된 시간 형식입니다. HH:mm 형식을 사용하세요 (예: 09:00, 18:30). " +
+                                    "입력값: startTime=%s, endTime=%s",
+                            timeRange.startTime(), timeRange.endTime())
+            );
+        }
+    }
+
 }
