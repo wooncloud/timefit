@@ -1,167 +1,140 @@
 package timefit.menu.dto;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import timefit.business.entity.BusinessTypeCode;
 import timefit.business.entity.ServiceCategoryCode;
 import timefit.menu.entity.OrderType;
 
-import java.util.Objects;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Menu Request DTO
- * - category (BusinessTypeCode) 제거
- * - businessType (대분류) 추가
- * - categoryCode (중분류) 추가
+ * - Create/Update 공통 사용
+ * - BookingSlot 생성 정보 포함
  */
 public class MenuRequest {
 
     /**
-     * 메뉴 생성 요청
-     * - businessType: Business.businessTypes 중 선택
-     * - categoryCode: businessType에 속하는 중분류 선택
+     * 메뉴 생성/수정 통합 요청
+     * - 생성: 모든 필드 필수
+     * - 수정: null이 아닌 필드만 업데이트
+     * NOTE: 검증 규칙
+     * - RESERVATION_BASED일 때 durationMinutes 필수 (Validator 에서 검증)
+     * - autoGenerateSlots=true일 때 slotSettings 필수 (Validator 에서 검증)
      */
-    @Getter
-    public static class CreateMenu {
+    public record CreateUpdateMenu(
+            // === 기본 정보 ===
+            @NotNull(message = "업종은 필수입니다")
+            BusinessTypeCode businessType,
 
-        @NotNull(message = "업종은 필수입니다")
-        private final BusinessTypeCode businessType;
+            @NotNull(message = "카테고리는 필수입니다")
+            ServiceCategoryCode categoryCode,
 
-        @NotNull(message = "카테고리는 필수입니다")
-        private final ServiceCategoryCode categoryCode;
+            @NotBlank(message = "서비스명은 필수입니다")
+            @Size(max = 100, message = "서비스명은 100자 이하로 입력해주세요")
+            String serviceName,
 
-        @NotBlank(message = "서비스명은 필수입니다")
-        @Size(max = 100, message = "서비스명은 100자 이하로 입력해주세요")
-        private final String serviceName;
+            @NotNull(message = "가격은 필수입니다")
+            @Positive(message = "가격은 0보다 커야 합니다")
+            Integer price,
 
-        @NotNull(message = "가격은 필수입니다")
-        @Min(value = 0, message = "가격은 0원 이상이어야 합니다")
-        private final Integer price;
+            @Size(max = 500, message = "설명은 500자 이하로 입력해주세요")
+            String description,
 
-        @Size(max = 500, message = "설명은 500자 이하로 입력해주세요")
-        private final String description;
+            @Size(max = 200, message = "이미지 URL은 200자 이하로 입력해주세요")
+            String imageUrl,
 
-        @NotNull(message = "주문 타입은 필수입니다")
-        private final OrderType orderType;
+            // === 예약 설정 ===
+            @NotNull(message = "서비스 유형은 필수입니다")
+            OrderType orderType,
 
-        @NotNull(message = "소요 시간은 필수입니다")
-        @Min(value = 1, message = "소요 시간은 최소 1분 이상이어야 합니다")
-        private final Integer durationMinutes;
+            /**
+             * 소요 시간 (분)
+             * - RESERVATION_BASED일 때 필수 (Validator 에서 검증)
+             * - ONDEMAND_BASED일 때 선택
+             */
+            @Positive(message = "소요 시간은 0보다 커야 합니다")
+            @Max(value = 1440, message = "소요 시간은 1440분(24시간)을 초과할 수 없습니다")
+            Integer durationMinutes,
 
-        private final String imageUrl;
+            // --------------- BookingSlot 생성 설정 (RESERVATION_BASED일 때만 사용)
+            /**
+             * BookingSlot 자동 생성 여부
+             * - true: 메뉴 생성/수정 시 슬롯 자동 생성
+             * - false 또는 null: 슬롯 생성 안 함
+             */
+            Boolean autoGenerateSlots,
 
-        public CreateMenu(
-                BusinessTypeCode businessType,
-                ServiceCategoryCode categoryCode,
-                String serviceName,
-                Integer price,
-                String description,
-                OrderType orderType,
-                Integer durationMinutes,
-                String imageUrl) {
+            /**
+             * 슬롯 생성 설정
+             * - autoGenerateSlots가 true일 때만 필수 (Validator 에서 검증)
+             */
+            @Valid
+            BookingSlotSettings slotSettings
+    ) {}
 
-            this.businessType = businessType;
-            this.categoryCode = categoryCode;
-            this.serviceName = serviceName;
-            this.price = price;
-            this.description = description;
-            this.orderType = orderType;
-            this.durationMinutes = durationMinutes;
-            this.imageUrl = imageUrl;
-        }
+    /**
+     * BookingSlot 생성 설정
+     * NOTE: 검증 규칙 (Validator 에서 처리)
+     * - startDate < endDate
+     * - 최대 생성 기간: 3개월
+     */
+    public record BookingSlotSettings(
+            /**
+             * 슬롯 생성 시작 날짜
+             */
+            @NotNull(message = "생성 시작 날짜는 필수입니다")
+            @FutureOrPresent(message = "생성 시작 날짜는 오늘 이후여야 합니다")
+            LocalDate startDate,
 
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-            CreateMenu that = (CreateMenu) other;
-            return Objects.equals(businessType, that.businessType) &&
-                    Objects.equals(categoryCode, that.categoryCode) &&
-                    Objects.equals(serviceName, that.serviceName) &&
-                    Objects.equals(price, that.price) &&
-                    Objects.equals(orderType, that.orderType);
-        }
+            /**
+             * 슬롯 생성 종료 날짜
+             */
+            @NotNull(message = "생성 종료 날짜는 필수입니다")
+            @Future(message = "생성 종료 날짜는 미래여야 합니다")
+            LocalDate endDate,
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(businessType, categoryCode, serviceName, price, orderType);
-        }
-    }
+            /**
+             * 슬롯 간격 (분)
+             * - 기본값: 60분
+             * - 15, 30, 60, 90, 120 등
+             */
+            @NotNull(message = "슬롯 간격은 필수입니다")
+            @Min(value = 15, message = "슬롯 간격은 최소 15분입니다")
+            @Max(value = 480, message = "슬롯 간격은 최대 480분(8시간)입니다")
+            Integer slotIntervalMinutes,
 
-    // 메뉴 수정 요청 (모든 필드 nullable for partial update)
-    // businessType, categoryCode 추가 (선택적 수정 가능)
-    @Getter
-    public static class UpdateMenu {
+            /**
+             * 슬롯당 예약 가능 인원 (capacity)
+             * - 기본값: 1
+             * - 1~N: 동시 예약 가능 인원
+             */
+            @NotNull(message = "예약 가능 인원은 필수입니다")
+            @Min(value = 1, message = "예약 가능 인원은 최소 1명입니다")
+            @Max(value = 100, message = "예약 가능 인원은 최대 100명입니다")
+            Integer slotCapacity,
 
-        @NotBlank(message = "서비스명은 필수입니다")
-        @Size(max = 100, message = "서비스명은 100자 이하로 입력해주세요")
-        private final String serviceName;
+            /**
+             * 특정 시간대만 생성 (선택)
+             * - null 이면 영업시간 전체에 슬롯 생성
+             * - 지정하면 해당 시간대에만 슬롯 생성
+             */
+            List<@Valid TimeRange> specificTimeRanges
+    ) {}
 
-        @NotNull(message = "업종은 필수입니다")
-        private final BusinessTypeCode businessType;
+    /**
+     * 시간대 설정
+     * NOTE: 시간 형식 검증은 Controller의 @Valid 또는 Validator 에서 처리
+     * - 형식: "HH:mm" (예: "09:00", "18:30")
+     * - startTime < endTime
+     */
+    public record TimeRange(
+            @NotNull(message = "시작 시간은 필수입니다")
+            String startTime,  // "09:00" 형식
 
-        @NotNull(message = "카테고리는 필수입니다")
-        private final ServiceCategoryCode categoryCode;
-
-        @NotNull(message = "가격은 필수입니다")
-        @Min(value = 0, message = "가격은 0원 이상이어야 합니다")
-        private final Integer price;
-
-        @Size(max = 500, message = "설명은 500자 이하로 입력해주세요")
-        private final String description;
-
-        @NotNull(message = "소요 시간은 필수입니다")
-        @Min(value = 1, message = "소요 시간은 최소 1분 이상이어야 합니다")
-        private final Integer durationMinutes;
-
-        private final String imageUrl;
-
-        /**
-         * 활성/비활성 상태
-         * - null이면 변경하지 않음
-         * - true: 활성화
-         * - false: 비활성화
-         */
-        private final Boolean isActive;
-
-        public UpdateMenu(
-                String serviceName,
-                BusinessTypeCode businessType,
-                ServiceCategoryCode categoryCode,
-                Integer price,
-                String description,
-                Integer durationMinutes,
-                String imageUrl,
-                Boolean isActive) {
-
-            this.serviceName = serviceName;
-            this.businessType = businessType;
-            this.categoryCode = categoryCode;
-            this.price = price;
-            this.description = description;
-            this.durationMinutes = durationMinutes;
-            this.imageUrl = imageUrl;
-            this.isActive = isActive;
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-            UpdateMenu that = (UpdateMenu) other;
-            return Objects.equals(serviceName, that.serviceName) &&
-                    Objects.equals(businessType, that.businessType) &&
-                    Objects.equals(categoryCode, that.categoryCode) &&
-                    Objects.equals(price, that.price) &&
-                    Objects.equals(isActive, that.isActive);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(serviceName, businessType, categoryCode, price, isActive);
-        }
-    }
+            @NotNull(message = "종료 시간은 필수입니다")
+            String endTime     // "18:00" 형식
+    ) {}
 }
