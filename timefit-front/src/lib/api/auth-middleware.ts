@@ -20,7 +20,7 @@ type AuthenticatedHandler<T = unknown> = (
  * 기능:
  * 1. 세션 검증 및 accessToken 확인
  * 2. 핸들러 실행 및 백엔드 401 응답 감지
- * 3. 토큰 리프레시 시도 (구현 예정)
+ * 3. 토큰 리프레시 시도 (refreshToken으로 새 accessToken 발급)
  * 4. 리프레시 실패 시 세션 클리어 및 로그아웃
  *
  * @example
@@ -98,8 +98,6 @@ export function withAuth<T = unknown>(handler: AuthenticatedHandler<T>) {
 /**
  * Refresh Token을 사용하여 새로운 Access Token을 발급받습니다.
  *
- * TODO: 백엔드 /api/auth/refresh 엔드포인트 구현 후 활성화
- *
  * @param refreshToken - 저장된 refresh token
  * @returns 새로운 accessToken과 refreshToken, 실패 시 null
  */
@@ -107,29 +105,40 @@ async function refreshAccessToken(
   refreshToken: string
 ): Promise<{ accessToken: string; refreshToken: string } | null> {
   try {
-    // TODO: 백엔드 리프레시 엔드포인트 호출
-    // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ refreshToken }),
-    // });
-    //
-    // if (!response.ok) {
-    //   return null;
-    // }
-    //
-    // const result = await response.json();
-    // return {
-    //   accessToken: result.data.accessToken,
-    //   refreshToken: result.data.refreshToken,
-    // };
+    const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-    console.log('[Token Refresh] 토큰 갱신 로직은 아직 구현되지 않았습니다.', {
-      refreshToken: refreshToken.substring(0, 10) + '...',
+    if (!BACKEND_API_URL) {
+      console.error('[Token Refresh] NEXT_PUBLIC_BACKEND_URL이 설정되지 않았습니다.');
+      return null;
+    }
+
+    console.log('[Token Refresh] 토큰 갱신 시도 중...');
+
+    const response = await fetch(`${BACKEND_API_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
     });
 
-    // 현재는 항상 null 반환 (로그아웃 처리)
-    return null;
+    if (!response.ok) {
+      console.log('[Token Refresh] 토큰 갱신 실패:', response.status);
+      return null;
+    }
+
+    const result = await response.json();
+
+    // 백엔드 응답 형식: ResponseData<TokenRefresh>
+    if (!result.success || !result.data) {
+      console.log('[Token Refresh] 응답 형식이 올바르지 않습니다:', result);
+      return null;
+    }
+
+    console.log('[Token Refresh] 토큰 갱신 성공');
+
+    return {
+      accessToken: result.data.accessToken,
+      refreshToken: result.data.refreshToken,
+    };
   } catch (error) {
     console.error('[Token Refresh Error]', error);
     return null;
