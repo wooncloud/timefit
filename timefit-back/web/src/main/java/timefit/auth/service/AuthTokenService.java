@@ -1,17 +1,14 @@
 package timefit.auth.service;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.exceptions.TokenExpiredException;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import timefit.auth.dto.AuthRequestDto;
 import timefit.auth.dto.AuthResponseDto;
+import timefit.auth.service.validator.TokenValidator;
 import timefit.config.JwtConfig;
 import timefit.exception.auth.AuthErrorCode;
 import timefit.exception.auth.AuthException;
@@ -20,7 +17,13 @@ import java.util.Date;
 import java.util.UUID;
 
 /**
- * JWT 기반 토큰 관리 서비스
+ * JWT 토큰 관리 서비스
+ * 역할:
+ * - Access Token 생성
+ * - Refresh Token 생성
+ * - Token 갱신
+ * - Token 무효화 (로그아웃)
+ * 검증 로직은 TokenValidator에 위임
  */
 @Slf4j
 @Service
@@ -28,9 +31,13 @@ import java.util.UUID;
 public class AuthTokenService {
 
     private final JwtConfig jwtConfig;
+    private final TokenValidator tokenValidator;
 
     /**
      * Access Token 생성
+     *
+     * @param userId 사용자 ID
+     * @return JWT Access Token
      */
     public String generateToken(UUID userId) {
         try {
@@ -53,6 +60,9 @@ public class AuthTokenService {
 
     /**
      * Refresh Token 생성
+     *
+     * @param userId 사용자 ID
+     * @return JWT Refresh Token
      */
     public String generateRefreshToken(UUID userId) {
         try {
@@ -76,22 +86,25 @@ public class AuthTokenService {
 
     /**
      * 토큰 갱신 (Refresh Token으로 새 Access + Refresh Token 발급)
+     *
+     * @param request Refresh Token 요청 DTO
+     * @return 새로운 Access Token과 Refresh Token
      */
     public AuthResponseDto.TokenRefresh refreshToken(AuthRequestDto.TokenRefresh request) {
-        // 1. Refresh Token 유효성 검증
-        if (!isValidToken(request.getRefreshToken())) {
+        // 1. Refresh Token 유효성 검증 (TokenValidator에 위임)
+        if (!tokenValidator.isValidToken(request.refreshToken())) {
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
 
-        // 2. 사용자 ID 추출
-        UUID userId = getUserIdFromToken(request.getRefreshToken());
+        // 2. 사용자 ID 추출 (TokenValidator에 위임)
+        UUID userId = tokenValidator.getUserIdFromToken(request.refreshToken());
 
         // 3. 새 토큰 생성
         String newAccessToken = generateToken(userId);
         String newRefreshToken = generateRefreshToken(userId);
 
-        // 4. 만료 시간 계산
-        Date expirationDate = getExpirationDate(newAccessToken);
+        // 4. 만료 시간 계산 (TokenValidator에 위임)
+        Date expirationDate = tokenValidator.getExpirationDate(newAccessToken);
         long expiresIn = (expirationDate.getTime() - System.currentTimeMillis()) / 1000;
 
         // 5. DTO 반환
@@ -103,73 +116,12 @@ public class AuthTokenService {
         );
     }
 
-    /**
-     * 토큰에서 사용자 ID 추출
-     */
-    public UUID getUserIdFromToken(String token) {
-        try {
-            DecodedJWT decodedJWT = verifyToken(token);
-            String userId = decodedJWT.getSubject();
-            return UUID.fromString(userId);
-        } catch (IllegalArgumentException e) {
-            log.error("유효하지 않은 UUID의 token입니다: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
-        }
-    }
-
-    /**
-     * 토큰 유효성 검증
-     */
-    public boolean isValidToken(String token) {
-        try {
-            verifyToken(token);
-            return true;
-        } catch (JWTVerificationException | IllegalArgumentException e) {
-            log.debug("유효하지 않은 token: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * 토큰 만료 시간 조회
-     */
-    public Date getExpirationDate(String token) {
-        try {
-            DecodedJWT decodedJWT = verifyToken(token);
-            return decodedJWT.getExpiresAt();
-        } catch (JWTVerificationException e) {
-            log.error("토큰 만료 시간 조회 실패: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
-        }
-    }
 
     /**
      * 토큰 무효화 (로그아웃)
-     * 현재는 로그만 기록 (추후 Redis 등으로 블랙리스트 관리 가능)
+     * @param token JWT 토큰
      */
     public void invalidateToken(String token) {
         log.info("토큰 무효화 요청: {}", token.substring(0, Math.min(20, token.length())));
-        // TODO: Redis 블랙리스트 추가
-    }
-
-    /**
-     * 토큰 검증
-     */
-    private DecodedJWT verifyToken(String token) {
-        try {
-            Algorithm algorithm = Algorithm.HMAC512(jwtConfig.getSecretKey());
-            JWTVerifier verifier = JWT.require(algorithm)
-                    .withIssuer(jwtConfig.getIssuer())
-                    .build();
-
-            return verifier.verify(token);
-
-        } catch (TokenExpiredException e) {
-            log.warn("만료된 토큰: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
-        } catch (JWTVerificationException e) {
-            log.warn("토큰 검증 실패: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
-        }
     }
 }

@@ -7,66 +7,51 @@ import org.springframework.transaction.annotation.Transactional;
 import timefit.auth.dto.AuthRequestDto;
 import timefit.auth.dto.AuthResponseDto;
 
-/**
- * Auth Facade Service
- *
- * 역할:
- * - 단일 진입점 (Facade 패턴)
- * - 단순 위임만 수행
- * - 트랜잭션 경계 설정
- *
- * 책임 분리:
- * - UserRegistrationService: 회원가입
- * - UserLoginService: 로그인
- * - AuthTokenService: 토큰 관리
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AuthService {
+public class AuthFacadeService {
 
     private final UserRegistrationService userRegistrationService;
     private final UserLoginService userLoginService;
     private final AuthTokenService authTokenService;
 
-    /**
-     * 사용자 회원가입
-     */
+    // 회원가입
     @Transactional
     public AuthResponseDto.UserSignUp signup(AuthRequestDto.UserSignUp request) {
+        log.info("회원가입 처리 위임: email={}", request.email());
         return userRegistrationService.registerUser(request);
     }
 
-    /**
-     * 사용자 로그인
-     */
+    // 일반 로그인
     @Transactional
     public AuthResponseDto.UserSignIn signin(AuthRequestDto.UserSignIn request) {
+        log.info("로그인 처리 위임: email={}", request.email());
         return userLoginService.loginUser(request);
     }
 
-    /**
-     * 고객 OAuth 로그인
-     */
+    // OAuth 로그인
     @Transactional
     public AuthResponseDto.CustomerOAuth customerOAuthLogin(AuthRequestDto.CustomerOAuth request) {
+        log.info("OAuth 로그인 처리 위임: provider={}", request.provider());
         return userLoginService.loginOAuthUser(request);
     }
 
-    /**
-     * 토큰 갱신
-     */
-    @Transactional
-    public AuthResponseDto.TokenRefresh refreshToken(AuthRequestDto.TokenRefresh request) {
-        return authTokenService.refreshToken(request);
-    }
-
-    /**
-     * 로그아웃
-     */
+    // 로그아웃
     @Transactional
     public void logout(AuthRequestDto.Logout request) {
-        authTokenService.invalidateToken(request.getTemporaryToken());
+        log.info("로그아웃 처리");
+
+        if (request.currentToken() != null) {
+            authTokenService.invalidateToken(request.currentToken());
+        }
+    }
+
+    // 토큰 갱신
+    @Transactional
+    public AuthResponseDto.TokenRefresh refreshToken(AuthRequestDto.TokenRefresh request) {
+        log.info("토큰 갱신 처리 위임");
+        return authTokenService.refreshToken(request);
     }
 }
