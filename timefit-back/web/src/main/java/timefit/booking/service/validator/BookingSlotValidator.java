@@ -85,16 +85,14 @@ public class BookingSlotValidator {
     }
 
     /**
-     * BookingSlot의 예약 가능 여부 검증 (capacity 제거)
+     * BookingSlot의 예약 가능 상태 검증
      *
      * @param slot 검증할 BookingSlot 엔티티
-     * @param currentBookings 현재 예약 수 (0 또는 1)
-     * @throws BookingException 이미 예약된 슬롯일 경우
+     * @throws BookingException 비활성 슬롯일 경우
      */
-    public void validateSlotCapacity(BookingSlot slot, Integer currentBookings) {
-        if (!slot.canAcceptReservation(currentBookings)) {
-            log.warn("슬롯 예약 불가 (이미 예약됨): slotId={}, currentBookings={}",
-                    slot.getId(), currentBookings);
+    public void validateSlotIsActive(BookingSlot slot) {
+        if (!slot.isActiveForReservation()) {
+            log.warn("비활성 슬롯으로 예약 불가: slotId={}", slot.getId());
             throw new BookingException(BookingErrorCode.AVAILABLE_SLOT_CAPACITY_EXCEEDED);
         }
     }
@@ -128,18 +126,16 @@ public class BookingSlotValidator {
     /**
      * 예약 가능한 슬롯인지 전체 검증
      *
-     * @param slotId 검증할 슬롯 ID
+     * @param slotId     검증할 슬롯 ID
      * @param businessId 업체 ID
-     * @param currentBookings 현재 예약 수 (0 또는 1)
-     * @return 조회된 예약 가능한 BookingSlot 엔티티
      */
-    public BookingSlot validateBookableSlot(UUID slotId, UUID businessId, Integer currentBookings) {
+    public void validateBookableSlot(UUID slotId, UUID businessId) {
         BookingSlot slot = validateSlotOfBusiness(slotId, businessId);
         validateSlotAvailable(slot);
         validateSlotNotPast(slot);
-        validateSlotCapacity(slot, currentBookings);
+        validateSlotIsActive(slot);
         validateSlotTimeFormat(slot);
-        return slot;
+        // 일단 여기 내부에 다 throw 있어서 괜찮나? ㅋㅋ 하 씨
     }
 
     // ----- 메뉴 생성 시 사용되는 validator

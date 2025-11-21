@@ -15,13 +15,9 @@ import timefit.common.auth.CurrentUserId;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * BookingSlot Controller
- * API 경로: /api/businesses/{businessId}/booking-slots
- */
 @Slf4j
 @RestController
-@RequestMapping("/api/business/{businessId}/booking-slots")
+@RequestMapping("/api/business/{businessId}/booking-slot")
 @RequiredArgsConstructor
 public class BookingSlotController {
 
@@ -29,19 +25,18 @@ public class BookingSlotController {
 
     /**
      * 슬롯 생성
-     * POST /api/businesses/{businessId}/booking-slots
      * 허용된 날짜+시간대만 받아서 슬롯 생성
      * OperatingHours 검증 자동 수행
      */
     @PostMapping
-    public ResponseEntity<ResponseData<BookingSlotResponse.SlotCreationResult>> createSlots(
+    public ResponseEntity<ResponseData<BookingSlotResponse.CreationResult>> createSlots(
             @PathVariable UUID businessId,
-            @Valid @RequestBody BookingSlotRequest.Create request,
+            @Valid @RequestBody BookingSlotRequest.BookingSlot request,
             @CurrentUserId UUID currentUserId) {
 
-        log.info("슬롯 생성 요청: businessId={}, menuId={}", businessId, request.getMenuId());
+        log.info("슬롯 생성 요청: businessId={}, menuId={}", businessId, request.menuId());
 
-        BookingSlotResponse.SlotCreationResult response = bookingSlotService.createSlots(
+        BookingSlotResponse.CreationResult response = bookingSlotService.createSlots(
                 businessId, request, currentUserId);
 
         return ResponseEntity.ok(ResponseData.of(response));
@@ -49,16 +44,16 @@ public class BookingSlotController {
 
     /**
      * 특정 날짜의 슬롯 조회
-     * GET /api/businesses/{businessId}/booking-slots?date=2025-01-15
+     * GET /api/business/{businessId}/booking-slot?date=2025-01-15
      */
     @GetMapping
-    public ResponseEntity<ResponseData<BookingSlotResponse.SlotList>> getSlotsByDate(
+    public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlotList>> getSlotsByDate(
             @PathVariable UUID businessId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         log.info("특정 날짜 슬롯 조회 요청: businessId={}, date={}", businessId, date);
 
-        BookingSlotResponse.SlotList response = bookingSlotService.getSlotsByDate(
+        BookingSlotResponse.BookingSlotList response = bookingSlotService.getSlotsByDate(
                 businessId, date);
 
         return ResponseEntity.ok(ResponseData.of(response));
@@ -66,10 +61,10 @@ public class BookingSlotController {
 
     /**
      * 기간별 슬롯 조회
-     * GET /api/businesses/{businessId}/booking-slots/range?startDate=2025-01-01&endDate=2025-01-31
+     * GET /api/business/{businessId}/booking-slot/range?startDate=2025-01-01&endDate=2025-01-31
      */
     @GetMapping("/range")
-    public ResponseEntity<ResponseData<BookingSlotResponse.SlotList>> getSlotsByDateRange(
+    public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlotList>> getSlotsByDateRange(
             @PathVariable UUID businessId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -77,50 +72,45 @@ public class BookingSlotController {
         log.info("기간별 슬롯 조회 요청: businessId={}, startDate={}, endDate={}",
                 businessId, startDate, endDate);
 
-        BookingSlotResponse.SlotList response = bookingSlotService.getSlotsByDateRange(
+        BookingSlotResponse.BookingSlotList response = bookingSlotService.getSlotsByDateRange(
                 businessId, startDate, endDate);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
 
     /**
-     * 특정 메뉴의 슬롯 조회
-     * GET /api/businesses/{businessId}/booking-slots/menu/{menuId}?startDate=2025-01-01&endDate=2025-01-31
+     * 메뉴별 슬롯 조회
+     * GET /api/business/{businessId}/booking-slot/menu/{menuId}?startDate=2025-01-01&endDate=2025-01-31
      */
     @GetMapping("/menu/{menuId}")
-    public ResponseEntity<ResponseData<BookingSlotResponse.SlotList>> getSlotsByMenu(
+    public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlotList>> getSlotsByMenu(
             @PathVariable UUID businessId,
             @PathVariable UUID menuId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-        log.info("메뉴별 슬롯 조회 요청: businessId={}, menuId={}", businessId, menuId);
+        log.info("메뉴별 슬롯 조회 요청: businessId={}, menuId={}, startDate={}, endDate={}",
+                businessId, menuId, startDate, endDate);
 
-        BookingSlotResponse.SlotList response = bookingSlotService.getSlotsByMenu(
+        BookingSlotResponse.BookingSlotList response = bookingSlotService.getSlotsByMenu(
                 businessId, menuId, startDate, endDate);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
 
-    /**
-     * 오늘 이후 활성 슬롯 조회
-     * GET /api/businesses/{businessId}/booking-slots/upcoming
-     */
+    // 향후 활성 슬롯 조회
     @GetMapping("/upcoming")
-    public ResponseEntity<ResponseData<BookingSlotResponse.SlotList>> getUpcomingSlots(
+    public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlotList>> getUpcomingSlots(
             @PathVariable UUID businessId) {
 
-        log.info("향후 슬롯 조회 요청: businessId={}", businessId);
+        log.info("향후 활성 슬롯 조회 요청: businessId={}", businessId);
 
-        BookingSlotResponse.SlotList response = bookingSlotService.getUpcomingSlots(businessId);
+        BookingSlotResponse.BookingSlotList response = bookingSlotService.getUpcomingSlots(businessId);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
 
-    /**
-     * 슬롯 삭제
-     * DELETE /api/businesses/{businessId}/booking-slots/{slotId}
-     */
+    // 슬롯 삭제
     @DeleteMapping("/{slotId}")
     public ResponseEntity<ResponseData<Void>> deleteSlot(
             @PathVariable UUID businessId,
@@ -134,46 +124,37 @@ public class BookingSlotController {
         return ResponseEntity.ok(ResponseData.of(null));
     }
 
-    /**
-     * 슬롯 비활성화
-     * PATCH /api/businesses/{businessId}/booking-slots/{slotId}/deactivate
-     */
+    // 슬롯 비활성화
     @PatchMapping("/{slotId}/deactivate")
-    public ResponseEntity<ResponseData<BookingSlotResponse.SlotDetail>> deactivateSlot(
+    public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlot>> deactivateSlot(
             @PathVariable UUID businessId,
             @PathVariable UUID slotId,
             @CurrentUserId UUID currentUserId) {
 
         log.info("슬롯 비활성화 요청: businessId={}, slotId={}", businessId, slotId);
 
-        BookingSlotResponse.SlotDetail response = bookingSlotService.deactivateSlot(
+        BookingSlotResponse.BookingSlot response = bookingSlotService.deactivateSlot(
                 businessId, slotId, currentUserId);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
 
-    /**
-     * 슬롯 재활성화
-     * PATCH /api/businesses/{businessId}/booking-slots/{slotId}/activate
-     */
+    // 슬롯 활성화
     @PatchMapping("/{slotId}/activate")
-    public ResponseEntity<ResponseData<BookingSlotResponse.SlotDetail>> activateSlot(
+    public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlot>> activateSlot(
             @PathVariable UUID businessId,
             @PathVariable UUID slotId,
             @CurrentUserId UUID currentUserId) {
 
         log.info("슬롯 재활성화 요청: businessId={}, slotId={}", businessId, slotId);
 
-        BookingSlotResponse.SlotDetail response = bookingSlotService.activateSlot(
+        BookingSlotResponse.BookingSlot response = bookingSlotService.activateSlot(
                 businessId, slotId, currentUserId);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
 
-    /**
-     * 과거 슬롯 일괄 삭제 (정리 작업)
-     * DELETE /api/businesses/{businessId}/booking-slots/past
-     */
+    // 과거 슬롯 일괄 삭제 (정리 작업)
     @DeleteMapping("/past")
     public ResponseEntity<ResponseData<Integer>> deletePastSlots(
             @PathVariable UUID businessId,

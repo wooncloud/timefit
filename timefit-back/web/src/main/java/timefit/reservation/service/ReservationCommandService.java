@@ -85,19 +85,16 @@ public class ReservationCommandService {
         validateMenuBelongsToBusiness(menu, business.getId());
         validateBookingSlotBelongsToBusiness(bookingSlot, business.getId());
 
-        // ✅ isAvailable 체크 (업체의 수동 비활성화)
-        if (!bookingSlot.getIsAvailable()) {
-            throw new BookingException(BookingErrorCode.AVAILABLE_SLOT_NOT_AVAILABLE);
-        }
+//        // ✅ isAvailable 체크 (업체의 수동 비활성화)
+//        if (!bookingSlot.getIsAvailable()) {
+//            throw new BookingException(BookingErrorCode.AVAILABLE_SLOT_NOT_AVAILABLE);
+//        }
 
-        // ✅ BookingSlot 통합 검증 (실제 예약 수 체크)
-        Integer currentBookings = bookingSlotQueryRepository
-                .countActiveReservationsBySlot(bookingSlot.getId());
-        bookingSlotValidator.validateBookableSlot(
-                bookingSlot.getId(),
-                business.getId(),
-                currentBookings
-        );
+//        // ✅ BookingSlot 통합 검증 (실제 예약 수 체크)
+//        Integer currentBookings = bookingSlotQueryRepository
+//                .countActiveReservationsBySlot(bookingSlot.getId());
+        // 해당 BookingSlot에 Reservation 기입할 수 있는지 [선점 확인] 검사
+        bookingSlotValidator.validateBookableSlot(bookingSlot.getId(), business.getId());
 
         // 3. Entity 생성 (정적 팩토리)
         Reservation reservation = Reservation.createReservationBased(
