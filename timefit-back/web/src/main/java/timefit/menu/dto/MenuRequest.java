@@ -3,7 +3,6 @@ package timefit.menu.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import timefit.business.entity.BusinessTypeCode;
-import timefit.business.entity.ServiceCategoryCode;
 import timefit.menu.entity.OrderType;
 
 import java.time.LocalDate;
@@ -29,8 +28,9 @@ public class MenuRequest {
             @NotNull(message = "업종은 필수입니다")
             BusinessTypeCode businessType,
 
-            @NotNull(message = "카테고리는 필수입니다")
-            ServiceCategoryCode categoryCode,
+            @NotBlank(message = "카테고리명은 필수입니다")
+            @Size(min = 2, max = 20, message = "카테고리명은 2~20자여야 합니다")
+            String categoryName,
 
             @NotBlank(message = "서비스명은 필수입니다")
             @Size(max = 100, message = "서비스명은 100자 이하로 입력해주세요")
@@ -56,65 +56,38 @@ public class MenuRequest {
              * - ONDEMAND_BASED일 때 선택
              */
             @Positive(message = "소요 시간은 0보다 커야 합니다")
-            @Max(value = 1440, message = "소요 시간은 1440분(24시간)을 초과할 수 없습니다")
+            @Max(value = 1440, message = "소요 시간은 1440분(24시간) 이하여야 합니다")
             Integer durationMinutes,
 
-            // --------------- BookingSlot 생성 설정 (RESERVATION_BASED일 때만 사용)
+            // === BookingSlot 자동 생성 ===
             /**
              * BookingSlot 자동 생성 여부
-             * - true: 메뉴 생성/수정 시 슬롯 자동 생성
+             * - true: slotSettings 필수
              * - false 또는 null: 슬롯 생성 안 함
              */
             Boolean autoGenerateSlots,
 
             /**
-             * 슬롯 생성 설정
-             * - autoGenerateSlots가 true일 때만 필수 (Validator 에서 검증)
+             * BookingSlot 생성 설정
+             * - autoGenerateSlots=true일 때 필수
              */
-            @Valid
             BookingSlotSettings slotSettings
     ) {}
 
     /**
      * BookingSlot 생성 설정
-     * NOTE: 검증 규칙 (Validator 에서 처리)
-     * - startDate < endDate
-     * - 최대 생성 기간: 3개월
      */
     public record BookingSlotSettings(
-            /**
-             * 슬롯 생성 시작 날짜
-             */
-            @NotNull(message = "생성 시작 날짜는 필수입니다")
-            @FutureOrPresent(message = "생성 시작 날짜는 오늘 이후여야 합니다")
+            @NotNull(message = "슬롯 시작 날짜는 필수입니다")
             LocalDate startDate,
 
-            /**
-             * 슬롯 생성 종료 날짜
-             */
-            @NotNull(message = "생성 종료 날짜는 필수입니다")
-            @Future(message = "생성 종료 날짜는 미래여야 합니다")
+            @NotNull(message = "슬롯 종료 날짜는 필수입니다")
             LocalDate endDate,
 
-            /**
-             * 슬롯 간격 (분)
-             * - 기본값: 60분
-             * - 15, 30, 60, 90, 120 등
-             */
             @NotNull(message = "슬롯 간격은 필수입니다")
             @Min(value = 15, message = "슬롯 간격은 최소 15분입니다")
             @Max(value = 480, message = "슬롯 간격은 최대 480분(8시간)입니다")
             Integer slotIntervalMinutes,
-
-            /**
-             * 슬롯당 예약 가능 인원 (capacity)
-             * - 기본값: 1
-             * - 1~N: 동시 예약 가능 인원
-             */
-            @NotNull(message = "예약 가능 인원은 필수입니다")
-            @Min(value = 1, message = "예약 가능 인원은 최소 1명입니다")
-            @Max(value = 100, message = "예약 가능 인원은 최대 100명입니다")
-            Integer slotCapacity,
 
             /**
              * 특정 시간대만 생성 (선택)

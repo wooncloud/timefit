@@ -9,11 +9,8 @@ import timefit.booking.service.BookingSlotCommandService;
 import timefit.business.entity.Business;
 import timefit.business.entity.BusinessCategory;
 import timefit.business.entity.BusinessTypeCode;
-import timefit.business.entity.ServiceCategoryCode;
-import timefit.business.service.validator.BusinessCategoryValidator;
+import timefit.businesscategory.service.validator.BusinessCategoryValidator;
 import timefit.business.service.validator.BusinessValidator;
-import timefit.exception.businesscategory.BusinessCategoryErrorCode;
-import timefit.exception.businesscategory.BusinessCategoryException;
 import timefit.exception.menu.MenuErrorCode;
 import timefit.exception.menu.MenuException;
 import timefit.menu.dto.MenuRequest;
@@ -52,6 +49,7 @@ public class MenuCommandService {
      * - OrderType 검증
      * - RESERVATION_BASED일 때 durationMinutes 필수
      * - autoGenerateSlots=true일 때 BookingSlot 자동 생성
+     * - categoryName 기반으로 BusinessCategory 조회
      */
     public MenuResponse createMenu(
             UUID businessId,
@@ -67,11 +65,11 @@ public class MenuCommandService {
         // 2. Request 검증 (Validator 에서 처리)
         menuValidator.validateMenuCreateRequest(request);
 
-        // 3. BusinessCategory 조회 및 검증
+        // 3. BusinessCategory 조회 및 검증 (categoryName 기반)
         BusinessCategory businessCategory = getBusinessCategory(
                 business,
                 request.businessType(),
-                request.categoryCode()
+                request.categoryName()
         );
 
         // 4. Menu Entity 생성 (정적 팩토리)
@@ -119,19 +117,19 @@ public class MenuCommandService {
     private BusinessCategory getBusinessCategory(
             Business business,
             BusinessTypeCode businessType,
-            ServiceCategoryCode categoryCode) {
+            String categoryName) {
 
         return businessCategoryValidator.validateAndGetBusinessCategory(
                 business.getId(),
                 businessType,
-                categoryCode
+                categoryName
         );
     }
 
     /**
      * 메뉴 수정
      * - OrderType 변경 시 검증
-     * - businessType, categoryCode 수정 시 BusinessCategory 변경
+     * - businessType, categoryName 수정 시 BusinessCategory 변경
      * - BookingSlot 재생성 옵션
      */
     public MenuResponse updateMenu(
@@ -168,34 +166,31 @@ public class MenuCommandService {
             menu.updateOrderType(request.orderType());
         }
 
-        // 5. businessType 또는 categoryCode 변경 시 BusinessCategory 변경
-        if (request.businessType() != null || request.categoryCode() != null) {
+        // 5. businessType 또는 categoryName 변경 시 BusinessCategory 변경
+        if (request.businessType() != null || request.categoryName() != null) {
             BusinessCategory currentCategory = menu.getBusinessCategory();
+
+            // 타겟 businessType 결정 (요청값 우선, 없으면 현재값 유지)
             BusinessTypeCode targetBusinessType =
                     request.businessType() != null ? request.businessType() : currentCategory.getBusinessType();
-            ServiceCategoryCode targetCategoryCode =
-                    request.categoryCode() != null ? request.categoryCode() : currentCategory.getCategoryCode();
 
-            // businessType 검증
-            if (!business.getBusinessTypes().contains(targetBusinessType)) {
-                throw new BusinessCategoryException(BusinessCategoryErrorCode.CATEGORY_NOT_FOUND);
-            }
+            // 타겟 categoryName 결정 (요청값 우선, 없으면 현재값 유지)
+            String targetCategoryName =
+                    request.categoryName() != null ? request.categoryName() : currentCategory.getCategoryName();
 
-            // categoryCode 검증
-            businessCategoryValidator.validateCategoryCodeBelongsToBusinessType(
-                    targetBusinessType,
-                    targetCategoryCode
-            );
-
-            // BusinessCategory 찾기
+            // BusinessCategory 찾기 (businessType + categoryName 조합으로 조회)
             BusinessCategory newCategory = getBusinessCategory(
                     business,
                     targetBusinessType,
-                    targetCategoryCode
+                    targetCategoryName
             );
 
-            // Menu의 BusinessCategory 변경
-            menu.updateBusinessCategory(newCategory);
+            // 실제로 변경이 필요한 경우에만 업데이트
+            if (!newCategory.getId().equals(currentCategory.getId())) {
+                menu.updateBusinessCategory(newCategory);
+                log.info("BusinessCategory 변경: categoryId={} -> categoryId={}",
+                        currentCategory.getId(), newCategory.getId());
+            }
         }
 
         // 6. 기본 정보 수정
