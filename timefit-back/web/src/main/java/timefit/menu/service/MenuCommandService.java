@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.booking.dto.BookingSlotRequest;
 import timefit.booking.service.BookingSlotCommandService;
+import timefit.booking.service.dto.AvailableTimeRange;
+import timefit.booking.service.dto.DailySlotSchedule;
 import timefit.business.entity.Business;
 import timefit.business.entity.BusinessCategory;
 import timefit.business.entity.BusinessTypeCode;
@@ -241,22 +243,18 @@ public class MenuCommandService {
                 menuId, settings.startDate(), settings.endDate());
 
         try {
-            // BookingSlot 생성 요청 DTO 구성
-            List<BookingSlotRequest.DailyTimeSlot> dailySlots = createDailySlots(
+            List<DailySlotSchedule> schedules = createDailySlots(
                     settings.startDate(),
                     settings.endDate(),
                     settings.specificTimeRanges()
             );
 
-            // private 생성자 → static factory method 사용
-            // Create (UUID menuId, Integer slotInterval, List<DailyTimeSlot> dailyTimeSlots)
-            BookingSlotRequest.Create slotRequest = BookingSlotRequest.Create.of(
+            BookingSlotRequest.BookingSlot slotRequest = new BookingSlotRequest.BookingSlot(
                     menuId,
                     settings.slotIntervalMinutes(),
-                    dailySlots
+                    schedules
             );
 
-            // BookingSlotCommandService로 위임
             bookingSlotCommandService.createSlots(businessId, slotRequest, currentUserId);
 
             log.info("BookingSlot 자동 생성 완료: menuId={}", menuId);
@@ -264,8 +262,6 @@ public class MenuCommandService {
         } catch (Exception e) {
             log.warn("BookingSlot 자동 생성 실패 (메뉴는 정상 생성됨): menuId={}, error={}",
                     menuId, e.getMessage());
-            // BookingSlot 생성 실패해도 Menu 생성은 성공으로 처리
-            // 추후 수동으로 슬롯 생성 가능
         }
     }
 
@@ -282,31 +278,26 @@ public class MenuCommandService {
      * 날짜 범위에 대한 DailySlot 생성
      * - specificTimeRanges가 있으면 사용, 없으면 빈 리스트 (영업시간 전체 사용)
      */
-    private List<BookingSlotRequest.DailyTimeSlot> createDailySlots(
+    private List<DailySlotSchedule> createDailySlots(
             LocalDate startDate,
             LocalDate endDate,
             List<MenuRequest.TimeRange> specificTimeRanges) {
 
-        List<BookingSlotRequest.DailyTimeSlot> dailySlots = new ArrayList<>();
+        List<DailySlotSchedule> dailySlots = new ArrayList<>();
 
-        // 날짜 범위 순회
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            List<BookingSlotRequest.TimeRange> timeRanges = new ArrayList<>();
+            List<AvailableTimeRange> timeRanges = new ArrayList<>();
 
-            // 특정 시간대가 지정되어 있으면 사용
             if (specificTimeRanges != null && !specificTimeRanges.isEmpty()) {
                 for (MenuRequest.TimeRange tr : specificTimeRanges) {
-                    // private 생성자 → static factory method 사용
-                    timeRanges.add(BookingSlotRequest.TimeRange.of(
+                    timeRanges.add(AvailableTimeRange.of(
                             LocalTime.parse(tr.startTime()),
                             LocalTime.parse(tr.endTime())
                     ));
                 }
             }
-            // 없으면 빈 리스트 (BookingSlotCommandService가 영업시간 전체 사용)
 
-            // private 생성자 → static factory method 사용
-            dailySlots.add(BookingSlotRequest.DailyTimeSlot.of(date, timeRanges));
+            dailySlots.add(DailySlotSchedule.of(date, timeRanges));
         }
 
         return dailySlots;

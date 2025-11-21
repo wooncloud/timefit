@@ -85,12 +85,10 @@ public class BookingSlot extends BaseEntity {
 
     /**
      * 예약 가능 여부 확인
-     *
-     * @param currentBookings 현재 예약 수
-     * @return 예약 가능 여부 (currentBookings == 0 && isAvailable)
+     * @return 예약 가능 여부
      */
-    public boolean canAcceptReservation(int currentBookings) {
-        return this.isAvailable && currentBookings == 0;
+    public boolean isActiveForReservation() {
+        return this.isAvailable;
     }
 
     // 슬롯 비활성화

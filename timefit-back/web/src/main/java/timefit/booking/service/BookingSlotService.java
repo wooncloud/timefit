@@ -29,9 +29,9 @@ public class BookingSlotService {
      * 슬롯 생성
      */
     @Transactional
-    public BookingSlotResponse.SlotCreationResult createSlots(
+    public BookingSlotResponse.CreationResult createSlots(
             UUID businessId,
-            BookingSlotRequest.Create request,
+            BookingSlotRequest.BookingSlot request,
             UUID currentUserId) {
         return bookingSlotCommandService.createSlots(businessId, request, currentUserId);
     }
@@ -48,7 +48,7 @@ public class BookingSlotService {
      * 슬롯 비활성화
      */
     @Transactional
-    public BookingSlotResponse.SlotDetail deactivateSlot(
+    public BookingSlotResponse.BookingSlot deactivateSlot(
             UUID businessId, UUID slotId, UUID currentUserId) {
         return bookingSlotCommandService.deactivateSlot(businessId, slotId, currentUserId);
     }
@@ -57,7 +57,7 @@ public class BookingSlotService {
      * 슬롯 재활성화
      */
     @Transactional
-    public BookingSlotResponse.SlotDetail activateSlot(
+    public BookingSlotResponse.BookingSlot activateSlot(
             UUID businessId, UUID slotId, UUID currentUserId) {
         return bookingSlotCommandService.activateSlot(businessId, slotId, currentUserId);
     }
@@ -76,7 +76,7 @@ public class BookingSlotService {
      * 특정 날짜의 슬롯 조회
      */
     @Transactional(readOnly = true)
-    public BookingSlotResponse.SlotList getSlotsByDate(
+    public BookingSlotResponse.BookingSlotList getSlotsByDate(
             UUID businessId, LocalDate date) {
         return bookingSlotQueryService.getSlotsByDate(businessId, date);
     }
@@ -85,7 +85,7 @@ public class BookingSlotService {
      * 날짜 범위의 슬롯 조회
      */
     @Transactional(readOnly = true)
-    public BookingSlotResponse.SlotList getSlotsByDateRange(
+    public BookingSlotResponse.BookingSlotList getSlotsByDateRange(
             UUID businessId, LocalDate startDate, LocalDate endDate) {
         return bookingSlotQueryService.getSlotsByDateRange(businessId, startDate, endDate);
     }
@@ -94,7 +94,7 @@ public class BookingSlotService {
      * 메뉴별 슬롯 조회
      */
     @Transactional(readOnly = true)
-    public BookingSlotResponse.SlotList getSlotsByMenu(
+    public BookingSlotResponse.BookingSlotList getSlotsByMenu(
             UUID businessId, UUID menuId, LocalDate startDate, LocalDate endDate) {
         return bookingSlotQueryService.getSlotsByMenu(businessId, menuId, startDate, endDate);
     }
@@ -103,7 +103,7 @@ public class BookingSlotService {
      * 향후 활성 슬롯 조회
      */
     @Transactional(readOnly = true)
-    public BookingSlotResponse.SlotList getUpcomingSlots(UUID businessId) {
+    public BookingSlotResponse.BookingSlotList getUpcomingSlots(UUID businessId) {
         return bookingSlotQueryService.getUpcomingSlots(businessId);
     }
 }
