@@ -13,6 +13,7 @@ public enum BusinessCategoryErrorCode {
     // 카테고리 생성 관련
     DUPLICATE_CATEGORY("이미 존재하는 카테고리입니다", HttpStatus.CONFLICT),
     INVALID_CATEGORY_DATA("잘못된 카테고리 정보입니다", HttpStatus.BAD_REQUEST),
+    INVALID_CATEGORY_NAME("카테고리명은 한글, 영문, 숫자만 사용 가능하며 2~20자여야 합니다",  HttpStatus.BAD_REQUEST),
 
     // 권한 관련
     CATEGORY_ACCESS_DENIED("해당 카테고리에 대한 권한이 없습니다", HttpStatus.FORBIDDEN),

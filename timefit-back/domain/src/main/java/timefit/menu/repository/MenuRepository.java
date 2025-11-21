@@ -27,4 +27,6 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     default List<Menu> findOnDemandBasedMenusByBusinessId(UUID businessId) {
         return findByBusinessIdAndOrderType(businessId, OrderType.ONDEMAND_BASED);
     }
+
+    long countByBusinessCategoryIdAndIsActiveTrue(UUID categoryId);
 }

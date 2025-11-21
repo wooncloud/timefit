@@ -190,7 +190,7 @@ public class ReservationResponseDto {
 
                     reservation.getMenu().getId(),
                     reservation.getMenu().getServiceName(),
-                    reservation.getMenu().getBusinessCategory().getCategoryCode().name(),
+                    reservation.getMenu().getBusinessCategory().getCategoryName(),
                     reservation.getMenu().getPrice(),
                     reservation.getMenu().getDescription(),
                     reservation.getMenu().getOrderType(),

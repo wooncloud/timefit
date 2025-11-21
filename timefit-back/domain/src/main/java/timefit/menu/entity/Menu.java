@@ -204,15 +204,6 @@ public class Menu extends BaseEntity {
         return this.business.getId().equals(businessId);
     }
 
-    /**
-     * 카테고리 표시 이름 조회 헬퍼 메서드
-     * 추가: DTO 변환 시 사용
-     * @return 카테고리 이름 (예: "컷", "펌")
-     */
-    public String getCategoryDisplayName() {
-        return this.businessCategory.getCategoryDisplayName();
-    }
-
     // ----------------- 검증 메서드
 
     // 예약형 메뉴 필수 필드 검증
