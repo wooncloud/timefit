@@ -11,9 +11,7 @@ import timefit.auth.service.validator.AuthValidator;
 import timefit.user.entity.User;
 import timefit.user.repository.UserRepository;
 
-/**
- * 사용자 등록 전담 서비스
- */
+// 사용자 등록 전담 서비스
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -24,33 +22,30 @@ public class UserRegistrationService {
     private final AuthValidator authValidator;
     private final AuthTokenHelper authTokenHelper;
 
-    /**
-     * 사용자 등록 (User 생성 + 토큰 발급)
-     *
-     * @return 회원가입 응답 DTO
-     */
+    // 사용자 등록 (User 생성 + 토큰 발급)
     @Transactional
     public AuthResponseDto.UserSignUp registerUser(AuthRequestDto.UserSignUp request) {
 
-        // 1. 중복 체크 (Validator 사용)
-        authValidator.validateEmailNotDuplicated(request.getEmail());
+        // 1. 중복 체크
+        authValidator.validateEmailNotDuplicated(request.email());
 
         // 2. User 생성 (Entity 정적 팩토리)
         User user = User.createUser(
-                request.getEmail(),
-                request.getPassword(),
-                request.getName(),
-                request.getPhoneNumber()
+                request.email(),
+                request.password(),
+                request.name(),
+                request.phoneNumber()
         );
 
         User savedUser = userRepository.save(user);
 
-        // 3. 토큰 생성 (Helper 사용)
+        log.info("사용자 등록 완료: userId={}, email={}",
+                savedUser.getId(), savedUser.getEmail());
+
+        // 3. 토큰 생성
         AuthTokenHelper.TokenPair tokenPair = authTokenHelper.generateTokenPair(savedUser.getId());
 
-        // 4. DTO 변환 및 반환
-        log.info("사용자 등록 완료: userId={}, role={}", savedUser.getId(), savedUser.getRole());
-
+        // 4. DTO 변환
         return AuthResponseDto.UserSignUp.of(
                 savedUser,
                 tokenPair.getAccessToken(),

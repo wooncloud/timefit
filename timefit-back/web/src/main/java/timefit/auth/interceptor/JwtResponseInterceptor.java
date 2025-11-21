@@ -28,7 +28,7 @@ public class JwtResponseInterceptor implements HandlerInterceptor {
         // Request Attribute에서 accessToken 추출
         Object accessToken = request.getAttribute(ACCESS_TOKEN_ATTRIBUTE);
 
-        if (accessToken != null && accessToken instanceof String) {
+        if (accessToken instanceof String) {
             // Authorization 헤더에 JWT 토큰 설정
             response.setHeader(
                     JwtConfig.AUTHORIZATION_HEADER,
