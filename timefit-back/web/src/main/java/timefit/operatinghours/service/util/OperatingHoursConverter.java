@@ -26,13 +26,13 @@ public class OperatingHoursConverter {
             DayOfWeek dayOfWeek) {
 
         // 휴무일 처리
-        if (Boolean.TRUE.equals(schedule.getIsClosed())) {
+        if (Boolean.TRUE.equals(schedule.isClosed())) {
             return BusinessHours.createClosedDay(business, dayOfWeek);
         }
 
         // 영업일 처리
-        LocalTime openTime = LocalTime.parse(schedule.getOpenTime());
-        LocalTime closeTime = LocalTime.parse(schedule.getCloseTime());
+        LocalTime openTime = LocalTime.parse(schedule.openTime());
+        LocalTime closeTime = LocalTime.parse(schedule.closeTime());
 
         return BusinessHours.createOpenDay(business, dayOfWeek, openTime, closeTime);
     }
@@ -54,8 +54,8 @@ public class OperatingHoursConverter {
         int sequence = 0;
 
         for (OperatingHoursRequestDto.TimeRange range : ranges) {
-            LocalTime startTime = LocalTime.parse(range.getStartTime());
-            LocalTime endTime = LocalTime.parse(range.getEndTime());
+            LocalTime startTime = LocalTime.parse(range.startTime());
+            LocalTime endTime = LocalTime.parse(range.endTime());
 
             result.add(OperatingHours.createOperatingHours(
                     business, dayOfWeek, startTime, endTime, false, sequence++

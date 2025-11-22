@@ -28,12 +28,12 @@ public class OperatingHoursController {
      * @return 영업시간 조회 결과
      */
     @GetMapping
-    public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHoursResult>> getOperatingHours(
+    public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHours>> getOperatingHours(
             @PathVariable UUID businessId) {
 
         log.info("영업시간 조회 요청: businessId={}", businessId);
 
-        OperatingHoursResponseDto.OperatingHoursResult response =
+        OperatingHoursResponseDto.OperatingHours response =
                 operatingHoursService.getOperatingHours(businessId);
 
         return ResponseEntity.ok(ResponseData.of(response));
@@ -48,14 +48,14 @@ public class OperatingHoursController {
      * @return 영업시간 설정 결과
      */
     @PutMapping
-    public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHoursResult>> setOperatingHours(
+    public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHours>> setOperatingHours(
             @PathVariable UUID businessId,
             @Valid @RequestBody OperatingHoursRequestDto.SetOperatingHours request,
             @CurrentUserId UUID currentUserId) {
 
         log.info("영업시간 설정 요청: businessId={}, userId={}", businessId, currentUserId);
 
-        OperatingHoursResponseDto.OperatingHoursResult response =
+        OperatingHoursResponseDto.OperatingHours response =
                 operatingHoursService.setOperatingHours(businessId, request, currentUserId);
 
         return ResponseEntity.ok(ResponseData.of(response));
@@ -68,13 +68,13 @@ public class OperatingHoursController {
      * @return 영업시간 리셋 결과
      */
     @PatchMapping("/reset")
-    public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHoursResult>> resetToDefault(
+    public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHours>> resetToDefault(
             @PathVariable UUID businessId,
             @CurrentUserId UUID currentUserId) {
 
         log.info("영업시간 리셋 요청: businessId={}, userId={}", businessId, currentUserId);
 
-        OperatingHoursResponseDto.OperatingHoursResult response =
+        OperatingHoursResponseDto.OperatingHours response =
                 operatingHoursService.resetToDefault(businessId, currentUserId);
 
         return ResponseEntity.ok(ResponseData.of(response));

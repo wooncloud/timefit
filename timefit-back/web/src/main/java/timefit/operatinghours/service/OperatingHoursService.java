@@ -17,24 +17,26 @@ public class OperatingHoursService {
     private final OperatingHoursCommandService commandService;
 
     // 영업시간 조회
-    public OperatingHoursResponseDto.OperatingHoursResult getOperatingHours(UUID businessId) {
+    public OperatingHoursResponseDto.OperatingHours getOperatingHours(UUID businessId) {
         return queryService.getOperatingHours(businessId);
     }
 
     // 영업시간 설정
     @Transactional
-    public OperatingHoursResponseDto.OperatingHoursResult setOperatingHours(
+    public OperatingHoursResponseDto.OperatingHours setOperatingHours(
             UUID businessId,
             OperatingHoursRequestDto.SetOperatingHours request,
             UUID currentUserId) {
+
         return commandService.setOperatingHours(businessId, request, currentUserId);
     }
 
     // 영업시간 리셋 (디폴트 값으로)
     @Transactional
-    public OperatingHoursResponseDto.OperatingHoursResult resetToDefault(
+    public OperatingHoursResponseDto.OperatingHours resetToDefault(
             UUID businessId,
             UUID currentUserId) {
+
         return commandService.resetToDefault(businessId, currentUserId);
     }
 }
