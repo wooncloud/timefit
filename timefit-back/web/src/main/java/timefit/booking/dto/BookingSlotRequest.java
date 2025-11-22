@@ -1,5 +1,7 @@
 package timefit.booking.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import timefit.booking.service.dto.DailySlotSchedule;
@@ -19,14 +21,19 @@ public class BookingSlotRequest {
      * - slotIntervalMinutes: 30분 간격
      * - schedules: 2025-01-15 ~ 2025-01-31 일별 스케줄
      */
+    @Schema(description = "예약 슬롯 생성 요청 데이터")
     public record BookingSlot(
+            @Schema(description = "예약 슬롯을 생성할 메뉴의 ID", example = "a1b2c3d4-e5f6-4a7b-8c9d-1234567890ab")
             @NotNull(message = "메뉴 ID는 필수입니다")
             UUID menuId,
 
+            @Schema(description = "슬롯 간격 (분). 메뉴 소요 시간보다 길거나 같아야 함", example = "30")
             @NotNull(message = "슬롯 간격은 필수입니다")
             @Positive(message = "슬롯 간격은 양수여야 합니다")
+            @Min(value = 1, message = "슬롯 간격은 최소 1분 이상이어야 합니다")
             Integer slotIntervalMinutes,
 
+            @Schema(description = "일별 슬롯 생성 스케줄 목록")
             @NotNull(message = "일별 스케줄은 필수입니다")
             List<DailySlotSchedule> schedules
     ) {

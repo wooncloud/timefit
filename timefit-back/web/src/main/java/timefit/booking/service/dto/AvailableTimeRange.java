@@ -1,5 +1,6 @@
 package timefit.booking.service.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalTime;
@@ -14,10 +15,13 @@ import java.time.LocalTime;
  * - 점심시간 제외: 12:00~13:00
  * → AvailableTimeRange(09:00, 12:00), AvailableTimeRange(13:00, 18:00)
  */
+@Schema(description = "슬롯 생성이 가능한 시간 범위")
 public record AvailableTimeRange(
+        @Schema(description = "시작 시간 (HH:mm)", example = "09:00")
         @NotNull(message = "시작 시간은 필수입니다")
         LocalTime startTime,
 
+        @Schema(description = "종료 시간 (HH:mm)", example = "12:00")
         @NotNull(message = "종료 시간은 필수입니다")
         LocalTime endTime
 ) {

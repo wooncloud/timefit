@@ -1,5 +1,7 @@
 package timefit.booking.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -17,9 +19,13 @@ public class BookingSlotResponse {
      * - created: 95개 생성 성공
      * - skipped: 5개 건너뜀 (중복 또는 영업시간 외)
      */
+    @Schema(description = "예약 슬롯 생성 배치 작업 결과")
     public record CreationResult(
+            @Schema(description = "총 요청된 슬롯 수 (중복 포함)")
             Integer totalRequested,
+            @Schema(description = "실제 생성된 슬롯 수 (중복 제외)")
             Integer created,
+            @Schema(description = "건너뛴 슬롯 수 (중복 또는 영업시간 외)")
             Integer skipped
     ) {
         // 정적 팩토리 메서드
@@ -42,14 +48,23 @@ public class BookingSlotResponse {
      * - endTime: 09:30
      * - isAvailable: 예약 가능 여부
      */
+    @Schema(description = "단일 예약 슬롯 상세 정보")
     public record BookingSlot(
+            @Schema(description = "슬롯 고유 ID")
             UUID slotId,
+            @Schema(description = "업체 ID")
             UUID businessId,
+            @Schema(description = "연결된 메뉴 ID")
             UUID menuId,
+            @Schema(description = "연결된 메뉴명")
             String menuName,
+            @Schema(description = "슬롯 날짜 (YYYY-MM-DD)")
             LocalDate slotDate,
+            @Schema(description = "슬롯 시작 시간 (HH:mm)")
             LocalTime startTime,
+            @Schema(description = "슬롯 종료 시간 (HH:mm)")
             LocalTime endTime,
+            @Schema(description = "예약 가능 여부 (true: 활성, false: 비활성)")
             Boolean isAvailable
     ) {
         /**
@@ -86,9 +101,13 @@ public class BookingSlotResponse {
      * - slots: 해당 기간의 모든 슬롯 목록
      */
     public record BookingSlotList(
+            @Schema(description = "업체 ID")
             UUID businessId,
+            @Schema(description = "조회 시작 날짜 (YYYY-MM-DD)")
             LocalDate startDate,
+            @Schema(description = "조회 종료 날짜 (YYYY-MM-DD)")
             LocalDate endDate,
+            @Schema(description = "해당 기간/날짜의 슬롯 목록")
             List<BookingSlot> slots
     ) {
         // 정적 팩토리 메서드
