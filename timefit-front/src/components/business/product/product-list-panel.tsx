@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import type { Product } from '@/types/product/product';
-import { productCategories } from '@/lib/mock';
+import { productCategories } from '@/lib/constants/product-categories';
 import { cn } from '@/lib/utils';
+import { ProductListEmpty } from './product-list-empty';
 
 interface ProductListPanelProps {
   products: Product[];
@@ -34,9 +35,7 @@ export function ProductListPanel({
 
       <div className="flex-1 overflow-y-auto pt-2 pe-2">
         {products.length === 0 ? (
-          <div className="flex h-full items-center justify-center p-8 text-center text-muted-foreground">
-            등록된 서비스가 없습니다
-          </div>
+          <ProductListEmpty onNewProduct={onNewProduct} />
         ) : (
           <div className="space-y-1">
             {products.map((product) => (
