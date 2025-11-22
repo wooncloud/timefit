@@ -9,8 +9,8 @@ export const productCategories: Record<ProductCategory, string> = {
 };
 
 export const menuTypes: Record<MenuType, string> = {
-  RESERVATION_BASED: '예약형',
-  ONDEMAND_BASED: '주문형',
+  RESERVATION_BASED: '관리자 확인 후 확정',
+  ONDEMAND_BASED: '예약 신청과 동시에 바로 확정',
 };
 
 export const mockProducts: Product[] = [

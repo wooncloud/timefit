@@ -6,7 +6,6 @@ import { ArrowLeft } from 'lucide-react';
 import type { Product } from '@/types/product/product';
 import { ProductBasicInfoSection } from './sections/product-basic-info-section';
 import { ProductReservationSection } from './sections/product-reservation-section';
-import { ProductBookingSlotSection } from './sections/product-booking-slot-section';
 import { ProductFormActions } from './sections/product-form-actions';
 
 interface ProductDetailFormProps {
@@ -58,10 +57,6 @@ export function ProductDetailForm({
             formData={formData}
             onFormDataChange={setFormData}
           />
-
-          {formData.menu_type === 'RESERVATION_BASED' && (
-            <ProductBookingSlotSection />
-          )}
         </div>
       </form>
     </div>
