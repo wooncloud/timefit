@@ -12,6 +12,7 @@ import { useBusinessStore } from '@/store';
 import { useBusinessDetail } from '@/hooks/business/useBusinessDetail';
 import type { UpdateBusinessRequest } from '@/types/business/businessDetail';
 import { toast } from 'sonner';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function Page() {
   const { business: storedBusiness } = useBusinessStore();
@@ -26,16 +27,33 @@ export default function Page() {
   // 폼 상태 관리
   const [formData, setFormData] = useState<UpdateBusinessRequest>({});
 
+  // 로딩 상태
   if (loading) {
-    return <div>로딩 중...</div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
+  // 에러 상태
   if (error) {
-    return <div>오류: {error}</div>;
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-8">
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <p className="text-sm text-muted-foreground">{error}</p>
+      </div>
+    );
   }
 
+  // 데이터 없음
   if (!detailBusiness) {
-    return <div>사업자 정보가 없습니다.</div>;
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-8">
+        <AlertCircle className="h-12 w-12 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">사업자 정보가 없습니다.</p>
+      </div>
+    );
   }
 
   const business = detailBusiness;
