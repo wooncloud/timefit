@@ -15,6 +15,8 @@ export interface TeamMember {
 
 interface TeamTableRowProps {
   member: TeamMember;
+  currentUserId?: string;
+  isOwner?: boolean;
   onChangeRole?: (memberId: string) => void;
   onChangeStatus?: (memberId: string) => void;
   onDelete?: (memberId: string) => void;
@@ -74,10 +76,14 @@ const getStatusLabel = (status: TeamMember['status']) => {
 
 export function TeamTableRow({
   member,
+  currentUserId,
+  isOwner = false,
   onChangeRole,
   onChangeStatus,
   onDelete,
 }: TeamTableRowProps) {
+  const isCurrentUser = currentUserId === member.id;
+
   return (
     <TableRow>
       <TableCell>
@@ -102,12 +108,14 @@ export function TeamTableRow({
         </Badge>
       </TableCell>
       <TableCell className="text-right">
-        <TeamActionsDropdown
-          memberId={member.id}
-          onChangeRole={onChangeRole}
-          onChangeStatus={onChangeStatus}
-          onDelete={onDelete}
-        />
+        {isOwner && !isCurrentUser && (
+          <TeamActionsDropdown
+            memberId={member.id}
+            onChangeRole={onChangeRole}
+            onChangeStatus={onChangeStatus}
+            onDelete={onDelete}
+          />
+        )}
       </TableCell>
     </TableRow>
   );

@@ -3,6 +3,8 @@ import { TeamTableRow, type TeamMember } from './team-table-row';
 
 interface TeamTableBodyProps {
   members: TeamMember[];
+  currentUserId?: string;
+  isOwner?: boolean;
   onChangeRole?: (memberId: string) => void;
   onChangeStatus?: (memberId: string) => void;
   onDelete?: (memberId: string) => void;
@@ -10,6 +12,8 @@ interface TeamTableBodyProps {
 
 export function TeamTableBody({
   members,
+  currentUserId,
+  isOwner = false,
   onChangeRole,
   onChangeStatus,
   onDelete,
@@ -20,6 +24,8 @@ export function TeamTableBody({
         <TeamTableRow
           key={member.id}
           member={member}
+          currentUserId={currentUserId}
+          isOwner={isOwner}
           onChangeRole={onChangeRole}
           onChangeStatus={onChangeStatus}
           onDelete={onDelete}
