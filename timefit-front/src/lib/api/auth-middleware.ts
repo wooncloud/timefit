@@ -11,6 +11,7 @@ type AuthenticatedHandler<T = unknown> = (
     accessToken: string;
     userId: string;
     session: Awaited<ReturnType<typeof getServerSession>>;
+    isRetry?: boolean;
   }
 ) => Promise<NextResponse<T>>;
 
@@ -48,7 +49,7 @@ export function withAuth<T = unknown>(handler: AuthenticatedHandler<T>) {
       // 2. 핸들러 실행
       const response = await handler(request, { accessToken, userId, session });
 
-      // 3. 백엔드에서 401 응답이 온 경우 처리
+      // 3. 백엔드에서 401 응답이 온 경우 처리 (재시도가 아닐 때만)
       if (response.status === 401) {
         const refreshToken = session.user?.refreshToken;
 
@@ -65,12 +66,23 @@ export function withAuth<T = unknown>(handler: AuthenticatedHandler<T>) {
             };
             await session.save();
 
-            // 핸들러 재실행 (새 토큰으로)
-            return handler(request, {
+            // 핸들러 재실행 (새 토큰으로, isRetry 플래그 설정)
+            const retryResponse = await handler(request, {
               accessToken: refreshResult.accessToken,
               userId,
               session,
+              isRetry: true,
             });
+
+            // 재시도 후에도 401이면 로그아웃
+            if (retryResponse.status === 401) {
+              console.log('[Auth Middleware] 토큰 갱신 후에도 401 응답, 로그아웃 처리');
+              return (await clearSessionAndLogout(
+                '세션이 만료되었습니다. 다시 로그인해주세요.'
+              )) as NextResponse<T>;
+            }
+
+            return retryResponse;
           }
         }
 
@@ -127,8 +139,8 @@ async function refreshAccessToken(
 
     const result = await response.json();
 
-    // 백엔드 응답 형식: ResponseData<TokenRefresh>
-    if (!result.success || !result.data) {
+    // 백엔드 응답 형식: { data: { accessToken, refreshToken, tokenType, expiresIn } }
+    if (!result.data || !result.data.accessToken || !result.data.refreshToken) {
       console.log('[Token Refresh] 응답 형식이 올바르지 않습니다:', result);
       return null;
     }
