@@ -7,23 +7,12 @@ import org.springframework.transaction.annotation.Transactional;
 import timefit.business.entity.BusinessCategory;
 import timefit.business.entity.BusinessTypeCode;
 import timefit.business.repository.BusinessCategoryRepository;
-import timefit.businesscategory.dto.BusinessCategoryResponse;
-import timefit.businesscategory.dto.CategoryListResponse;
-import timefit.businesscategory.dto.CategorySummary;
+import timefit.businesscategory.dto.BusinessCategoryResponseDto;
 import timefit.businesscategory.service.validator.BusinessCategoryValidator;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-/**
- * BusinessCategory 조회 전담 서비스
- *
- * 담당 기능:
- * - 카테고리 목록 조회
- * - 카테고리 상세 조회
- * - 업종별 카테고리 조회
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -39,17 +28,13 @@ public class BusinessCategoryQueryService {
      * @param businessId 업체 ID
      * @return 카테고리 목록 응답 DTO
      */
-    public CategoryListResponse getCategoryList(UUID businessId) {
+    public BusinessCategoryResponseDto.CategoryList getCategoryList(UUID businessId) {
         log.info("카테고리 목록 조회: businessId={}", businessId);
 
         List<BusinessCategory> categories = businessCategoryRepository
                 .findByBusinessIdAndIsActiveTrueOrderByBusinessTypeAscCategoryNameAsc(businessId);
 
-        List<CategorySummary> summaries = categories.stream()
-                .map(CategorySummary::of)
-                .collect(Collectors.toList());
-
-        return CategoryListResponse.of(summaries, summaries.size());
+        return BusinessCategoryResponseDto.CategoryList.of(categories);
     }
 
     /**
@@ -59,7 +44,7 @@ public class BusinessCategoryQueryService {
      * @param businessType 업종 코드
      * @return 카테고리 목록 응답 DTO
      */
-    public CategoryListResponse getCategoryListByType(
+    public BusinessCategoryResponseDto.CategoryList getCategoryListByType(
             UUID businessId,
             BusinessTypeCode businessType) {
 
@@ -70,11 +55,7 @@ public class BusinessCategoryQueryService {
                 .findByBusinessIdAndBusinessTypeAndIsActiveTrueOrderByCategoryNameAsc(
                         businessId, businessType);
 
-        List<CategorySummary> summaries = categories.stream()
-                .map(CategorySummary::of)
-                .collect(Collectors.toList());
-
-        return CategoryListResponse.of(summaries, summaries.size());
+        return BusinessCategoryResponseDto.CategoryList.of(categories);
     }
 
     /**
@@ -84,13 +65,13 @@ public class BusinessCategoryQueryService {
      * @param categoryId 카테고리 ID
      * @return 카테고리 상세 응답 DTO
      */
-    public BusinessCategoryResponse getCategory(UUID businessId, UUID categoryId) {
+    public BusinessCategoryResponseDto.Category getCategory(UUID businessId, UUID categoryId) {
         log.info("카테고리 상세 조회: businessId={}, categoryId={}", businessId, categoryId);
 
         // 조회 및 검증
         BusinessCategory category = businessCategoryValidator.validateExists(categoryId);
         businessCategoryValidator.validateCategoryBelongsToBusiness(category, businessId);
 
-        return BusinessCategoryResponse.of(category);
+        return BusinessCategoryResponseDto.Category.of(category);
     }
 }
