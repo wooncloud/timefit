@@ -8,7 +8,7 @@ import timefit.booking.repository.BookingSlotQueryRepository;
 import timefit.booking.repository.BookingSlotRepository;
 import timefit.exception.booking.BookingErrorCode;
 import timefit.exception.booking.BookingException;
-import timefit.menu.dto.MenuRequest;
+import timefit.menu.dto.MenuRequestDto;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -148,7 +148,7 @@ public class BookingSlotValidator {
      * @param settings BookingSlot 생성 설정
      * @throws BookingException 검증 실패 시
      */
-    public void validateSlotSettings(MenuRequest.BookingSlotSettings settings) {
+    public void validateSlotSettings(MenuRequestDto.BookingSlotSettings settings) {
         LocalDate startDate = settings.startDate();
         LocalDate endDate = settings.endDate();
 
@@ -170,7 +170,7 @@ public class BookingSlotValidator {
 
         // 3. 특정 시간대 검증 (선택사항)
         if (settings.specificTimeRanges() != null && !settings.specificTimeRanges().isEmpty()) {
-            for (MenuRequest.TimeRange timeRange : settings.specificTimeRanges()) {
+            for (MenuRequestDto.TimeRange timeRange : settings.specificTimeRanges()) {
                 validateTimeRange(timeRange);
             }
         }
@@ -184,7 +184,7 @@ public class BookingSlotValidator {
      * @param timeRange 검증할 시간대
      * @throws BookingException 검증 실패 시
      */
-    public void validateTimeRange(MenuRequest.TimeRange timeRange) {
+    public void validateTimeRange(MenuRequestDto.TimeRange timeRange) {
         try {
             LocalTime start = LocalTime.parse(timeRange.startTime());
             LocalTime end = LocalTime.parse(timeRange.endTime());

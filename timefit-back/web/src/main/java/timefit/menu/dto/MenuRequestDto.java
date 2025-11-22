@@ -8,12 +8,7 @@ import timefit.menu.entity.OrderType;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Menu Request DTO
- * - Create/Update 공통 사용
- * - BookingSlot 생성 정보 포함
- */
-public class MenuRequest {
+public class MenuRequestDto {
 
     /**
      * 메뉴 생성/수정 통합 요청
@@ -24,7 +19,6 @@ public class MenuRequest {
      * - autoGenerateSlots=true일 때 slotSettings 필수 (Validator 에서 검증)
      */
     public record CreateUpdateMenu(
-            // === 기본 정보 ===
             @NotNull(message = "업종은 필수입니다")
             BusinessTypeCode businessType,
 
@@ -46,7 +40,6 @@ public class MenuRequest {
             @Size(max = 200, message = "이미지 URL은 200자 이하로 입력해주세요")
             String imageUrl,
 
-            // === 예약 설정 ===
             @NotNull(message = "서비스 유형은 필수입니다")
             OrderType orderType,
 
@@ -59,7 +52,7 @@ public class MenuRequest {
             @Max(value = 1440, message = "소요 시간은 1440분(24시간) 이하여야 합니다")
             Integer durationMinutes,
 
-            // === BookingSlot 자동 생성 ===
+            // BookingSlot 자동 생성
             /**
              * BookingSlot 자동 생성 여부
              * - true: slotSettings 필수
@@ -74,9 +67,7 @@ public class MenuRequest {
             BookingSlotSettings slotSettings
     ) {}
 
-    /**
-     * BookingSlot 생성 설정
-     */
+    // BookingSlot 생성 설정
     public record BookingSlotSettings(
             @NotNull(message = "슬롯 시작 날짜는 필수입니다")
             LocalDate startDate,
