@@ -13,12 +13,8 @@ import java.util.UUID;
 
 public class ReservationResponseDto {
 
-    // ========================================
-    // 1. 고객용 DTO
-    // ========================================
-
     /**
-     * 고객용 예약 상세 (단일)
+     * 고객용 예약 상세 (단수)
      */
     public record CustomerReservation(
             // 예약 기본 정보
@@ -77,7 +73,7 @@ public class ReservationResponseDto {
     }
 
     /**
-     * 고객 예약 목록 응답
+     * 고객 예약 목록 (복수)
      */
     public record CustomerReservationList(
             List<CustomerReservationItem> reservations,
@@ -97,8 +93,13 @@ public class ReservationResponseDto {
             UUID reservationId,
             String reservationNumber,
             ReservationStatus status,
-            BusinessSummaryInfo businessInfo,
-            ReservationSummaryDetails reservationDetails,
+            UUID businessId,
+            String businessName,
+            String businessLogoUrl,
+            LocalDate reservationDate,
+            LocalTime reservationTime,
+            Integer reservationDuration,
+            Integer reservationPrice,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
@@ -106,24 +107,27 @@ public class ReservationResponseDto {
                 UUID reservationId,
                 String reservationNumber,
                 ReservationStatus status,
-                BusinessSummaryInfo businessInfo,
-                ReservationSummaryDetails reservationDetails,
+                UUID businessId,
+                String businessName,
+                String businessLogoUrl,
+                LocalDate reservationDate,
+                LocalTime reservationTime,
+                Integer reservationDuration,
+                Integer reservationPrice,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt) {
             return new CustomerReservationItem(
                     reservationId, reservationNumber, status,
-                    businessInfo, reservationDetails,
+                    businessId, businessName, businessLogoUrl,
+                    reservationDate, reservationTime,
+                    reservationDuration, reservationPrice,
                     createdAt, updatedAt
             );
         }
     }
 
-    // ========================================
-    // 2. 업체용 DTO
-    // ========================================
-
     /**
-     * 업체용 예약 상세
+     * 업체용 예약 상세 (단수)
      */
     public record BusinessReservation(
             // 예약 기본 정보
@@ -211,18 +215,27 @@ public class ReservationResponseDto {
     }
 
     /**
-     * 업체 예약 목록 응답
+     * 업체 예약 목록 (복수)
      */
     public record BusinessReservationList(
-            BusinessInfo businessInfo,
+            UUID businessId,
+            String businessName,
+            String businessAddress,
+            String businessContactPhone,
             List<BusinessReservationItem> reservations,
             PaginationInfo pagination
     ) {
         public static BusinessReservationList of(
-                BusinessInfo businessInfo,
+                UUID businessId,
+                String businessName,
+                String businessAddress,
+                String businessContactPhone,
                 List<BusinessReservationItem> reservations,
                 PaginationInfo pagination) {
-            return new BusinessReservationList(businessInfo, reservations, pagination);
+            return new BusinessReservationList(
+                    businessId, businessName, businessAddress, businessContactPhone,
+                    reservations, pagination
+            );
         }
     }
 
@@ -233,8 +246,13 @@ public class ReservationResponseDto {
             UUID reservationId,
             String reservationNumber,
             ReservationStatus status,
-            CustomerSummaryInfo customerInfo,
-            ReservationSummaryDetails reservationDetails,
+            UUID customerId,
+            String customerName,
+            String customerPhone,
+            LocalDate reservationDate,
+            LocalTime reservationTime,
+            Integer reservationDuration,
+            Integer reservationPrice,
             LocalDateTime createdAt,
             Boolean requiresAction
     ) {
@@ -242,13 +260,20 @@ public class ReservationResponseDto {
                 UUID reservationId,
                 String reservationNumber,
                 ReservationStatus status,
-                CustomerSummaryInfo customerInfo,
-                ReservationSummaryDetails reservationDetails,
+                UUID customerId,
+                String customerName,
+                String customerPhone,
+                LocalDate reservationDate,
+                LocalTime reservationTime,
+                Integer reservationDuration,
+                Integer reservationPrice,
                 LocalDateTime createdAt,
                 Boolean requiresAction) {
             return new BusinessReservationItem(
                     reservationId, reservationNumber, status,
-                    customerInfo, reservationDetails,
+                    customerId, customerName, customerPhone,
+                    reservationDate, reservationTime,
+                    reservationDuration, reservationPrice,
                     createdAt, requiresAction
             );
         }
@@ -298,76 +323,12 @@ public class ReservationResponseDto {
     }
 
     // ========================================
-    // 4. 공통 내부 DTO
+    // 4. 공통 DTO
     // ========================================
 
     /**
-     * 업체 정보 (상세)
+     * 페이지네이션 정보
      */
-    public record BusinessInfo(
-            UUID businessId,
-            String businessName,
-            String address,
-            String contactPhone
-    ) {
-        public static BusinessInfo of(
-                UUID businessId,
-                String businessName,
-                String address,
-                String contactPhone) {
-            return new BusinessInfo(businessId, businessName, address, contactPhone);
-        }
-    }
-
-    /**
-     * 업체 정보 (간략)
-     */
-    public record BusinessSummaryInfo(
-            UUID businessId,
-            String businessName,
-            String logoUrl
-    ) {
-        public static BusinessSummaryInfo of(
-                UUID businessId,
-                String businessName,
-                String logoUrl) {
-            return new BusinessSummaryInfo(businessId, businessName, logoUrl);
-        }
-    }
-
-    /**
-     * 고객 정보 (간략)
-     */
-    public record CustomerSummaryInfo(
-            UUID customerId,
-            String customerName,
-            String customerPhone
-    ) {
-        public static CustomerSummaryInfo of(
-                UUID customerId,
-                String customerName,
-                String customerPhone) {
-            return new CustomerSummaryInfo(customerId, customerName, customerPhone);
-        }
-    }
-
-    // 예약 상세 정보
-    public record ReservationSummaryDetails(
-            LocalDate date,
-            LocalTime time,
-            Integer durationMinutes,
-            Integer totalPrice
-    ) {
-        public static ReservationSummaryDetails of(
-                LocalDate date,
-                LocalTime time,
-                Integer durationMinutes,
-                Integer totalPrice) {
-            return new ReservationSummaryDetails(date, time, durationMinutes, totalPrice);
-        }
-    }
-
-    // 페이지네이션 정보
     public record PaginationInfo(
             Integer currentPage,
             Integer totalPages,

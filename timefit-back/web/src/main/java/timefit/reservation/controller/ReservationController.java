@@ -27,19 +27,27 @@ public class ReservationController {
     // 고객용 API: /api/reservations
     // ========================================
 
-    // 예약 생성
+    /**
+     * 예약 생성
+     * - bookingSlotId가 있으면 RESERVATION_BASED
+     * - bookingSlotId가 없고 reservationDate/Time이 있으면 ONDEMAND_BASED
+     */
     @PostMapping("/api/reservation")
     public ResponseEntity<ResponseData<ReservationResponseDto.CustomerReservation>> createReservation(
             @Valid @RequestBody ReservationRequestDto.CreateReservation request,
             @CurrentUserId UUID customerId) {
 
         log.info("예약 생성 요청: customerId={}, businessId={}, menuId={}",
-                customerId, request.getBusinessId(), request.getMenuId());
+                customerId, request.businessId(), request.menuId());
 
         ReservationResponseDto.CustomerReservation response;
-        if (request.isReservationBased()) {
+
+        // 예약 타입 판별 로직 (DTO에서 제거됨)
+        if (request.bookingSlotId() != null) {
+            // RESERVATION_BASED
             response = reservationService.createReservationBased(request, customerId);
-        } else if (request.isOnDemandBased()) {
+        } else if (request.reservationDate() != null && request.reservationTime() != null) {
+            // ONDEMAND_BASED
             response = reservationService.createOnDemandBased(request, customerId);
         } else {
             throw new IllegalArgumentException("유효하지 않은 예약 타입입니다");
@@ -124,7 +132,6 @@ public class ReservationController {
     public ResponseEntity<ResponseData<ReservationResponseDto.BusinessReservationList>> getBusinessReservations(
             @PathVariable UUID businessId,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String customerName,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "0") int page,
@@ -135,8 +142,7 @@ public class ReservationController {
                 businessId, currentUserId, status);
 
         ReservationResponseDto.BusinessReservationList response = reservationService.getBusinessReservations(
-                businessId, currentUserId, status, customerName,
-                startDate, endDate, page, size);
+                businessId, currentUserId, status, startDate, endDate, page, size);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
@@ -198,7 +204,7 @@ public class ReservationController {
             @RequestBody(required = false) String notes,
             @CurrentUserId UUID currentUserId) {
 
-        log.info("예약 완료 처리 요청: businessId={}, reservationId={}, userId={}",
+        log.info("예약 완료 요청: businessId={}, reservationId={}, userId={}",
                 businessId, reservationId, currentUserId);
 
         ReservationResponseDto.ReservationActionResult response = reservationService.completeReservation(
