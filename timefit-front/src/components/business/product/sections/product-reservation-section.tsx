@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { Product, MenuType } from '@/types/product/product';
-import { menuTypes } from '@/lib/mock';
+import { menuTypes } from '@/lib/constants/product-categories';
 
 interface ProductReservationSectionProps {
   formData: Partial<Product>;
