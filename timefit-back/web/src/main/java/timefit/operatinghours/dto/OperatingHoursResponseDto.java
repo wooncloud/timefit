@@ -7,7 +7,7 @@ import timefit.common.entity.DayOfWeek;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class OperatingHoursResponse {
+public class OperatingHoursResponseDto {
 
     // 영업시간 + 예약 가능 시간대 통합 조회 결과
     public record OperatingHoursResult(
