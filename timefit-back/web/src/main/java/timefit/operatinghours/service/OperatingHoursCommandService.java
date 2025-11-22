@@ -11,8 +11,8 @@ import timefit.business.repository.BusinessHoursRepository;
 import timefit.business.repository.OperatingHoursRepository;
 import timefit.business.service.validator.BusinessValidator;
 import timefit.common.entity.DayOfWeek;
-import timefit.operatinghours.dto.OperatingHoursRequest;
-import timefit.operatinghours.dto.OperatingHoursResponse;
+import timefit.operatinghours.dto.OperatingHoursRequestDto;
+import timefit.operatinghours.dto.OperatingHoursResponseDto;
 import timefit.operatinghours.service.util.BusinessHoursDefaultConfig;
 import timefit.operatinghours.service.util.OperatingHoursConverter;
 
@@ -47,9 +47,9 @@ public class OperatingHoursCommandService {
      * @param currentUserId 현재 사용자 ID
      * @return 영업시간 설정 결과
      */
-    public OperatingHoursResponse.OperatingHoursResult setOperatingHours(
+    public OperatingHoursResponseDto.OperatingHoursResult setOperatingHours(
             UUID businessId,
-            OperatingHoursRequest.SetOperatingHours request,
+            OperatingHoursRequestDto.SetOperatingHours request,
             UUID currentUserId) {
 
         log.info("영업시간 설정 시작: businessId={}, userId={}", businessId, currentUserId);
@@ -70,7 +70,7 @@ public class OperatingHoursCommandService {
                 businessId, updatedBusinessHours.size(), newOperatingHours.size());
 
         // 5. DTO 변환
-        return OperatingHoursResponse.OperatingHoursResult.of(
+        return OperatingHoursResponseDto.OperatingHoursResult.of(
                 businessId,
                 business.getBusinessName(),
                 updatedBusinessHours,
@@ -85,7 +85,7 @@ public class OperatingHoursCommandService {
      * @param currentUserId 현재 사용자 ID
      * @return 영업시간 리셋 결과
      */
-    public OperatingHoursResponse.OperatingHoursResult resetToDefault(
+    public OperatingHoursResponseDto.OperatingHoursResult resetToDefault(
             UUID businessId,
             UUID currentUserId) {
 
@@ -106,7 +106,7 @@ public class OperatingHoursCommandService {
         log.info("영업시간 리셋 완료: businessId={}, 디폴트 설정 적용", businessId);
 
         // 5. DTO 변환 (OperatingHours는 빈 리스트)
-        return OperatingHoursResponse.OperatingHoursResult.of(
+        return OperatingHoursResponseDto.OperatingHoursResult.of(
                 businessId,
                 business.getBusinessName(),
                 updatedBusinessHours,
@@ -128,7 +128,7 @@ public class OperatingHoursCommandService {
      */
     private List<BusinessHours> updateBusinessHours(
             Business business,
-            OperatingHoursRequest.SetOperatingHours request) {
+            OperatingHoursRequestDto.SetOperatingHours request) {
 
         // 1. 기존 레코드 조회 및 Map 변환
         List<BusinessHours> existingHours = businessHoursRepository
@@ -140,7 +140,7 @@ public class OperatingHoursCommandService {
         // 2. 요청 데이터로 업데이트 또는 생성
         List<BusinessHours> result = new ArrayList<>();
 
-        for (OperatingHoursRequest.DaySchedule schedule : request.getSchedules()) {
+        for (OperatingHoursRequestDto.DaySchedule schedule : request.getSchedules()) {
             DayOfWeek dayOfWeek = DayOfWeek.fromValue(schedule.getDayOfWeek());
             BusinessHours existing = hoursMap.get(dayOfWeek);
 
@@ -174,7 +174,7 @@ public class OperatingHoursCommandService {
      */
     private List<OperatingHours> recreateOperatingHours(
             Business business,
-            OperatingHoursRequest.SetOperatingHours request) {
+            OperatingHoursRequestDto.SetOperatingHours request) {
 
         // 1. 기존 데이터 삭제
         operatingHoursRepository.deleteByBusinessId(business.getId());
@@ -183,7 +183,7 @@ public class OperatingHoursCommandService {
         // 2. 새 데이터 생성
         List<OperatingHours> newOperatingHours = new ArrayList<>();
 
-        for (OperatingHoursRequest.DaySchedule schedule : request.getSchedules()) {
+        for (OperatingHoursRequestDto.DaySchedule schedule : request.getSchedules()) {
             DayOfWeek dayOfWeek = DayOfWeek.fromValue(schedule.getDayOfWeek());
 
             // 예약 가능 시간대가 있는 경우에만 생성

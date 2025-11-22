@@ -4,7 +4,7 @@ import timefit.business.entity.Business;
 import timefit.business.entity.BusinessHours;
 import timefit.business.entity.OperatingHours;
 import timefit.common.entity.DayOfWeek;
-import timefit.operatinghours.dto.OperatingHoursRequest;
+import timefit.operatinghours.dto.OperatingHoursRequestDto;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public class OperatingHoursConverter {
      */
     public static BusinessHours convertToBusinessHours(
             Business business,
-            OperatingHoursRequest.DaySchedule schedule,
+            OperatingHoursRequestDto.DaySchedule schedule,
             DayOfWeek dayOfWeek) {
 
         // 휴무일 처리
@@ -47,13 +47,13 @@ public class OperatingHoursConverter {
      */
     public static List<OperatingHours> convertToOperatingHours(
             Business business,
-            List<OperatingHoursRequest.TimeRange> ranges,
+            List<OperatingHoursRequestDto.TimeRange> ranges,
             DayOfWeek dayOfWeek) {
 
         List<OperatingHours> result = new ArrayList<>();
         int sequence = 0;
 
-        for (OperatingHoursRequest.TimeRange range : ranges) {
+        for (OperatingHoursRequestDto.TimeRange range : ranges) {
             LocalTime startTime = LocalTime.parse(range.getStartTime());
             LocalTime endTime = LocalTime.parse(range.getEndTime());
 

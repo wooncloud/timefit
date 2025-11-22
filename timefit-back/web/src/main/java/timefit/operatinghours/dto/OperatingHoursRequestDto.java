@@ -7,7 +7,7 @@ import lombok.Getter;
 
 import java.util.List;
 
-public class OperatingHoursRequest {
+public class OperatingHoursRequestDto {
 
     // 영업시간 + 예약 가능 시간대 통합 설정
     @Getter
