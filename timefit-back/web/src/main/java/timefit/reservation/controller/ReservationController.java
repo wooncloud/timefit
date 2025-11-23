@@ -24,7 +24,7 @@ import timefit.reservation.service.ReservationService;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Tag(name = "예약", description = "예약 관리 API (고객용/업체용)")
+@Tag(name = "07. 예약 관리", description = "예약 관리 API (고객용/업체용)")
 @Slf4j
 @RestController
 @RequiredArgsConstructor

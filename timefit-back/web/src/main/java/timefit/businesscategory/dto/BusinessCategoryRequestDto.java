@@ -16,31 +16,29 @@ public class BusinessCategoryRequestDto {
     public record CreateCategory(
             @Schema(
                     description = "업종 코드",
-                    example = "BD003",
+                    example = "BD008",
                     requiredMode = Schema.RequiredMode.REQUIRED,
-                    allowableValues = {
-                            "BD000 (음식점업)", "BD001 (숙박업)", "BD002 (소매/유통업)",
-                            "BD003 (미용/뷰티업)", "BD004 (의료업)", "BD005 (피트니스/스포츠업)",
-                            "BD006 (교육/문화업)", "BD007 (전문서비스업)", "BD008 (생활서비스업)",
-                            "BD009 (제조/생산업)"
-                    }
+                    allowableValues = {"BD000", "BD001", "BD002", "BD003", "BD004", "BD005", "BD006", "BD007", "BD008", "BD009", "BD010", "BD011", "BD012", "BD013"}
             )
             @NotNull(message = "업종은 필수입니다")
             BusinessTypeCode businessType,
 
             @Schema(
-                    description = "카테고리명 (2~20자, 한글/영문/숫자/공백만 가능)",
+                    description = "카테고리명 (2-20자, 한글/영문/숫자/공백만 가능)",
                     example = "헤어 컷",
-                    requiredMode = Schema.RequiredMode.REQUIRED
+                    requiredMode = Schema.RequiredMode.REQUIRED,
+                    minLength = 2,
+                    maxLength = 20
             )
             @NotBlank(message = "카테고리명은 필수입니다")
             @Size(min = 2, max = 20, message = "카테고리명은 2~20자여야 합니다")
             String categoryName,
 
             @Schema(
-                    description = "카테고리 공지사항 (최대 1000자)",
+                    description = "카테고리 공지사항",
                     example = "예약 시 주의사항을 확인해주세요.",
-                    nullable = true
+                    nullable = true,
+                    maxLength = 1000
             )
             @Size(max = 1000, message = "카테고리 공지사항은 1000자 이내여야 합니다")
             String categoryNotice
@@ -54,17 +52,20 @@ public class BusinessCategoryRequestDto {
     @Schema(description = "카테고리 수정 (변경할 필드만 입력)")
     public record UpdateCategory(
             @Schema(
-                    description = "카테고리명 (2~20자, 한글/영문/숫자/공백만 가능)",
+                    description = "카테고리명 (2-20자, 한글/영문/숫자/공백만 가능)",
                     example = "헤어 펌",
-                    nullable = true
+                    nullable = true,
+                    minLength = 2,
+                    maxLength = 20
             )
             @Size(min = 2, max = 20, message = "카테고리명은 2~20자여야 합니다")
             String categoryName,
 
             @Schema(
-                    description = "카테고리 공지사항 (최대 1000자)",
+                    description = "카테고리 공지사항",
                     example = "새로운 공지사항입니다.",
-                    nullable = true
+                    nullable = true,
+                    maxLength = 1000
             )
             @Size(max = 1000, message = "카테고리 공지사항은 1000자 이내여야 합니다")
             String categoryNotice,

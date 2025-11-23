@@ -7,6 +7,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
+@Schema(description = "예약 슬롯 응답")
 public class BookingSlotResponse {
 
     /**
@@ -21,11 +22,22 @@ public class BookingSlotResponse {
      */
     @Schema(description = "예약 슬롯 생성 배치 작업 결과")
     public record CreationResult(
-            @Schema(description = "총 요청된 슬롯 수 (중복 포함)")
+            @Schema(
+                    description = "총 요청된 슬롯 수 (중복 포함)",
+                    example = "100"
+            )
             Integer totalRequested,
-            @Schema(description = "실제 생성된 슬롯 수 (중복 제외)")
+
+            @Schema(
+                    description = "실제 생성된 슬롯 수 (중복 제외)",
+                    example = "95"
+            )
             Integer created,
-            @Schema(description = "건너뛴 슬롯 수 (중복 또는 영업시간 외)")
+
+            @Schema(
+                    description = "건너뛴 슬롯 수 (중복 또는 영업시간 외)",
+                    example = "5"
+            )
             Integer skipped
     ) {
         // 정적 팩토리 메서드
@@ -50,21 +62,52 @@ public class BookingSlotResponse {
      */
     @Schema(description = "단일 예약 슬롯 상세 정보")
     public record BookingSlot(
-            @Schema(description = "슬롯 고유 ID")
+            @Schema(
+                    description = "슬롯 고유 ID",
+                    example = "550e8400-e29b-41d4-a716-446655440003"
+            )
             UUID slotId,
-            @Schema(description = "업체 ID")
+
+            @Schema(
+                    description = "업체 ID",
+                    example = "550e8400-e29b-41d4-a716-446655440001"
+            )
             UUID businessId,
-            @Schema(description = "연결된 메뉴 ID")
+
+            @Schema(
+                    description = "연결된 메뉴 ID",
+                    example = "550e8400-e29b-41d4-a716-446655440002"
+            )
             UUID menuId,
-            @Schema(description = "연결된 메뉴명")
+
+            @Schema(
+                    description = "연결된 메뉴명",
+                    example = "헤어 컷"
+            )
             String menuName,
-            @Schema(description = "슬롯 날짜 (YYYY-MM-DD)")
+
+            @Schema(
+                    description = "슬롯 날짜",
+                    example = "2025-12-01"
+            )
             LocalDate slotDate,
-            @Schema(description = "슬롯 시작 시간 (HH:mm)")
+
+            @Schema(
+                    description = "슬롯 시작 시간",
+                    example = "09:00"
+            )
             LocalTime startTime,
-            @Schema(description = "슬롯 종료 시간 (HH:mm)")
+
+            @Schema(
+                    description = "슬롯 종료 시간",
+                    example = "09:30"
+            )
             LocalTime endTime,
-            @Schema(description = "예약 가능 여부 (true: 활성, false: 비활성)")
+
+            @Schema(
+                    description = "예약 가능 여부 (true: 활성, false: 비활성)",
+                    example = "true"
+            )
             Boolean isAvailable
     ) {
         /**
@@ -101,16 +144,27 @@ public class BookingSlotResponse {
      * - slots: 해당 기간의 모든 슬롯 목록
      */
     public record BookingSlotList(
-            @Schema(description = "업체 ID")
+            @Schema(
+                    description = "업체 ID",
+                    example = "550e8400-e29b-41d4-a716-446655440001"
+            )
             UUID businessId,
-            @Schema(description = "조회 시작 날짜 (YYYY-MM-DD)")
+
+            @Schema(
+                    description = "조회 시작 날짜",
+                    example = "2025-12-01"
+            )
             LocalDate startDate,
-            @Schema(description = "조회 종료 날짜 (YYYY-MM-DD)")
+
+            @Schema(
+                    description = "조회 종료 날짜",
+                    example = "2025-12-31"
+            )
             LocalDate endDate,
+
             @Schema(description = "해당 기간/날짜의 슬롯 목록")
             List<BookingSlot> slots
     ) {
-        // 정적 팩토리 메서드
         public static BookingSlotList of(
                 UUID businessId,
                 LocalDate startDate,

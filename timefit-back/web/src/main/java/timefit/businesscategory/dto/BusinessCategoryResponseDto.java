@@ -32,13 +32,8 @@ public class BusinessCategoryResponseDto {
 
             @Schema(
                     description = "업종 코드",
-                    example = "BD003",
-                    allowableValues = {
-                            "BD000 (음식점업)", "BD001 (숙박업)", "BD002 (소매/유통업)",
-                            "BD003 (미용/뷰티업)", "BD004 (의료업)", "BD005 (피트니스/스포츠업)",
-                            "BD006 (교육/문화업)", "BD007 (전문서비스업)", "BD008 (생활서비스업)",
-                            "BD009 (제조/생산업)"
-                    }
+                    example = "BD008",
+                    allowableValues = {"BD000", "BD001", "BD002", "BD003", "BD004", "BD005", "BD006", "BD007", "BD008", "BD009", "BD010", "BD011", "BD012", "BD013"}
             )
             BusinessTypeCode businessType,
 

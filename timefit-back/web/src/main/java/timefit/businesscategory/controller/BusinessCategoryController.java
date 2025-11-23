@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import timefit.business.entity.BusinessTypeCode;
@@ -22,7 +23,7 @@ import timefit.common.auth.CurrentUserId;
 
 import java.util.UUID;
 
-@Tag(name = "카테고리", description = "업체 카테고리 관리 API")
+@Tag(name = "04. 메뉴 카테고리", description = "메뉴를 분류하기 위한 카테고리 관리 API (업종별 중분류)")
 @Slf4j
 @RestController
 @RequestMapping("/api/business/{businessId}")
@@ -42,20 +43,21 @@ public class BusinessCategoryController {
     @Operation(
             summary = "카테고리 목록 조회",
             description = """
-                    업체의 활성 카테고리 목록을 조회합니다.
+                    업체의 카테고리 목록을 조회합니다.
                     
                     1. Path Parameter
-                        - businessId: 업체 ID (UUID)
+                       - businessId: 업체 ID (UUID)
                     
-                    2. Query Parameter
-                        - businessType: 업종 코드 (선택, 미입력 시 전체 조회)
+                    2. Query Parameter (선택)
+                       - businessType: 업종 코드 (미입력 시 전체 조회)
                     
                     3. 응답
-                        - 성공: categories 배열, totalCount
-                        - 정렬: businessType 오름차순 → categoryName 오름차순
+                       - categories: 카테고리 배열
+                       - totalCount: 전체 카테고리 수
+                       - 정렬: businessType 오름차순 → categoryName 오름차순
                     
                     4. 권한
-                        - 인증된 사용자 (업체 소속 확인)
+                       - 인증된 사용자 (업체 소속 확인)
                     """
     )
     @ApiResponses({
@@ -68,22 +70,22 @@ public class BusinessCategoryController {
                             examples = @ExampleObject(
                                     value = """
                                             {
-                                                "success": true,
-                                                "data": {
+                                              "success": true,
+                                              "data": {
                                                 "categories": [
-                                                {
+                                                  {
                                                     "categoryId": "550e8400-e29b-41d4-a716-446655440000",
                                                     "businessId": "550e8400-e29b-41d4-a716-446655440001",
-                                                    "businessType": "BD003",
+                                                    "businessType": "BD008",
                                                     "categoryName": "헤어 컷",
-                                                    "categoryNotice": "예약 시 주의사항",
+                                                    "categoryNotice": "예약 시 주의사항을 확인해주세요.",
                                                     "isActive": true,
                                                     "createdAt": "2025-11-23T10:00:00",
                                                     "updatedAt": "2025-11-23T10:00:00"
-                                                }
+                                                  }
                                                 ],
                                                 "totalCount": 1
-                                                }
+                                              }
                                             }
                                             """
                             )
@@ -91,7 +93,7 @@ public class BusinessCategoryController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "NOT_FOUND - 업체를 찾을 수 없음",
+                    description = "BUSINESS_NOT_FOUND - 업체를 찾을 수 없음",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseData.class)
@@ -109,14 +111,9 @@ public class BusinessCategoryController {
 
             @Parameter(
                     description = "업종 코드 (선택)",
-                    example = "BD003",
+                    example = "BD008",
                     schema = @Schema(
-                            allowableValues = {
-                                    "BD000 (음식점업)", "BD001 (숙박업)", "BD002 (소매/유통업)",
-                                    "BD003 (미용/뷰티업)", "BD004 (의료업)", "BD005 (피트니스/스포츠업)",
-                                    "BD006 (교육/문화업)", "BD007 (전문서비스업)", "BD008 (생활서비스업)",
-                                    "BD009 (제조/생산업)"
-                            }
+                            allowableValues = {"BD000", "BD001", "BD002", "BD003", "BD004", "BD005", "BD006", "BD007", "BD008", "BD009", "BD010", "BD011", "BD012", "BD013"}
                     )
             )
             @RequestParam(required = false) BusinessTypeCode businessType) {
@@ -144,11 +141,11 @@ public class BusinessCategoryController {
                     특정 카테고리의 상세 정보를 조회합니다.
                     
                     1. Path Parameter
-                        - businessId: 업체 ID (UUID)
-                        - categoryId: 카테고리 ID (UUID)
+                       - businessId: 업체 ID (UUID)
+                       - categoryId: 카테고리 ID (UUID)
                     
                     2. 권한
-                        - 인증된 사용자 (업체 소속 확인)
+                       - 인증된 사용자 (업체 소속 확인)
                     """
     )
     @ApiResponses({
@@ -162,7 +159,7 @@ public class BusinessCategoryController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "FORBIDDEN - 다른 업체의 카테고리에 접근 시도",
+                    description = "BUSINESS_ACCESS_DENIED - 다른 업체의 카테고리에 접근 시도",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseData.class)
@@ -170,7 +167,7 @@ public class BusinessCategoryController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "NOT_FOUND - 카테고리를 찾을 수 없음",
+                    description = "CATEGORY_NOT_FOUND - 카테고리를 찾을 수 없음",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseData.class)
@@ -185,7 +182,6 @@ public class BusinessCategoryController {
                     example = "550e8400-e29b-41d4-a716-446655440001"
             )
             @PathVariable UUID businessId,
-
             @Parameter(
                     description = "카테고리 ID",
                     required = true,
@@ -211,51 +207,49 @@ public class BusinessCategoryController {
      * @return 생성된 카테고리 정보
      */
     @Operation(
-            summary = "카테고리 생성",
+            summary = "카테고리 생성 (업체용)",
             description = """
-                    업체에 새로운 카테고리를 생성합니다.
+                    새로운 카테고리를 생성합니다.
                     
                     1. Path Parameter
-                        - businessId: 업체 ID (UUID)
+                       - businessId: 업체 ID (UUID)
                     
                     2. Request Body 필수값
-                        - businessType: 업종 코드
-                        - categoryName: 카테고리명
+                       - businessType: 업종 코드 (BD000 ~ BD013)
+                       - categoryName: 카테고리명 (2-20자, 한글/영문/숫자/공백만 가능)
                     
                     3. Request Body 선택값
-                        - categoryNotice: 카테고리 공지사항
+                       - categoryNotice: 카테고리 공지사항 (최대 1000자)
                     
                     4. 제약사항
-                        - businessType: BD000~BD009 중 하나
-                        - categoryName: 2~20자, 한글/영문/숫자/공백만 허용
-                        - categoryNotice: 최대 1000자
-                        - 같은 업체, 같은 업종 내에서 카테고리명 중복 불가
+                       - 같은 업체 내에서 동일한 카테고리명 중복 불가
+                       - businessType은 해당 업체의 업종 중 하나여야 함
                     
                     5. 권한
-                        - OWNER, MANAGER
+                       - OWNER, MANAGER
                     """
     )
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "200",
-                    description = "생성 성공",
+                    responseCode = "201",
+                    description = "카테고리 생성 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = BusinessCategoryResponseDto.Category.class),
                             examples = @ExampleObject(
                                     value = """
                                             {
-                                                "success": true,
-                                                "data": {
+                                              "success": true,
+                                              "data": {
                                                 "categoryId": "550e8400-e29b-41d4-a716-446655440000",
                                                 "businessId": "550e8400-e29b-41d4-a716-446655440001",
-                                                "businessType": "BD003",
+                                                "businessType": "BD008",
                                                 "categoryName": "헤어 컷",
-                                                "categoryNotice": null,
+                                                "categoryNotice": "예약 시 주의사항을 확인해주세요.",
                                                 "isActive": true,
                                                 "createdAt": "2025-11-23T10:00:00",
                                                 "updatedAt": "2025-11-23T10:00:00"
-                                                }
+                                              }
                                             }
                                             """
                             )
@@ -267,41 +261,31 @@ public class BusinessCategoryController {
                             VALIDATION_ERROR - 요청 형식 오류
                             1. businessType 은(는) 필수 값입니다.
                             2. categoryName 은(는) 필수 값입니다.
-                            3. categoryName 최소 길이는 2 입니다.
-                            4. categoryName 최대 길이는 20 입니다.
-                            5. categoryName 에 포함될 수 없는 문자가 존재합니다. (특수문자, 이모지 불가)
-                            6. categoryNotice 최대 길이는 1000 입니다.
+                            3. 카테고리명은 2~20자여야 합니다.
+                            4. 카테고리 공지사항은 1000자 이내여야 합니다.
                             
-                            INVALID_CATEGORY_NAME_FORMAT - 카테고리명 형식 오류
+                            INVALID_CATEGORY_NAME_FORMAT - 카테고리명 형식 오류 (한글/영문/숫자/공백만 가능)
                             
                             CATEGORY_NAME_DUPLICATE - 중복된 카테고리명
-                            - 같은 업체의 같은 업종 내에 동일한 카테고리명이 이미 존재합니다.
+                            
+                            BUSINESS_TYPE_NOT_MATCHED - 업체의 업종이 아님
                             """,
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = ResponseData.class),
-                            examples = @ExampleObject(
-                                    name = "Validation Error 예시",
-                                    value = """
-                                            {
-                                                "success": false,
-                                                "code": 400,
-                                                "message": "error",
-                                                "error": {
-                                                "code": "VALIDATION_ERROR",
-                                                "message": "categoryName 은(는) 필수 값입니다."
-                                                }
-                                            }
-                                            """
-                            )
+                            schema = @Schema(implementation = ResponseData.class)
                     )
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = """
-                            FORBIDDEN - 권한 없음
-                            - OWNER 또는 MANAGER 권한이 필요합니다.
-                            """,
+                    description = "BUSINESS_ACCESS_DENIED - 권한 없음 (OWNER, MANAGER만 가능)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseData.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "BUSINESS_NOT_FOUND - 업체를 찾을 수 없음",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseData.class)
@@ -326,24 +310,24 @@ public class BusinessCategoryController {
                             examples = @ExampleObject(
                                     value = """
                                             {
-                                                "businessType": "BD003",
-                                                "categoryName": "헤어 컷",
-                                                "categoryNotice": "예약 시 주의사항을 확인해주세요."
+                                              "businessType": "BD008",
+                                              "categoryName": "헤어 컷",
+                                              "categoryNotice": "예약 시 주의사항을 확인해주세요."
                                             }
                                             """
                             )
                     )
             )
             @Valid @RequestBody BusinessCategoryRequestDto.CreateCategory request,
-
-            @Parameter(hidden = true) @CurrentUserId UUID currentUserId) {
+            @Parameter(hidden = true)
+            @CurrentUserId UUID currentUserId) {
 
         log.info("카테고리 생성: businessId={}, categoryName={}", businessId, request.categoryName());
 
         BusinessCategoryResponseDto.Category response =
                 categoryFacadeService.createCategory(businessId, request, currentUserId);
 
-        return ResponseEntity.ok(ResponseData.of(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseData.of(response));
     }
 
     /**
@@ -357,32 +341,34 @@ public class BusinessCategoryController {
      * @return 수정된 카테고리 정보
      */
     @Operation(
-            summary = "카테고리 수정",
+            summary = "카테고리 수정 (업체용)",
             description = """
-                    카테고리 정보를 부분 수정합니다.
+                    카테고리 정보를 수정합니다.
                     
                     1. Path Parameter
-                        - businessId: 업체 ID (UUID)
-                        - categoryId: 카테고리 ID (UUID)
+                       - businessId: 업체 ID (UUID)
+                       - categoryId: 카테고리 ID (UUID)
                     
-                    2. Request Body (모두 선택값)
-                        - categoryName: 카테고리명 (변경 시에만 입력)
-                        - categoryNotice: 카테고리 공지사항 (변경 시에만 입력)
-                        - isActive: 활성화 상태 (변경 시에만 입력)
+                    2. Request Body (모두 선택)
+                       - categoryName: 카테고리명 (2-20자, 한글/영문/숫자/공백만 가능)
+                       - categoryNotice: 카테고리 공지사항 (최대 1000자)
+                       - isActive: 활성화 상태 (true/false)
                     
-                    3. 제약사항
-                        - categoryName: 2~20자, 한글/영문/숫자/공백만 허용
-                        - categoryNotice: 최대 1000자
-                        - 같은 업체, 같은 업종 내에서 카테고리명 중복 불가 (자신 제외)
+                    3. 수정 규칙
+                       - null이 아닌 필드만 수정
+                       - null 필드는 기존 값 유지
                     
-                    4. 권한
-                        - OWNER, MANAGER
+                    4. 제약사항
+                       - 카테고리명 변경 시 중복 확인
+                    
+                    5. 권한
+                       - OWNER, MANAGER
                     """
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "수정 성공",
+                    description = "카테고리 수정 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = BusinessCategoryResponseDto.Category.class)
@@ -392,10 +378,8 @@ public class BusinessCategoryController {
                     responseCode = "400",
                     description = """
                             VALIDATION_ERROR - 요청 형식 오류
-                            1. categoryName 최소 길이는 2 입니다.
-                            2. categoryName 최대 길이는 20 입니다.
-                            3. categoryName 에 포함될 수 없는 문자가 존재합니다.
-                            4. categoryNotice 최대 길이는 1000 입니다.
+                            1. 카테고리명은 2~20자여야 합니다.
+                            2. 카테고리 공지사항은 1000자 이내여야 합니다.
                             
                             INVALID_CATEGORY_NAME_FORMAT - 카테고리명 형식 오류
                             
@@ -408,7 +392,7 @@ public class BusinessCategoryController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "FORBIDDEN - 권한 없음",
+                    description = "BUSINESS_ACCESS_DENIED - 권한 없음",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseData.class)
@@ -416,7 +400,7 @@ public class BusinessCategoryController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "NOT_FOUND - 카테고리를 찾을 수 없음",
+                    description = "CATEGORY_NOT_FOUND - 카테고리를 찾을 수 없음",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseData.class)
@@ -450,7 +434,7 @@ public class BusinessCategoryController {
                                             name = "카테고리명만 변경",
                                             value = """
                                                     {
-                                                        "categoryName": "헤어 펌"
+                                                      "categoryName": "헤어 펌"
                                                     }
                                                     """
                                     ),
@@ -458,7 +442,7 @@ public class BusinessCategoryController {
                                             name = "비활성화",
                                             value = """
                                                     {
-                                                        "isActive": false
+                                                      "isActive": false
                                                     }
                                                     """
                                     ),
@@ -466,9 +450,9 @@ public class BusinessCategoryController {
                                             name = "여러 필드 동시 변경",
                                             value = """
                                                     {
-                                                        "categoryName": "스타일링",
-                                                        "categoryNotice": "새로운 공지사항",
-                                                        "isActive": true
+                                                      "categoryName": "스타일링",
+                                                      "categoryNotice": "새로운 공지사항입니다.",
+                                                      "isActive": true
                                                     }
                                                     """
                                     )
@@ -476,8 +460,8 @@ public class BusinessCategoryController {
                     )
             )
             @Valid @RequestBody BusinessCategoryRequestDto.UpdateCategory request,
-
-            @Parameter(hidden = true) @CurrentUserId UUID currentUserId) {
+            @Parameter(hidden = true)
+            @CurrentUserId UUID currentUserId) {
 
         log.info("카테고리 수정: businessId={}, categoryId={}", businessId, categoryId);
 
@@ -497,20 +481,24 @@ public class BusinessCategoryController {
      * @return 성공 응답
      */
     @Operation(
-            summary = "카테고리 삭제",
+            summary = "카테고리 삭제 (업체용)",
             description = """
                     카테고리를 비활성화합니다 (논리 삭제).
                     
                     1. Path Parameter
-                        - businessId: 업체 ID (UUID)
-                        - categoryId: 카테고리 ID (UUID)
+                       - businessId: 업체 ID (UUID)
+                       - categoryId: 카테고리 ID (UUID)
                     
-                    2. 제약사항
-                        - 활성 메뉴가 있는 카테고리는 삭제할 수 없습니다.
-                        - 먼저 해당 카테고리의 메뉴를 삭제하거나 비활성화해야 합니다.
+                    2. 삭제 처리
+                       - 논리적 삭제 (isActive = false)
+                       - 카테고리 데이터는 보존됨
                     
-                    3. 권한
-                        - OWNER, MANAGER
+                    3. 제약사항
+                       - 활성 메뉴가 있는 카테고리는 삭제 불가
+                       - 먼저 해당 카테고리의 메뉴를 삭제하거나 비활성화해야 함
+                    
+                    4. 권한
+                       - OWNER, MANAGER
                     """
     )
     @ApiResponses({
@@ -536,7 +524,7 @@ public class BusinessCategoryController {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "FORBIDDEN - 권한 없음",
+                    description = "BUSINESS_ACCESS_DENIED - 권한 없음",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseData.class)
@@ -544,7 +532,7 @@ public class BusinessCategoryController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "NOT_FOUND - 카테고리를 찾을 수 없음",
+                    description = "CATEGORY_NOT_FOUND - 카테고리를 찾을 수 없음",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseData.class)
@@ -566,8 +554,8 @@ public class BusinessCategoryController {
                     example = "550e8400-e29b-41d4-a716-446655440000"
             )
             @PathVariable UUID categoryId,
-
-            @Parameter(hidden = true) @CurrentUserId UUID currentUserId) {
+            @Parameter(hidden = true)
+            @CurrentUserId UUID currentUserId) {
 
         log.info("카테고리 삭제: businessId={}, categoryId={}", businessId, categoryId);
 

@@ -22,7 +22,7 @@ import timefit.menu.service.MenuService;
 
 import java.util.UUID;
 
-@Tag(name = "메뉴", description = "서비스/메뉴 관리 API")
+@Tag(name = "05. 메뉴 관리", description = "메뉴(업체에서 제공하는 서비스) 관리 API")
 @Slf4j
 @RestController
 @RequestMapping("/api/business/{businessId}/menu")
