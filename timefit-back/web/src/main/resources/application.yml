@@ -3,9 +3,6 @@ spring:
     active: dev
   application:
     name: timefit-back
-  mvc:
-    favicon:
-      enabled: false
 
   servlet:
     multipart:
@@ -79,10 +76,10 @@ spring:
 
 ---
 
-# SpringDoc 최소 설정 추가
+# SpringDoc
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /v1/api-docs
     enabled: true
   swagger-ui:
     path: /swagger-ui.html
