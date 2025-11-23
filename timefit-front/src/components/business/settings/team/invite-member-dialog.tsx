@@ -14,13 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 interface InviteMemberDialogProps {
   open: boolean;
@@ -30,8 +23,7 @@ interface InviteMemberDialogProps {
 
 export interface InviteMemberData {
   email: string;
-  role: 'MANAGER' | 'MEMBER';
-  message: string;
+  invitationMessage?: string;
 }
 
 export function InviteMemberDialog({
@@ -40,7 +32,6 @@ export function InviteMemberDialog({
   onInvite,
 }: InviteMemberDialogProps) {
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<'MANAGER' | 'MEMBER'>('MEMBER');
   const [message, setMessage] = useState('');
 
   const handleInvite = () => {
@@ -51,13 +42,11 @@ export function InviteMemberDialog({
 
     onInvite({
       email: email.trim(),
-      role,
-      message: message.trim(),
+      invitationMessage: message.trim() || undefined,
     });
 
     // 폼 초기화
     setEmail('');
-    setRole('MEMBER');
     setMessage('');
     onOpenChange(false);
   };
@@ -65,7 +54,6 @@ export function InviteMemberDialog({
   const handleCancel = () => {
     // 폼 초기화
     setEmail('');
-    setRole('MEMBER');
     setMessage('');
     onOpenChange(false);
   };
@@ -76,7 +64,8 @@ export function InviteMemberDialog({
         <DialogHeader>
           <DialogTitle>팀원 초대하기</DialogTitle>
           <DialogDescription>
-            초대할 팀원의 이메일과 역할을 입력해주세요.
+            초대할 팀원의 이메일을 입력해주세요. 초대된 팀원은 멤버(직원)
+            권한으로 시작됩니다.
           </DialogDescription>
         </DialogHeader>
 
@@ -93,29 +82,6 @@ export function InviteMemberDialog({
               onChange={(e) => setEmail(e.target.value)}
               autoFocus
             />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="role">
-              역할 <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={role}
-              onValueChange={(value) =>
-                setRole(value as 'MANAGER' | 'MEMBER')
-              }
-            >
-              <SelectTrigger id="role">
-                <SelectValue placeholder="역할을 선택하세요" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="MANAGER">매니저</SelectItem>
-                <SelectItem value="MEMBER">멤버(직원)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              매니저: 관리 권한 | 멤버(직원): 기본 권한
-            </p>
           </div>
 
           <div className="grid gap-2">

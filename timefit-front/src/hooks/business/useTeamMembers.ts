@@ -8,6 +8,8 @@ import type {
   ChangeMemberRoleHandlerResponse,
   MemberStatusChangeHandlerResponse,
   DeleteMemberHandlerResponse,
+  InviteMemberRequest,
+  InviteMemberHandlerResponse,
   BusinessRole,
 } from '@/types/business/teamMember';
 
@@ -185,6 +187,42 @@ export function useTeamMembers(businessId: string) {
     }
   };
 
+  const inviteMember = async (
+    inviteData: InviteMemberRequest
+  ): Promise<boolean> => {
+    try {
+      setUpdating(true);
+
+      const response = await fetch(`/api/business/${businessId}/member`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inviteData),
+      });
+
+      const result: InviteMemberHandlerResponse = await response.json();
+
+      if (handleAuthError(result)) {
+        return false;
+      }
+
+      if (!result.success) {
+        toast.error(result.message || '구성원 초대에 실패했습니다.');
+        return false;
+      }
+
+      toast.success('구성원을 성공적으로 초대했습니다.');
+      // Refetch data to update UI
+      await fetchTeamMembers();
+      return true;
+    } catch (err) {
+      console.error('Failed to invite member:', err);
+      toast.error('구성원 초대 중 오류가 발생했습니다.');
+      return false;
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   useEffect(() => {
     if (businessId) {
       fetchTeamMembers();
@@ -201,5 +239,6 @@ export function useTeamMembers(businessId: string) {
     activateMember,
     deactivateMember,
     deleteMember,
+    inviteMember,
   };
 }

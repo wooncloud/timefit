@@ -18,6 +18,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { TeamMember } from '@/components/business/settings/team/team-table-row';
 import { useTeamMembers } from '@/hooks/business/useTeamMembers';
 import { useBusinessStore } from '@/store/business-store';
+import { useUserStore } from '@/store/user-store';
 import type { TeamMemberDetail } from '@/types/business/teamMember';
 
 // 백엔드 TeamMemberDetail을 프론트엔드 TeamMember로 변환
@@ -37,7 +38,9 @@ const convertToTeamMember = (member: TeamMemberDetail): TeamMember => {
 
 export default function Page() {
   const { business } = useBusinessStore();
+  const { user } = useUserStore();
   const businessId = business?.businessId || '';
+  const currentUserId = user?.userId || '';
   const {
     data,
     loading,
@@ -46,6 +49,7 @@ export default function Page() {
     activateMember,
     deactivateMember,
     deleteMember,
+    inviteMember,
   } = useTeamMembers(businessId);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
@@ -55,6 +59,12 @@ export default function Page() {
 
   // 백엔드 데이터를 프론트엔드 형식으로 변환
   const teamMembers = data?.members.map(convertToTeamMember) || [];
+
+  // 현재 사용자의 역할 확인 (OWNER만 관리 권한)
+  const currentUserMember = data?.members.find(
+    (m) => m.userId === currentUserId
+  );
+  const isOwner = currentUserMember?.role === 'OWNER';
 
   const handleChangeRole = (memberId: string) => {
     const member = teamMembers.find((m) => m.id === memberId);
@@ -94,9 +104,8 @@ export default function Page() {
     }
   };
 
-  const handleInvite = (data: InviteMemberData) => {
-    console.log('Invite member:', data);
-    // TODO: API 호출로 팀원 초대 로직 구현
+  const handleInvite = async (data: InviteMemberData) => {
+    await inviteMember(data);
   };
 
   const handleConfirmRoleChange = async (
@@ -146,17 +155,21 @@ export default function Page() {
     <div>
       <Card>
         <CardContent className="pt-4">
-          <div className="mb-4 flex justify-end">
-            <Button onClick={() => setInviteDialogOpen(true)}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              초대하기
-            </Button>
-          </div>
+          {isOwner && (
+            <div className="mb-4 flex justify-end">
+              <Button onClick={() => setInviteDialogOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                초대하기
+              </Button>
+            </div>
+          )}
 
           <Table>
             <TeamTableHeader />
             <TeamTableBody
               members={teamMembers}
+              currentUserId={currentUserId}
+              isOwner={isOwner}
               onChangeRole={handleChangeRole}
               onChangeStatus={handleChangeStatus}
               onDelete={handleDelete}

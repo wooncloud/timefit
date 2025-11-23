@@ -1,3 +1,6 @@
+/**
+ * 인증된 사용자의 비즈니스 정보
+ */
 export interface AuthBusinessInfo {
   businessId?: string;
   businessName?: string;
@@ -12,6 +15,9 @@ export interface AuthBusinessInfo {
   createdAt?: string;
 }
 
+/**
+ * 인증된 사용자의 프로필 정보
+ */
 export interface AuthUserProfile {
   userId?: string;
   email: string;

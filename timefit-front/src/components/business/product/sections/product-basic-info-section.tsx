@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Product, ProductCategory } from '@/types/product/product';
-import { productCategories } from '@/lib/mock';
+import { productCategories } from '@/lib/constants/product-categories';
 
 interface ProductBasicInfoSectionProps {
   formData: Partial<Product>;

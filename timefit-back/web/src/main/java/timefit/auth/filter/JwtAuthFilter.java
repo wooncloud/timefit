@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import timefit.auth.service.AuthTokenService;
+import timefit.auth.service.validator.TokenValidator;
 import timefit.config.JwtConfig;
 import timefit.exception.auth.AuthException;
 import timefit.exception.auth.AuthErrorCode;
@@ -26,7 +26,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final AuthTokenService authTokenService;
+    private final TokenValidator tokenValidator;
 
     @Override
     protected void doFilterInternal(
@@ -80,12 +80,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
 
-        if (!authTokenService.isValidToken(token)) {
+        // TokenValidator를 사용한 토큰 검증
+        if (!tokenValidator.isValidToken(token)) {
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
 
         // 토큰에서 사용자 ID 추출하여 요청에 설정
-        UUID userId = authTokenService.getUserIdFromToken(token);
+        UUID userId = tokenValidator.getUserIdFromToken(token);
         request.setAttribute("userId", userId);
         request.setAttribute("token", token);
 

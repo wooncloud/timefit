@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { Product, MenuType } from '@/types/product/product';
-import { menuTypes } from '@/lib/mock';
+import { menuTypes } from '@/lib/constants/product-categories';
 
 interface ProductReservationSectionProps {
   formData: Partial<Product>;
@@ -16,7 +16,7 @@ export function ProductReservationSection({
   return (
     <div className="space-y-4 border-t pt-6">
       <div className="flex items-center gap-2">
-        <div className="text-lg font-semibold">⏱️ 예약 설정</div>
+        <div className="text-lg font-semibold">⏱️ 예약확정 방식</div>
       </div>
 
       <div className="space-y-3">
@@ -31,7 +31,7 @@ export function ProductReservationSection({
             <div key={key} className="flex items-center space-x-2">
               <RadioGroupItem value={key} id={key} />
               <Label htmlFor={key} className="font-normal">
-                {label} ({key})
+                {label}
               </Label>
             </div>
           ))}
@@ -39,7 +39,7 @@ export function ProductReservationSection({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="duration">소요 시간 (필수)</Label>
+        <Label htmlFor="duration">서비스 시간 (필수)</Label>
         <div className="flex items-center gap-2">
           <Input
             id="duration"

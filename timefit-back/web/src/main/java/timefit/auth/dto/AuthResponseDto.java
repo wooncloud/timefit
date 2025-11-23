@@ -1,6 +1,6 @@
 package timefit.auth.dto;
 
-import lombok.Getter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import timefit.business.entity.Business;
 import timefit.business.entity.BusinessTypeCode;
 import timefit.business.entity.UserBusinessRole;
@@ -11,41 +11,82 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+@Schema(description = "인증 응답")
 public class AuthResponseDto {
 
-    @Getter
-    public static class UserSignUp {
-        private final UUID userId;
-        private final String email;
-        private final String name;
-        private final String phoneNumber;
-        private final String role;
-        private final String profileImageUrl;
-        private final String accessToken;
-        private final String refreshToken;
-        private final LocalDateTime createdAt;
-        private final LocalDateTime lastLoginAt;
+    // 일반 회원가입 응답
+    @Schema(description = "일반 회원가입 성공 응답 데이터")
+    public record UserSignUp(
+            @Schema(
+                    description = "사용자 고유 ID",
+                    example = "550e8400-e29b-41d4-a716-446655440000"
+            )
+            UUID userId,
 
-        private UserSignUp(UUID userId, String email, String name, String phoneNumber, String role,
-                           String profileImageUrl, String accessToken, String refreshToken,
-                           LocalDateTime createdAt, LocalDateTime lastLoginAt) {
-            this.userId = userId;
-            this.email = email;
-            this.name = name;
-            this.phoneNumber = phoneNumber;
-            this.role = role;
-            this.profileImageUrl = profileImageUrl;
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-            this.createdAt = createdAt;
-            this.lastLoginAt = lastLoginAt;
-        }
+            @Schema(
+                    description = "사용자 이메일",
+                    example = "user@example.com"
+            )
+            String email,
 
-        /**
-         * Entity → DTO 변환 (정적 팩토리)
-         * 회원가입 응답 생성
-         */
-        public static UserSignUp of(User user, String accessToken, String refreshToken) {
+            @Schema(
+                    description = "사용자 이름",
+                    example = "홍길동",
+                    minLength = 2,
+                    maxLength = 50
+            )
+            String name,
+
+            @Schema(
+                    description = "사용자 연락처",
+                    example = "010-1234-5678",
+                    nullable = true
+            )
+            String phoneNumber,
+
+            @Schema(
+                    description = "사용자 권한 (UserRole)",
+                    example = "CUSTOMER",
+                    allowableValues = {"CUSTOMER", "BUSINESS", "ADMIN"}
+            )
+            String role,
+
+            @Schema(
+                    description = "프로필 이미지 URL",
+                    example = "https://example.com/profile.jpg",
+                    nullable = true
+            )
+            String profileImageUrl,
+
+            @Schema(
+                    description = "발급된 Access Token",
+                    example = "eyJhbGciOiJIUzI1NiJ9..."
+            )
+            String accessToken,
+
+            @Schema(
+                    description = "발급된 Refresh Token",
+                    example = "eyJhbGciOiJIUzI1NiJ9..."
+            )
+            String refreshToken,
+
+            @Schema(
+                    description = "가입일시",
+                    example = "2025-11-23T10:00:00"
+            )
+            LocalDateTime createdAt,
+
+            @Schema(
+                    description = "최근 로그인일시",
+                    example = "2025-11-23T10:00:00"
+            )
+            LocalDateTime lastLoginAt
+    ) {
+        public static UserSignUp of(
+                User user,
+                String accessToken,
+                String refreshToken) {
+
             return new UserSignUp(
                     user.getId(),
                     user.getEmail(),
@@ -61,47 +102,85 @@ public class AuthResponseDto {
         }
     }
 
-    @Getter
-    public static class UserSignIn {
-        private final UUID userId;
-        private final String email;
-        private final String name;
-        private final String phoneNumber;
-        private final String role;
-        private final String profileImageUrl;
-        private final List<BusinessInfo> businesses;
-        private final String accessToken;
-        private final String refreshToken;
-        private final LocalDateTime createdAt;
-        private final LocalDateTime lastLoginAt;
+    // 일반 로그인 응답
+    @Schema(description = "일반 로그인 성공 응답")
+    public record UserSignIn(
+            @Schema(
+                    description = "사용자 고유 ID",
+                    example = "550e8400-e29b-41d4-a716-446655440000"
+            )
+            UUID userId,
 
-        private UserSignIn(UUID userId, String email, String name, String phoneNumber, String role,
-                           String profileImageUrl, List<BusinessInfo> businesses, String accessToken, String refreshToken,
-                           LocalDateTime createdAt, LocalDateTime lastLoginAt) {
-            this.userId = userId;
-            this.email = email;
-            this.name = name;
-            this.phoneNumber = phoneNumber;
-            this.role = role;
-            this.profileImageUrl = profileImageUrl;
-            this.businesses = businesses;
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-            this.createdAt = createdAt;
-            this.lastLoginAt = lastLoginAt;
-        }
+            @Schema(
+                    description = "사용자 이메일",
+                    example = "user@example.com"
+            )
+            String email,
 
-        /**
-         * Entity → DTO 변환 (정적 팩토리)
-         * 로그인 응답 생성 (비즈니스 정보 포함)
-         */
+            @Schema(
+                    description = "사용자 이름",
+                    example = "홍길동",
+                    minLength = 2,
+                    maxLength = 50
+            )
+            String name,
+
+            @Schema(
+                    description = "사용자 연락처",
+                    example = "010-1234-5678",
+                    nullable = true
+            )
+            String phoneNumber,
+
+            @Schema(
+                    description = "사용자 권한 (UserRole)",
+                    example = "BUSINESS",
+                    allowableValues = {"CUSTOMER", "BUSINESS", "ADMIN"}
+            )
+            String role,
+
+            @Schema(
+                    description = "프로필 이미지 URL",
+                    example = "https://example.com/profile.jpg",
+                    nullable = true
+            )
+            String profileImageUrl,
+
+            @Schema(
+                    description = "사용자에게 연결된 업체 목록",
+                    nullable = true
+            )
+            List<BusinessInfo> businesses,
+
+            @Schema(
+                    description = "발급된 Access Token",
+                    example = "eyJhbGciOiJIUzI1NiJ9..."
+            )
+            String accessToken,
+
+            @Schema(
+                    description = "발급된 Refresh Token",
+                    example = "eyJhbGciOiJIUzI1NiJ9..."
+            )
+            String refreshToken,
+
+            @Schema(
+                    description = "가입일시",
+                    example = "2025-11-01T10:00:00"
+            )
+            LocalDateTime createdAt,
+
+            @Schema(
+                    description = "최근 로그인일시",
+                    example = "2025-11-23T10:00:00"
+            )
+            LocalDateTime lastLoginAt
+    ) {
         public static UserSignIn of(
                 User user,
-                List<UserBusinessRole> userBusinessRoles,
+                List<BusinessInfo> businesses,
                 String accessToken,
                 String refreshToken) {
-
-            List<BusinessInfo> businessInfos = createBusinessInfos(userBusinessRoles);
 
             return new UserSignIn(
                     user.getId(),
@@ -110,68 +189,100 @@ public class AuthResponseDto {
                     user.getPhoneNumber(),
                     user.getRole().name(),
                     user.getProfileImageUrl(),
-                    businessInfos,
+                    businesses,
                     accessToken,
                     refreshToken,
                     user.getCreatedAt(),
                     user.getLastLoginAt()
             );
         }
-
-        /**
-         * BusinessInfo 목록 생성 (Helper 메서드)
-         */
-        private static List<BusinessInfo> createBusinessInfos(List<UserBusinessRole> userBusinessRoles) {
-            return userBusinessRoles.stream()
-                    .map(role -> BusinessInfo.of(role.getBusiness(), role))
-                    .toList();
-        }
     }
 
-    @Getter
-    public static class CustomerOAuth {
-        private final UUID userId;
-        private final String email;
-        private final String name;
-        private final String phoneNumber;
-        private final String role;
-        private final String profileImageUrl;
-        private final List<BusinessInfo> businesses;
-        private final String accessToken;
-        private final String refreshToken;
-        private final Boolean isFirstLogin;
-        private final LocalDateTime createdAt;
-        private final LocalDateTime lastLoginAt;
+    // OAuth 로그인 응답
+    @Schema(description = "OAuth 로그인 성공 응답")
+    public record CustomerOAuth(
+            @Schema(
+                    description = "사용자 고유 ID",
+                    example = "550e8400-e29b-41d4-a716-446655440000"
+            )
+            UUID userId,
 
-        private CustomerOAuth(UUID userId, String email, String name, String phoneNumber, String role,
-                              String profileImageUrl, List<BusinessInfo> businesses, String accessToken, String refreshToken,
-                              Boolean isFirstLogin, LocalDateTime createdAt, LocalDateTime lastLoginAt) {
-            this.userId = userId;
-            this.email = email;
-            this.name = name;
-            this.phoneNumber = phoneNumber;
-            this.role = role;
-            this.profileImageUrl = profileImageUrl;
-            this.businesses = businesses;
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-            this.isFirstLogin = isFirstLogin;
-            this.createdAt = createdAt;
-            this.lastLoginAt = lastLoginAt;
-        }
+            @Schema(
+                    description = "사용자 이메일",
+                    example = "user@example.com",
+                    nullable = true
+            )
+            String email,
 
-        /**
-         * Entity → DTO 변환 (정적 팩토리)
-         * OAuth 로그인 응답 생성
-         */
+            @Schema(
+                    description = "사용자 이름",
+                    example = "홍길동"
+            )
+            String name,
+
+            @Schema(
+                    description = "사용자 연락처",
+                    example = "010-1234-5678",
+                    nullable = true
+            )
+            String phoneNumber,
+
+            @Schema(
+                    description = "사용자 권한",
+                    example = "CUSTOMER",
+                    allowableValues = {"CUSTOMER", "BUSINESS", "ADMIN"}
+            )
+            String role,
+
+            @Schema(
+                    description = "프로필 이미지 URL",
+                    example = "https://example.com/profile.jpg",
+                    nullable = true
+            )
+            String profileImageUrl,
+
+            @Schema(
+                    description = "사용자에게 연결된 업체 목록",
+                    nullable = true
+            )
+            List<BusinessInfo> businesses,
+
+            @Schema(
+                    description = "발급된 Access Token",
+                    example = "eyJhbGciOiJIUzI1NiJ9..."
+            )
+            String accessToken,
+
+            @Schema(
+                    description = "발급된 Refresh Token",
+                    example = "eyJhbGciOiJIUzI1NiJ9..."
+            )
+            String refreshToken,
+
+            @Schema(
+                    description = "최초 로그인 여부 (회원가입 여부)",
+                    example = "false"
+            )
+            Boolean isFirstLogin,
+
+            @Schema(
+                    description = "가입일시",
+                    example = "2025-11-01T10:00:00"
+            )
+            LocalDateTime createdAt,
+
+            @Schema(
+                    description = "최근 로그인일시",
+                    example = "2025-11-23T10:00:00"
+            )
+            LocalDateTime lastLoginAt
+    ) {
         public static CustomerOAuth of(
                 User user,
-                List<UserBusinessRole> userBusinessRoles,
+                List<BusinessInfo> businesses,
                 String accessToken,
                 String refreshToken,
                 boolean isFirstLogin) {
-
-            List<BusinessInfo> businessInfos = createBusinessInfos(userBusinessRoles);
 
             return new CustomerOAuth(
                     user.getId(),
@@ -180,7 +291,7 @@ public class AuthResponseDto {
                     user.getPhoneNumber(),
                     user.getRole().name(),
                     user.getProfileImageUrl(),
-                    businessInfos,
+                    businesses,
                     accessToken,
                     refreshToken,
                     isFirstLogin,
@@ -188,69 +299,100 @@ public class AuthResponseDto {
                     user.getLastLoginAt()
             );
         }
-
-        /**
-         * BusinessInfo 목록 생성 (Helper 메서드)
-         */
-        private static List<BusinessInfo> createBusinessInfos(List<UserBusinessRole> userBusinessRoles) {
-            return userBusinessRoles.stream()
-                    .map(role -> BusinessInfo.of(role.getBusiness(), role))
-                    .toList();
-        }
     }
 
-    @Getter
-    public static class TokenRefresh {
-        private final String accessToken;
-        private final String refreshToken;
-        private final String tokenType;
-        private final Long expiresIn;
+    @Schema(description = "토큰 갱신 성공 응답")
+    public record TokenRefresh(
+            @Schema(
+                    description = "새로 발급된 Access Token",
+                    example = "eyJhbGciOiJIUzI1NiJ9..."
+            )
+            String accessToken,
 
-        private TokenRefresh(String accessToken, String refreshToken, String tokenType, Long expiresIn) {
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-            this.tokenType = tokenType;
-            this.expiresIn = expiresIn;
-        }
+            @Schema(
+                    description = "새로 발급된 Refresh Token",
+                    example = "eyJhbGciOiJIUzI1NiJ9..."
+            )
+            String refreshToken,
 
-        public static TokenRefresh of(String accessToken, String refreshToken, String tokenType, Long expiresIn) {
+            @Schema(
+                    description = "토큰 타입",
+                    example = "Bearer"
+            )
+            String tokenType,
+
+            @Schema(
+                    description = "Access Token 만료까지 남은 시간 (초)",
+                    example = "3600"
+            )
+            Long expiresIn
+    ) {
+        public static TokenRefresh of(
+                String accessToken,
+                String refreshToken,
+                String tokenType,
+                Long expiresIn) {
             return new TokenRefresh(accessToken, refreshToken, tokenType, expiresIn);
         }
     }
 
-    @Getter
-    public static class BusinessInfo {
-        private final UUID businessId;
-        private final String businessName;
-        private final Set<BusinessTypeCode> businessTypes;
-        private final String address;
-        private final String contactPhone;
-        private final String description;
-        private final String logoUrl;
-        private final String role;
-        private final LocalDateTime joinedAt;
-        private final Boolean isActive;
-        private final LocalDateTime createdAt;
+    @Schema(description = "사용자가 속한 업체 정보")
+    public record BusinessInfo(
+            @Schema(
+                    description = "업체 고유 ID",
+                    example = "550e8400-e29b-41d4-a716-446655440001"
+            )
+            UUID businessId,
 
-        private BusinessInfo(UUID businessId, String businessName, Set<BusinessTypeCode> businessTypes,
-                             String address, String contactPhone, String description, String logoUrl, String role,
-                             LocalDateTime joinedAt, Boolean isActive, LocalDateTime createdAt) {
-            this.businessId = businessId;
-            this.businessName = businessName;
-            this.businessTypes = businessTypes;
-            this.address = address;
-            this.contactPhone = contactPhone;
-            this.description = description;
-            this.logoUrl = logoUrl;
-            this.role = role;
-            this.joinedAt = joinedAt;
-            this.isActive = isActive;
-            this.createdAt = createdAt;
-        }
+            @Schema(
+                    description = "상호명",
+                    example = "강남 헤어샵",
+                    minLength = 2,
+                    maxLength = 100
+            )
+            String businessName,
 
-        /**
-         * Entity → DTO 변환 (정적 팩토리)
-         */
+            @Schema(
+                    description = "업종 코드 목록 (최소 1개 필수)",
+                    example = "[\"BD008\"]",
+                    allowableValues = {"BD000", "BD001", "BD002", "BD003", "BD004", "BD005", "BD006", "BD007", "BD008", "BD009", "BD010", "BD011", "BD012", "BD013"}
+            )
+            Set<BusinessTypeCode> businessTypes,
+
+            @Schema(
+                    description = "업체 주소",
+                    example = "서울시 강남구 강남대로 123",
+                    maxLength = 200,
+                    nullable = true
+            )
+            String address,
+
+            @Schema(
+                    description = "업체 연락처",
+                    example = "02-1234-5678",
+                    nullable = true
+            )
+            String contactPhone,
+
+            @Schema(
+                    description = "해당 업체에 대한 사용자 역할",
+                    example = "OWNER",
+                    allowableValues = {"OWNER", "MANAGER", "MEMBER"}
+            )
+            String userRole,
+
+            @Schema(
+                    description = "업체 활성화 상태",
+                    example = "true"
+            )
+            Boolean isBusinessActive,
+
+            @Schema(
+                    description = "업체 합류 일시",
+                    example = "2025-11-01T10:00:00"
+            )
+            LocalDateTime joinedAt
+    ) {
         public static BusinessInfo of(Business business, UserBusinessRole userBusinessRole) {
             return new BusinessInfo(
                     business.getId(),
@@ -258,12 +400,9 @@ public class AuthResponseDto {
                     business.getBusinessTypes(),
                     business.getAddress(),
                     business.getContactPhone(),
-                    business.getDescription(),
-                    business.getLogoUrl(),
                     userBusinessRole.getRole().name(),
-                    userBusinessRole.getJoinedAt(),
                     business.getIsActive(),
-                    business.getCreatedAt()
+                    userBusinessRole.getCreatedAt()
             );
         }
     }

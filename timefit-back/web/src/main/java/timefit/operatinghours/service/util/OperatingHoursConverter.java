@@ -4,7 +4,7 @@ import timefit.business.entity.Business;
 import timefit.business.entity.BusinessHours;
 import timefit.business.entity.OperatingHours;
 import timefit.common.entity.DayOfWeek;
-import timefit.operatinghours.dto.OperatingHoursRequest;
+import timefit.operatinghours.dto.OperatingHoursRequestDto;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -22,17 +22,17 @@ public class OperatingHoursConverter {
      */
     public static BusinessHours convertToBusinessHours(
             Business business,
-            OperatingHoursRequest.DaySchedule schedule,
+            OperatingHoursRequestDto.DaySchedule schedule,
             DayOfWeek dayOfWeek) {
 
         // 휴무일 처리
-        if (Boolean.TRUE.equals(schedule.getIsClosed())) {
+        if (Boolean.TRUE.equals(schedule.isClosed())) {
             return BusinessHours.createClosedDay(business, dayOfWeek);
         }
 
         // 영업일 처리
-        LocalTime openTime = LocalTime.parse(schedule.getOpenTime());
-        LocalTime closeTime = LocalTime.parse(schedule.getCloseTime());
+        LocalTime openTime = LocalTime.parse(schedule.openTime());
+        LocalTime closeTime = LocalTime.parse(schedule.closeTime());
 
         return BusinessHours.createOpenDay(business, dayOfWeek, openTime, closeTime);
     }
@@ -47,15 +47,15 @@ public class OperatingHoursConverter {
      */
     public static List<OperatingHours> convertToOperatingHours(
             Business business,
-            List<OperatingHoursRequest.TimeRange> ranges,
+            List<OperatingHoursRequestDto.TimeRange> ranges,
             DayOfWeek dayOfWeek) {
 
         List<OperatingHours> result = new ArrayList<>();
         int sequence = 0;
 
-        for (OperatingHoursRequest.TimeRange range : ranges) {
-            LocalTime startTime = LocalTime.parse(range.getStartTime());
-            LocalTime endTime = LocalTime.parse(range.getEndTime());
+        for (OperatingHoursRequestDto.TimeRange range : ranges) {
+            LocalTime startTime = LocalTime.parse(range.startTime());
+            LocalTime endTime = LocalTime.parse(range.endTime());
 
             result.add(OperatingHours.createOperatingHours(
                     business, dayOfWeek, startTime, endTime, false, sequence++

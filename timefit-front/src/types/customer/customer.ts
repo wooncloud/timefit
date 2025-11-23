@@ -1,3 +1,6 @@
+/**
+ * 고객 정보
+ */
 export interface Customer {
     id: string;
     name: string;

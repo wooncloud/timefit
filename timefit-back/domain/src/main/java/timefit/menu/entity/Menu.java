@@ -167,6 +167,18 @@ public class Menu extends BaseEntity {
         this.durationMinutes = durationMinutes;
     }
 
+    public void updateOrderType(OrderType  orderType) {
+        if (this.orderType == OrderType.ONDEMAND_BASED) {
+            this.orderType = orderType;
+        }
+        else if (this.orderType == OrderType.RESERVATION_BASED) {
+            this.orderType = OrderType.ONDEMAND_BASED;
+        }
+        else {
+            throw new IllegalArgumentException("유효하지 못한 서비스 타입입니다.");
+        }
+    }
+
     // 메뉴 활성화
     public void activate() {
         this.isActive = true;
@@ -190,15 +202,6 @@ public class Menu extends BaseEntity {
     // 특정 업체에 속하는지 확인
     public boolean belongsToBusiness(UUID businessId) {
         return this.business.getId().equals(businessId);
-    }
-
-    /**
-     * 카테고리 표시 이름 조회 헬퍼 메서드
-     * 추가: DTO 변환 시 사용
-     * @return 카테고리 이름 (예: "컷", "펌")
-     */
-    public String getCategoryDisplayName() {
-        return this.businessCategory.getCategoryDisplayName();
     }
 
     // ----------------- 검증 메서드

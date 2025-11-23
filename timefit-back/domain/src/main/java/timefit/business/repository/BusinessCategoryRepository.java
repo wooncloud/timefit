@@ -13,16 +13,59 @@ import java.util.UUID;
 public interface BusinessCategoryRepository extends JpaRepository<BusinessCategory, UUID> {
 
     /**
-     * 특정 업체의 특정 업종 + 카테고리 코드로 조회
-     * - 중복 검증용
-     *
-     * @param businessId 업체 ID
-     * @param businessType 업종 코드
-     * @param categoryCode 카테고리 코드
-     * @return 카테고리 (Optional)
+     * 특정 업체의 활성 카테고리 목록 조회 (정렬: businessType → categoryName)
      */
-    Optional<BusinessCategory> findByBusinessIdAndBusinessTypeAndCategoryCode(
+    List<BusinessCategory> findByBusinessIdAndIsActiveTrueOrderByBusinessTypeAscCategoryNameAsc(
+            UUID businessId
+    );
+
+    /**
+     * 특정 업체의 모든 카테고리 목록 조회 (활성/비활성 포함)
+     */
+    List<BusinessCategory> findByBusinessIdOrderByBusinessTypeAscCategoryNameAsc(
+            UUID businessId
+    );
+
+    /**
+     * 특정 업체의 특정 업종 카테고리 목록 조회
+     */
+    List<BusinessCategory> findByBusinessIdAndBusinessTypeAndIsActiveTrueOrderByCategoryNameAsc(
+            UUID businessId,
+            BusinessTypeCode businessType
+    );
+
+    /**
+     * 중복 검증용 (대소문자 구분)
+     */
+    boolean existsByBusinessIdAndBusinessTypeAndCategoryNameAndIsActiveTrue(
             UUID businessId,
             BusinessTypeCode businessType,
-            timefit.business.entity.ServiceCategoryCode categoryCode);
+            String categoryName
+    );
+
+    /**
+     * 카테고리 조회 (대소문자 구분)
+     */
+    Optional<BusinessCategory> findByBusinessIdAndBusinessTypeAndCategoryNameAndIsActiveTrue(
+            UUID businessId,
+            BusinessTypeCode businessType,
+            String categoryName
+    );
+
+    /**
+     * 카테고리 조회 (대소문자 무시)
+     */
+    Optional<BusinessCategory> findByBusinessIdAndBusinessTypeAndCategoryNameIgnoreCaseAndIsActiveTrue(
+            UUID businessId,
+            BusinessTypeCode businessType,
+            String categoryName
+    );
+
+
+
+    /**
+     * 특정 카테고리에 연결된 활성 메뉴 수 조회
+     * (Menu 엔티티와의 관계 확인용)
+     */
+    // countByIdAndMenus_IsActiveTrue 대신 MenuRepository 에서 조회
 }

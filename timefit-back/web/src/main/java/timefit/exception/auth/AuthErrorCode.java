@@ -25,7 +25,7 @@ public enum AuthErrorCode {
     NO_BUSINESS_ASSOCIATION("업체 정보가 없습니다", HttpStatus.FORBIDDEN),
 
     // OAuth 관련
-    OAUTH_PROVIDER_ERROR("OAuth 인증 중 오류가 발생했습니다", HttpStatus.BAD_REQUEST),
+    OAUTH_PROVIDER_ERROR("OAuth 인증 중 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_OAUTH_PROVIDER("지원하지 않는 OAuth 제공자입니다", HttpStatus.BAD_REQUEST),
 
     // 일반 인증 관련

@@ -114,11 +114,15 @@ export function useBusinessSignup(options: UseBusinessSignupOptions = {}) {
       const data = await businessService.createBusiness(requestBody);
 
       if (data.success) {
-        setMessage('사업자 등록이 완료되었습니다. 사업자 페이지로 이동합니다.');
+        setMessage(
+          '사업자 등록이 완료되었습니다. 로그인 페이지로 이동합니다.'
+        );
         setFormData({ ...initialBusinessSignupForm });
         setErrors({});
+
+        // 사업자 등록 성공 후 로그인 페이지로 이동
         setTimeout(() => {
-          router.replace('/business');
+          router.replace('/signin');
         }, 1500);
         onSuccess?.();
       } else {
