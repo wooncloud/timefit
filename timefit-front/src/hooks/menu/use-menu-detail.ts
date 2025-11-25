@@ -18,6 +18,7 @@ interface UseMenuDetailReturn {
   refetch: () => Promise<void>;
   updateMenu: (data: CreateUpdateMenuRequest) => Promise<boolean>;
   deleteMenu: () => Promise<boolean>;
+  toggleMenu: () => Promise<boolean>;
   updating: boolean;
   deleting: boolean;
 }
@@ -144,6 +145,43 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
     }
   };
 
+  const toggleMenu = async (): Promise<boolean> => {
+    if (!businessId || !menuId) {
+      setError('비즈니스 정보 또는 메뉴 ID가 없습니다.');
+      return false;
+    }
+
+    try {
+      setUpdating(true);
+      setError(null);
+
+      const response = await fetch(`/api/business/${businessId}/menu/${menuId}/toggle`, {
+        method: 'PATCH',
+      });
+
+      const result: UpdateMenuHandlerResponse = await response.json();
+
+      if (handleAuthError(result)) {
+        return false;
+      }
+
+      if (!result.success || !result.data) {
+        setError(result.message || '메뉴 상태 변경에 실패했습니다.');
+        return false;
+      }
+
+      setMenu(result.data);
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '메뉴 상태 변경 중 오류가 발생했습니다.';
+      console.error('Menu toggle error:', errorMessage);
+      setError(errorMessage);
+      return false;
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   useEffect(() => {
     fetchMenu();
   }, [fetchMenu]);
@@ -155,6 +193,7 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
     refetch: fetchMenu,
     updateMenu,
     deleteMenu,
+    toggleMenu,
     updating,
     deleting,
   };

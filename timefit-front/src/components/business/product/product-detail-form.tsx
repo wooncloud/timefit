@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import type { Product } from '@/types/product/product';
 import { ProductBasicInfoSection } from './sections/product-basic-info-section';
 import { ProductReservationSection } from './sections/product-reservation-section';
@@ -13,6 +11,7 @@ interface ProductDetailFormProps {
   onSave: (product: Partial<Product>) => void;
   onCancel: () => void;
   onDelete?: (id: string) => void;
+  onToggleActive?: () => void;
 }
 
 export function ProductDetailForm({
@@ -20,6 +19,7 @@ export function ProductDetailForm({
   onSave,
   onCancel,
   onDelete,
+  onToggleActive,
 }: ProductDetailFormProps) {
   const [formData, setFormData] = useState<Partial<Product>>(
     product || {
@@ -45,6 +45,7 @@ export function ProductDetailForm({
           product={product}
           onCancel={onCancel}
           onDelete={onDelete}
+          onToggleActive={onToggleActive}
         />
 
         <div className="space-y-6 p-4">
