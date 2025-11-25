@@ -84,20 +84,19 @@ export default function Page() {
     const menuRequest = productToMenuRequest(productData);
 
     if (selectedMenuId) {
-      // 수정
       const success = await updateMenu(menuRequest);
       if (success) {
         toast.success('메뉴가 수정되었습니다.');
-        await refetch(); // 목록 갱신
-        setSelectedMenuId(null);
+        await refetch();
       } else {
         toast.error('메뉴 수정에 실패했습니다.');
       }
     } else {
-      // 생성
       const newMenu = await createMenu(menuRequest);
       if (newMenu) {
         toast.success('메뉴가 생성되었습니다.');
+        await refetch();
+        setSelectedMenuId(newMenu.menuId);
         setIsCreating(false);
       } else {
         toast.error('메뉴 생성에 실패했습니다.');
@@ -126,11 +125,6 @@ export default function Page() {
     }
   };
 
-  const handleCancel = () => {
-    setSelectedMenuId(null);
-    setIsCreating(false);
-  };
-
   // 로딩 상태 처리
   if (listLoading) {
     return (
@@ -156,9 +150,9 @@ export default function Page() {
       <div className="flex-1">
         {selectedProduct || isCreating ? (
           <ProductDetailForm
+            key={selectedProduct?.id || 'new'}
             product={selectedProduct}
             onSave={handleSaveProduct}
-            onCancel={handleCancel}
             onDelete={handleDeleteProduct}
             onToggleActive={handleToggleActive}
           />

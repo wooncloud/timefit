@@ -5,14 +5,12 @@ import type { Product } from '@/types/product/product';
 
 interface ProductFormActionsProps {
   product: Product | null;
-  onCancel: () => void;
   onDelete?: (id: string) => void;
   onToggleActive?: () => void;
 }
 
 export function ProductFormActions({
   product,
-  onCancel,
   onDelete,
   onToggleActive,
 }: ProductFormActionsProps) {
@@ -43,9 +41,6 @@ export function ProductFormActions({
           </div>
         )}
         <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            취소
-          </Button>
           <Button type="submit">{product ? '수정하기' : '등록하기'}</Button>
         </div>
       </div>

@@ -9,7 +9,6 @@ import { ProductFormActions } from './sections/product-form-actions';
 interface ProductDetailFormProps {
   product: Product | null;
   onSave: (product: Partial<Product>) => void;
-  onCancel: () => void;
   onDelete?: (id: string) => void;
   onToggleActive?: () => void;
 }
@@ -17,7 +16,6 @@ interface ProductDetailFormProps {
 export function ProductDetailForm({
   product,
   onSave,
-  onCancel,
   onDelete,
   onToggleActive,
 }: ProductDetailFormProps) {
@@ -43,7 +41,6 @@ export function ProductDetailForm({
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
         <ProductFormActions
           product={product}
-          onCancel={onCancel}
           onDelete={onDelete}
           onToggleActive={onToggleActive}
         />
