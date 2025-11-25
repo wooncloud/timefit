@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Product } from '@/types/product/product';
 import { ProductBasicInfoSection } from './sections/product-basic-info-section';
 import { ProductReservationSection } from './sections/product-reservation-section';
@@ -30,6 +30,22 @@ export function ProductDetailForm({
       is_active: true,
     }
   );
+
+  useEffect(() => {
+    if (product) {
+      setFormData(product);
+    } else {
+      setFormData({
+        service_name: '',
+        category: 'HAIRCUT',
+        price: 0,
+        description: '',
+        menu_type: 'RESERVATION_BASED',
+        duration_minutes: 60,
+        is_active: true,
+      });
+    }
+  }, [product]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

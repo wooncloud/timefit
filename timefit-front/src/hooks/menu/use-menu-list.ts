@@ -139,8 +139,6 @@ export function useMenuList(options: UseMenuListOptions = {}): UseMenuListReturn
         return null;
       }
 
-      await fetchMenus();
-
       return result.data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '메뉴 생성 중 오류가 발생했습니다.';
