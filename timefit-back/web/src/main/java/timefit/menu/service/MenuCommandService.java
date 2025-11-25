@@ -266,36 +266,6 @@ public class MenuCommandService {
         return dailySlots;
     }
 
-    // 메뉴 활성/비활성 토글
-    public MenuResponseDto.Menu toggleMenuActive(
-            UUID businessId,
-            UUID menuId,
-            UUID currentUserId) {
-
-        log.info("메뉴 활성상태 토글 시작: businessId={}, menuId={}, userId={}",
-                businessId, menuId, currentUserId);
-
-        // 1. 권한 검증
-        businessValidator.validateBusinessAccess(currentUserId, businessId);
-
-        // 2. Menu 조회 및 검증
-        Menu menu = menuValidator.validateMenuOfBusiness(menuId, businessId);
-
-        // 3. 활성상태 토글
-        if (menu.getIsActive()) {
-            menuValidator.validateNoFutureActiveReservations(menuId);
-            menu.deactivate();
-            log.info("메뉴 비활성화: menuId={}", menuId);
-        } else {
-            menu.activate();
-            log.info("메뉴 활성화: menuId={}", menuId);
-        }
-
-        log.info("메뉴 활성상태 토글 완료: menuId={}, isActive={}", menuId, menu.getIsActive());
-
-        return MenuResponseDto.Menu.from(menu);
-    }
-
     // 메뉴 삭제 (논리 삭제)
     public void deleteMenu(
             UUID businessId,
