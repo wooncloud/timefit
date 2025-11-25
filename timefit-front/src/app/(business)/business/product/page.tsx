@@ -140,7 +140,7 @@ export default function Page() {
       <div className="w-80">
         <ProductListPanel
           products={products}
-          selectedProductId={selectedProduct?.id}
+          selectedProductId={isCreating ? null : selectedProduct?.id}
           onSelectProduct={handleSelectProduct}
           onNewProduct={handleNewProduct}
         />
@@ -150,7 +150,7 @@ export default function Page() {
       <div className="flex-1">
         {selectedProduct || isCreating ? (
           <ProductDetailForm
-            key={selectedProduct?.id || 'new'}
+            key={isCreating ? 'creating-new' : selectedProduct?.id || 'new'}
             product={selectedProduct}
             onSave={handleSaveProduct}
             onDelete={handleDeleteProduct}

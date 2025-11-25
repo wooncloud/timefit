@@ -35,6 +35,7 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
 
   const fetchMenu = useCallback(async () => {
     if (!businessId || !menuId) {
+      setMenu(null);
       setLoading(false);
       return;
     }

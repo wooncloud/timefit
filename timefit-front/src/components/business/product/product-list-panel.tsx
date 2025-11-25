@@ -10,7 +10,7 @@ import { ProductListEmpty } from './product-list-empty';
 
 interface ProductListPanelProps {
   products: Product[];
-  selectedProductId?: string;
+  selectedProductId?: string | null;
   onSelectProduct: (product: Product | null) => void;
   onNewProduct: () => void;
 }
