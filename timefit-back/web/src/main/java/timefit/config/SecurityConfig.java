@@ -129,6 +129,9 @@ public class SecurityConfig {
                         // ========== 검증 API (공개) ==========
                         .requestMatchers("/api/validation/**").permitAll()
 
+                        // ========== 테스트 API (개발용) ==========
+                        .requestMatchers("/api/test/**").permitAll()
+
                         // ========== 개발/모니터링 도구 ==========
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()

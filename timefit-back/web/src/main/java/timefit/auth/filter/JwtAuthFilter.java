@@ -103,6 +103,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             // 검증 API
             "/api/validation/**",
 
+            // 테스트 API (개발용)
+            "/api/test/**",
+
             // 개발/모니터링 도구
             "/actuator/**",
             "/swagger-ui/**",
