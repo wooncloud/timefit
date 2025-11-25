@@ -107,6 +107,7 @@ public class SecurityConfig {
                         // ========== 인증 관련 API ==========
                         .requestMatchers("/api/auth/signup").permitAll()   // 회원가입 (공개)
                         .requestMatchers("/api/auth/signin").permitAll()   // 로그인 (공개)
+                        .requestMatchers("/api/auth/refresh").permitAll()  // 리프레시 토큰 (공개)
                         .requestMatchers("/api/auth/**").authenticated()   // 나머지는 인증 필요 (logout, refresh 등)
 
                         // ========== 업체 관련 공개 API ==========
@@ -128,6 +129,9 @@ public class SecurityConfig {
 
                         // ========== 검증 API (공개) ==========
                         .requestMatchers("/api/validation/**").permitAll()
+
+                        // ========== 테스트 API (개발용) ==========
+                        .requestMatchers("/api/test/**").permitAll()
 
                         // ========== 개발/모니터링 도구 ==========
                         .requestMatchers("/actuator/**").permitAll()
