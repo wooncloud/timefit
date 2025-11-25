@@ -62,6 +62,16 @@ public class MenuService {
         return menuCommandService.updateMenu(businessId, menuId, request, currentUserId);
     }
 
+    // 메뉴 활성/비활성 토글
+    @Transactional
+    public MenuResponseDto.Menu toggleMenuActive(
+            UUID businessId,
+            UUID menuId,
+            UUID currentUserId) {
+
+        return menuCommandService.toggleMenuActive(businessId, menuId, currentUserId);
+    }
+
     // 메뉴 삭제 (비활성화)
     @Transactional
     public void deleteMenu(UUID businessId, UUID menuId, UUID currentUserId) {
