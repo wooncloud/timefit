@@ -90,11 +90,6 @@ export function ProductBasicInfoSection({
           rows={3}
         />
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="image">이미지</Label>
-        <Input id="image" type="file" accept="image/*" />
-      </div>
     </div>
   );
 }
