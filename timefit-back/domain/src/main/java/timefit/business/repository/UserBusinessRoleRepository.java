@@ -45,4 +45,10 @@ public interface UserBusinessRoleRepository extends JpaRepository<UserBusinessRo
      */
     @EntityGraph(attributePaths = {"user"})
     List<UserBusinessRole> findByBusinessIdAndRoleAndIsActive(UUID businessId, BusinessRole role, Boolean isActive);
+
+    /**
+     * 업체 + 사용자 이메일로 구성원 존재 확인
+     * (초대 시 이미 구성원인지 체크용)
+     */
+    boolean existsByBusinessIdAndUserEmail(UUID businessId, String email);
 }
