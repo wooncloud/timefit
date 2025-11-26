@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { handleAuthError } from '@/lib/api/handle-auth-error';
+import { useCallback, useEffect, useState } from 'react';
+
 import type {
   Category,
-  CreateCategoryRequest,
-  UpdateCategoryRequest,
-  GetCategoryListHandlerResponse,
   CreateCategoryHandlerResponse,
-  UpdateCategoryHandlerResponse,
+  CreateCategoryRequest,
   DeleteCategoryHandlerResponse,
+  GetCategoryListHandlerResponse,
+  UpdateCategoryHandlerResponse,
+  UpdateCategoryRequest,
 } from '@/types/category/category';
 import { useBusinessStore } from '@/store/business-store';
+import { handleAuthError } from '@/lib/api/handle-auth-error';
 
 interface UseCategoryListReturn {
   categories: Category[];
@@ -67,7 +68,10 @@ export function useCategoryList(): UseCategoryListReturn {
       setCategories(result.data.categories);
       setTotalCount(result.data.totalCount);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '카테고리 목록을 불러오는 중 오류가 발생했습니다.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : '카테고리 목록을 불러오는 중 오류가 발생했습니다.';
       console.error('Category list fetch error:', errorMessage);
       setError(errorMessage);
       setCategories([]);
@@ -111,7 +115,10 @@ export function useCategoryList(): UseCategoryListReturn {
       await fetchCategories();
       return result.data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '카테고리 생성 중 오류가 발생했습니다.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : '카테고리 생성 중 오류가 발생했습니다.';
       console.error('Category creation error:', errorMessage);
       setError(errorMessage);
       return null;
@@ -133,13 +140,16 @@ export function useCategoryList(): UseCategoryListReturn {
       setUpdating(true);
       setError(null);
 
-      const response = await fetch(`/api/business/${businessId}/category/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await fetch(
+        `/api/business/${businessId}/category/${id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
       const result: UpdateCategoryHandlerResponse = await response.json();
 
@@ -155,7 +165,10 @@ export function useCategoryList(): UseCategoryListReturn {
       await fetchCategories();
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '카테고리 수정 중 오류가 발생했습니다.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : '카테고리 수정 중 오류가 발생했습니다.';
       console.error('Category update error:', errorMessage);
       setError(errorMessage);
       return false;
@@ -174,9 +187,12 @@ export function useCategoryList(): UseCategoryListReturn {
       setDeleting(true);
       setError(null);
 
-      const response = await fetch(`/api/business/${businessId}/category/${id}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/business/${businessId}/category/${id}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       const result: DeleteCategoryHandlerResponse = await response.json();
 
@@ -192,7 +208,10 @@ export function useCategoryList(): UseCategoryListReturn {
       await fetchCategories();
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '카테고리 삭제 중 오류가 발생했습니다.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : '카테고리 삭제 중 오류가 발생했습니다.';
       console.error('Category delete error:', errorMessage);
       setError(errorMessage);
       return false;
@@ -219,4 +238,3 @@ export function useCategoryList(): UseCategoryListReturn {
     deleting,
   };
 }
-

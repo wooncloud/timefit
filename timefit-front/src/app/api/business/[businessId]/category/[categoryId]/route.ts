@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api/auth-middleware';
+import { NextResponse } from 'next/server';
+
 import type {
-  UpdateCategoryHandlerResponse,
   DeleteCategoryHandlerResponse,
+  UpdateCategoryHandlerResponse,
   UpdateCategoryRequest,
 } from '@/types/category/category';
+import { withAuth } from '@/lib/api/auth-middleware';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -19,9 +20,11 @@ export const PATCH = withAuth<UpdateCategoryHandlerResponse>(
       const pathSegments = url.pathname.split('/').filter(Boolean);
       const businessIndex = pathSegments.indexOf('business');
       const categoryIndex = pathSegments.indexOf('category');
-      
-      const businessId = businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
-      const categoryId = categoryIndex !== -1 ? pathSegments[categoryIndex + 1] : null;
+
+      const businessId =
+        businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
+      const categoryId =
+        categoryIndex !== -1 ? pathSegments[categoryIndex + 1] : null;
 
       if (!businessId || !categoryId) {
         return NextResponse.json(
@@ -87,9 +90,11 @@ export const DELETE = withAuth<DeleteCategoryHandlerResponse>(
       const pathSegments = url.pathname.split('/').filter(Boolean);
       const businessIndex = pathSegments.indexOf('business');
       const categoryIndex = pathSegments.indexOf('category');
-      
-      const businessId = businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
-      const categoryId = categoryIndex !== -1 ? pathSegments[categoryIndex + 1] : null;
+
+      const businessId =
+        businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
+      const categoryId =
+        categoryIndex !== -1 ? pathSegments[categoryIndex + 1] : null;
 
       if (!businessId || !categoryId) {
         return NextResponse.json(
@@ -141,4 +146,3 @@ export const DELETE = withAuth<DeleteCategoryHandlerResponse>(
     }
   }
 );
-

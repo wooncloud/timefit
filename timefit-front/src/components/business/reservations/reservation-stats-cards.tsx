@@ -1,8 +1,9 @@
 'use client';
 
-import type { Reservation } from './reservation-table-row';
+import { reservationStatConfigs } from '@/lib/data/reservation/reservation-stat-configs';
+
 import { ReservationStatCard } from './reservation-stat-card';
-import { reservationStatConfigs } from '@/lib/data/reservation/reservationStatConfigs';
+import type { Reservation } from './reservation-table-row';
 
 interface ReservationStatsCardsProps {
   reservations: Reservation[];

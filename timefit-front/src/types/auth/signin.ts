@@ -1,3 +1,5 @@
+import type { AuthUserProfile } from '@/types/auth/user';
+
 /**
  * 백엔드 회원 로그인 요청 본문.
  */
@@ -5,8 +7,6 @@ export interface SigninRequestBody {
   email: string;
   password: string;
 }
-
-import type { AuthUserProfile } from '@/types/auth/user';
 
 /**
  * 백엔드 회원 로그인 응답 구조.

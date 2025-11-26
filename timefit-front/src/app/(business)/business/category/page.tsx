@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+import type { Category } from '@/types/category/category';
+import { useCategoryList } from '@/hooks/category/use-category-list';
+import { CategoryEditDialog } from '@/components/business/category/category-edit-dialog';
 import { CategoryForm } from '@/components/business/category/category-form';
 import { CategoryTable } from '@/components/business/category/category-table';
-import { CategoryEditDialog } from '@/components/business/category/category-edit-dialog';
-import { useCategoryList } from '@/hooks/category/use-category-list';
-import type { Category } from '@/types/category/category';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,7 +85,7 @@ export default function Page() {
   };
 
   const handleToggle = async (id: string, currentStatus: boolean) => {
-    const category = categories.find((c) => c.id === id);
+    const category = categories.find(c => c.id === id);
     if (!category) return;
 
     const success = await updateCategory(id, {
@@ -111,7 +112,7 @@ export default function Page() {
   }
 
   return (
-    <div className="container mx-auto py-6 px-6">
+    <div className="container mx-auto px-6 py-6">
       <CategoryForm onSubmit={handleCreate} />
       <CategoryTable
         categories={categories}
@@ -123,7 +124,7 @@ export default function Page() {
       <CategoryEditDialog
         category={editingCategory}
         open={editDialogOpen}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           setEditDialogOpen(open);
           if (!open) setEditingCategory(null);
         }}

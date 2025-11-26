@@ -1,7 +1,7 @@
 import type {
-  CreateBusinessRequestBody,
   CreateBusinessHandlerResponse,
-} from '@/types/auth/business/createBusiness';
+  CreateBusinessRequestBody,
+} from '@/types/auth/business/create-business';
 
 class BusinessService {
   private apiUrl = '/api/auth/business';

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
-import { sessionOptions, SessionData } from '@/lib/session/options';
+
 import { clearAccessTokenCookie } from '@/lib/cookie';
+import { SessionData, sessionOptions } from '@/lib/session/options';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,4 +36,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

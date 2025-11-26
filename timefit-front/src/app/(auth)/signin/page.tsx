@@ -1,16 +1,23 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { CalendarClock } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+
+import { useSignin } from '@/hooks/auth/use-signin';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useSignin } from '@/hooks/auth/useSignin';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function BusinessSignInPage() {
-  const { formData, errors, isLoading, message, handleInputChange, handleSubmit } =
-    useSignin();
+  const {
+    formData,
+    errors,
+    isLoading,
+    message,
+    handleInputChange,
+    handleSubmit,
+  } = useSignin();
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">

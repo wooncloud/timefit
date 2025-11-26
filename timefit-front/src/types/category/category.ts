@@ -13,7 +13,7 @@ export interface CreateCategoryRequest {
   isActive: boolean;
 }
 
-export interface UpdateCategoryRequest extends CreateCategoryRequest {}
+export type UpdateCategoryRequest = CreateCategoryRequest;
 
 export interface CategoryListResponse {
   categories: Category[];
@@ -50,4 +50,3 @@ export interface DeleteCategoryHandlerResponse {
   requiresLogout?: boolean;
   redirectTo?: string;
 }
-

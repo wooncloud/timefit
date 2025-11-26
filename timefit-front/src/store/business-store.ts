@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+
 import type { AuthBusinessInfo } from '@/types/auth/user';
 
 interface BusinessState {
@@ -23,18 +24,18 @@ const initialState: BusinessState = {
 export const useBusinessStore = create<BusinessState & BusinessActions>()(
   devtools(
     persist(
-      (set) => ({
+      set => ({
         ...initialState,
 
-        setBusiness: (business) => set({ business }),
+        setBusiness: business => set({ business }),
 
-        setLoading: (loading) => set({ loading }),
+        setLoading: loading => set({ loading }),
 
         reset: () => set(initialState),
       }),
       {
         name: 'business-store',
-        onRehydrateStorage: () => (state) => {
+        onRehydrateStorage: () => state => {
           state && (state._hasHydrated = true);
         },
       }

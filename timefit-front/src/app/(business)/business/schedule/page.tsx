@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { WeekdayHoursPanel } from '@/components/business/schedule/weekday-hours-panel';
-import { ScheduleEditorPanel } from '@/components/business/schedule/schedule-editor-panel';
-import { mockBusinessHours } from '@/lib/mock/business-hours';
+
 import { WEEKDAYS } from '@/lib/data/schedule/weekdays';
 import type { BusinessHours } from '@/lib/data/schedule/weekdays';
+import { mockBusinessHours } from '@/lib/mock/business-hours';
+import { ScheduleEditorPanel } from '@/components/business/schedule/schedule-editor-panel';
+import { WeekdayHoursPanel } from '@/components/business/schedule/weekday-hours-panel';
 
 export default function Page() {
   const [businessHours, setBusinessHours] =

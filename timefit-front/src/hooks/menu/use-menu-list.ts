@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { handleAuthError } from '@/lib/api/handle-auth-error';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import type {
-  Menu,
-  MenuListResponse,
+  CreateMenuHandlerResponse,
   CreateUpdateMenuRequest,
   GetMenuListHandlerResponse,
-  CreateMenuHandlerResponse,
+  Menu,
 } from '@/types/menu/menu';
 import { useBusinessStore } from '@/store/business-store';
+import { handleAuthError } from '@/lib/api/handle-auth-error';
 
 interface UseMenuListOptions {
   serviceName?: string;
@@ -29,7 +29,9 @@ interface UseMenuListReturn {
   creating: boolean;
 }
 
-export function useMenuList(options: UseMenuListOptions = {}): UseMenuListReturn {
+export function useMenuList(
+  options: UseMenuListOptions = {}
+): UseMenuListReturn {
   const { business } = useBusinessStore();
   const businessId = business?.businessId;
 
@@ -98,7 +100,10 @@ export function useMenuList(options: UseMenuListOptions = {}): UseMenuListReturn
       setMenus(result.data.menus);
       setTotalCount(result.data.totalCount);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '메뉴 목록을 불러오는 중 오류가 발생했습니다.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : '메뉴 목록을 불러오는 중 오류가 발생했습니다.';
       console.error('Menu list fetch error:', errorMessage);
       setError(errorMessage);
       setMenus([]);
@@ -141,7 +146,10 @@ export function useMenuList(options: UseMenuListOptions = {}): UseMenuListReturn
 
       return result.data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '메뉴 생성 중 오류가 발생했습니다.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : '메뉴 생성 중 오류가 발생했습니다.';
       console.error('Menu creation error:', errorMessage);
       setError(errorMessage);
       return null;

@@ -8,10 +8,7 @@ interface ScheduleEditorPanelProps {
   endTime: string;
 }
 
-export function ScheduleEditorPanel({
-  selectedDay,
-}: ScheduleEditorPanelProps) {
-
+export function ScheduleEditorPanel({ selectedDay }: ScheduleEditorPanelProps) {
   return (
     <Card className="flex-1">
       <CardHeader>
@@ -21,8 +18,7 @@ export function ScheduleEditorPanel({
             : '요일 예약 슬롯 편집'}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-      </CardContent>
+      <CardContent className="space-y-6"></CardContent>
     </Card>
   );
 }

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
 import type {
   PublicBusinessDetail,
   UpdateBusinessRequest,
-} from '@/types/business/businessDetail';
+} from '@/types/business/business-detail';
 import { handleAuthError } from '@/lib/api/handle-auth-error';
 
 interface UseBusinessDetailResult {

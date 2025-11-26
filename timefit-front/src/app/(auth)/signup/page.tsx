@@ -1,14 +1,15 @@
 'use client';
 
+import { useState } from 'react';
+import Link from 'next/link';
+import { CalendarClock } from 'lucide-react';
+
+import { useSignup } from '@/hooks/auth/use-signup';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { CalendarClock } from 'lucide-react';
-import Link from 'next/link';
-import { useState } from 'react';
-import { useSignup } from '@/hooks/auth/useSignup';
 
 export default function SignUpPage() {
   const [isBusiness, setIsBusiness] = useState(false);

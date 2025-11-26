@@ -1,4 +1,4 @@
-import { Settings2, Store, User, House } from 'lucide-react';
+import { House, Settings2, Store, User } from 'lucide-react';
 
 export const navItems = [
   {

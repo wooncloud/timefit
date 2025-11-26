@@ -1,3 +1,5 @@
+import type { AuthUserProfile } from '@/types/auth/user';
+
 /**
  * 백엔드 회원가입 엔드포인트가 기대하는 요청 본문 형태.
  */
@@ -58,4 +60,3 @@ export interface SignupHandlerErrorResponse {
 export type SignupHandlerResponse =
   | SignupHandlerSuccessResponse
   | SignupHandlerErrorResponse;
-import type { AuthUserProfile } from '@/types/auth/user';

@@ -1,8 +1,8 @@
+import type { MenuType, Product } from '@/types/product/product';
+import { menuTypes } from '@/lib/constants/product-categories';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { Product, MenuType } from '@/types/product/product';
-import { menuTypes } from '@/lib/constants/product-categories';
 
 interface ProductReservationSectionProps {
   formData: Partial<Product>;
@@ -45,7 +45,7 @@ export function ProductReservationSection({
             id="duration"
             type="number"
             value={formData.duration_minutes || 60}
-            onChange={(e) =>
+            onChange={e =>
               onFormDataChange({
                 ...formData,
                 duration_minutes: Number(e.target.value),

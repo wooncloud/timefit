@@ -2,16 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+
 import type {
   SigninFormData,
   SigninFormErrors,
   SigninRequestBody,
 } from '@/types/auth/signin';
-import { authService } from '@/services/auth/authService';
-import {
-  validateSigninForm,
-  initialSigninForm,
-} from '@/lib/validators/authValidators';
+import { authService } from '@/services/auth/auth-service';
+import { validateSigninForm } from '@/lib/validators/auth-validators';
 
 interface UseSigninOptions {
   onSuccess?: () => void;
@@ -35,14 +33,14 @@ export function useSignin(options: UseSigninOptions = {}) {
     const { name, value } = e.target;
     const fieldName = name as keyof SigninFormData;
 
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [fieldName]: value,
     }));
 
     // 입력시 해당 필드의 에러 메시지 제거
     if (errors[fieldName]) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         [fieldName]: undefined,
       }));

@@ -1,7 +1,7 @@
 import {
   BusinessSignupFormData,
   BusinessSignupFormErrors,
-} from '@/types/auth/business/createBusiness';
+} from '@/types/auth/business/create-business';
 
 interface BusinessSignupValidationResult {
   isValid: boolean;

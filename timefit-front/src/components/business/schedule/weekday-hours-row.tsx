@@ -1,9 +1,9 @@
 'use client';
 
+import type { BusinessHours } from '@/lib/data/schedule/weekdays';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
-import type { BusinessHours } from '@/lib/data/schedule/weekdays';
 
 interface WeekdayHoursRowProps {
   day: BusinessHours;

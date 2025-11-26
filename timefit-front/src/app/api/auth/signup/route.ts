@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
+
 import {
   SignupApiResponse,
   SignupHandlerErrorResponse,
@@ -9,8 +10,8 @@ import {
   SignupSuccessPayload,
 } from '@/types/auth/signup';
 import {
-  sessionOptions,
   SessionData,
+  sessionOptions,
   SessionUser,
 } from '@/lib/session/options';
 

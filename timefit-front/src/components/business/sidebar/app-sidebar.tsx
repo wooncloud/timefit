@@ -1,6 +1,9 @@
 'use client';
+
 import * as React from 'react';
 
+import type { AppSidebarProps } from '@/types/sidebar/app-sidebar';
+import { navItems } from '@/lib/data/sidebar/sidebar-menu';
 import { NavMain } from '@/components/business/sidebar/nav-main';
 import { NavUser } from '@/components/business/sidebar/nav-user';
 import { TeamSwitcher } from '@/components/business/sidebar/team-switcher';
@@ -11,8 +14,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import type { AppSidebarProps } from '@/types/sidebar/appSidebar';
-import { navItems } from '@/lib/data/sidebar/sidebarMenu';
+
 const defaultTeamsMock = [
   { name: 'Acme Inc', plan: 'Enterprise' },
   { name: 'Acme Corp.', plan: 'Startup' },

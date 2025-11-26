@@ -1,3 +1,5 @@
+import { MoreHorizontal } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -5,14 +7,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
 
 interface ReservationActionsDropdownProps {
   reservationId: string;
 }
 
 export function ReservationActionsDropdown({
-  reservationId,
+  reservationId: _reservationId,
 }: ReservationActionsDropdownProps) {
   return (
     <DropdownMenu>

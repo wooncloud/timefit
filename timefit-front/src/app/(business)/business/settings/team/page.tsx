@@ -1,25 +1,26 @@
 'use client';
 
 import { useState } from 'react';
+import { AlertCircle, Loader2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Table } from '@/components/ui/table';
-import { UserPlus, Loader2, AlertCircle } from 'lucide-react';
-import { TeamTableHeader } from '@/components/business/settings/team/team-table-header';
-import { TeamTableBody } from '@/components/business/settings/team/team-table-body';
+
+import type { TeamMemberDetail } from '@/types/business/team-member';
+import { useTeamMembers } from '@/hooks/business/use-team-members';
+import { useBusinessStore } from '@/store/business-store';
+import { useUserStore } from '@/store/user-store';
+import { ChangeRoleDialog } from '@/components/business/settings/team/change-role-dialog';
+import { ChangeStatusDialog } from '@/components/business/settings/team/change-status-dialog';
 import {
   InviteMemberDialog,
   type InviteMemberData,
 } from '@/components/business/settings/team/invite-member-dialog';
-import { ChangeRoleDialog } from '@/components/business/settings/team/change-role-dialog';
-import { ChangeStatusDialog } from '@/components/business/settings/team/change-status-dialog';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { TeamTableBody } from '@/components/business/settings/team/team-table-body';
+import { TeamTableHeader } from '@/components/business/settings/team/team-table-header';
 import type { TeamMember } from '@/components/business/settings/team/team-table-row';
-import { useTeamMembers } from '@/hooks/business/useTeamMembers';
-import { useBusinessStore } from '@/store/business-store';
-import { useUserStore } from '@/store/user-store';
-import type { TeamMemberDetail } from '@/types/business/teamMember';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Table } from '@/components/ui/table';
 
 // 백엔드 TeamMemberDetail을 프론트엔드 TeamMember로 변환
 const convertToTeamMember = (member: TeamMemberDetail): TeamMember => {
@@ -61,13 +62,11 @@ export default function Page() {
   const teamMembers = data?.members.map(convertToTeamMember) || [];
 
   // 현재 사용자의 역할 확인 (OWNER만 관리 권한)
-  const currentUserMember = data?.members.find(
-    (m) => m.userId === currentUserId
-  );
+  const currentUserMember = data?.members.find(m => m.userId === currentUserId);
   const isOwner = currentUserMember?.role === 'OWNER';
 
   const handleChangeRole = (memberId: string) => {
-    const member = teamMembers.find((m) => m.id === memberId);
+    const member = teamMembers.find(m => m.id === memberId);
     if (member) {
       setSelectedMember(member);
       setChangeRoleDialogOpen(true);
@@ -75,7 +74,7 @@ export default function Page() {
   };
 
   const handleChangeStatus = (memberId: string) => {
-    const member = teamMembers.find((m) => m.id === memberId);
+    const member = teamMembers.find(m => m.id === memberId);
     if (member) {
       // 초대중 상태인 경우 상태 변경 불가
       if (member.status === 'invited') {
@@ -88,7 +87,7 @@ export default function Page() {
   };
 
   const handleDelete = (memberId: string) => {
-    const member = teamMembers.find((m) => m.id === memberId);
+    const member = teamMembers.find(m => m.id === memberId);
     if (member) {
       setSelectedMember(member);
       setDeleteDialogOpen(true);

@@ -1,7 +1,12 @@
 /**
  * 상품 카테고리 타입
  */
-export type ProductCategory = 'HAIRCUT' | 'STYLING' | 'PERM' | 'COLOR' | 'TREATMENT';
+export type ProductCategory =
+  | 'HAIRCUT'
+  | 'STYLING'
+  | 'PERM'
+  | 'COLOR'
+  | 'TREATMENT';
 
 /**
  * 메뉴 타입 (예약 기반 / 당일 접수 기반)

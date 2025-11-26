@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 
-import { withAuth } from '@/lib/api/auth-middleware';
 import type {
   GetBusinessDetailApiResponse,
   GetBusinessDetailHandlerResponse,
   UpdateBusinessApiResponse,
   UpdateBusinessHandlerResponse,
   UpdateBusinessRequest,
-} from '@/types/business/businessDetail';
+} from '@/types/business/business-detail';
+import { withAuth } from '@/lib/api/auth-middleware';
 
 const BACKEND_API_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';

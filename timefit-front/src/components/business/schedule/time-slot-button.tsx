@@ -1,5 +1,11 @@
 'use client';
 
+import {
+  timeSlotStatusConfig,
+  timeSlotStatuses,
+  type TimeSlotStatus,
+} from '@/lib/data/schedule/time-slot-status';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -7,12 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
-import {
-  timeSlotStatusConfig,
-  timeSlotStatuses,
-  type TimeSlotStatus,
-} from '@/lib/data/schedule/timeSlotStatus';
 
 interface TimeSlotButtonProps {
   time: string;

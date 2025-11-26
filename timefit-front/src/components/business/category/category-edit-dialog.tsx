@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+
+import type { Category } from '@/types/category/category';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,13 +15,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import type { Category } from '@/types/category/category';
 
 interface CategoryEditDialogProps {
   category: Category | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (id: string, data: { name: string; notice: string; isActive: boolean }) => void;
+  onSubmit: (
+    id: string,
+    data: { name: string; notice: string; isActive: boolean }
+  ) => void;
 }
 
 export function CategoryEditDialog({
@@ -56,9 +60,7 @@ export function CategoryEditDialog({
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>카테고리 수정</DialogTitle>
-          <DialogDescription>
-            카테고리 정보를 수정합니다.
-          </DialogDescription>
+          <DialogDescription>카테고리 정보를 수정합니다.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
@@ -67,7 +69,7 @@ export function CategoryEditDialog({
               <Input
                 id="edit-name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 placeholder="예: 신발"
               />
             </div>
@@ -76,7 +78,7 @@ export function CategoryEditDialog({
               <Input
                 id="edit-notice"
                 value={notice}
-                onChange={(e) => setNotice(e.target.value)}
+                onChange={e => setNotice(e.target.value)}
                 placeholder="예: 운동화 및 샌들"
               />
             </div>
@@ -90,7 +92,11 @@ export function CategoryEditDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               취소
             </Button>
             <Button type="submit">저장</Button>
@@ -100,4 +106,3 @@ export function CategoryEditDialog({
     </Dialog>
   );
 }
-

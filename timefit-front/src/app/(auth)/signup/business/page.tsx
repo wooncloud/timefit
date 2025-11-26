@@ -1,14 +1,15 @@
 'use client';
 
+import Link from 'next/link';
+import { CalendarClock } from 'lucide-react';
+
+import { useBusinessSignup } from '@/hooks/business/use-business-signup';
 import { cn } from '@/lib/utils';
+import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
-import { CalendarClock } from 'lucide-react';
-import Link from 'next/link';
-import { useBusinessSignup } from '@/hooks/business/useBusinessSignup';
 
 export default function BusinessSignUpPage() {
   const {
@@ -75,7 +76,7 @@ export default function BusinessSignUpPage() {
             <Label htmlFor="businessTypes">업종</Label>
             <BusinessTypeSelect
               value={formData.businessTypes[0] || ''}
-              onValueChange={(value) => handleBusinessTypesChange([value])}
+              onValueChange={value => handleBusinessTypesChange([value])}
               className={errors.businessTypes ? 'border-red-500' : ''}
             />
             {errors.businessTypes && (

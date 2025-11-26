@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api/auth-middleware';
+import { NextResponse } from 'next/server';
+
 import type {
-  GetCategoryListHandlerResponse,
   CreateCategoryHandlerResponse,
   CreateCategoryRequest,
+  GetCategoryListHandlerResponse,
 } from '@/types/category/category';
+import { withAuth } from '@/lib/api/auth-middleware';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -18,7 +19,8 @@ export const GET = withAuth<GetCategoryListHandlerResponse>(
       const url = new URL(request.url);
       const pathSegments = url.pathname.split('/').filter(Boolean);
       const businessIndex = pathSegments.indexOf('business');
-      const businessId = businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
+      const businessId =
+        businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
 
       if (!businessId) {
         return NextResponse.json(
@@ -45,7 +47,8 @@ export const GET = withAuth<GetCategoryListHandlerResponse>(
         return NextResponse.json(
           {
             success: false,
-            message: errorData.message || '카테고리 목록을 불러오는데 실패했습니다',
+            message:
+              errorData.message || '카테고리 목록을 불러오는데 실패했습니다',
             requiresLogout: response.status === 401,
             redirectTo: response.status === 401 ? '/' : undefined,
           },
@@ -78,7 +81,8 @@ export const POST = withAuth<CreateCategoryHandlerResponse>(
       const url = new URL(request.url);
       const pathSegments = url.pathname.split('/').filter(Boolean);
       const businessIndex = pathSegments.indexOf('business');
-      const businessId = businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
+      const businessId =
+        businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
 
       if (!businessId) {
         return NextResponse.json(
@@ -137,4 +141,3 @@ export const POST = withAuth<CreateCategoryHandlerResponse>(
     }
   }
 );
-

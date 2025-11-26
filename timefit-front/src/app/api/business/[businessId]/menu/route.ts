@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api/auth-middleware';
+import { NextResponse } from 'next/server';
+
 import type {
-  GetMenuListHandlerResponse,
   CreateMenuHandlerResponse,
   CreateUpdateMenuRequest,
+  GetMenuListHandlerResponse,
 } from '@/types/menu/menu';
+import { withAuth } from '@/lib/api/auth-middleware';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -19,7 +20,8 @@ export const GET = withAuth<GetMenuListHandlerResponse>(
       const { searchParams } = url;
       const pathSegments = url.pathname.split('/').filter(Boolean);
       const businessIndex = pathSegments.indexOf('business');
-      const businessId = businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
+      const businessId =
+        businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
 
       if (!businessId) {
         return NextResponse.json(
@@ -39,7 +41,8 @@ export const GET = withAuth<GetMenuListHandlerResponse>(
 
       const queryParams = new URLSearchParams();
       if (serviceName) queryParams.append('serviceName', serviceName);
-      if (businessCategoryId) queryParams.append('businessCategoryId', businessCategoryId);
+      if (businessCategoryId)
+        queryParams.append('businessCategoryId', businessCategoryId);
       if (minPrice) queryParams.append('minPrice', minPrice);
       if (maxPrice) queryParams.append('maxPrice', maxPrice);
       if (isActive !== null && isActive !== undefined) {
@@ -95,7 +98,8 @@ export const POST = withAuth<CreateMenuHandlerResponse>(
       const url = new URL(request.url);
       const pathSegments = url.pathname.split('/').filter(Boolean);
       const businessIndex = pathSegments.indexOf('business');
-      const businessId = businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
+      const businessId =
+        businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
 
       if (!businessId) {
         return NextResponse.json(

@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { useBusinessStore } from './business-store';
+
 import type { AuthUserProfile } from '@/types/auth/user';
+
+import { useBusinessStore } from './business-store';
 
 interface UserState {
   user: AuthUserProfile | null;
@@ -21,10 +23,10 @@ const initialState: UserState = {
 };
 
 export const useUserStore = create<UserState & UserActions>()(
-  devtools((set) => ({
+  devtools(set => ({
     ...initialState,
 
-    setUser: (user) =>
+    setUser: user =>
       set({
         user,
         isAuthenticated: !!user,

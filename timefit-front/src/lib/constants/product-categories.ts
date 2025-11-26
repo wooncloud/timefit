@@ -1,4 +1,4 @@
-import type { ProductCategory, MenuType } from '@/types/product/product';
+import type { MenuType, ProductCategory } from '@/types/product/product';
 
 export const productCategories: Record<ProductCategory, string> = {
   HAIRCUT: '커트',

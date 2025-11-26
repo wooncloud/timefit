@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { clearSessionAndLogout } from './logout-helper';
-
-import { getServerSession } from '@/lib/session/server';
-import type { SessionUser } from '@/lib/session/options';
 import type { RefreshTokenResponse, TokenPair } from '@/types/auth/token';
-import { HTTP_STATUS, AUTH_MESSAGES } from '@/types/auth/token';
+import { AUTH_MESSAGES, HTTP_STATUS } from '@/types/auth/token';
+import type { SessionUser } from '@/lib/session/options';
+import { getServerSession } from '@/lib/session/server';
+
+import { clearSessionAndLogout } from './logout-helper';
 
 // ==================== 타입 정의 ====================
 
@@ -24,7 +24,9 @@ type AuthenticatedHandler<T = unknown> = (
 /**
  * 세션 만료 처리 및 로그아웃을 수행합니다.
  */
-async function handleSessionExpiration<T>(message: string): Promise<NextResponse<T>> {
+async function handleSessionExpiration<T>(
+  message: string
+): Promise<NextResponse<T>> {
   console.log(`[Auth] 세션 만료 처리: ${message}`);
   return (await clearSessionAndLogout(message)) as NextResponse<T>;
 }
@@ -91,12 +93,16 @@ async function handle401Response<T>(
  * @param refreshToken - 저장된 refresh token
  * @returns 새로운 accessToken과 refreshToken, 실패 시 null
  */
-async function refreshAccessToken(refreshToken: string): Promise<TokenPair | null> {
+async function refreshAccessToken(
+  refreshToken: string
+): Promise<TokenPair | null> {
   try {
     const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
     if (!BACKEND_API_URL) {
-      console.error('[Token Refresh] NEXT_PUBLIC_BACKEND_URL이 설정되지 않았습니다.');
+      console.error(
+        '[Token Refresh] NEXT_PUBLIC_BACKEND_URL이 설정되지 않았습니다.'
+      );
       return null;
     }
 

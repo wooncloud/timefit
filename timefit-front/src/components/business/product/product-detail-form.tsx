@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
 import type { Product } from '@/types/product/product';
+
 import { ProductBasicInfoSection } from './sections/product-basic-info-section';
-import { ProductReservationSection } from './sections/product-reservation-section';
 import { ProductFormActions } from './sections/product-form-actions';
+import { ProductReservationSection } from './sections/product-reservation-section';
 
 interface ProductDetailFormProps {
   product: Product | null;

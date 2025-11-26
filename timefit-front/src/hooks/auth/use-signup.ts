@@ -2,14 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+
 import type {
   SignupFormData,
   SignupFormErrors,
   SignupRequestBody,
 } from '@/types/auth/signup';
-import { authService } from '@/services/auth/authService';
-import { validateSignupForm } from '@/lib/validators/authValidators';
-import { formatPhoneNumber } from '@/lib/formatters/phoneFormatter';
+import { authService } from '@/services/auth/auth-service';
+import { formatPhoneNumber } from '@/lib/formatters/phone-formatter';
+import { validateSignupForm } from '@/lib/validators/auth-validators';
 
 interface UseSignupOptions {
   isBusiness?: boolean;
@@ -39,14 +40,14 @@ export function useSignup(options: UseSignupOptions = {}) {
     const nextValue =
       fieldName === 'phoneNumber' ? formatPhoneNumber(value) : value;
 
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [fieldName]: nextValue,
     }));
 
     // 입력시 해당 필드의 에러 메시지 제거
     if (errors[fieldName]) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         [fieldName]: undefined,
       }));
