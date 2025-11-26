@@ -4,8 +4,8 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 
 import {
-  sessionOptions,
   SessionData,
+  sessionOptions,
   SessionUser,
 } from '@/lib/session/options';
 

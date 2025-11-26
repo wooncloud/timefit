@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
+
+import { mockCustomers } from '@/lib/mock';
+import { CustomerCountDisplay } from '@/components/business/customers/customer-count-display';
 import { CustomerFilterToolbar } from '@/components/business/customers/customer-filter-toolbar';
+import { CustomerTableEmpty } from '@/components/business/customers/customer-table-empty';
 import { CustomerTableHeader } from '@/components/business/customers/customer-table-header';
 import { CustomerTableRow } from '@/components/business/customers/customer-table-row';
-import { CustomerTableEmpty } from '@/components/business/customers/customer-table-empty';
-import { CustomerCountDisplay } from '@/components/business/customers/customer-count-display';
 import { Table, TableBody } from '@/components/ui/table';
-import { mockCustomers } from '@/lib/mock';
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,7 +22,7 @@ export default function Page() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
-        (customer) =>
+        customer =>
           customer.name.toLowerCase().includes(query) ||
           customer.phone.includes(query)
       );
@@ -68,7 +69,7 @@ export default function Page() {
             {filteredAndSortedCustomers.length === 0 ? (
               <CustomerTableEmpty />
             ) : (
-              filteredAndSortedCustomers.map((customer) => (
+              filteredAndSortedCustomers.map(customer => (
                 <CustomerTableRow key={customer.id} customer={customer} />
               ))
             )}

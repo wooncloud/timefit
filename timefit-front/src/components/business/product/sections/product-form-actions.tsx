@@ -1,20 +1,22 @@
-import { Button } from '@/components/ui/button';
 import type { Product } from '@/types/product/product';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 interface ProductFormActionsProps {
   product: Product | null;
-  onCancel: () => void;
   onDelete?: (id: string) => void;
+  onToggleActive?: () => void;
 }
 
 export function ProductFormActions({
   product,
-  onCancel,
   onDelete,
+  onToggleActive,
 }: ProductFormActionsProps) {
   return (
     <div className="flex items-center justify-between p-4">
-      <div>
+      <div className="flex items-center gap-4">
         {product && onDelete && (
           <Button
             type="button"
@@ -25,11 +27,22 @@ export function ProductFormActions({
           </Button>
         )}
       </div>
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          취소
-        </Button>
-        <Button type="submit">{product ? '수정하기' : '등록하기'}</Button>
+      <div className="flex items-center gap-4">
+        {product && onToggleActive && (
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="active-mode"
+              checked={product.is_active}
+              onCheckedChange={onToggleActive}
+            />
+            <Label htmlFor="active-mode">
+              {product.is_active ? '판매 중' : '판매 중지'}
+            </Label>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Button type="submit">{product ? '수정하기' : '등록하기'}</Button>
+        </div>
       </div>
     </div>
   );

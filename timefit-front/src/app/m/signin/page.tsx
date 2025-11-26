@@ -1,5 +1,5 @@
-import { OAuthProviders } from '@/components/auth/oauth-providers';
 import { EmailSigninForm } from '@/components/auth/email-signin-form';
+import { OAuthProviders } from '@/components/auth/oauth-providers';
 
 export default function MobileSigninPage() {
   return (

@@ -1,9 +1,10 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { WeekdayHoursRow } from './weekday-hours-row';
 import { WEEKDAYS } from '@/lib/data/schedule/weekdays';
 import type { BusinessHours } from '@/lib/data/schedule/weekdays';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { WeekdayHoursRow } from './weekday-hours-row';
 
 interface WeekdayHoursPanelProps {
   businessHours: BusinessHours[];

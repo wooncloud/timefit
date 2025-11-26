@@ -1,16 +1,18 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
+
 import type { Product } from '@/types/product/product';
 import { productCategories } from '@/lib/constants/product-categories';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
 import { ProductListEmpty } from './product-list-empty';
 
 interface ProductListPanelProps {
   products: Product[];
-  selectedProductId?: string;
+  selectedProductId?: string | null;
   onSelectProduct: (product: Product | null) => void;
   onNewProduct: () => void;
 }
@@ -27,18 +29,17 @@ export function ProductListPanel({
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">서비스 목록</h2>
           <Button size="sm" onClick={onNewProduct}>
-            <Plus className="h-4 w-4" />
-            새 서비스
+            <Plus className="h-4 w-4" />새 서비스
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pt-2 pe-2">
+      <div className="flex-1 overflow-y-auto pe-2 pt-2">
         {products.length === 0 ? (
           <ProductListEmpty onNewProduct={onNewProduct} />
         ) : (
           <div className="space-y-1">
-            {products.map((product) => (
+            {products.map(product => (
               <button
                 key={product.id}
                 onClick={() => onSelectProduct(product)}

@@ -1,25 +1,25 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
 import type { Product } from '@/types/product/product';
+
 import { ProductBasicInfoSection } from './sections/product-basic-info-section';
-import { ProductReservationSection } from './sections/product-reservation-section';
 import { ProductFormActions } from './sections/product-form-actions';
+import { ProductReservationSection } from './sections/product-reservation-section';
 
 interface ProductDetailFormProps {
   product: Product | null;
   onSave: (product: Partial<Product>) => void;
-  onCancel: () => void;
   onDelete?: (id: string) => void;
+  onToggleActive?: () => void;
 }
 
 export function ProductDetailForm({
   product,
   onSave,
-  onCancel,
   onDelete,
+  onToggleActive,
 }: ProductDetailFormProps) {
   const [formData, setFormData] = useState<Partial<Product>>(
     product || {
@@ -33,6 +33,22 @@ export function ProductDetailForm({
     }
   );
 
+  useEffect(() => {
+    if (product) {
+      setFormData(product);
+    } else {
+      setFormData({
+        service_name: '',
+        category: 'HAIRCUT',
+        price: 0,
+        description: '',
+        menu_type: 'RESERVATION_BASED',
+        duration_minutes: 60,
+        is_active: true,
+      });
+    }
+  }, [product]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
@@ -43,8 +59,8 @@ export function ProductDetailForm({
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
         <ProductFormActions
           product={product}
-          onCancel={onCancel}
           onDelete={onDelete}
+          onToggleActive={onToggleActive}
         />
 
         <div className="space-y-6 p-4">

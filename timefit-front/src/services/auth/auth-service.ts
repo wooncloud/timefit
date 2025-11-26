@@ -1,11 +1,11 @@
 import type {
-  SignupRequestBody,
-  SignupHandlerResponse,
-} from '@/types/auth/signup';
-import type {
-  SigninRequestBody,
   SigninHandlerResponse,
+  SigninRequestBody,
 } from '@/types/auth/signin';
+import type {
+  SignupHandlerResponse,
+  SignupRequestBody,
+} from '@/types/auth/signup';
 
 class AuthService {
   private apiUrl = '/api/auth';

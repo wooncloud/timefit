@@ -2,6 +2,7 @@ package timefit.auth.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.auth.dto.AuthRequestDto;
@@ -21,18 +22,20 @@ public class UserRegistrationService {
     private final UserRepository userRepository;
     private final AuthValidator authValidator;
     private final AuthTokenHelper authTokenHelper;
+    private final PasswordEncoder passwordEncoder;
 
     // 사용자 등록 (User 생성 + 토큰 발급)
     @Transactional
     public AuthResponseDto.UserSignUp registerUser(AuthRequestDto.UserSignUp request) {
 
-        // 1. 중복 체크
+        // 1. 중복 체크 & 비밀번호 암호화
         authValidator.validateEmailNotDuplicated(request.email());
+        String encodedPassword = passwordEncoder.encode(request.password());
 
         // 2. User 생성 (Entity 정적 팩토리)
         User user = User.createUser(
                 request.email(),
-                request.password(),
+                encodedPassword,
                 request.name(),
                 request.phoneNumber()
         );

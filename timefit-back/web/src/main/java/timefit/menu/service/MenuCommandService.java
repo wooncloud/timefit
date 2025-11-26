@@ -296,7 +296,7 @@ public class MenuCommandService {
         return MenuResponseDto.Menu.from(menu);
     }
 
-    // 메뉴 삭제 (논리 삭제)
+    // 메뉴 삭제 (영구 삭제)
     public void deleteMenu(
             UUID businessId,
             UUID menuId,
@@ -314,8 +314,8 @@ public class MenuCommandService {
         // 3. 삭제 전에 미래 예약 검증
         menuValidator.validateNoFutureActiveReservations(menuId);
 
-        // 4. 비활성화 (논리 삭제)
-        menu.deactivate();
+        // 4. 메뉴 삭제
+        menuRepository.delete(menu);
 
         log.info("메뉴 삭제 완료: menuId={}", menuId);
     }

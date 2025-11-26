@@ -7,7 +7,7 @@ import {
   CreateBusinessHandlerSuccessResponse,
   CreateBusinessRequestBody,
   CreateBusinessSuccessPayload,
-} from '@/types/auth/business/createBusiness';
+} from '@/types/auth/business/create-business';
 import { getServerSession } from '@/lib/session/server';
 
 const BACKEND_API_URL =

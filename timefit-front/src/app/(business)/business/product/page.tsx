@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+import type { CreateUpdateMenuRequest, Menu } from '@/types/menu/menu';
 import type { Product } from '@/types/product/product';
-import type { Menu, CreateUpdateMenuRequest } from '@/types/menu/menu';
-import { ProductListPanel } from '@/components/business/product/product-list-panel';
+import { useMenuDetail } from '@/hooks/menu/use-menu-detail';
+import { useMenuList } from '@/hooks/menu/use-menu-list';
 import { ProductDetailForm } from '@/components/business/product/product-detail-form';
 import { ProductEmptyState } from '@/components/business/product/product-empty-state';
-import { useMenuList } from '@/hooks/menu/use-menu-list';
-import { useMenuDetail } from '@/hooks/menu/use-menu-detail';
+import { ProductListPanel } from '@/components/business/product/product-list-panel';
 
 // Menu → Product 변환 함수
 function menuToProduct(menu: Menu): Product {
@@ -51,10 +52,15 @@ export default function Page() {
   const [isCreating, setIsCreating] = useState(false);
 
   // 메뉴 목록 조회
-  const { menus, loading: listLoading, createMenu } = useMenuList();
+  const { menus, loading: listLoading, createMenu, refetch } = useMenuList();
 
   // 선택된 메뉴 상세 조회
-  const { menu: selectedMenu, updateMenu, deleteMenu } = useMenuDetail(selectedMenuId);
+  const {
+    menu: selectedMenu,
+    updateMenu,
+    deleteMenu,
+    toggleMenu,
+  } = useMenuDetail(selectedMenuId);
 
   // Menu[] → Product[] 변환
   const products = useMemo(() => menus.map(menuToProduct), [menus]);
@@ -79,19 +85,19 @@ export default function Page() {
     const menuRequest = productToMenuRequest(productData);
 
     if (selectedMenuId) {
-      // 수정
       const success = await updateMenu(menuRequest);
       if (success) {
         toast.success('메뉴가 수정되었습니다.');
-        setSelectedMenuId(null);
+        await refetch();
       } else {
         toast.error('메뉴 수정에 실패했습니다.');
       }
     } else {
-      // 생성
       const newMenu = await createMenu(menuRequest);
       if (newMenu) {
         toast.success('메뉴가 생성되었습니다.');
+        await refetch();
+        setSelectedMenuId(newMenu.menuId);
         setIsCreating(false);
       } else {
         toast.error('메뉴 생성에 실패했습니다.');
@@ -103,15 +109,21 @@ export default function Page() {
     const success = await deleteMenu();
     if (success) {
       toast.success('메뉴가 삭제되었습니다.');
+      await refetch(); // 목록 갱신
       setSelectedMenuId(null);
     } else {
       toast.error('메뉴 삭제에 실패했습니다.');
     }
   };
 
-  const handleCancel = () => {
-    setSelectedMenuId(null);
-    setIsCreating(false);
+  const handleToggleActive = async () => {
+    const success = await toggleMenu();
+    if (success) {
+      toast.success('메뉴 상태가 변경되었습니다.');
+      await refetch(); // 목록 갱신
+    } else {
+      toast.error('메뉴 상태 변경에 실패했습니다.');
+    }
   };
 
   // 로딩 상태 처리
@@ -129,7 +141,7 @@ export default function Page() {
       <div className="w-80">
         <ProductListPanel
           products={products}
-          selectedProductId={selectedProduct?.id}
+          selectedProductId={isCreating ? null : selectedProduct?.id}
           onSelectProduct={handleSelectProduct}
           onNewProduct={handleNewProduct}
         />
@@ -139,10 +151,11 @@ export default function Page() {
       <div className="flex-1">
         {selectedProduct || isCreating ? (
           <ProductDetailForm
+            key={isCreating ? 'creating-new' : selectedProduct?.id || 'new'}
             product={selectedProduct}
             onSave={handleSaveProduct}
-            onCancel={handleCancel}
             onDelete={handleDeleteProduct}
+            onToggleActive={handleToggleActive}
           />
         ) : (
           <ProductEmptyState />

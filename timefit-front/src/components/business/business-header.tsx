@@ -1,8 +1,8 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
+
+import { navItems } from '@/lib/data/sidebar/sidebar-menu';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,7 +11,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { navItems } from '@/lib/data/sidebar/sidebarMenu';
+import { Separator } from '@/components/ui/separator';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 function getPageTitle(pathname: string) {
   for (const section of navItems) {

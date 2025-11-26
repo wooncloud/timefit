@@ -1,5 +1,6 @@
-import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { TableCell, TableRow } from '@/components/ui/table';
+
 import { ReservationActionsDropdown } from './reservation-actions-dropdown';
 
 export interface Reservation {

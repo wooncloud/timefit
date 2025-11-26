@@ -1,9 +1,9 @@
 'use client';
 
-import FullCalendar from '@fullcalendar/react';
+import koLocale from '@fullcalendar/core/locales/ko';
 import dayGridPlugin from '@fullcalendar/daygrid'; // a plugin!
 import interactionPlugin from '@fullcalendar/interaction'; // needed for dayClick
-import koLocale from '@fullcalendar/core/locales/ko';
+import FullCalendar from '@fullcalendar/react';
 import { toast } from 'sonner';
 
 export default function Calendar() {

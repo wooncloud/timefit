@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { handleAuthError } from '@/lib/api/handle-auth-error';
+import { useCallback, useEffect, useState } from 'react';
+
 import type {
-  Menu,
   CreateUpdateMenuRequest,
-  GetMenuDetailHandlerResponse,
-  UpdateMenuHandlerResponse,
   DeleteMenuHandlerResponse,
+  GetMenuDetailHandlerResponse,
+  Menu,
+  UpdateMenuHandlerResponse,
 } from '@/types/menu/menu';
 import { useBusinessStore } from '@/store/business-store';
+import { handleAuthError } from '@/lib/api/handle-auth-error';
 
 interface UseMenuDetailReturn {
   menu: Menu | null;
@@ -18,6 +19,7 @@ interface UseMenuDetailReturn {
   refetch: () => Promise<void>;
   updateMenu: (data: CreateUpdateMenuRequest) => Promise<boolean>;
   deleteMenu: () => Promise<boolean>;
+  toggleMenu: () => Promise<boolean>;
   updating: boolean;
   deleting: boolean;
 }
@@ -34,6 +36,7 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
 
   const fetchMenu = useCallback(async () => {
     if (!businessId || !menuId) {
+      setMenu(null);
       setLoading(false);
       return;
     }
@@ -42,7 +45,9 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/business/${businessId}/menu/${menuId}`);
+      const response = await fetch(
+        `/api/business/${businessId}/menu/${menuId}`
+      );
       const result: GetMenuDetailHandlerResponse = await response.json();
 
       if (handleAuthError(result)) {
@@ -57,7 +62,10 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
 
       setMenu(result.data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '메뉴를 불러오는 중 오류가 발생했습니다.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : '메뉴를 불러오는 중 오류가 발생했습니다.';
       console.error('Menu detail fetch error:', errorMessage);
       setError(errorMessage);
       setMenu(null);
@@ -66,7 +74,9 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
     }
   }, [businessId, menuId]);
 
-  const updateMenu = async (data: CreateUpdateMenuRequest): Promise<boolean> => {
+  const updateMenu = async (
+    data: CreateUpdateMenuRequest
+  ): Promise<boolean> => {
     if (!businessId || !menuId) {
       setError('비즈니스 정보 또는 메뉴 ID가 없습니다.');
       return false;
@@ -76,13 +86,16 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
       setUpdating(true);
       setError(null);
 
-      const response = await fetch(`/api/business/${businessId}/menu/${menuId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await fetch(
+        `/api/business/${businessId}/menu/${menuId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
       const result: UpdateMenuHandlerResponse = await response.json();
 
@@ -98,7 +111,10 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
       setMenu(result.data);
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '메뉴 수정 중 오류가 발생했습니다.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : '메뉴 수정 중 오류가 발생했습니다.';
       console.error('Menu update error:', errorMessage);
       setError(errorMessage);
       return false;
@@ -117,9 +133,12 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
       setDeleting(true);
       setError(null);
 
-      const response = await fetch(`/api/business/${businessId}/menu/${menuId}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/business/${businessId}/menu/${menuId}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       const result: DeleteMenuHandlerResponse = await response.json();
 
@@ -135,12 +154,58 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
       setMenu(null);
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '메뉴 삭제 중 오류가 발생했습니다.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : '메뉴 삭제 중 오류가 발생했습니다.';
       console.error('Menu delete error:', errorMessage);
       setError(errorMessage);
       return false;
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const toggleMenu = async (): Promise<boolean> => {
+    if (!businessId || !menuId) {
+      setError('비즈니스 정보 또는 메뉴 ID가 없습니다.');
+      return false;
+    }
+
+    try {
+      setUpdating(true);
+      setError(null);
+
+      const response = await fetch(
+        `/api/business/${businessId}/menu/${menuId}/toggle`,
+        {
+          method: 'PATCH',
+        }
+      );
+
+      const result: UpdateMenuHandlerResponse = await response.json();
+
+      if (handleAuthError(result)) {
+        return false;
+      }
+
+      if (!result.success || !result.data) {
+        setError(result.message || '메뉴 상태 변경에 실패했습니다.');
+        return false;
+      }
+
+      setMenu(result.data);
+      return true;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : '메뉴 상태 변경 중 오류가 발생했습니다.';
+      console.error('Menu toggle error:', errorMessage);
+      setError(errorMessage);
+      return false;
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -155,6 +220,7 @@ export function useMenuDetail(menuId: string | null): UseMenuDetailReturn {
     refetch: fetchMenu,
     updateMenu,
     deleteMenu,
+    toggleMenu,
     updating,
     deleting,
   };

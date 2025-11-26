@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api/auth-middleware';
+
 import type {
-  InviteMemberRequest,
   InviteMemberApiResponse,
   InviteMemberHandlerResponse,
-} from '@/types/business/teamMember';
+  InviteMemberRequest,
+} from '@/types/business/team-member';
+import { withAuth } from '@/lib/api/auth-middleware';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 

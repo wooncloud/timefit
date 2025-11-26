@@ -2,6 +2,7 @@ package timefit.auth.service.validator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import timefit.exception.auth.AuthErrorCode;
 import timefit.exception.auth.AuthException;
@@ -10,7 +11,6 @@ import timefit.user.repository.UserRepository;
 
 /**
  * Auth 도메인 검증 클래스
- *
  * 목적:
  * - Auth 고유의 검증 로직 분리
  * - Service 계층 코드 간결화
@@ -22,6 +22,7 @@ import timefit.user.repository.UserRepository;
 public class AuthValidator {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 이메일 중복 검증
@@ -53,7 +54,7 @@ public class AuthValidator {
                 });
 
         // 2. 비밀번호 검증
-        if (!password.equals(user.getPasswordHash())) {
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             log.warn("비밀번호 불일치: {}", email);
             throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
         }

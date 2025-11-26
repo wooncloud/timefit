@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -19,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
 import type { TeamMember } from './team-table-row';
 
 interface ChangeStatusDialogProps {
@@ -107,7 +109,7 @@ export function ChangeStatusDialog({
             </Label>
             <Select
               value={selectedStatus}
-              onValueChange={(value) =>
+              onValueChange={value =>
                 setSelectedStatus(value as TeamMember['status'])
               }
             >

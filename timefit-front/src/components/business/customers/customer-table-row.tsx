@@ -1,6 +1,10 @@
 import dayjs from 'dayjs';
+
 import 'dayjs/locale/ko';
-import { TableCell, TableRow } from '@/components/ui/table';
+
+import { Eye, MoreVertical, Pencil } from 'lucide-react';
+
+import type { Customer } from '@/types/customer/customer';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,8 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Eye, Pencil } from 'lucide-react';
-import type { Customer } from '@/types/customer/customer';
+import { TableCell, TableRow } from '@/components/ui/table';
 
 dayjs.locale('ko');
 

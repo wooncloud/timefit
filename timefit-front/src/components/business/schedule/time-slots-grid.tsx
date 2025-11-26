@@ -1,8 +1,10 @@
 'use client';
 
 import { useMemo } from 'react';
+
+import type { TimeSlotStatus } from '@/lib/data/schedule/time-slot-status';
+
 import { TimeSlotButton } from './time-slot-button';
-import type { TimeSlotStatus } from '@/lib/data/schedule/timeSlotStatus';
 
 interface TimeSlot {
   time: string;

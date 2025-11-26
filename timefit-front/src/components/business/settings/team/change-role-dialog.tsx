@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -19,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
 import type { TeamMember } from './team-table-row';
 
 interface ChangeRoleDialogProps {
@@ -34,7 +36,8 @@ export function ChangeRoleDialog({
   member,
   onConfirm,
 }: ChangeRoleDialogProps) {
-  const [selectedRole, setSelectedRole] = useState<TeamMember['role']>('MEMBER');
+  const [selectedRole, setSelectedRole] =
+    useState<TeamMember['role']>('MEMBER');
 
   // 멤버가 변경되면 현재 역할로 초기화
   useEffect(() => {
@@ -83,7 +86,11 @@ export function ChangeRoleDialog({
           <div className="grid gap-2">
             <Label>현재 권한</Label>
             <div className="text-sm font-medium">
-              {member.role === 'OWNER' ? '관리자' : member.role === 'MANAGER' ? '매니저' : '멤버(직원)'}
+              {member.role === 'OWNER'
+                ? '관리자'
+                : member.role === 'MANAGER'
+                  ? '매니저'
+                  : '멤버(직원)'}
             </div>
           </div>
 
@@ -93,7 +100,7 @@ export function ChangeRoleDialog({
             </Label>
             <Select
               value={selectedRole}
-              onValueChange={(value) =>
+              onValueChange={value =>
                 setSelectedRole(value as TeamMember['role'])
               }
             >

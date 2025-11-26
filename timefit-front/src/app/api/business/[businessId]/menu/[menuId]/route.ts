@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api/auth-middleware';
+import { NextResponse } from 'next/server';
+
 import type {
+  CreateUpdateMenuRequest,
+  DeleteMenuHandlerResponse,
   GetMenuDetailHandlerResponse,
   UpdateMenuHandlerResponse,
-  DeleteMenuHandlerResponse,
-  CreateUpdateMenuRequest,
 } from '@/types/menu/menu';
+import { withAuth } from '@/lib/api/auth-middleware';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -20,8 +21,9 @@ export const GET = withAuth<GetMenuDetailHandlerResponse>(
       const pathSegments = url.pathname.split('/').filter(Boolean);
       const businessIndex = pathSegments.indexOf('business');
       const menuIndex = pathSegments.indexOf('menu');
-      
-      const businessId = businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
+
+      const businessId =
+        businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
       const menuId = menuIndex !== -1 ? pathSegments[menuIndex + 1] : null;
 
       if (!businessId || !menuId) {
@@ -84,8 +86,9 @@ export const PATCH = withAuth<UpdateMenuHandlerResponse>(
       const pathSegments = url.pathname.split('/').filter(Boolean);
       const businessIndex = pathSegments.indexOf('business');
       const menuIndex = pathSegments.indexOf('menu');
-      
-      const businessId = businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
+
+      const businessId =
+        businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
       const menuId = menuIndex !== -1 ? pathSegments[menuIndex + 1] : null;
 
       if (!businessId || !menuId) {
@@ -152,8 +155,9 @@ export const DELETE = withAuth<DeleteMenuHandlerResponse>(
       const pathSegments = url.pathname.split('/').filter(Boolean);
       const businessIndex = pathSegments.indexOf('business');
       const menuIndex = pathSegments.indexOf('menu');
-      
-      const businessId = businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
+
+      const businessId =
+        businessIndex !== -1 ? pathSegments[businessIndex + 1] : null;
       const menuId = menuIndex !== -1 ? pathSegments[menuIndex + 1] : null;
 
       if (!businessId || !menuId) {

@@ -1,6 +1,7 @@
+import type { Product, ProductCategory } from '@/types/product/product';
+import { productCategories } from '@/lib/constants/product-categories';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -8,8 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Product, ProductCategory } from '@/types/product/product';
-import { productCategories } from '@/lib/constants/product-categories';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ProductBasicInfoSectionProps {
   formData: Partial<Product>;
@@ -31,7 +31,7 @@ export function ProductBasicInfoSection({
         <Input
           id="service_name"
           value={formData.service_name || ''}
-          onChange={(e) =>
+          onChange={e =>
             onFormDataChange({ ...formData, service_name: e.target.value })
           }
           placeholder="디자인 컷"
@@ -67,7 +67,7 @@ export function ProductBasicInfoSection({
             id="price"
             type="number"
             value={formData.price || 0}
-            onChange={(e) =>
+            onChange={e =>
               onFormDataChange({ ...formData, price: Number(e.target.value) })
             }
             min="0"
@@ -83,17 +83,12 @@ export function ProductBasicInfoSection({
         <Textarea
           id="description"
           value={formData.description || ''}
-          onChange={(e) =>
+          onChange={e =>
             onFormDataChange({ ...formData, description: e.target.value })
           }
           placeholder="트렌디한 헤어 스타일링"
           rows={3}
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="image">이미지</Label>
-        <Input id="image" type="file" accept="image/*" />
       </div>
     </div>
   );

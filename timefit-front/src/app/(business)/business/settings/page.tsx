@@ -1,18 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useBusinessStore } from '@/store';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+import type { UpdateBusinessRequest } from '@/types/business/business-detail';
+import { useBusinessDetail } from '@/hooks/business/use-business-detail';
+import { AddressSearch } from '@/components/business/settings/address-search';
+import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
+import { FormLabel } from '@/components/business/settings/form-label';
+import { SettingsHeader } from '@/components/business/settings/settings-header';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { SettingsHeader } from '@/components/business/settings/settings-header';
-import { FormLabel } from '@/components/business/settings/form-label';
-import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
-import { AddressSearch } from '@/components/business/settings/address-search';
-import { useBusinessStore } from '@/store';
-import { useBusinessDetail } from '@/hooks/business/useBusinessDetail';
-import type { UpdateBusinessRequest } from '@/types/business/businessDetail';
-import { toast } from 'sonner';
-import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function Page() {
   const { business: storedBusiness } = useBusinessStore();
@@ -63,7 +64,7 @@ export default function Page() {
     field: keyof UpdateBusinessRequest,
     value: string | string[]
   ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   // 저장 핸들러
@@ -87,7 +88,7 @@ export default function Page() {
                 name="businessName"
                 value={formData.businessName ?? business.businessName}
                 placeholder="홍길동의 카페"
-                onChange={(e) => handleChange('businessName', e.target.value)}
+                onChange={e => handleChange('businessName', e.target.value)}
                 disabled={updating}
               />
             </div>
@@ -95,11 +96,10 @@ export default function Page() {
               <FormLabel text="업종" required />
               <BusinessTypeSelect
                 value={
-                  formData.businessTypes?.[0] ?? (business.businessTypes[0] || '')
+                  formData.businessTypes?.[0] ??
+                  (business.businessTypes[0] || '')
                 }
-                onValueChange={(value) =>
-                  handleChange('businessTypes', [value])
-                }
+                onValueChange={value => handleChange('businessTypes', [value])}
               />
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function Page() {
             <FormLabel text="주소" required />
             <AddressSearch
               value={formData.address ?? business.address}
-              onChange={(value) => handleChange('address', value)}
+              onChange={value => handleChange('address', value)}
             />
           </div>
 
@@ -132,7 +132,7 @@ export default function Page() {
               <Input
                 placeholder="02-1234-5678"
                 value={formData.contactPhone ?? business.contactPhone}
-                onChange={(e) => handleChange('contactPhone', e.target.value)}
+                onChange={e => handleChange('contactPhone', e.target.value)}
                 disabled={updating}
               />
             </div>
@@ -152,7 +152,7 @@ export default function Page() {
               placeholder="맛있는 커피와 디저트를 제공하는 아늑한 카페입니다. 신선한 원두와 수제 디저트로 고객님께 특별한 경험을 선사합니다."
               className="min-h-[120px]"
               value={formData.description ?? business.description}
-              onChange={(e) => handleChange('description', e.target.value)}
+              onChange={e => handleChange('description', e.target.value)}
               disabled={updating}
             />
           </div>

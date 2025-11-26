@@ -2,20 +2,21 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+
 import type {
   BusinessSignupFormData,
   BusinessSignupFormErrors,
   CreateBusinessRequestBody,
-} from '@/types/auth/business/createBusiness';
-import { businessService } from '@/services/business/businessService';
-import {
-  validateBusinessSignupForm,
-  initialBusinessSignupForm,
-} from '@/lib/validators/businessValidators';
+} from '@/types/auth/business/create-business';
+import { businessService } from '@/services/business/business-service';
 import {
   formatBusinessNumber,
   formatContactPhone,
-} from '@/lib/formatters/businessFormatter';
+} from '@/lib/formatters/business-formatter';
+import {
+  initialBusinessSignupForm,
+  validateBusinessSignupForm,
+} from '@/lib/validators/business-validators';
 
 interface UseBusinessSignupOptions {
   onSuccess?: () => void;
@@ -56,14 +57,14 @@ export function useBusinessSignup(options: UseBusinessSignupOptions = {}) {
       nextValue = formatContactPhone(value);
     }
 
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [fieldName]: nextValue,
     }));
 
     // 입력시 해당 필드의 에러 메시지 제거
     if (errors[fieldName]) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         [fieldName]: undefined,
       }));
@@ -71,13 +72,13 @@ export function useBusinessSignup(options: UseBusinessSignupOptions = {}) {
   };
 
   const handleBusinessTypesChange = (values: string[]) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       businessTypes: values,
     }));
 
     if (errors.businessTypes) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         businessTypes: undefined,
       }));
@@ -114,9 +115,7 @@ export function useBusinessSignup(options: UseBusinessSignupOptions = {}) {
       const data = await businessService.createBusiness(requestBody);
 
       if (data.success) {
-        setMessage(
-          '사업자 등록이 완료되었습니다. 로그인 페이지로 이동합니다.'
-        );
+        setMessage('사업자 등록이 완료되었습니다. 로그인 페이지로 이동합니다.');
         setFormData({ ...initialBusinessSignupForm });
         setErrors({});
 

@@ -1,5 +1,5 @@
-import { SignupFormData, SignupFormErrors } from '@/types/auth/signup';
 import { SigninFormData, SigninFormErrors } from '@/types/auth/signin';
+import { SignupFormData, SignupFormErrors } from '@/types/auth/signup';
 
 interface SignupValidationResult {
   isValid: boolean;

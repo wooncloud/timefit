@@ -3,14 +3,27 @@ spring:
     active: dev
   application:
     name: timefit-back
-  mvc:
-    favicon:
-      enabled: false
 
   servlet:
     multipart:
       max-file-size: 20MB
       max-request-size: 100MB
+
+    # Email Configuration (Gmail SMTP)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}  # Gmail 주소 (환경변수)
+    password: ${MAIL_PASSWORD}  # Gmail 앱 비밀번호 (환경변수)
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 5000
+          starttls:
+            enable: true
+            required: true
+        debug: false  # 디버깅 필요 시 true로 변경
 
 server:
   port: 8080
@@ -79,10 +92,10 @@ spring:
 
 ---
 
-# SpringDoc 최소 설정 추가
+# SpringDoc
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /v1/api-docs
     enabled: true
   swagger-ui:
     path: /swagger-ui.html

@@ -1,5 +1,5 @@
-import { MobileNavbar } from '@/components/layout/mobile-navbar';
 import { MobileDock } from '@/components/layout/mobile-dock';
+import { MobileNavbar } from '@/components/layout/mobile-navbar';
 
 export default function MobileLayout({
   children,

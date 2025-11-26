@@ -1,5 +1,6 @@
+import { PackageOpen, Plus } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
-import { Plus, PackageOpen } from 'lucide-react';
 import {
   Empty,
   EmptyContent,
@@ -28,8 +29,7 @@ export function ProductListEmpty({ onNewProduct }: ProductListEmptyProps) {
         </EmptyHeader>
         <EmptyContent>
           <Button size="sm" onClick={onNewProduct}>
-            <Plus className="h-4 w-4" />
-            새 서비스 추가
+            <Plus className="h-4 w-4" />새 서비스 추가
           </Button>
         </EmptyContent>
       </Empty>

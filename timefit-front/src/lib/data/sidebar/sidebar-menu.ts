@@ -1,4 +1,4 @@
-import { Settings2, Store, User, House } from 'lucide-react';
+import { House, Settings2, Store, User } from 'lucide-react';
 
 export const navItems = [
   {
@@ -16,6 +16,7 @@ export const navItems = [
     isActive: true,
     items: [
       { title: '영업 일정', url: '/business/schedule' },
+      { title: '카테고리', url: '/business/category' },
       { title: '서비스/상품', url: '/business/product' },
       { title: '예약 현황', url: '/business/reservations' },
     ],

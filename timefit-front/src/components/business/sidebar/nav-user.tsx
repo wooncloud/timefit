@@ -1,5 +1,8 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUserStore } from '@/store';
 import { ChevronsUpDown, LogOut } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,14 +20,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useUserStore } from '@/store';
 
 export function NavUser() {
-  const name = useUserStore((state) => state.user?.name ?? '');
-  const email = useUserStore((state) => state.user?.email ?? '');
-  const profileImageUrl = useUserStore((state) => state.user?.profileImageUrl);
+  const name = useUserStore(state => state.user?.name ?? '');
+  const email = useUserStore(state => state.user?.email ?? '');
+  const profileImageUrl = useUserStore(state => state.user?.profileImageUrl);
 
   const { isMobile } = useSidebar();
   const router = useRouter();

@@ -1,12 +1,12 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Table } from '@/components/ui/table';
-import { ReservationTableHeader } from '@/components/business/reservations/reservation-table-header';
-import { ReservationTableBody } from '@/components/business/reservations/reservation-table-body';
+import { mockReservations } from '@/lib/mock';
 import { ReservationFilterToolbar } from '@/components/business/reservations/reservation-filter-toolbar';
 import { ReservationStatsCards } from '@/components/business/reservations/reservation-stats-cards';
-import { mockReservations } from '@/lib/mock';
+import { ReservationTableBody } from '@/components/business/reservations/reservation-table-body';
+import { ReservationTableHeader } from '@/components/business/reservations/reservation-table-header';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table } from '@/components/ui/table';
 
 export default function Page() {
   return (

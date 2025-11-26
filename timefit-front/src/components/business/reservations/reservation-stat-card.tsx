@@ -1,6 +1,7 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { LucideIcon } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ReservationStatCardProps {
   icon: LucideIcon;
