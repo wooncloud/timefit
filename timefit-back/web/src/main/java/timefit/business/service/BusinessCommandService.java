@@ -15,6 +15,8 @@ import timefit.business.service.validator.BusinessValidator;
 import timefit.common.entity.BusinessRole;
 import timefit.exception.business.BusinessErrorCode;
 import timefit.exception.business.BusinessException;
+import timefit.invitation.dto.InvitationResponseDto;
+import timefit.invitation.service.InvitationService;
 import timefit.user.entity.User;
 import timefit.user.repository.UserRepository;
 
@@ -28,7 +30,7 @@ public class BusinessCommandService {
 
     private final BusinessRepository businessRepository;
     private final UserBusinessRoleRepository userBusinessRoleRepository;
-    private final UserRepository userRepository;
+    private final InvitationService invitationService;
     private final BusinessValidator businessValidator;
     private final AuthValidator authValidator;
 
@@ -159,43 +161,17 @@ public class BusinessCommandService {
         log.info("구성원 초대 시작: businessId={}, inviterUserId={}, email={}",
                 businessId, inviterUserId, request.email());
 
-        // 1. 업체 존재 확인
-        businessValidator.validateBusinessExists(businessId);
-
-        // 2. 초대자 권한 확인 (OWNER 또는 MANAGER)
-        businessValidator.validateManagerOrOwnerRole(inviterUserId, businessId);
-
-        // 3. 초대할 사용자 조회 (이메일로)
-        User invitee = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> {
-                    log.warn("초대 실패 - 사용자 없음: email={}", request.email());
-                    return new BusinessException(BusinessErrorCode.USER_NOT_FOUND);
-                });
-
-        // 4. 이미 등록된 사용자인지 확인
-        userBusinessRoleRepository.findByUserIdAndBusinessId(invitee.getId(), businessId)
-                .ifPresent(existing -> {
-                    log.warn("초대 실패 - 이미 등록된 구성원: userId={}, businessId={}",
-                            invitee.getId(), businessId);
-                    throw new BusinessException(BusinessErrorCode.USER_ALREADY_MEMBER);
-                });
-
-        // 5. 초대자 조회
-        User inviter = authValidator.validateUserExists(inviterUserId);
-
-        // 6. MEMBER 권한으로 생성
-        UserBusinessRole memberRole = UserBusinessRole.createMember(
-                invitee,
-                businessValidator.validateBusinessExists(businessId),
-                inviter
+        InvitationResponseDto.Invitation invitation = invitationService.sendInvitation(
+                businessId,
+                request.email(),
+                BusinessRole.MEMBER,
+                inviterUserId
         );
 
-        UserBusinessRole savedMemberRole = userBusinessRoleRepository.save(memberRole);
+        log.info("초대 이메일 발송 완료: invitationId={}, email={}",
+                invitation.invitationId(), request.email());
 
-        log.info("구성원 초대 완료: userId={}, businessId={}, role=MEMBER",
-                invitee.getId(), businessId);
-
-        return BusinessResponseDto.MemberListResponse.MemberResponse.of(savedMemberRole);
+        return BusinessResponseDto.MemberListResponse.MemberResponse.fromInvitation(invitation);
     }
 
     /**
