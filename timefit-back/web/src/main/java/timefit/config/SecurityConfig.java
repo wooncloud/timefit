@@ -124,6 +124,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/reservation/**").authenticated()
                         .requestMatchers("/api/reservations/**").authenticated()
 
+                        // ========== 초대 관련 API (인증 필요) ==========
+                        .requestMatchers("/api/invitation/**").authenticated()
+
                         // ========== 사용자 API (인증 필요) ==========
                         .requestMatchers("/api/user/**").authenticated()
 
