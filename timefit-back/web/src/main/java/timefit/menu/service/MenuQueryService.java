@@ -29,10 +29,10 @@ public class MenuQueryService {
         log.info("메뉴 목록 조회 시작: businessId={}", businessId);
 
         businessValidator.validateBusinessExists(businessId);
-        List<Menu> menus = menuQueryRepository.findActiveMenusByBusinessId(businessId);
+        List<Menu> menuList = menuQueryRepository.findActiveMenusByBusinessId(businessId);
 
-        log.info("메뉴 목록 조회 완료: businessId={}, count={}", businessId, menus.size());
-        return MenuResponseDto.MenuList.of(menus);
+        log.info("메뉴 목록 조회 완료: businessId={}, count={}", businessId, menuList.size());
+        return MenuResponseDto.MenuList.of(menuList);
     }
 
     // 메뉴 목록 조회 (검색/필터링)
@@ -49,13 +49,13 @@ public class MenuQueryService {
 
         businessValidator.validateBusinessExists(businessId);
 
-        List<Menu> menus = menuQueryRepository.findMenusWithFilters(
+        List<Menu> menuList = menuQueryRepository.findMenusWithFilters(
                 businessId, serviceName, businessCategoryId,
                 minPrice, maxPrice, isActive
         );
 
-        log.info("메뉴 목록 필터링 완료: businessId={}, count={}", businessId, menus.size());
-        return MenuResponseDto.MenuList.of(menus);
+        log.info("메뉴 목록 필터링 완료: businessId={}, count={}", businessId, menuList.size());
+        return MenuResponseDto.MenuList.of(menuList);
     }
 
     // 메뉴 상세 조회
