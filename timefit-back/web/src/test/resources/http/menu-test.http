@@ -1,0 +1,276 @@
+### ================================================================
+### Timefit Menu 관리 테스트 (Happy Path)
+### 📝 테스트 시나리오:
+###    1. 사장 계정 회원가입
+###    2. 업체 생성
+###    3. 영업시간 등록 (월~금 09:00-18:00)
+###    4. 카테고리 생성 (헤어)
+###    5. Menu 생성 (RESERVATION_BASED)
+###    6. Menu 조회
+###    7. Menu 수정 (durationMinutes 변경 → BookingSlot 재생성)
+###    8. Menu 토글 (활성 → 비활성)
+###    9. Menu 토글 (비활성 → 활성)
+###    10. Menu 삭제
+### ================================================================
+
+@baseUrl = http://localhost:8080
+
+### ================================================================
+### 1. 사장 계정 회원가입
+### ================================================================
+
+# @name 사장회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "menu-owner@timefit.com",
+  "password": "password123",
+  "name": "메뉴사장",
+  "phoneNumber": "010-1111-2222"
+}
+
+> {%
+    client.global.set("ownerToken", response.body.data.accessToken);
+    console.log("✅ [1/9] 사장 회원가입 성공:", response.body.data.name);
+%}
+
+###
+
+### ================================================================
+### 2. 업체 생성
+### ================================================================
+
+# @name 업체생성
+POST {{baseUrl}}/api/business
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessName": "타임핏 뷰티샵",
+  "businessTypes": ["BD008"],
+  "businessNumber": "123-45-67890",
+  "address": "서울시 강남구",
+  "contactPhone": "02-1234-5678"
+}
+
+> {%
+    client.global.set("businessId", response.body.data.businessId);
+    console.log("✅ [2/9] 업체 생성 성공:", response.body.data.businessName);
+%}
+
+###
+
+### ================================================================
+### 3. 영업시간 등록 (월~금 09:00-18:00)
+### ================================================================
+
+# @name 영업시간등록
+POST {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "operatingHours": [
+    {
+      "dayOfWeek": "MONDAY",
+      "timeRanges": [{"startTime": "09:00", "endTime": "18:00"}]
+    },
+    {
+      "dayOfWeek": "TUESDAY",
+      "timeRanges": [{"startTime": "09:00", "endTime": "18:00"}]
+    },
+    {
+      "dayOfWeek": "WEDNESDAY",
+      "timeRanges": [{"startTime": "09:00", "endTime": "18:00"}]
+    },
+    {
+      "dayOfWeek": "THURSDAY",
+      "timeRanges": [{"startTime": "09:00", "endTime": "18:00"}]
+    },
+    {
+      "dayOfWeek": "FRIDAY",
+      "timeRanges": [{"startTime": "09:00", "endTime": "18:00"}]
+    },
+    {
+      "dayOfWeek": "SATURDAY",
+      "isClosed": true
+    },
+    {
+      "dayOfWeek": "SUNDAY",
+      "isClosed": true
+    }
+  ]
+}
+
+> {%
+    console.log("✅ [3/9] 영업시간 등록 성공");
+%}
+
+###
+
+### ================================================================
+### 4. 카테고리 생성 (헤어 서비스)
+### ================================================================
+
+# @name 카테고리생성
+POST {{baseUrl}}/api/business/{{businessId}}/category
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "헤어",
+  "categoryNotice": "헤어 관련 서비스입니다"
+}
+
+> {%
+    console.log("✅ [4/10] 카테고리 생성 성공");
+    console.log("    - 카테고리명:", response.body.data.categoryName);
+    console.log("    - 업종:", response.body.data.businessType);
+%}
+
+###
+
+### ================================================================
+### 5. Menu 생성 (RESERVATION_BASED)
+### ================================================================
+
+# @name 메뉴생성
+POST {{baseUrl}}/api/business/{{businessId}}/menu
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "헤어",
+  "serviceName": "헤어 커트",
+  "description": "기본 커트 서비스",
+  "price": 30000,
+  "durationMinutes": 60,
+  "orderType": "RESERVATION_BASED",
+  "autoGenerateSlots": true,
+  "slotSettings": {
+    "startDate": "2025-12-08",
+    "endDate": "2026-02-08",
+    "slotIntervalMinutes": 30,
+    "specificTimeRanges": [
+      {"startTime": "09:00", "endTime": "12:00"},
+      {"startTime": "14:00", "endTime": "18:00"}
+    ]
+  }
+}
+
+> {%
+    if (response.body.data && response.body.data.menuId) {
+        client.global.set("menuId", response.body.data.menuId);
+        console.log("✅ [5/10] Menu 생성 성공");
+        console.log("    - Menu ID:", response.body.data.menuId);
+        console.log("    - 서비스명:", response.body.data.serviceName);
+        console.log("    - 소요시간:", response.body.data.durationMinutes + "분");
+    } else {
+        console.error("❌ Menu 생성 실패:", response.body.errorResponse);
+    }
+%}
+
+###
+
+### ================================================================
+### 6. Menu 조회
+### ================================================================
+
+# @name 메뉴조회
+GET {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("✅ [6/10] Menu 조회 성공");
+    console.log("    - 서비스명:", response.body.data.serviceName);
+    console.log("    - 활성 상태:", response.body.data.isActive);
+    console.log("    - 가격:", response.body.data.price + "원");
+%}
+
+###
+
+### ================================================================
+### 7. Menu 수정 (durationMinutes 변경 → BookingSlot 재생성)
+### ================================================================
+
+# @name 메뉴수정
+PATCH {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId}}
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "헤어",
+  "serviceName": "헤어 커트 + 스타일링",
+  "description": "커트 + 스타일링 패키지",
+  "price": 40000,
+  "durationMinutes": 90,
+  "orderType": "RESERVATION_BASED",
+  "autoGenerateSlots": true,
+  "slotSettings": {
+    "startDate": "2025-12-08",
+    "endDate": "2026-02-08",
+    "slotIntervalMinutes": 30,
+    "specificTimeRanges": [
+      {"startTime": "09:00", "endTime": "12:00"},
+      {"startTime": "14:00", "endTime": "18:00"}
+    ]
+  }
+}
+
+> {%
+    console.log("✅ [7/10] Menu 수정 성공");
+    console.log("    - 서비스명:", response.body.data.serviceName);
+    console.log("    - 소요시간: 60분 → 90분 (BookingSlot 재생성됨)");
+    console.log("    - 가격:", response.body.data.price + "원");
+%}
+
+###
+
+### ================================================================
+### 8. Menu 토글 (활성 → 비활성)
+### ================================================================
+
+# @name 메뉴비활성화
+PATCH {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId}}/toggle
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("✅ [8/10] Menu 비활성화 성공");
+    console.log("    - 활성 상태:", response.body.data.isActive);
+%}
+
+###
+
+### ================================================================
+### 9. Menu 토글 (비활성 → 활성)
+### ================================================================
+
+# @name 메뉴활성화
+PATCH {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId}}/toggle
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("✅ [9/10] Menu 재활성화 성공");
+    console.log("    - 활성 상태:", response.body.data.isActive);
+%}
+
+###
+
+### ================================================================
+### 10. Menu 삭제
+### ================================================================
+
+# @name 메뉴삭제
+DELETE {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("✅ [10/10] Menu 삭제 성공");
+    console.log("\n🎉 모든 테스트 완료!");
+%}
+
+###
