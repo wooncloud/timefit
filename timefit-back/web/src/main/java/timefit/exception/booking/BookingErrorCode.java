@@ -9,6 +9,7 @@ public enum BookingErrorCode {
 
     AVAILABLE_SLOT_NOT_FOUND("예약 슬롯을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     AVAILABLE_SLOT_CONFLICT("예약 가능 시간이 중복됩니다", HttpStatus.CONFLICT),
+    AVAILABLE_SLOT_INCOMPLETE_SETTINGS("슬롯 설정이 누락되었습니다", HttpStatus.BAD_REQUEST),
     AVAILABLE_SLOT_PAST_DATE("과거 날짜에는 슬롯을 생성할 수 없습니다", HttpStatus.BAD_REQUEST),
     AVAILABLE_SLOT_INVALID_TIME("시작 시간이 종료 시간보다 늦을 수 없습니다", HttpStatus.BAD_REQUEST),
     AVAILABLE_SLOT_OUTSIDE_BUSINESS_HOURS("영업시간 외에는 슬롯을 생성할 수 없습니다", HttpStatus.BAD_REQUEST),

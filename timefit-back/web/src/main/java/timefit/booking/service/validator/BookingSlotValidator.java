@@ -146,34 +146,44 @@ public class BookingSlotValidator {
      * BookingSlot 생성 설정 검증
      *
      * [검증 항목]
-     * 1. 날짜 순서 검증 (startDate <= endDate)
-     * 2. 최대 기간 검증 (3개월)
-     * 3. 특정 시간대 검증 (선택사항)
+     * 1. settings null 체크
+     * 2. startDate, endDate 필수 값 체크
+     * 3. 날짜 순서 검증 (startDate <= endDate)
+     * 4. 최대 기간 검증 (3개월)
+     * 5. 특정 시간대 검증 (선택사항)
      *
      * @param settings BookingSlot 생성 설정
      * @throws BookingException 검증 실패 시
      */
     public void validateSlotSettings(MenuRequestDto.BookingSlotSettings settings) {
+        // 0. settings null 체크
+        if (settings == null) {
+            throw new BookingException(
+                    BookingErrorCode.AVAILABLE_SLOT_INCOMPLETE_SETTINGS);
+        }
+
+        // 1. startDate, endDate 필수 값 체크
         LocalDate startDate = settings.startDate();
         LocalDate endDate = settings.endDate();
 
-        // 1. 날짜 순서 검증
+        if (startDate == null || endDate == null) {
+            throw new BookingException(
+                    BookingErrorCode.AVAILABLE_SLOT_INCOMPLETE_SETTINGS);
+        }
+
+        // 2. 날짜 순서 검증
         if (startDate.isAfter(endDate)) {
             throw new BookingException(
-                    BookingErrorCode.AVAILABLE_SLOT_INVALID_TIME,
-                    "시작 날짜는 종료 날짜보다 이전이어야 합니다"
-            );
+                    BookingErrorCode.AVAILABLE_SLOT_INVALID_TIME);
         }
 
-        // 2. 최대 기간 검증 (3개월)
+        // 3. 최대 기간 검증 (3개월)
         if (startDate.plusMonths(3).isBefore(endDate)) {
             throw new BookingException(
-                    BookingErrorCode.AVAILABLE_SLOT_DATE_RANGE_EXCEEDED,
-                    "슬롯 생성 기간은 최대 3개월입니다"
-            );
+                    BookingErrorCode.AVAILABLE_SLOT_DATE_RANGE_EXCEEDED);
         }
 
-        // 3. 특정 시간대 검증 (선택사항)
+        // 4. 특정 시간대 검증 (선택사항)
         if (settings.specificTimeRanges() != null && !settings.specificTimeRanges().isEmpty()) {
             for (MenuRequestDto.TimeRange timeRange : settings.specificTimeRanges()) {
                 validateTimeRange(timeRange);
