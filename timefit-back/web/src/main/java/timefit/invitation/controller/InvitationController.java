@@ -1,5 +1,7 @@
 package timefit.invitation.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,12 +10,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import timefit.common.ResponseData;
 import timefit.common.auth.CurrentUserId;
+import timefit.common.swagger.operation.invitation.*;
+import timefit.common.swagger.requestbody.invitation.*;
 import timefit.invitation.dto.InvitationRequestDto;
 import timefit.invitation.dto.InvitationResponseDto;
 import timefit.invitation.service.InvitationService;
 
 import java.util.UUID;
 
+@Tag(name = "08. 초대 관리", description = "업체 구성원 초대 관리 API")
 @Slf4j
 @RestController
 @RequestMapping("/api")
@@ -24,14 +29,12 @@ public class InvitationController {
 
     /**
      * 초대 목록 조회
-     * @param businessId 업체 ID
-     * @param currentUserId 현재 사용자 ID
-     * @return 초대 목록
      */
+    @GetInvitationsOperation
     @GetMapping("/business/{businessId}/invitations")
     public ResponseEntity<ResponseData<InvitationResponseDto.InvitationList>> getInvitations(
             @PathVariable UUID businessId,
-            @CurrentUserId UUID currentUserId) {
+            @Parameter(hidden = true) @CurrentUserId UUID currentUserId) {
 
         log.info("초대 목록 조회 요청: businessId={}, userId={}", businessId, currentUserId);
 
@@ -43,16 +46,13 @@ public class InvitationController {
 
     /**
      * 초대 재발송
-     * @param businessId 업체 ID
-     * @param invitationId 초대 ID
-     * @param currentUserId 현재 사용자 ID
-     * @return 초대 정보
      */
+    @ResendInvitationOperation
     @PostMapping("/business/{businessId}/invitation/{invitationId}/resend")
     public ResponseEntity<ResponseData<InvitationResponseDto.Invitation>> resendInvitation(
             @PathVariable UUID businessId,
             @PathVariable UUID invitationId,
-            @CurrentUserId UUID currentUserId) {
+            @Parameter(hidden = true) @CurrentUserId UUID currentUserId) {
 
         log.info("초대 재발송 요청: businessId={}, invitationId={}, userId={}",
                 businessId, invitationId, currentUserId);
@@ -65,14 +65,12 @@ public class InvitationController {
 
     /**
      * 초대 수락
-     * @param request 수락 요청 (token)
-     * @param currentUserId 현재 사용자 ID
-     * @return 수락 결과
      */
+    @AcceptInvitationOperation
     @PostMapping("/invitation/accept")
     public ResponseEntity<ResponseData<InvitationResponseDto.AcceptResult>> acceptInvitation(
-            @Valid @RequestBody InvitationRequestDto.AcceptInvitation request,
-            @CurrentUserId UUID currentUserId) {
+            @AcceptInvitationRequestBody @Valid @RequestBody InvitationRequestDto.AcceptInvitation request,
+            @Parameter(hidden = true) @CurrentUserId UUID currentUserId) {
 
         log.info("초대 수락 요청: token={}, userId={}", request.token(), currentUserId);
 
@@ -84,16 +82,13 @@ public class InvitationController {
 
     /**
      * 초대 취소
-     * @param businessId 업체 ID
-     * @param invitationId 초대 ID
-     * @param currentUserId 현재 사용자 ID
-     * @return 204 No Content
      */
+    @CancelInvitationOperation
     @DeleteMapping("/business/{businessId}/invitation/{invitationId}")
     public ResponseEntity<ResponseData<Void>> cancelInvitation(
             @PathVariable UUID businessId,
             @PathVariable UUID invitationId,
-            @CurrentUserId UUID currentUserId) {
+            @Parameter(hidden = true) @CurrentUserId UUID currentUserId) {
 
         log.info("초대 취소 요청: businessId={}, invitationId={}, userId={}",
                 businessId, invitationId, currentUserId);
