@@ -18,7 +18,7 @@ public enum MenuErrorCode {
     INVALID_SLOT_SETTINGS("슬롯 설정이 누락되었거나 필수 항목이 없습니다", HttpStatus.BAD_REQUEST),
 
     // 메뉴 수정/삭제 관련
-    CANNOT_DEACTIVATE_MENU_WITH_RESERVATIONS("이 메뉴에 미래 예약이 존재하여 삭제/비활성화할 수 없습니다", HttpStatus.BAD_REQUEST),
+    CANNOT_DEACTIVATE_MENU_WITH_RESERVATIONS("이 메뉴에 미래 예약이 존재하여 삭제 / 비활성화할 수 없습니다", HttpStatus.BAD_REQUEST),
     CANNOT_CHANGE_DURATION_WITH_RESERVATIONS("이 메뉴에 미래 예약이 존재하여 소요 시간을 변경할 수 없습니다", HttpStatus.BAD_REQUEST),
     CANNOT_CHANGE_ORDER_TYPE("메뉴 타입(예약형/주문형)은 변경할 수 없습니다", HttpStatus.BAD_REQUEST),
 
