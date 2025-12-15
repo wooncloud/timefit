@@ -26,6 +26,16 @@ public class AuthController {
     private final AuthFacadeService authFacadeService;
 
     /**
+     * 서버 헬스 체크 (부하 테스트용)
+     * 인증 없이 접근 가능한 간단한 엔드포인트
+     */
+    @GetMapping("/health")
+    public ResponseEntity<ResponseData<String>> health() {
+        log.debug("Health check 요청");
+        return ResponseEntity.ok(ResponseData.of("OK"));
+    }
+
+    /**
      * 회원가입
      */
     @SignupOperation

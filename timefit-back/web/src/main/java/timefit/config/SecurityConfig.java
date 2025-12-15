@@ -108,6 +108,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/signup").permitAll()   // 회원가입 (공개)
                         .requestMatchers("/api/auth/signin").permitAll()   // 로그인 (공개)
                         .requestMatchers("/api/auth/refresh").permitAll()  // 리프레시 토큰 (공개)
+                        .requestMatchers("/api/auth/health").permitAll()   // health check
                         .requestMatchers("/api/auth/**").authenticated()   // 나머지는 인증 필요 (logout, refresh 등)
 
                         // ========== 업체 관련 공개 API ==========
