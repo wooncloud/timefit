@@ -1,0 +1,18 @@
+# 테스트 결과
+results/*.html
+results/*.json
+results/*.csv
+results/*.txt
+!results/.gitkeep
+
+# 환경 설정 (민감 정보)
+config/local.json
+config/*.env
+
+# 임시 파일
+*.tmp
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

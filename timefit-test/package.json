@@ -1,0 +1,12 @@
+{
+  "name": "timefit-performance-tests",
+  "version": "1.0.0",
+  "scripts": {
+    "test:health": "k6 run --out dashboard=open scripts/01-health-check.js"
+  },
+  "author": "Sechang Jang",
+  "license": "MIT",
+  "devDependencies": {
+    "k6-to-junit": "^1.0.3"
+  }
+}
