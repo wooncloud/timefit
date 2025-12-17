@@ -34,12 +34,11 @@ export default function Page() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
 
-  const handleCreate = async (data: {
-    name: string;
-    notice: string;
-    isActive: boolean;
-  }) => {
-    const result = await createCategory(data);
+  const handleCreate = async (
+    categoryName: string,
+    categoryNotice: string
+  ) => {
+    const result = await createCategory(categoryName, categoryNotice);
     if (result) {
       toast.success('카테고리가 생성되었습니다.');
     } else {
@@ -54,9 +53,11 @@ export default function Page() {
 
   const handleUpdate = async (
     id: string,
-    data: { name: string; notice: string; isActive: boolean }
+    categoryName: string,
+    categoryNotice: string,
+    isActive: boolean
   ) => {
-    const success = await updateCategory(id, data);
+    const success = await updateCategory(id, categoryName, categoryNotice, isActive);
     if (success) {
       toast.success('카테고리가 수정되었습니다.');
       setEditDialogOpen(false);
@@ -85,14 +86,15 @@ export default function Page() {
   };
 
   const handleToggle = async (id: string, currentStatus: boolean) => {
-    const category = categories.find(c => c.id === id);
+    const category = categories.find(c => c.categoryId === id);
     if (!category) return;
 
-    const success = await updateCategory(id, {
-      name: category.name,
-      notice: category.notice,
-      isActive: !currentStatus,
-    });
+    const success = await updateCategory(
+      id,
+      category.categoryName,
+      category.categoryNotice,
+      !currentStatus
+    );
 
     if (success) {
       toast.success(

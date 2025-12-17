@@ -50,18 +50,20 @@ export function CategoryTable({
             </TableRow>
           ) : (
             categories.map(category => (
-              <TableRow key={category.id}>
-                <TableCell className="font-medium">{category.name}</TableCell>
+              <TableRow key={category.categoryId}>
+                <TableCell className="font-medium">
+                  {category.categoryName}
+                </TableCell>
                 <TableCell>
                   <Switch
                     checked={category.isActive}
                     onCheckedChange={() =>
-                      onToggle(category.id, category.isActive)
+                      onToggle(category.categoryId, category.isActive)
                     }
                   />
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {category.notice || '-'}
+                  {category.categoryNotice || '-'}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
@@ -76,7 +78,7 @@ export function CategoryTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onDelete(category.id)}
+                      onClick={() => onDelete(category.categoryId)}
                       className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />
