@@ -4,7 +4,7 @@ Content-Type: application/json
 
 {
   "email": "test@example.com",
-  "password": "testpass123",
+  "password": "password",
   "name": "테스트사용자",
   "phoneNumber": "010-9999-8888",
   "role": "BUSINESS"
