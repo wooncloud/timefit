@@ -34,9 +34,11 @@ const queryDuration = new Trend('query_duration');
 
 export const options = {
     stages: [
-        { duration: '30s', target: 50 },   // 워밍업
-        { duration: '2m', target: 100 },   // 고부하
-        { duration: '30s', target: 0 },    // 종료
+        { duration: '30s', target: 100 },
+        { duration: '1m', target: 200 },
+        { duration: '2m', target: 300 },
+        { duration: '2m', target: 500 },
+        { duration: '30s', target: 0 },
     ],
     thresholds: {
         // 슬롯 조회는 빨라야 함: p95 < 200ms
