@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import type { Category } from '@/types/category/category';
 import type { Product } from '@/types/product/product';
@@ -27,7 +28,7 @@ export function ProductDetailForm({
   const [formData, setFormData] = useState<Partial<Product>>(
     product || {
       service_name: '',
-      category: 'HAIRCUT',
+      category: '', // 사용자가 카테고리를 선택하도록 빈 값으로 시작
       price: 0,
       description: '',
       menu_type: 'RESERVATION_BASED',
@@ -42,7 +43,7 @@ export function ProductDetailForm({
     } else {
       setFormData({
         service_name: '',
-        category: 'HAIRCUT',
+        category: '', // 사용자가 카테고리를 선택하도록 빈 값으로 시작
         price: 0,
         description: '',
         menu_type: 'RESERVATION_BASED',
@@ -54,6 +55,33 @@ export function ProductDetailForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation checks
+    if (!formData.service_name?.trim()) {
+      toast.error('서비스명을 입력해주세요.');
+      return;
+    }
+
+    if (!formData.category?.trim()) {
+      toast.error('카테고리를 선택해주세요.');
+      return;
+    }
+
+    if (!formData.price || formData.price <= 0) {
+      toast.error('가격을 입력해주세요.');
+      return;
+    }
+
+    if (!formData.duration_minutes || formData.duration_minutes < 5) {
+      toast.error('서비스 시간은 최소 5분 이상이어야 합니다.');
+      return;
+    }
+
+    if (formData.duration_minutes > 1440) {
+      toast.error('서비스 시간은 최대 1440분(24시간)을 초과할 수 없습니다.');
+      return;
+    }
+
     onSave(formData);
   };
 
