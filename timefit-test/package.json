@@ -6,11 +6,13 @@
     "test:pattern:l1:smoke": "k6 run --out dashboard=open scripts/01-patterns/level-1-no-join/business_smoke.js",
     "test:pattern:l1:load": "k6 run --out dashboard=open scripts/01-patterns/level-1-no-join/business_load.js",
     "test:pattern:l1:stress": "k6 run --out dashboard=open scripts/01-patterns/level-1-no-join/business_stress.js",
+    "test:pattern:l1:soak": "k6 run --out dashboard=open scripts/01-patterns/level-1-no-join/business_soak.js",
 
     "// ========== Level 1: no-join (HTML 저장) ==========": "",
     "test:pattern:l1:smoke:report": "k6 run --out dashboard=export=results/level-1-business-smoke.html scripts/01-patterns/level-1-no-join/business_smoke.js",
     "test:pattern:l1:load:report": "k6 run --out dashboard=export=results/level-1-business-load.html scripts/01-patterns/level-1-no-join/business_load.js",
     "test:pattern:l1:stress:report": "k6 run --out dashboard=export=results/level-1-business-stress.html scripts/01-patterns/level-1-no-join/business_stress.js",
+    "test:pattern:l1:soak:report": "k6 run --out dashboard=export=results/level-1-menus-soak.html scripts/01-patterns/level-1-no-join/business_soak.js",
 
     "// ========== Level 2: single-join (실시간 대시보드) ==========": "",
     "test:pattern:l2:load": "k6 run --out dashboard=open scripts/01-patterns/level-2-single-join/menus_load.js",
@@ -25,12 +27,10 @@
     "// ========== Level 3: multiple-join (실시간 대시보드) ==========": "",
     "test:pattern:l3:load": "k6 run --out dashboard=open scripts/01-patterns/level-3-multiple-join/reservations_load.js",
     "test:pattern:l3:stress": "k6 run --out dashboard=open scripts/01-patterns/level-3-multiple-join/reservations_stress.js",
-    "test:pattern:l3:soak": "k6 run --out dashboard=open scripts/01-patterns/level-3-multiple-join/reservations_soak.js",
 
     "// ========== Level 3: multiple-join (HTML 저장) ==========": "",
     "test:pattern:l3:load:report": "k6 run --out dashboard=export=results/level-3-reservations-load.html scripts/01-patterns/level-3-multiple-join/reservations_load.js",
     "test:pattern:l3:stress:report": "k6 run --out dashboard=export=results/level-3-reservations-stress.html scripts/01-patterns/level-3-multiple-join/reservations_stress.js",
-    "test:pattern:l3:soak:report": "k6 run --out dashboard=export=results/level-3-reservations-soak.html scripts/01-patterns/level-3-multiple-join/reservations_soak.js",
 
 
     "// ========== Phase 2: Booking (실시간 대시보드) ==========": "",
