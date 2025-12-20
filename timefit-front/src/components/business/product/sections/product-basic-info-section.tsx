@@ -1,5 +1,5 @@
-import type { Product, ProductCategory } from '@/types/product/product';
-import { productCategories } from '@/lib/constants/product-categories';
+import type { Category } from '@/types/category/category';
+import type { Product } from '@/types/product/product';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -13,11 +13,13 @@ import { Textarea } from '@/components/ui/textarea';
 
 interface ProductBasicInfoSectionProps {
   formData: Partial<Product>;
+  categories: Category[];
   onFormDataChange: (data: Partial<Product>) => void;
 }
 
 export function ProductBasicInfoSection({
   formData,
+  categories,
   onFormDataChange,
 }: ProductBasicInfoSectionProps) {
   return (
@@ -42,20 +44,25 @@ export function ProductBasicInfoSection({
       <div className="space-y-2">
         <Label htmlFor="category">카테고리</Label>
         <Select
-          value={formData.category}
-          onValueChange={(value: ProductCategory) =>
+          value={formData.category || ''}
+          onValueChange={value =>
             onFormDataChange({ ...formData, category: value })
           }
         >
           <SelectTrigger id="category">
-            <SelectValue />
+            <SelectValue placeholder="카테고리를 선택하세요" />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(productCategories).map(([key, label]) => (
-              <SelectItem key={key} value={key}>
-                {label}
-              </SelectItem>
-            ))}
+            {categories
+              .filter(cat => cat.isActive)
+              .map(category => (
+                <SelectItem
+                  key={category.categoryId}
+                  value={category.categoryName}
+                >
+                  {category.categoryName}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>

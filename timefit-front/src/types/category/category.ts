@@ -4,8 +4,10 @@
  */
 export interface Category {
   categoryId: string;
+  businessId: string;
+  businessType: string;
   categoryName: string;
-  categoryNotice: string;
+  categoryNotice: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

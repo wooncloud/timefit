@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import type { CreateUpdateMenuRequest, Menu } from '@/types/menu/menu';
 import type { Product } from '@/types/product/product';
+import { useCategoryList } from '@/hooks/category/use-category-list';
 import { useMenuDetail } from '@/hooks/menu/use-menu-detail';
 import { useMenuList } from '@/hooks/menu/use-menu-list';
 import { ProductDetailForm } from '@/components/business/product/product-detail-form';
@@ -53,6 +54,9 @@ export default function Page() {
 
   // 메뉴 목록 조회
   const { menus, loading: listLoading, createMenu, refetch } = useMenuList();
+
+  // 카테고리 목록 조회
+  const { categories, loading: categoriesLoading } = useCategoryList();
 
   // 선택된 메뉴 상세 조회
   const {
@@ -127,7 +131,7 @@ export default function Page() {
   };
 
   // 로딩 상태 처리
-  if (listLoading) {
+  if (listLoading || categoriesLoading) {
     return (
       <div className="flex h-[calc(100vh-6rem)] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -153,6 +157,7 @@ export default function Page() {
           <ProductDetailForm
             key={isCreating ? 'creating-new' : selectedProduct?.id || 'new'}
             product={selectedProduct}
+            categories={categories}
             onSave={handleSaveProduct}
             onDelete={handleDeleteProduct}
             onToggleActive={handleToggleActive}

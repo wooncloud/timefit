@@ -3,7 +3,6 @@
 import { Plus } from 'lucide-react';
 
 import type { Product } from '@/types/product/product';
-import { productCategories } from '@/lib/constants/product-categories';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -60,7 +59,7 @@ export function ProductListPanel({
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span className="rounded bg-muted px-2 py-0.5 text-xs">
-                    {productCategories[product.category]}
+                    {product.category}
                   </span>
                   <span>·</span>
                   <span>{product.price.toLocaleString()}원</span>

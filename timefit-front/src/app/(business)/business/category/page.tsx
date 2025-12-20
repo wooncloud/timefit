@@ -34,10 +34,7 @@ export default function Page() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
 
-  const handleCreate = async (
-    categoryName: string,
-    categoryNotice: string
-  ) => {
+  const handleCreate = async (categoryName: string, categoryNotice: string) => {
     const result = await createCategory(categoryName, categoryNotice);
     if (result) {
       toast.success('카테고리가 생성되었습니다.');
@@ -57,7 +54,12 @@ export default function Page() {
     categoryNotice: string,
     isActive: boolean
   ) => {
-    const success = await updateCategory(id, categoryName, categoryNotice, isActive);
+    const success = await updateCategory(
+      id,
+      categoryName,
+      categoryNotice,
+      isActive
+    );
     if (success) {
       toast.success('카테고리가 수정되었습니다.');
       setEditDialogOpen(false);
@@ -92,7 +94,7 @@ export default function Page() {
     const success = await updateCategory(
       id,
       category.categoryName,
-      category.categoryNotice,
+      category.categoryNotice ?? '',
       !currentStatus
     );
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import type { Category } from '@/types/category/category';
 import type { Product } from '@/types/product/product';
 
 import { ProductBasicInfoSection } from './sections/product-basic-info-section';
@@ -10,6 +11,7 @@ import { ProductReservationSection } from './sections/product-reservation-sectio
 
 interface ProductDetailFormProps {
   product: Product | null;
+  categories: Category[];
   onSave: (product: Partial<Product>) => void;
   onDelete?: (id: string) => void;
   onToggleActive?: () => void;
@@ -17,6 +19,7 @@ interface ProductDetailFormProps {
 
 export function ProductDetailForm({
   product,
+  categories,
   onSave,
   onDelete,
   onToggleActive,
@@ -66,6 +69,7 @@ export function ProductDetailForm({
         <div className="space-y-6 p-4">
           <ProductBasicInfoSection
             formData={formData}
+            categories={categories}
             onFormDataChange={setFormData}
           />
 
