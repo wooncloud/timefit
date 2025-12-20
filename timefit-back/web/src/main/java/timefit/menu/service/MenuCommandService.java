@@ -4,31 +4,28 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import timefit.booking.dto.BookingSlotRequest;
-import timefit.booking.service.BookingSlotCommandService;
-import timefit.booking.service.dto.AvailableTimeRange;
-import timefit.booking.service.dto.DailySlotSchedule;
 import timefit.business.entity.Business;
-import timefit.business.entity.BusinessCategory;
-import timefit.business.entity.BusinessTypeCode;
-import timefit.businesscategory.service.validator.BusinessCategoryValidator;
 import timefit.business.service.validator.BusinessValidator;
-import timefit.exception.menu.MenuErrorCode;
-import timefit.exception.menu.MenuException;
 import timefit.menu.dto.MenuRequestDto;
 import timefit.menu.dto.MenuResponseDto;
 import timefit.menu.entity.Menu;
-import timefit.menu.entity.OrderType;
 import timefit.menu.repository.MenuRepository;
+import timefit.menu.service.helper.MenuBookingSlotHelper;
+import timefit.menu.service.factory.MenuEntityFactory;
+import timefit.menu.service.helper.MenuUpdateHelper;
+import timefit.menu.service.validator.MenuReservationValidator;
 import timefit.menu.service.validator.MenuValidator;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-// Menu CUD 전담 서비스
+/**
+ * [위임 구조]
+ * - MenuValidator: 기본 검증
+ * - MenuReservationValidator: 예약 관련 검증
+ * - MenuEntityFactory: Menu Entity 생성
+ * - MenuUpdateHelper: Menu Entity 수정
+ * - MenuBookingSlotAdapter: BookingSlot 생성 위임
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -37,11 +34,21 @@ public class MenuCommandService {
 
     private final MenuRepository menuRepository;
     private final BusinessValidator businessValidator;
-    private final BusinessCategoryValidator businessCategoryValidator;
     private final MenuValidator menuValidator;
-    private final BookingSlotCommandService bookingSlotCommandService;
+    private final MenuReservationValidator menuReservationValidator;
+    private final MenuEntityFactory menuEntityFactory;
+    private final MenuUpdateHelper menuUpdateHelper;
+    private final MenuBookingSlotHelper menuBookingSlotHelper;
 
-    // 메뉴 생성
+    /**
+     * 메뉴 생성
+     * 1. 권한 검증
+     * 2. 생성 요청 검증
+     * 3. Menu Entity 생성
+     * 4. 저장
+     * 5. BookingSlot 생성
+     * - Menu와 BookingSlot은 하나의 트랜잭션 (실패 시 전체 롤백)
+     */
     public MenuResponseDto.Menu createMenu(
             UUID businessId,
             MenuRequestDto.CreateUpdateMenu request,
@@ -53,67 +60,31 @@ public class MenuCommandService {
         // 1. 권한 검증
         Business business = businessValidator.validateBusinessAccess(currentUserId, businessId);
 
-        // 2. Request 검증
+        // 2. 생성 요청 검증
         menuValidator.validateMenuCreateRequest(request);
 
-        // 3. BusinessCategory 조회 및 검증
-        BusinessCategory businessCategory = getBusinessCategory(
-                business,
-                request.businessType(),
-                request.categoryName()
-        );
+        // 3. Menu Entity 생성
+        Menu menu = menuEntityFactory.createMenu(business, request);
 
-        // 4. Menu Entity 생성
-        Menu menu;
-        if (OrderType.RESERVATION_BASED.equals(request.orderType())) {
-            menu = Menu.createReservationBased(
-                    business,
-                    businessCategory,
-                    request.serviceName(),
-                    request.price(),
-                    request.description(),
-                    request.durationMinutes(),
-                    request.imageUrl()
-            );
-        } else {
-            menu = Menu.createOnDemandBased(
-                    business,
-                    businessCategory,
-                    request.serviceName(),
-                    request.price(),
-                    request.description(),
-                    request.durationMinutes(),
-                    request.imageUrl()
-            );
-        }
+        // 4. 저장
+        menuRepository.save(menu);
+        log.info("메뉴 생성 완료: menuId={}, serviceName={}",
+                menu.getId(), menu.getServiceName());
 
-        // 5. 저장
-        Menu savedMenu = menuRepository.save(menu);
+        // 5. BookingSlot 생성 위임
+        menuBookingSlotHelper.generateForMenu(menu, request);
 
-        log.info("메뉴 생성 완료: menuId={}, serviceName={}", savedMenu.getId(), savedMenu.getServiceName());
-
-        // 6. BookingSlot 자동 생성
-        if (shouldGenerateSlots(request)) {
-            createBookingSlotsForMenu(businessId, savedMenu.getId(), request.slotSettings(), currentUserId);
-        }
-
-        return MenuResponseDto.Menu.from(savedMenu);
+        return MenuResponseDto.Menu.from(menu);
     }
 
-    // BusinessCategory 조회 및 검증
-    private BusinessCategory getBusinessCategory(
-            Business business,
-            BusinessTypeCode businessType,
-            String categoryName) {
-
-        return businessCategoryValidator.validateAndGetBusinessCategory(
-                business.getId(),
-                businessType,
-                categoryName
-        );
-    }
-
-    // 메뉴 수정
+    /**
+     * 메뉴 수정
+     * 1. 권한 검증
+     * 2. Menu 조회 및 수정 전 상태 저장
+     * 3. 수정 요청 검증
+     * 4. Menu 데이터 수정
+     * 5. BookingSlot 재생성
+     */
     public MenuResponseDto.Menu updateMenu(
             UUID businessId,
             UUID menuId,
@@ -124,149 +95,31 @@ public class MenuCommandService {
                 businessId, menuId, currentUserId);
 
         // 1. 권한 검증
-        Business business = businessValidator.validateBusinessAccess(currentUserId, businessId);
+        businessValidator.validateBusinessAccess(currentUserId, businessId);
 
-        // 2. Request 검증
-        menuValidator.validateMenuUpdateRequest(request);
-
-        // 3. Menu 조회 및 검증
+        // 2. Menu 조회 및 수정 전 상태 저장
         Menu menu = menuValidator.validateMenuOfBusiness(menuId, businessId);
+        Integer oldDurationMinutes = menu.getDurationMinutes();
 
-        // 4. OrderType 변경 시 검증
-        OrderType originalOrderType = menu.getOrderType();
-        if (request.orderType() != null && !request.orderType().equals(originalOrderType)) {
-            log.info("OrderType 변경: {} -> {}", originalOrderType, request.orderType());
+        // 3. 수정 요청 검증
+        menuValidator.validateMenuUpdateRequest(request, menu);
 
-            if (request.orderType() == OrderType.RESERVATION_BASED) {
-                if (request.durationMinutes() == null || request.durationMinutes() <= 0) {
-                    throw new MenuException(MenuErrorCode.DURATION_REQUIRED_FOR_RESERVATION);
-                }
-            }
-
-            menu.updateOrderType(request.orderType());
-        }
-
-        // 5. businessType 또는 categoryName 변경 시 BusinessCategory 변경
-        if (request.businessType() != null || request.categoryName() != null) {
-            BusinessCategory currentCategory = menu.getBusinessCategory();
-
-            BusinessTypeCode targetBusinessType =
-                    request.businessType() != null ? request.businessType() : currentCategory.getBusinessType();
-
-            String targetCategoryName =
-                    request.categoryName() != null ? request.categoryName() : currentCategory.getCategoryName();
-
-            BusinessCategory newCategory = getBusinessCategory(
-                    business,
-                    targetBusinessType,
-                    targetCategoryName
-            );
-
-            if (!newCategory.getId().equals(currentCategory.getId())) {
-                menu.updateBusinessCategory(newCategory);
-                log.info("BusinessCategory 변경: categoryId={} -> categoryId={}",
-                        currentCategory.getId(), newCategory.getId());
-            }
-        }
-
-        // 6. 기본 정보 수정
-        if (request.serviceName() != null ||
-                request.price() != null ||
-                request.description() != null) {
-            menu.updateBasicInfo(
-                    request.serviceName(),
-                    request.price(),
-                    request.description()
-            );
-        }
-
-        // 7. 소요 시간 수정
-        if (request.durationMinutes() != null) {
-            menu.updateDuration(request.durationMinutes());
-        }
-
-        // 8. 이미지 URL 수정
-        if (request.imageUrl() != null) {
-            menu.updateImageUrl(request.imageUrl());
-        }
-
+        // 4. Menu 데이터 수정
+        menuUpdateHelper.updateMenuData(menu, request, businessId);
         log.info("메뉴 수정 완료: menuId={}", menuId);
 
-        // 9. BookingSlot 재생성
-        if (shouldGenerateSlots(request)) {
-            createBookingSlotsForMenu(businessId, menuId, request.slotSettings(), currentUserId);
-        }
+        // 5. BookingSlot 재생성 위임
+        menuBookingSlotHelper.regenerateForMenu(menu, request, oldDurationMinutes);
 
         return MenuResponseDto.Menu.from(menu);
     }
 
-    // BookingSlot 자동 생성
-    private void createBookingSlotsForMenu(
-            UUID businessId,
-            UUID menuId,
-            MenuRequestDto.BookingSlotSettings settings,
-            UUID currentUserId) {
-
-        log.info("BookingSlot 자동 생성 시작: menuId={}, startDate={}, endDate={}",
-                menuId, settings.startDate(), settings.endDate());
-
-        try {
-            List<DailySlotSchedule> schedules = createDailySlots(
-                    settings.startDate(),
-                    settings.endDate(),
-                    settings.specificTimeRanges()
-            );
-
-            BookingSlotRequest.BookingSlot slotRequest = new BookingSlotRequest.BookingSlot(
-                    menuId,
-                    settings.slotIntervalMinutes(),
-                    schedules
-            );
-
-            bookingSlotCommandService.createSlots(businessId, slotRequest, currentUserId);
-
-            log.info("BookingSlot 자동 생성 완료: menuId={}", menuId);
-
-        } catch (Exception e) {
-            log.warn("BookingSlot 자동 생성 실패 (메뉴는 정상 생성됨): menuId={}, error={}",
-                    menuId, e.getMessage());
-        }
-    }
-
-    // BookingSlot 생성 필요 여부 확인
-    private boolean shouldGenerateSlots(MenuRequestDto.CreateUpdateMenu request) {
-        return request.orderType() == OrderType.RESERVATION_BASED &&
-                Boolean.TRUE.equals(request.autoGenerateSlots()) &&
-                request.slotSettings() != null;
-    }
-
-    // 날짜 범위에 대한 DailySlot 생성
-    private List<DailySlotSchedule> createDailySlots(
-            LocalDate startDate,
-            LocalDate endDate,
-            List<MenuRequestDto.TimeRange> specificTimeRanges) {
-
-        List<DailySlotSchedule> dailySlots = new ArrayList<>();
-
-        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            List<AvailableTimeRange> timeRanges = new ArrayList<>();
-
-            if (specificTimeRanges != null && !specificTimeRanges.isEmpty()) {
-                for (MenuRequestDto.TimeRange tr : specificTimeRanges) {
-                    timeRanges.add(AvailableTimeRange.of(
-                            LocalTime.parse(tr.startTime()),
-                            LocalTime.parse(tr.endTime())
-                    ));
-                }
-            }
-
-            dailySlots.add(DailySlotSchedule.of(date, timeRanges));
-        }
-
-        return dailySlots;
-    }
-
-    // 메뉴 활성/비활성 토글
+    /**
+     * 메뉴 활성/비활성 토글
+     * 1. 권한 검증
+     * 2. Menu 조회
+     * 3. 활성 상태 토글
+     */
     public MenuResponseDto.Menu toggleMenuActive(
             UUID businessId,
             UUID menuId,
@@ -278,25 +131,25 @@ public class MenuCommandService {
         // 1. 권한 검증
         businessValidator.validateBusinessAccess(currentUserId, businessId);
 
-        // 2. Menu 조회 및 검증
+        // 2. Menu 조회
         Menu menu = menuValidator.validateMenuOfBusiness(menuId, businessId);
 
-        // 3. 활성상태 토글
-        if (menu.getIsActive()) {
-            menuValidator.validateNoFutureActiveReservations(menuId);
-            menu.deactivate();
-            log.info("메뉴 비활성화: menuId={}", menuId);
-        } else {
-            menu.activate();
-            log.info("메뉴 활성화: menuId={}", menuId);
-        }
+        // 3. 활성 상태 토글
+        menuUpdateHelper.toggleActive(menu);
 
-        log.info("메뉴 활성상태 토글 완료: menuId={}, isActive={}", menuId, menu.getIsActive());
+        log.info("메뉴 활성상태 토글 완료: menuId={}, isActive={}",
+                menuId, menu.getIsActive());
 
         return MenuResponseDto.Menu.from(menu);
     }
 
-    // 메뉴 삭제 (영구 삭제)
+    /**
+     * 메뉴 삭제 (영구 삭제)
+     * 1. 권한 검증
+     * 2. Menu 조회
+     * 3. 미래 예약 검증
+     * 4. 영구 삭제
+     */
     public void deleteMenu(
             UUID businessId,
             UUID menuId,
@@ -308,13 +161,13 @@ public class MenuCommandService {
         // 1. 권한 검증
         businessValidator.validateBusinessAccess(currentUserId, businessId);
 
-        // 2. Menu 조회 및 검증
+        // 2. Menu 조회
         Menu menu = menuValidator.validateMenuOfBusiness(menuId, businessId);
 
-        // 3. 삭제 전에 미래 예약 검증
-        menuValidator.validateNoFutureActiveReservations(menuId);
+        // 3. 미래 예약 검증
+        menuReservationValidator.validateActiveReservations(menuId);
 
-        // 4. 메뉴 삭제
+        // 4. 영구 삭제
         menuRepository.delete(menu);
 
         log.info("메뉴 삭제 완료: menuId={}", menuId);

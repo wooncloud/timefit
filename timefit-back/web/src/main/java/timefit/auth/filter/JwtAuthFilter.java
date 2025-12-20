@@ -95,6 +95,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             "/api/auth/signup",
             "/api/auth/signin",
             "/api/auth/refresh",
+            "/api/auth/health",
 
             // 업체 관련 공개 API
             "/api/business/search/**",                              // 업체 검색 (쿼리 파라미터 포함)

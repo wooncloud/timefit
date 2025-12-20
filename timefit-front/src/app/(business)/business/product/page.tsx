@@ -6,8 +6,10 @@ import { toast } from 'sonner';
 
 import type { CreateUpdateMenuRequest, Menu } from '@/types/menu/menu';
 import type { Product } from '@/types/product/product';
+import { useCategoryList } from '@/hooks/category/use-category-list';
 import { useMenuDetail } from '@/hooks/menu/use-menu-detail';
 import { useMenuList } from '@/hooks/menu/use-menu-list';
+import { useBusinessStore } from '@/store/business-store';
 import { ProductDetailForm } from '@/components/business/product/product-detail-form';
 import { ProductEmptyState } from '@/components/business/product/product-empty-state';
 import { ProductListPanel } from '@/components/business/product/product-list-panel';
@@ -18,7 +20,7 @@ function menuToProduct(menu: Menu): Product {
     id: menu.menuId,
     business_id: menu.businessId,
     service_name: menu.serviceName,
-    category: 'HAIRCUT', // Menu는 categoryName을 사용하므로 기본값 설정
+    category: menu.categoryName, // 백엔드에서 받은 카테고리 이름 사용
     description: menu.description,
     price: menu.price,
     duration_minutes: menu.durationMinutes || 60,
@@ -33,11 +35,11 @@ function menuToProduct(menu: Menu): Product {
 // Product → CreateUpdateMenuRequest 변환 함수
 function productToMenuRequest(
   product: Partial<Product>,
-  businessType: string = 'BD008' // 기본값: 뷰티
+  businessType?: string
 ): CreateUpdateMenuRequest {
   return {
-    businessType: businessType as any,
-    categoryName: product.category || 'HAIRCUT',
+    businessType: (businessType || 'BD008') as any,
+    categoryName: product.category || '', // 카테고리는 사용자가 선택한 값 사용
     serviceName: product.service_name || '',
     price: product.price || 0,
     description: product.description,
@@ -51,8 +53,15 @@ export default function Page() {
   const [selectedMenuId, setSelectedMenuId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
+  // 비즈니스 정보
+  const { business } = useBusinessStore();
+  const businessType = business?.businessTypes?.[0]; // 첫 번째 비즈니스 타입 사용
+
   // 메뉴 목록 조회
   const { menus, loading: listLoading, createMenu, refetch } = useMenuList();
+
+  // 카테고리 목록 조회
+  const { categories, loading: categoriesLoading } = useCategoryList();
 
   // 선택된 메뉴 상세 조회
   const {
@@ -82,7 +91,7 @@ export default function Page() {
   };
 
   const handleSaveProduct = async (productData: Partial<Product>) => {
-    const menuRequest = productToMenuRequest(productData);
+    const menuRequest = productToMenuRequest(productData, businessType);
 
     if (selectedMenuId) {
       const success = await updateMenu(menuRequest);
@@ -127,7 +136,7 @@ export default function Page() {
   };
 
   // 로딩 상태 처리
-  if (listLoading) {
+  if (listLoading || categoriesLoading) {
     return (
       <div className="flex h-[calc(100vh-6rem)] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -153,6 +162,7 @@ export default function Page() {
           <ProductDetailForm
             key={isCreating ? 'creating-new' : selectedProduct?.id || 'new'}
             product={selectedProduct}
+            categories={categories}
             onSave={handleSaveProduct}
             onDelete={handleDeleteProduct}
             onToggleActive={handleToggleActive}

@@ -32,7 +32,7 @@ export const GET = withAuth<GetCategoryListHandlerResponse>(
         );
       }
 
-      const backendUrl = `${BACKEND_URL}/api/business/${businessId}/category`;
+      const backendUrl = `${BACKEND_URL}/api/business/${businessId}/categories`;
 
       const response = await fetch(backendUrl, {
         method: 'GET',

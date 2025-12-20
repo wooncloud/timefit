@@ -1,5 +1,6 @@
-import type { Product, ProductCategory } from '@/types/product/product';
-import { productCategories } from '@/lib/constants/product-categories';
+import { useState } from 'react';
+import type { Category } from '@/types/category/category';
+import type { Product } from '@/types/product/product';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -10,16 +11,50 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 interface ProductBasicInfoSectionProps {
   formData: Partial<Product>;
+  categories: Category[];
   onFormDataChange: (data: Partial<Product>) => void;
 }
 
 export function ProductBasicInfoSection({
   formData,
+  categories,
   onFormDataChange,
 }: ProductBasicInfoSectionProps) {
+  const [priceInput, setPriceInput] = useState(
+    formData.price?.toString() || '0'
+  );
+
+  const handlePriceBlur = () => {
+    const numValue = priceInput.replace(/[^0-9]/g, '');
+
+    if (!numValue || numValue === '0') {
+      toast.error('가격을 입력해주세요.');
+      setPriceInput('0');
+      onFormDataChange({ ...formData, price: 0 });
+      return;
+    }
+
+    const parsedPrice = parseInt(numValue, 10);
+    if (parsedPrice < 0) {
+      toast.error('가격은 0 이상이어야 합니다.');
+      setPriceInput('0');
+      onFormDataChange({ ...formData, price: 0 });
+      return;
+    }
+
+    setPriceInput(parsedPrice.toLocaleString());
+    onFormDataChange({ ...formData, price: parsedPrice });
+  };
+
+  const handlePriceChange = (value: string) => {
+    const cleaned = value.replace(/[^0-9]/g, '');
+    setPriceInput(cleaned);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -42,20 +77,25 @@ export function ProductBasicInfoSection({
       <div className="space-y-2">
         <Label htmlFor="category">카테고리</Label>
         <Select
-          value={formData.category}
-          onValueChange={(value: ProductCategory) =>
+          value={formData.category || ''}
+          onValueChange={value =>
             onFormDataChange({ ...formData, category: value })
           }
         >
           <SelectTrigger id="category">
-            <SelectValue />
+            <SelectValue placeholder="카테고리를 선택하세요" />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(productCategories).map(([key, label]) => (
-              <SelectItem key={key} value={key}>
-                {label}
-              </SelectItem>
-            ))}
+            {categories
+              .filter(cat => cat.isActive)
+              .map(category => (
+                <SelectItem
+                  key={category.categoryId}
+                  value={category.categoryName}
+                >
+                  {category.categoryName}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>
@@ -65,13 +105,12 @@ export function ProductBasicInfoSection({
         <div className="flex items-center gap-2">
           <Input
             id="price"
-            type="number"
-            value={formData.price || 0}
-            onChange={e =>
-              onFormDataChange({ ...formData, price: Number(e.target.value) })
-            }
-            min="0"
-            step="1000"
+            type="text"
+            inputMode="numeric"
+            value={priceInput}
+            onChange={e => handlePriceChange(e.target.value)}
+            onBlur={handlePriceBlur}
+            placeholder="0"
             required
           />
           <span className="text-sm text-muted-foreground">원</span>

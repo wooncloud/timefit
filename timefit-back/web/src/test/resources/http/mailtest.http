@@ -1,0 +1,179 @@
+### ================================================================
+### Timefit 초대 시스템 테스트 (Happy Path)
+### 📝 테스트 시나리오:
+###    1. 사장 계정(owner@timefit.com) 회원가입
+###    2. 사장이 업체 생성
+###    3. 손님 계정(sehan5284a@gmail.com) 회원가입
+###    4. 사장이 손님에게 초대 발송 ⚠️ 이메일 1회 발송
+###    5. 사장이 초대 목록 조회
+###    6. 손님이 초대 수락
+###    7. 사장이 구성원 목록 확인 (2명)
+### ⚠️ 주의사항:
+###    - 이메일 발송: 1회만 (Step 4)
+###    - 초대 수락: 1회만 가능 (재테스트 시 Step 4부터 다시 실행)
+###    - 토큰 유효기간: 7일
+### ================================================================
+
+@baseUrl = http://localhost:8080
+
+### ================================================================
+### 1. 사장 계정 회원가입 (초대하는 사람)
+### ================================================================
+
+# @name 초대자회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "owner@timefit.com",
+  "password": "password123",
+  "name": "김사장",
+  "phoneNumber": "010-1234-5678"
+}
+
+> {%
+    client.global.set("ownerToken", response.body.data.accessToken);
+    console.log("✅ [1/7] 사장 회원가입 성공:", response.body.data.name);
+%}
+
+###
+
+### ================================================================
+### 2. 사장이 업체 생성
+### ================================================================
+
+# @name 업체생성
+POST {{baseUrl}}/api/business
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessName": "타임핏 헤어샵",
+  "businessTypes": ["BD008"],
+  "businessNumber": "123-45-67890",
+  "address": "서울시 강남구 테헤란로 123",
+  "contactPhone": "02-1234-5678"
+}
+
+> {%
+    client.global.set("businessId", response.body.data.businessId);
+    console.log("✅ [2/7] 업체 생성 성공:", response.body.data.businessName);
+%}
+
+###
+
+### ================================================================
+### 3. 손님 계정 회원가입 (초대받을 사람)
+### ================================================================
+
+# @name 피초대자회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "sehan5284a@gmail.com",
+  "password": "password123",
+  "name": "이직원",
+  "phoneNumber": "010-9876-5432"
+}
+
+> {%
+    client.global.set("memberToken", response.body.data.accessToken);
+    console.log("✅ [3/7] 손님 회원가입 성공:", response.body.data.name);
+%}
+
+###
+
+### ================================================================
+### 4. 사장이 손님에게 초대 발송 ⚠️ 이메일 발송 1회
+### ================================================================
+
+# @name 초대발송
+POST {{baseUrl}}/api/business/{{businessId}}/member
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "email": "sehan5284a@gmail.com"
+}
+
+> {%
+    console.log("✅ [4/7] 초대 발송 성공");
+    console.log("    - 초대받는 사람:", response.body.data.email);
+    console.log("    - 초대한 사람:", response.body.data.invitedByName);
+    console.log("⚠️ 이메일이 발송되었습니다 (Gmail 확인: sehan5284a@gmail.com)");
+%}
+
+###
+
+### ================================================================
+### 5. 사장이 초대 목록 조회
+### ================================================================
+
+# @name 초대목록조회
+GET {{baseUrl}}/api/business/{{businessId}}/invitations
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    const invitation = response.body.data.invitations[0];
+    client.global.set("invitationToken", invitation.token);
+    client.global.set("invitationId", invitation.invitationId);
+    console.log("✅ [5/7] 초대 목록 조회 성공");
+    console.log("    - 초대 ID:", invitation.invitationId);
+    console.log("    - 초대 상태:", invitation.status);
+    console.log("    - 만료 시간:", invitation.expiresAt);
+    console.log("\n📧 이메일에서 받은 토큰:");
+    console.log("    http://localhost:3000/invite/" + invitation.token);
+    console.log("\n🔑 초대 토큰 (첫 50자):", invitation.token.substring(0, 50) + "...");
+%}
+
+###
+
+
+### ================================================================
+### 6. 손님이 초대 수락
+###
+### 🔍 테스트 방법:
+### Backend 만으로 테스트 하는 방법은 '수동' 밖에 없습니다.
+### 우선 인증 받은 메일에서 해당 초대에 대한 인증 값을 추출해주세요.
+### ex : 'http://localhost:3000/invite/0b0fcd90-07e7-4f4f-bd51-8cd6e9659ef9' 이라면 뒤에
+### 0b0fcd90-07e7-4f4f-bd51-8cd6e9659ef9 만 복사하여 token 에 붙여넣고 테스트를 단독으로 돌리시면 됩니다.
+### ================================================================
+
+# @name 초대수락
+POST {{baseUrl}}/api/invitation/accept
+Content-Type: application/json
+Authorization: Bearer {{memberToken}}
+
+{
+  "token": "0b0fcd90-07e7-4f4f-bd51-8cd6e9659ef9"
+}
+
+> {%
+    console.log("✅ [6/7] 초대 수락 성공");
+    console.log("    - 사용된 토큰:", "{{invitationToken}}".substring(0, 50) + "...");
+    console.log("    - 업체명:", response.body.data.businessName);
+    console.log("    - 부여된 권한:", response.body.data.role);
+    console.log("\n💡 이메일 링크가 정상 작동했습니다!");
+%}
+
+###
+
+### ================================================================
+### 7. 사장이 구성원 목록 확인 (2명)
+### ================================================================
+
+# @name 구성원목록
+GET {{baseUrl}}/api/business/{{businessId}}/members
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("✅ [7/7] 구성원 목록 조회 성공");
+    console.log("    - 전체 구성원 수:", response.body.data.totalMembers);
+    response.body.data.members.forEach((member, idx) => {
+        console.log(`    [${idx + 1}] ${member.name} (${member.role})`);
+    });
+    console.log("\n🎉 모든 테스트 완료!");
+%}
+
+###

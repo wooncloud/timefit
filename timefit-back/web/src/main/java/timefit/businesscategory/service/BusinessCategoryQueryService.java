@@ -23,7 +23,7 @@ public class BusinessCategoryQueryService {
     private final BusinessCategoryValidator businessCategoryValidator;
 
     /**
-     * 업체의 모든 활성 카테고리 목록 조회
+     * 업체의 모든 카테고리 목록 조회 (활성/비활성 포함)
      *
      * @param businessId 업체 ID
      * @return 카테고리 목록 응답 DTO
@@ -32,7 +32,7 @@ public class BusinessCategoryQueryService {
         log.info("카테고리 목록 조회: businessId={}", businessId);
 
         List<BusinessCategory> categories = businessCategoryRepository
-                .findByBusinessIdAndIsActiveTrueOrderByBusinessTypeAscCategoryNameAsc(businessId);
+                .findByBusinessIdOrderByBusinessTypeAscCategoryNameAsc(businessId);
 
         return BusinessCategoryResponseDto.CategoryList.of(categories);
     }

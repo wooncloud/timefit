@@ -20,7 +20,7 @@ export interface Product {
   id: string;
   business_id: string;
   service_name: string;
-  category: ProductCategory;
+  category: string; // 백엔드 카테고리 이름 (동적)
   description?: string;
   price: number;
   duration_minutes: number;

@@ -5,30 +5,23 @@ import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 
 interface CategoryFormProps {
-  onSubmit: (data: { name: string; notice: string; isActive: boolean }) => void;
+  onSubmit: (categoryName: string, categoryNotice: string) => void;
 }
 
 export function CategoryForm({ onSubmit }: CategoryFormProps) {
-  const [name, setName] = useState('');
-  const [notice, setNotice] = useState('');
-  const [isActive, setIsActive] = useState(true);
+  const [categoryName, setCategoryName] = useState('');
+  const [categoryNotice, setCategoryNotice] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!categoryName.trim()) return;
 
-    onSubmit({
-      name: name.trim(),
-      notice: notice.trim(),
-      isActive,
-    });
+    onSubmit(categoryName.trim(), categoryNotice.trim());
 
-    setName('');
-    setNotice('');
-    setIsActive(true);
+    setCategoryName('');
+    setCategoryNotice('');
   };
 
   return (
@@ -37,8 +30,8 @@ export function CategoryForm({ onSubmit }: CategoryFormProps) {
         <div className="flex-1">
           <Input
             placeholder="예: 커트"
-            value={name}
-            onChange={e => setName(e.target.value)}
+            value={categoryName}
+            onChange={e => setCategoryName(e.target.value)}
             className="h-10"
           />
           <label className="mt-1 block text-xs text-muted-foreground">
@@ -48,22 +41,12 @@ export function CategoryForm({ onSubmit }: CategoryFormProps) {
         <div className="flex-[2]">
           <Input
             placeholder="예: 남성 커트, 여성 커트, 앞머리 커트 등"
-            value={notice}
-            onChange={e => setNotice(e.target.value)}
+            value={categoryNotice}
+            onChange={e => setCategoryNotice(e.target.value)}
             className="h-10"
           />
           <label className="mt-1 block text-xs text-muted-foreground">
             카테고리 설명
-          </label>
-        </div>
-        <div className="flex items-center gap-2 pt-2">
-          <Switch
-            checked={isActive}
-            onCheckedChange={setIsActive}
-            id="active-new"
-          />
-          <label htmlFor="active-new" className="text-sm text-muted-foreground">
-            활성화
           </label>
         </div>
         <Button type="submit" size="default" className="h-10">

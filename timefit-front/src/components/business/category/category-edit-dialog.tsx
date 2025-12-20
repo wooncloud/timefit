@@ -22,7 +22,9 @@ interface CategoryEditDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (
     id: string,
-    data: { name: string; notice: string; isActive: boolean }
+    categoryName: string,
+    categoryNotice: string,
+    isActive: boolean
   ) => void;
 }
 
@@ -32,27 +34,28 @@ export function CategoryEditDialog({
   onOpenChange,
   onSubmit,
 }: CategoryEditDialogProps) {
-  const [name, setName] = useState('');
-  const [notice, setNotice] = useState('');
+  const [categoryName, setCategoryName] = useState('');
+  const [categoryNotice, setCategoryNotice] = useState('');
   const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (category) {
-      setName(category.name);
-      setNotice(category.notice);
+      setCategoryName(category.categoryName);
+      setCategoryNotice(category.categoryNotice);
       setIsActive(category.isActive);
     }
   }, [category]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!category || !name.trim()) return;
+    if (!category || !categoryName.trim()) return;
 
-    onSubmit(category.id, {
-      name: name.trim(),
-      notice: notice.trim(),
-      isActive,
-    });
+    onSubmit(
+      category.categoryId,
+      categoryName.trim(),
+      categoryNotice.trim(),
+      isActive
+    );
   };
 
   return (
@@ -68,8 +71,8 @@ export function CategoryEditDialog({
               <Label htmlFor="edit-name">카테고리 이름</Label>
               <Input
                 id="edit-name"
-                value={name}
-                onChange={e => setName(e.target.value)}
+                value={categoryName}
+                onChange={e => setCategoryName(e.target.value)}
                 placeholder="예: 신발"
               />
             </div>
@@ -77,8 +80,8 @@ export function CategoryEditDialog({
               <Label htmlFor="edit-notice">카테고리 설명</Label>
               <Input
                 id="edit-notice"
-                value={notice}
-                onChange={e => setNotice(e.target.value)}
+                value={categoryNotice}
+                onChange={e => setCategoryNotice(e.target.value)}
                 placeholder="예: 운동화 및 샌들"
               />
             </div>

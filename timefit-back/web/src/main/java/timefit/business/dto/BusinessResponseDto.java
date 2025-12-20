@@ -5,6 +5,7 @@ import timefit.business.entity.Business;
 import timefit.business.entity.BusinessTypeCode;
 import timefit.business.entity.UserBusinessRole;
 import timefit.common.entity.BusinessRole;
+import timefit.invitation.dto.InvitationResponseDto;
 import timefit.user.entity.User;
 
 import java.time.LocalDateTime;
@@ -373,6 +374,19 @@ public class BusinessResponseDto {
                         userRole.getIsActive(),
                         invitedBy != null ? invitedBy.getName() : null,
                         user.getLastLoginAt()
+                );
+            }
+
+            public static MemberResponse fromInvitation(InvitationResponseDto.Invitation invitation) {
+                return new MemberResponse(
+                        null,  // userId: 초대 수락 전이므로 null
+                        invitation.email(),
+                        null,  // name: 초대 수락 전이므로 null
+                        invitation.role(),
+                        null,  // joinedAt: 초대 수락 전이므로 null
+                        null,  // isActive: 초대 PENDING 상태
+                        invitation.invitedByName(),
+                        null   // lastLoginAt: 초대 수락 전이므로 null
                 );
             }
         }

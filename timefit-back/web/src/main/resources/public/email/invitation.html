@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timefit 초대장</title>
+</head>
+<body style="font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background-color: #f4f4f4; padding: 20px;">
+<table style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <!-- 헤더 -->
+    <tr>
+        <td style="background-color: #007bff; padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Timefit</h1>
+        </td>
+    </tr>
+
+    <!-- 본문 -->
+    <tr>
+        <td style="padding: 40px 30px;">
+            <h2 style="color: #333333; margin-top: 0; font-size: 20px;">{{BUSINESS_NAME}}에서 초대했습니다</h2>
+
+            <p style="color: #666666; line-height: 1.6; margin: 20px 0;">
+                안녕하세요,
+            </p>
+
+            <p style="color: #666666; line-height: 1.6; margin: 20px 0;">
+                <strong style="color: #333333;">{{INVITER_NAME}}</strong>님이
+                <strong style="color: #333333;">{{BUSINESS_NAME}}</strong>의
+                <strong style="color: #007bff;">{{ROLE_NAME}}</strong>로 초대했습니다.
+            </p>
+
+            <p style="color: #666666; line-height: 1.6; margin: 20px 0;">
+                아래 버튼을 클릭하여 초대를 수락하세요:
+            </p>
+
+            <!-- 버튼 -->
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{INVITE_LINK}}"
+                   style="display: inline-block; padding: 14px 28px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                    초대 수락하기
+                </a>
+            </div>
+
+            <!-- 만료 안내 -->
+            <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #ffc107; margin: 30px 0;">
+                <p style="color: #666666; margin: 0; font-size: 14px;">
+                    ⏰ 이 초대는 <strong style="color: #333333;">{{EXPIRES_AT}}</strong>까지 유효합니다.
+                </p>
+            </div>
+
+            <!-- 링크 복사 안내 -->
+            <p style="color: #999999; font-size: 13px; line-height: 1.6; margin: 20px 0;">
+                버튼이 작동하지 않으면 아래 링크를 복사하여 브라우저에 붙여넣으세요:<br>
+                <span style="color: #007bff; word-break: break-all;">{{INVITE_LINK}}</span>
+            </p>
+        </td>
+    </tr>
+
+    <!-- 푸터 -->
+    <tr>
+        <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e9ecef;">
+            <p style="color: #999999; font-size: 13px; margin: 0;">
+                감사합니다.<br>
+                <strong>Timefit 팀</strong>
+            </p>
+            <p style="color: #cccccc; font-size: 12px; margin: 10px 0 0 0;">
+                © 2024 Timefit. All rights reserved.
+            </p>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

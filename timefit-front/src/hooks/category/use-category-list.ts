@@ -16,12 +16,19 @@ import { handleAuthError } from '@/lib/api/handle-auth-error';
 
 interface UseCategoryListReturn {
   categories: Category[];
-  totalCount: number;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
-  createCategory: (data: CreateCategoryRequest) => Promise<Category | null>;
-  updateCategory: (id: string, data: UpdateCategoryRequest) => Promise<boolean>;
+  createCategory: (
+    categoryName: string,
+    categoryNotice: string
+  ) => Promise<Category | null>;
+  updateCategory: (
+    id: string,
+    categoryName: string,
+    categoryNotice: string,
+    isActive: boolean
+  ) => Promise<boolean>;
   deleteCategory: (id: string) => Promise<boolean>;
   creating: boolean;
   updating: boolean;
@@ -31,9 +38,9 @@ interface UseCategoryListReturn {
 export function useCategoryList(): UseCategoryListReturn {
   const { business } = useBusinessStore();
   const businessId = business?.businessId;
+  const businessType = business?.businessTypes?.[0]; // 첫 번째 비즈니스 타입 사용
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -61,12 +68,10 @@ export function useCategoryList(): UseCategoryListReturn {
       if (!result.success || !result.data) {
         setError(result.message || '카테고리 목록을 불러오는데 실패했습니다.');
         setCategories([]);
-        setTotalCount(0);
         return;
       }
 
-      setCategories(result.data.categories);
-      setTotalCount(result.data.totalCount);
+      setCategories(result.data.categories || []);
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -75,17 +80,22 @@ export function useCategoryList(): UseCategoryListReturn {
       console.error('Category list fetch error:', errorMessage);
       setError(errorMessage);
       setCategories([]);
-      setTotalCount(0);
     } finally {
       setLoading(false);
     }
   }, [businessId]);
 
   const createCategory = async (
-    data: CreateCategoryRequest
+    categoryName: string,
+    categoryNotice: string
   ): Promise<Category | null> => {
     if (!businessId) {
       setError('비즈니스 정보가 없습니다.');
+      return null;
+    }
+
+    if (!businessType) {
+      setError('비즈니스 타입 정보가 없습니다.');
       return null;
     }
 
@@ -93,12 +103,18 @@ export function useCategoryList(): UseCategoryListReturn {
       setCreating(true);
       setError(null);
 
+      const requestData: CreateCategoryRequest = {
+        businessType,
+        categoryName,
+        categoryNotice,
+      };
+
       const response = await fetch(`/api/business/${businessId}/category`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestData),
       });
 
       const result: CreateCategoryHandlerResponse = await response.json();
@@ -129,7 +145,9 @@ export function useCategoryList(): UseCategoryListReturn {
 
   const updateCategory = async (
     id: string,
-    data: UpdateCategoryRequest
+    categoryName: string,
+    categoryNotice: string,
+    isActive: boolean
   ): Promise<boolean> => {
     if (!businessId) {
       setError('비즈니스 정보가 없습니다.');
@@ -140,6 +158,12 @@ export function useCategoryList(): UseCategoryListReturn {
       setUpdating(true);
       setError(null);
 
+      const requestData: UpdateCategoryRequest = {
+        categoryName,
+        categoryNotice,
+        isActive,
+      };
+
       const response = await fetch(
         `/api/business/${businessId}/category/${id}`,
         {
@@ -147,7 +171,7 @@ export function useCategoryList(): UseCategoryListReturn {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(requestData),
         }
       );
 
@@ -226,7 +250,6 @@ export function useCategoryList(): UseCategoryListReturn {
 
   return {
     categories,
-    totalCount,
     loading,
     error,
     refetch: fetchCategories,

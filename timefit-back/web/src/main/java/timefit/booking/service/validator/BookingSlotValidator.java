@@ -8,7 +8,11 @@ import timefit.booking.repository.BookingSlotQueryRepository;
 import timefit.booking.repository.BookingSlotRepository;
 import timefit.exception.booking.BookingErrorCode;
 import timefit.exception.booking.BookingException;
+import timefit.exception.menu.MenuErrorCode;
+import timefit.exception.menu.MenuException;
 import timefit.menu.dto.MenuRequestDto;
+import timefit.menu.entity.Menu;
+import timefit.menu.entity.OrderType;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -16,9 +20,10 @@ import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
 /**
- * BookingSlot 도메인 검증 클래스
- * - BookingSlot 고유의 검증 로직 분리
- * - 슬롯 유효성, 예약 가능 여부 등 검증
+ * BookingSlot 검증 담당
+ * - BookingSlot 존재 및 상태 검증
+ * - 시간 범위 검증
+ * - Menu에서 BookingSlot 생성 시 검증
  */
 @Slf4j
 @Component
@@ -126,7 +131,7 @@ public class BookingSlotValidator {
     /**
      * 예약 가능한 슬롯인지 전체 검증
      *
-     * @param slotId     검증할 슬롯 ID
+     * @param slotId 검증할 슬롯 ID
      * @param businessId 업체 ID
      */
     public void validateBookableSlot(UUID slotId, UUID businessId) {
@@ -135,40 +140,50 @@ public class BookingSlotValidator {
         validateSlotNotPast(slot);
         validateSlotIsActive(slot);
         validateSlotTimeFormat(slot);
-        // 일단 여기 내부에 다 throw 있어서 괜찮나? ㅋㅋ 하 씨
     }
-
-    // ----- 메뉴 생성 시 사용되는 validator
 
     /**
      * BookingSlot 생성 설정 검증
-     * - 날짜 범위 검증
-     * - 시간대 검증
+     *
+     * [검증 항목]
+     * 1. settings null 체크
+     * 2. startDate, endDate 필수 값 체크
+     * 3. 날짜 순서 검증 (startDate <= endDate)
+     * 4. 최대 기간 검증 (3개월)
+     * 5. 특정 시간대 검증 (선택사항)
      *
      * @param settings BookingSlot 생성 설정
      * @throws BookingException 검증 실패 시
      */
     public void validateSlotSettings(MenuRequestDto.BookingSlotSettings settings) {
+        // 0. settings null 체크
+        if (settings == null) {
+            throw new BookingException(
+                    BookingErrorCode.AVAILABLE_SLOT_INCOMPLETE_SETTINGS);
+        }
+
+        // 1. startDate, endDate 필수 값 체크
         LocalDate startDate = settings.startDate();
         LocalDate endDate = settings.endDate();
 
-        // 1. 날짜 순서 검증
+        if (startDate == null || endDate == null) {
+            throw new BookingException(
+                    BookingErrorCode.AVAILABLE_SLOT_INCOMPLETE_SETTINGS);
+        }
+
+        // 2. 날짜 순서 검증
         if (startDate.isAfter(endDate)) {
             throw new BookingException(
-                    BookingErrorCode.AVAILABLE_SLOT_INVALID_TIME,
-                    "시작 날짜는 종료 날짜보다 이전이어야 합니다"
-            );
+                    BookingErrorCode.AVAILABLE_SLOT_INVALID_TIME);
         }
 
-        // 2. 최대 기간 검증 (3개월)
+        // 3. 최대 기간 검증 (3개월)
         if (startDate.plusMonths(3).isBefore(endDate)) {
             throw new BookingException(
-                    BookingErrorCode.AVAILABLE_SLOT_DATE_RANGE_EXCEEDED,
-                    "슬롯 생성 기간은 최대 3개월입니다"
-            );
+                    BookingErrorCode.AVAILABLE_SLOT_DATE_RANGE_EXCEEDED);
         }
 
-        // 3. 특정 시간대 검증 (선택사항)
+        // 4. 특정 시간대 검증 (선택사항)
         if (settings.specificTimeRanges() != null && !settings.specificTimeRanges().isEmpty()) {
             for (MenuRequestDto.TimeRange timeRange : settings.specificTimeRanges()) {
                 validateTimeRange(timeRange);
@@ -178,8 +193,10 @@ public class BookingSlotValidator {
 
     /**
      * TimeRange 검증
-     * - 시간 형식 검증 (HH:mm)
-     * - startTime < endTime 검증
+     *
+     * [검증 항목]
+     * 1. 시간 형식 검증 (HH:mm)
+     * 2. startTime < endTime 검증
      *
      * @param timeRange 검증할 시간대
      * @throws BookingException 검증 실패 시
@@ -229,4 +246,69 @@ public class BookingSlotValidator {
         }
     }
 
+    // ===== Menu에서 BookingSlot 생성 시 검증 =====
+
+    /**
+     * Menu에서 BookingSlot 생성 가능 여부 검증
+     *
+     * [검증 흐름]
+     * 1. ONDEMAND_BASED → 생성 불필요 (정상 종료)
+     * 2. autoGenerateSlots=false → 생성 불필요 (정상 종료)
+     * 3. slotSettings=null → 예외 발생 (로직 오류)
+     * 4. slotSettings 유효성 검증
+     *
+     * [호출 시점]
+     * - BookingSlotCommandService.createFromMenu()
+     * - BookingSlotCommandService.regenerateFromMenu()
+     *
+     * @param menu 생성/수정된 Menu
+     * @param request Menu 생성/수정 요청 DTO
+     * @throws MenuException 생성 조건이 올바르지 않은 경우
+     */
+    public void validateCreationFromMenu(Menu menu, MenuRequestDto.CreateUpdateMenu request) {
+        // 1. ONDEMAND_BASED 체크 (정상 종료)
+        if (request.orderType() != OrderType.RESERVATION_BASED) {
+            log.debug("ONDEMAND_BASED 메뉴 - BookingSlot 생성 불필요: menuId={}", menu.getId());
+            return;
+        }
+
+        // 2. autoGenerateSlots 체크 (정상 종료)
+        if (!Boolean.TRUE.equals(request.autoGenerateSlots())) {
+            log.debug("autoGenerateSlots=false - BookingSlot 생성 생략: menuId={}", menu.getId());
+            return;
+        }
+
+        // 3. slotSettings 필수 체크 (예외 발생)
+        if (request.slotSettings() == null) {
+            log.error("slotSettings 누락 - BookingSlot 생성 불가: menuId={}", menu.getId());
+            throw new MenuException(MenuErrorCode.INVALID_SLOT_SETTINGS);
+        }
+
+        // 4. slotSettings 유효성 검증
+        validateSlotSettings(request.slotSettings());
+    }
+
+    /**
+     * BookingSlot 재생성 필요 여부 확인
+     *
+     * [확인 항목]
+     * - request.durationMinutes가 null이 아니고
+     * - oldDurationMinutes와 다른 경우
+     *
+     * @param request Menu 수정 요청 DTO
+     * @param oldDurationMinutes 수정 전 durationMinutes
+     * @return true: 재생성 필요, false: 재생성 불필요
+     */
+    public boolean shouldRegenerate(
+            MenuRequestDto.CreateUpdateMenu request,
+            Integer oldDurationMinutes) {
+
+        // durationMinutes가 변경되지 않았으면 재생성 불필요
+        if (request.durationMinutes() == null) {
+            return false;
+        }
+
+        // durationMinutes가 변경되었으면 재생성 필요
+        return !oldDurationMinutes.equals(request.durationMinutes());
+    }
 }
