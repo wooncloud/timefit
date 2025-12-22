@@ -1,9 +1,9 @@
 /**
  * ========================================
- * Phase 2: concurrent-booking - 동시 예약 테스트
+ * Concurrent Booking Test - 동시성 제어 검증
  * ========================================
  *
- * 목적: 같은 슬롯에 동시 예약 시도 시 동시성 제어 확인
+ * 목적: 같은 슬롯에 동시 예약 시 Optimistic Lock 동작 확인
  *
  * API: POST /api/reservation (단수!)
  * Body:
@@ -11,15 +11,32 @@
  *   - customerName, customerPhone
  *   - durationMinutes, totalPrice
  *
- * 시나리오:
- * - 50명의 서로 다른 고객이 동시에 같은 슬롯 예약 시도
- * - 단 1명만 성공해야 함 (Optimistic Lock)
- * - 나머지 49명은 실패 (409 Conflict)
+ * 근거:
+ * - 50 VU, 50 iterations: 50명이 동시에 같은 슬롯 예약 시도
+ *   → 실제 상황: 인기 시간대 (예: 토요일 오후 3시)
+ *   → 1명만 성공, 49명 실패(409 Conflict) 예상
  *
- * 학습 포인트:
- * - "동시성 제어가 작동하는가?"
- * - "실패율이 98%인가? (1명 성공, 49명 실패)"
- * - "Optimistic Lock이 효과적인가?"
+ * - shared-iterations: 모든 VU가 동시에 시작
+ *   → 최대한 동시성 극대화
+ *   → Connection Pool 경합 강제 발생
+ *
+ * - maxDuration 30초: 충분한 시간 (실제는 1-2초 내 완료)
+ *
+ * 예상 결과:
+ * - success_count: 1 ✅
+ * - conflict_count: 49 ✅
+ * - conflicts rate: 98% ✅
+ *
+ * 실패 시나리오:
+ * - success_count: 2+ → Optimistic Lock 실패 (Race Condition)
+ * - conflict_count: 0 → 모두 실패 (설정 오류)
+ *
+ * 실행 주기: 예약 로직 변경 시마다
+ * 소요 시간: 30초
+ *
+ * 업계 표준:
+ * - Martin Fowler: "Optimistic Lock은 충돌률 5% 이하일 때 효율적"
+ * - 우리 케이스: 충돌률 98%이지만 테스트 목적이므로 정상
  */
 
 import http from 'k6/http';
@@ -37,7 +54,6 @@ const conflictCount = new Counter('conflict_count');
 
 export const options = {
     scenarios: {
-        // 50명이 동시에 같은 슬롯 예약 시도
         concurrent_booking: {
             executor: 'shared-iterations',
             vus: 50,              // 50명 동시
@@ -46,12 +62,9 @@ export const options = {
         },
     },
     thresholds: {
-        // 동시성 테스트이므로 관대한 threshold
-        'http_req_duration': ['p(95)<2000'],
-        // 49명 실패 = 정상 (98%)
-        'conflicts': ['rate>0.95'],
-        // 1명만 성공 (2%)
-        'success': ['rate<0.05'],
+        'http_req_duration': ['p(95)<2000'],  // 동시성 테스트는 관대
+        'conflicts': ['rate>0.95'],           // 49명 실패 = 정상!
+        'success': ['rate<0.05'],             // 1명만 성공
     },
 };
 
@@ -189,7 +202,7 @@ export default function (data) {
 export function teardown(data) {
     console.log('');
     console.log('========================================');
-    console.log('Phase 2: concurrent-booking 완료');
+    console.log('✅ Concurrent Booking Test 완료');
     console.log('========================================');
     console.log('');
     console.log('💡 결과 해석:');

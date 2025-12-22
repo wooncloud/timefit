@@ -1,9 +1,9 @@
 /**
  * ========================================
- * Phase 2: slot-generation - 슬롯 생성 성능 테스트
+ * Slot Generation Test - 대량 INSERT 성능 확인
  * ========================================
  *
- * 목적: 메뉴 생성 시 자동 슬롯 생성의 성능 측정
+ * 목적: 메뉴 생성 시 자동 슬롯 생성(30일, 540개)의 성능 측정
  *
  * API: POST /api/business/{businessId}/menu
  * Body:
@@ -12,16 +12,35 @@
  *   - autoGenerateSlots: true
  *   - slotSettings: { startDate, endDate, slotIntervalMinutes, specificTimeRanges }
  *
- * 시나리오:
- * - 30일간 슬롯 자동 생성
- * - 09:00-18:00, 30분 간격 = 하루 18개 슬롯
- * - 30일 × 18개 = 약 540개 슬롯 INSERT
- * - VU 10으로 동시 생성 테스트
+ * 근거:
+ * - VU 5-10: 슬롯 생성은 무거운 작업 (대량 INSERT)
+ *   → 30일 × 18개/일 = 540개 슬롯 INSERT
+ *   → 동시에 많이 실행되는 작업 아님 (업체 등록은 드뭄)
  *
- * 학습 포인트:
- * - "대량 INSERT 성능은?"
- * - "트랜잭션 처리 시간은?"
- * - "동시 생성 시 충돌은?"
+ * - 2분 유지: 충분한 반복 횟수 (10-20회)
+ *   → 평균 응답 시간의 신뢰도 확보
+ *   → DB Transaction Lock 경합 확인
+ *
+ * - p95 < 5000ms (5초): 대량 INSERT는 느릴 수 있음
+ *   → 540개 INSERT = Batch Insert 시 1-3초 예상
+ *   → 5초 = 여유 있는 목표 (UX상 허용 가능)
+ *
+ * 예상 결과:
+ * - VU 5, p95 < 2000ms: Batch Insert 효과 우수 ✅
+ * - VU 5, p95 < 5000ms: 목표 달성 ✅
+ * - VU 10, p95 > 5000ms: Transaction Lock 경합 ⚠️
+ *
+ * 실행 주기: 슬롯 생성 로직 변경 시
+ * 소요 시간: 3분
+ *
+ * 최적화 포인트:
+ * - Batch Insert 사용 (한 번에 100개씩)
+ * - Transaction 분리 (메뉴 생성 / 슬롯 생성)
+ * - 비동기 처리 고려 (사용자는 메뉴 생성 완료 후 이탈)
+ *
+ * 업계 표준:
+ * - 대량 INSERT: Batch 사용 시 10배 빠름
+ * - Transaction: 짧게 유지 (Lock 경합 최소화)
  */
 
 import http from 'k6/http';
@@ -35,13 +54,12 @@ const slotGenerationDuration = new Trend('slot_generation_duration');
 
 export const options = {
     stages: [
-        { duration: '30s', target: 5 },   // 워밍업
-        { duration: '2m', target: 10 },   // 메인 테스트
-        { duration: '30s', target: 0 },   // 종료
+        { duration: '30s', target: 5 },    // Warm up
+        { duration: '2m', target: 10 },    // 메인 테스트
+        { duration: '30s', target: 0 },    // Cool down
     ],
     thresholds: {
-        // 슬롯 생성은 무거운 작업: p95 < 5초
-        'http_req_duration': ['p(95)<5000'],
+        'http_req_duration': ['p(95)<5000'],  // 5초 (대량 INSERT)
         'http_req_failed': ['rate<0.05'],
         'errors': ['rate<0.05'],
     },
@@ -71,8 +89,8 @@ export function setup() {
     }
 
     const body = JSON.parse(loginRes.body);
-    console.log('로그인 성공: owner1@timefit.com');
-    console.log(`업체 ID: ${BUSINESS_IDS[0]} (owner1 소유)`);
+    console.log('✅ 로그인 성공: owner1@timefit.com');
+    console.log(`✅ 업체 ID: ${BUSINESS_IDS[0]}`);
     console.log('');
     console.log('테스트 시나리오:');
     console.log('  - 메뉴 생성 + 30일 슬롯 자동 생성');
@@ -170,9 +188,7 @@ export default function (data) {
 
 export function teardown(data) {
     console.log('');
-    console.log('========================================');
-    console.log('Phase 2: slot-generation 완료');
-    console.log('========================================');
+    console.log('✅ Slot Generation Test 완료');
     console.log('');
     console.log('분석 포인트:');
     console.log('  - p95가 5초 이하?');

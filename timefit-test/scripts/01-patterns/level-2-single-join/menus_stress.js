@@ -1,9 +1,9 @@
 /**
  * ========================================
- * Level 2: single-join - 메뉴 목록 조회 스트레스 테스트
+ * Stress Test - 비즈니스 목표 + 한계 탐색
  * ========================================
  *
- * 목적: JOIN 1개 쿼리의 한계점 파악
+ * 목적: JOIN 1개 쿼리의 비즈니스 목표 달성 및 한계 파악
  *
  * API: GET /api/business/{businessId}/menu
  * 쿼리:
@@ -12,17 +12,19 @@
  * JOIN: 1개
  * 권한: 인증 필요 (JWT 토큰)
  *
- * 테스트 시나리오:
- * - VU 50 → 200 → 500 → 1000 점진적 증가
- *
- * 예상 결과:
- * - VU 200까지: p95 < 200ms
- * - VU 500: p95 < 500ms (증가 시작)
- * - VU 800+: 급증 (Level 1보다 빨리 한계)
- *
  * 학습 포인트:
  * - "JOIN 있으면 한계 VU가 낮아지는가?"
- * - "Level 1은 VU 800, Level 2는?"
+ * - "Level 1 (no-join)과 비교하여 병목이 더 빨리 발생하는가?"
+ * - "VU 500에서도 p95 < 300ms 달성 가능한가?"
+ *
+ * 예상 결과:
+ * - VU 100: p95 < 150ms ✅
+ * - VU 500: p95 < 300ms ✅ (목표 달성)
+ * - VU 750: p95 < 500ms ⚠️
+ * - VU 1000: p95 > 1000ms ❌
+ *
+ * 실행 주기: 월 1회
+ * 소요 시간: 15분
  */
 
 import http from 'k6/http';
@@ -36,19 +38,16 @@ const menuDuration = new Trend('menu_query_duration');
 
 export const options = {
     stages: [
-        { duration: '1m', target: 50 },
-        { duration: '2m', target: 200 },
-        { duration: '2m', target: 200 },
-        { duration: '2m', target: 500 },
-        { duration: '2m', target: 500 },
-        { duration: '2m', target: 1000 },
-        { duration: '1m', target: 1000 },
-        { duration: '30s', target: 0 },
+        { duration: '2m', target: 100 },   // Warm up
+        { duration: '5m', target: 500 },   // 목표 부하
+        { duration: '2m', target: 750 },   // 1.5배 부하
+        { duration: '5m', target: 1000 },  // 2배 부하
+        { duration: '1m', target: 0 },     // Cool down
     ],
     thresholds: {
         'http_req_duration': ['p(95)<3000'],
-        'http_req_failed': ['rate<0.2'],
-        'errors': ['rate<0.2'],
+        'http_req_failed': ['rate<0.1'],
+        'errors': ['rate<0.1'],
     },
 };
 
@@ -60,8 +59,9 @@ const BUSINESS_IDS = [
 
 export function setup() {
     console.log('========================================');
-    console.log('Level 2: single-join - 메뉴 목록 조회 스트레스 테스트');
+    console.log('Level 2: single-join - Stress Test');
     console.log('========================================');
+    console.log(`Target URL: ${BASE_URL}`);
     console.log('');
 
     const loginRes = http.post(`${BASE_URL}/api/auth/signin`, JSON.stringify({
@@ -78,9 +78,9 @@ export function setup() {
     const body = JSON.parse(loginRes.body);
     console.log('✅ 로그인 성공');
     console.log('');
-    console.log('학습 목표:');
-    console.log('  - JOIN으로 한계 VU가 낮아지는가?');
-    console.log('  - Level 1: VU 800 vs Level 2: ?');
+    console.log('목표: JOIN 1개 쿼리의 한계 탐색');
+    console.log('  - VU 500에서 p95 < 300ms 달성?');
+    console.log('  - Level 1과 비교하여 병목 빨리 발생?');
     console.log('========================================');
     console.log('');
 
@@ -114,15 +114,12 @@ export default function (data) {
 
 export function teardown(data) {
     console.log('');
-    console.log('========================================');
-    console.log('Level 2 Stress Test 완료');
-    console.log('========================================');
+    console.log('✅ Stress Test 완료');
     console.log('');
     console.log('분석 포인트:');
-    console.log('  - 어느 VU부터 응답 시간 급증?');
-    console.log('  - Level 1보다 한계가 낮았나요?');
+    console.log('  - VU 500에서 p95 < 300ms 달성했나요?');
+    console.log('  - Level 1 대비 병목이 더 빨리 발생했나요?');
     console.log('');
-    console.log('다음 단계:');
-    console.log('  npm run test:pattern:l2:spike');
+    console.log('다음 단계: npm run test:pattern:l2:spike');
     console.log('');
 }

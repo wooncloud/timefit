@@ -1,9 +1,9 @@
 /**
  * ========================================
- * Phase 2: query-performance - 슬롯 조회 성능 테스트
+ * Query Performance Test - 슬롯 조회 최적화 검증
  * ========================================
  *
- * 목적: 날짜별 슬롯 조회 쿼리의 성능 측정
+ * 목적: 날짜별 슬롯 조회 쿼리의 성능 및 인덱스 효과 확인
  *
  * API: GET /api/business/{businessId}/booking-slot/menu/{menuId}?startDate={date}&endDate={date}
  *
@@ -13,14 +13,32 @@
  *   AND slot_date BETWEEN ? AND ? AND is_available = true
  *   ORDER BY slot_date, start_time
  *
- * 시나리오:
- * - VU 100으로 고부하 조회
- * - 날짜를 랜덤하게 변경하여 조회
+ * 근거:
+ * - Load Test 패턴 사용 (100 VU, 5분)
+ *   → 조회 API는 자주 호출되므로 일상 부하 기준
+ *   → 날짜를 랜덤하게 변경하여 Cache Miss 시나리오 테스트
  *
- * 학습 포인트:
- * - "인덱스가 제대로 작동하는가?"
- * - "캐싱이 필요한가?"
- * - "조회 성능이 충분한가?"
+ * - p95 < 200ms: 조회는 빨라야 함 (쓰기보다 엄격)
+ *   → 인덱스 효과: (business_id, menu_id, slot_date)
+ *   → 예상: 인덱스 사용 시 10-50ms
+ *   → 200ms = 네트워크(50ms) + DB(50ms) + 여유(100ms)
+ *
+ * 테스트 케이스:
+ * - 여러 업체/메뉴 랜덤 조회 (4개 조합)
+ * - 오늘부터 7일 중 랜덤 날짜
+ * - Cache 없는 상황 (Cold Cache)
+ *
+ * 예상 결과:
+ * - VU 100, p95 < 100ms: 인덱스 효과 우수 ✅
+ * - VU 100, p95 < 200ms: 목표 달성 ✅
+ * - VU 100, p95 > 200ms: 인덱스 확인 필요 ⚠️
+ *
+ * 실행 주기: 쿼리 변경 시마다 (인덱스 추가/삭제)
+ * 소요 시간: 5분
+ *
+ * 최적화 포인트:
+ * - 인덱스: (business_id, menu_id, slot_date, is_available)
+ * - Redis 캐싱 고려 (p95 > 100ms 시)
  */
 
 import http from 'k6/http';
@@ -34,15 +52,12 @@ const queryDuration = new Trend('query_duration');
 
 export const options = {
     stages: [
-        { duration: '30s', target: 100 },
-        { duration: '1m', target: 200 },
-        { duration: '2m', target: 300 },
-        { duration: '2m', target: 500 },
-        { duration: '30s', target: 0 },
+        { duration: '1m', target: 100 },   // Ramp up
+        { duration: '3m', target: 100 },   // Steady state
+        { duration: '1m', target: 0 },     // Ramp down
     ],
     thresholds: {
-        // 슬롯 조회는 빨라야 함: p95 < 200ms
-        'http_req_duration': ['p(95)<200'],
+        'http_req_duration': ['p(95)<200'],  // 조회는 빨라야 함
         'http_req_failed': ['rate<0.01'],
         'errors': ['rate<0.01'],
     },
@@ -64,7 +79,7 @@ export function setup() {
     console.log('');
     console.log('테스트 시나리오:');
     console.log('  - VU 100으로 슬롯 조회');
-    console.log('  - 날짜 랜덤 변경');
+    console.log('  - 날짜 랜덤 변경 (Cache Miss)');
     console.log('  - 여러 업체/메뉴 랜덤 조회');
     console.log('');
     console.log('학습 목표:');
@@ -114,9 +129,7 @@ export default function (data) {
 
 export function teardown(data) {
     console.log('');
-    console.log('========================================');
-    console.log('Phase 2: query-performance 완료');
-    console.log('========================================');
+    console.log('✅ Query Performance Test 완료');
     console.log('');
     console.log('분석 포인트:');
     console.log('  - p95 < 200ms 달성?');
