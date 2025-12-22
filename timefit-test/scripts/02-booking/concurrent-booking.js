@@ -103,8 +103,10 @@ export function setup() {
     console.log('');
 
     // 2. 실제 슬롯 조회 (동적으로 가져오기)
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
+    // ⚠️ 중요: 7일 후 날짜 사용 (시간대 이슈 회피 + 과거 날짜 방지)
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 7); // 7일 후
+    const dateStr = futureDate.toISOString().split('T')[0];
 
     const slotsUrl = `${BASE_URL}/api/business/${FIXED_BUSINESS_ID}/booking-slot/menu/${FIXED_MENU_ID}?startDate=${dateStr}&endDate=${dateStr}`;
     const slotsRes = http.get(slotsUrl, {

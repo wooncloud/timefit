@@ -1,13 +1,14 @@
 -- ========================================
--- Timefit Bulk Test Data v1
+-- Timefit Bulk Test Data v2
 -- For Level 3 Performance Testing
 -- ========================================
 -- Data Scale:
 --   Users: 100 (3 business owners + 97 customers)
 --   Business: 3
 --   Menu: 30
---   BookingSlot: ~3,000
+--   BookingSlot: ~3,000 (CURRENT_DATE ~ +60 days)
 --   Reservation: 10,000
+--   Date Range: TODAY ~ +60 DAYS (No past dates!)
 -- ========================================
 
 -- Enable pgcrypto extension (for UUID generation)
@@ -318,7 +319,7 @@ SELECT
     NOW(),
     NOW()
 FROM
-    generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE + INTERVAL '30 days', INTERVAL '1 day') AS date_series,
+    generate_series(CURRENT_DATE, CURRENT_DATE + INTERVAL '60 days', INTERVAL '1 day') AS date_series,
     generate_series(TIMESTAMP '2024-01-01 09:00', TIMESTAMP '2024-01-01 11:00', INTERVAL '60 minutes') AS time_series
 WHERE EXTRACT(ISODOW FROM date_series) BETWEEN 1 AND 5;
 
@@ -335,7 +336,7 @@ SELECT
     NOW(),
     NOW()
 FROM
-    generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE + INTERVAL '30 days', INTERVAL '1 day') AS date_series,
+    generate_series(CURRENT_DATE, CURRENT_DATE + INTERVAL '60 days', INTERVAL '1 day') AS date_series,
     generate_series(TIMESTAMP '2024-01-01 13:00', TIMESTAMP '2024-01-01 17:00', INTERVAL '60 minutes') AS time_series
 WHERE EXTRACT(ISODOW FROM date_series) BETWEEN 1 AND 5;
 
@@ -352,7 +353,7 @@ SELECT
     NOW(),
     NOW()
 FROM
-    generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE + INTERVAL '30 days', INTERVAL '1 day') AS date_series,
+    generate_series(CURRENT_DATE, CURRENT_DATE + INTERVAL '60 days', INTERVAL '1 day') AS date_series,
     generate_series(TIMESTAMP '2024-01-01 09:00', TIMESTAMP '2024-01-01 13:00', INTERVAL '60 minutes') AS time_series
 WHERE EXTRACT(ISODOW FROM date_series) IN (6, 7);
 
@@ -370,7 +371,7 @@ SELECT
     NOW(),
     NOW()
 FROM
-    generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE + INTERVAL '30 days', INTERVAL '1 day') AS date_series,
+    generate_series(CURRENT_DATE, CURRENT_DATE + INTERVAL '60 days', INTERVAL '1 day') AS date_series,
     generate_series(TIMESTAMP '2024-01-01 09:00', TIMESTAMP '2024-01-01 11:30', INTERVAL '30 minutes') AS time_series
 WHERE EXTRACT(ISODOW FROM date_series) BETWEEN 1 AND 5;
 
@@ -387,7 +388,7 @@ SELECT
     NOW(),
     NOW()
 FROM
-    generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE + INTERVAL '30 days', INTERVAL '1 day') AS date_series,
+    generate_series(CURRENT_DATE, CURRENT_DATE + INTERVAL '60 days', INTERVAL '1 day') AS date_series,
     generate_series(TIMESTAMP '2024-01-01 13:00', TIMESTAMP '2024-01-01 17:30', INTERVAL '30 minutes') AS time_series
 WHERE EXTRACT(ISODOW FROM date_series) BETWEEN 1 AND 5;
 
@@ -404,7 +405,7 @@ SELECT
     NOW(),
     NOW()
 FROM
-    generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE + INTERVAL '30 days', INTERVAL '1 day') AS date_series,
+    generate_series(CURRENT_DATE, CURRENT_DATE + INTERVAL '60 days', INTERVAL '1 day') AS date_series,
     generate_series(TIMESTAMP '2024-01-01 09:00', TIMESTAMP '2024-01-01 13:30', INTERVAL '30 minutes') AS time_series
 WHERE EXTRACT(ISODOW FROM date_series) IN (6, 7);
 
@@ -421,7 +422,7 @@ SELECT
     NOW(),
     NOW()
 FROM
-    generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE + INTERVAL '30 days', INTERVAL '1 day') AS date_series,
+    generate_series(CURRENT_DATE, CURRENT_DATE + INTERVAL '60 days', INTERVAL '1 day') AS date_series,
     generate_series(TIMESTAMP '2024-01-01 09:00', TIMESTAMP '2024-01-01 11:00', INTERVAL '60 minutes') AS time_series
 WHERE EXTRACT(ISODOW FROM date_series) BETWEEN 1 AND 5;
 
@@ -437,7 +438,7 @@ SELECT
     NOW(),
     NOW()
 FROM
-    generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE + INTERVAL '30 days', INTERVAL '1 day') AS date_series,
+    generate_series(CURRENT_DATE, CURRENT_DATE + INTERVAL '60 days', INTERVAL '1 day') AS date_series,
     generate_series(TIMESTAMP '2024-01-01 13:00', TIMESTAMP '2024-01-01 17:00', INTERVAL '60 minutes') AS time_series
 WHERE EXTRACT(ISODOW FROM date_series) BETWEEN 1 AND 5;
 
@@ -453,7 +454,7 @@ SELECT
     NOW(),
     NOW()
 FROM
-    generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE + INTERVAL '30 days', INTERVAL '1 day') AS date_series,
+    generate_series(CURRENT_DATE, CURRENT_DATE + INTERVAL '60 days', INTERVAL '1 day') AS date_series,
     generate_series(TIMESTAMP '2024-01-01 09:00', TIMESTAMP '2024-01-01 13:00', INTERVAL '60 minutes') AS time_series
 WHERE EXTRACT(ISODOW FROM date_series) IN (6, 7);
 
