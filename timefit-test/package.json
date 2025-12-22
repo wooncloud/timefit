@@ -21,7 +21,17 @@
     "// ========== Phase 2: Booking ==========": "",
     "test:booking:slot-generation": "k6 run --out dashboard=report=results/booking-slot-generation.html scripts/02-booking/slot-generation.js",
     "test:booking:concurrent": "k6 run --out dashboard=report=results/booking-concurrent.html scripts/02-booking/concurrent-booking.js",
-    "test:booking:query": "k6 run --out dashboard=report=results/booking-query.html scripts/02-booking/query-performance.js"
+    "test:booking:query": "k6 run --out dashboard=report=results/booking-query.html scripts/02-booking/query-performance.js",
+
+
+    "// ========== 전체 실행 (하나 실패 시 중단) ==========": "",
+    "test:all:phase1": "npm run test:pattern:l1:smoke && npm run test:pattern:l1:load && npm run test:pattern:l1:stress && npm run test:pattern:l1:soak && npm run test:pattern:l2:load && npm run test:pattern:l2:stress && npm run test:pattern:l2:spike && npm run test:pattern:l3:load && npm run test:pattern:l3:stress",
+    "test:all:phase2": "npm run test:booking:slot-generation && npm run test:booking:concurrent && npm run test:booking:query",
+    "test:all": "npm run test:all:phase1 && npm run test:all:phase2",
+    "// ========== 전체 실행 (실패해도 계속) ==========": "",
+    "test:all:phase1:continue": "npm run test:pattern:l1:smoke; npm run test:pattern:l1:load; npm run test:pattern:l1:stress; npm run test:pattern:l1:soak; npm run test:pattern:l2:load; npm run test:pattern:l2:stress; npm run test:pattern:l2:spike; npm run test:pattern:l3:load; npm run test:pattern:l3:stress",
+    "test:all:phase2:continue": "npm run test:booking:slot-generation; npm run test:booking:concurrent; npm run test:booking:query",
+    "test:all:continue": "npm run test:all:phase1:continue; npm run test:all:phase2:continue"
   },
   "author": "Sechang Jang",
   "license": "MIT",
