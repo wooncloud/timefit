@@ -66,6 +66,9 @@ public class OperatingHoursResponseDto {
     // 예약 가능 시간대 결과
     @Schema(description = "예약 가능 시간대 범위")
     public record TimeRange(
+            @Schema(description = "시간대 순서", example = "0")
+            Integer sequence,
+
             @Schema(
                     description = "시작 시간 (HH:mm)",
                     example = "09:00"
@@ -76,6 +79,9 @@ public class OperatingHoursResponseDto {
                     description = "종료 시간 (HH:mm)",
                     example = "12:00"
             )
-            String endTime
+            String endTime,
+
+            @Schema(description = "이 시간대 휴무 여부", example = "false")
+            Boolean isClosed
     ) {}
 }
