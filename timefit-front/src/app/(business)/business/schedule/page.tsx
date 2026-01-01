@@ -1,63 +1,25 @@
-'use client';
+import { getOperatingHours } from '@/services/schedule/operating-hours-service';
+import { mapOperatingHoursToBusinessHours } from '@/lib/data/schedule/map-operating-hours';
+import { getCurrentUserFromSession } from '@/lib/session/server';
 
-import { useState } from 'react';
+import { ScheduleClient } from './schedule-client';
 
-import { WEEKDAYS } from '@/lib/data/schedule/weekdays';
-import type { BusinessHours } from '@/lib/data/schedule/weekdays';
-import { mockBusinessHours } from '@/lib/mock/business-hours';
-import { ScheduleEditorPanel } from '@/components/business/schedule/schedule-editor-panel';
-import { WeekdayHoursPanel } from '@/components/business/schedule/weekday-hours-panel';
+export default async function SchedulePage() {
+  const sessionUser = await getCurrentUserFromSession();
 
-export default function Page() {
-  const [businessHours, setBusinessHours] =
-    useState<BusinessHours[]>(mockBusinessHours);
-  const [selectedDayId, setSelectedDayId] = useState<string>('mon');
+  if (!sessionUser) {
+    throw new Error('세션 사용자 정보를 찾을 수 없습니다.');
+  }
 
-  const selectedDay = businessHours.find(d => d.id === selectedDayId);
-  const selectedWeekday = WEEKDAYS.find(w => w.id === selectedDayId);
+  const businessId = sessionUser.businesses?.[0]?.businessId;
 
-  const handleToggle = (id: string, enabled: boolean) => {
-    setBusinessHours(prev =>
-      prev.map(day => (day.id === id ? { ...day, isEnabled: enabled } : day))
-    );
-  };
+  if (!businessId) {
+    throw new Error('업체 ID를 찾을 수 없습니다.');
+  }
 
-  const handleTimeChange = (
-    id: string,
-    type: 'start' | 'end',
-    value: string
-  ) => {
-    setBusinessHours(prev =>
-      prev.map(day =>
-        day.id === id
-          ? {
-              ...day,
-              [type === 'start' ? 'startTime' : 'endTime']: value,
-            }
-          : day
-      )
-    );
-  };
+  // ✅ Server Component에서 직접 데이터 페치
+  const operatingHours = await getOperatingHours(businessId);
+  const businessHours = mapOperatingHoursToBusinessHours(operatingHours);
 
-  const handleSelect = (id: string) => {
-    setSelectedDayId(id);
-  };
-
-  return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[500px_1fr]">
-      <WeekdayHoursPanel
-        businessHours={businessHours}
-        selectedDayId={selectedDayId}
-        onToggle={handleToggle}
-        onTimeChange={handleTimeChange}
-        onSelect={handleSelect}
-      />
-
-      <ScheduleEditorPanel
-        selectedDay={selectedWeekday?.fullLabel}
-        startTime={selectedDay?.startTime || '09:00'}
-        endTime={selectedDay?.endTime || '18:00'}
-      />
-    </div>
-  );
+  return <ScheduleClient initialBusinessHours={businessHours} />;
 }
