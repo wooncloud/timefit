@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     return responseJson;
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error('로그아웃 오류:', error);
     return NextResponse.json(
       {
         success: false,

@@ -10,7 +10,7 @@ import { withAuth } from '@/lib/api/auth-middleware';
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 if (!BACKEND_URL) {
-  throw new Error('NEXT_PUBLIC_BACKEND_URL is not defined');
+  throw new Error('NEXT_PUBLIC_BACKEND_URL이 정의되지 않았습니다.');
 }
 
 export const GET = withAuth<GetCategoryListHandlerResponse>(
@@ -63,7 +63,7 @@ export const GET = withAuth<GetCategoryListHandlerResponse>(
         data: result.data,
       });
     } catch (error) {
-      console.error('Category list fetch error:', error);
+      console.error('카테고리 목록 조회 오류:', error);
       return NextResponse.json(
         {
           success: false,
@@ -130,7 +130,7 @@ export const POST = withAuth<CreateCategoryHandlerResponse>(
         { status: 201 }
       );
     } catch (error) {
-      console.error('Category creation error:', error);
+      console.error('카테고리 생성 오류:', error);
       return NextResponse.json(
         {
           success: false,

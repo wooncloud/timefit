@@ -59,7 +59,7 @@ export const PATCH = withAuth<ChangeMemberRoleHandlerResponse>(
         message: '권한이 변경되었습니다.',
       });
     } catch (error) {
-      console.error('Failed to change member role:', error);
+      console.error('구성원 권한 변경 실패:', error);
       return NextResponse.json(
         {
           success: false,

@@ -11,7 +11,7 @@ import { withAuth } from '@/lib/api/auth-middleware';
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 if (!BACKEND_URL) {
-  throw new Error('NEXT_PUBLIC_BACKEND_URL is not defined');
+  throw new Error('NEXT_PUBLIC_BACKEND_URL이 정의되지 않았습니다.');
 }
 
 export const GET = withAuth<GetCategoryDetailHandlerResponse>(
@@ -68,7 +68,7 @@ export const GET = withAuth<GetCategoryDetailHandlerResponse>(
         data: result.data,
       });
     } catch (error) {
-      console.error('Category fetch error:', error);
+      console.error('카테고리 조회 오류:', error);
       return NextResponse.json(
         {
           success: false,
@@ -138,7 +138,7 @@ export const PATCH = withAuth<UpdateCategoryHandlerResponse>(
         message: '카테고리가 수정되었습니다',
       });
     } catch (error) {
-      console.error('Category update error:', error);
+      console.error('카테고리 수정 오류:', error);
       return NextResponse.json(
         {
           success: false,
@@ -202,7 +202,7 @@ export const DELETE = withAuth<DeleteCategoryHandlerResponse>(
         message: '카테고리가 삭제되었습니다',
       });
     } catch (error) {
-      console.error('Category delete error:', error);
+      console.error('카테고리 삭제 오류:', error);
       return NextResponse.json(
         {
           success: false,
