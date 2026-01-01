@@ -32,3 +32,48 @@ export function mapOperatingHoursToBusinessHours(
     isEnabled: !schedule.isClosed,
   }));
 }
+/**
+ * WeekdayId를 dayOfWeek 숫자로 변환
+ * sun=0, mon=1, ..., sat=6
+ */
+function weekdayIdToDayOfWeek(weekdayId: WeekdayId): number {
+  const mapping: Record<WeekdayId, number> = {
+    sun: 0,
+    mon: 1,
+    tue: 2,
+    wed: 3,
+    thu: 4,
+    fri: 5,
+    sat: 6,
+  };
+  return mapping[weekdayId];
+}
+
+/**
+ * 프론트엔드 데이터를 백엔드 PUT 요청 형식으로 변환
+ */
+export function mapToUpdateOperatingHoursRequest(
+  businessHours: BusinessHours[],
+  bookingSlotsMap: Record<
+    string,
+    import('@/types/schedule/operating-hours').BookingTimeRange[]
+  >
+): import('@/types/schedule/operating-hours').UpdateOperatingHoursRequest {
+  const schedules = businessHours.map(day => {
+    const dayOfWeek = weekdayIdToDayOfWeek(day.id);
+    const bookingSlots = bookingSlotsMap[day.id] || [];
+
+    return {
+      dayOfWeek,
+      openTime: day.isEnabled ? day.startTime : null,
+      closeTime: day.isEnabled ? day.endTime : null,
+      isClosed: !day.isEnabled,
+      bookingTimeRanges: bookingSlots.map(({ startTime, endTime }) => ({
+        startTime,
+        endTime,
+      })),
+    };
+  });
+
+  return { schedules };
+}

@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 
 import type { BookingTimeRange } from '@/types/schedule/operating-hours';
+import { useUpdateOperatingHours } from '@/hooks/schedule/mutations/use-update-operating-hours';
+import { mapToUpdateOperatingHoursRequest } from '@/lib/data/schedule/map-operating-hours';
+import type { BusinessHours } from '@/lib/data/schedule/weekdays';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -11,19 +14,28 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { BookingSlotEditDialog } from './booking-slot-edit-dialog';
 
 interface ScheduleEditorPanelProps {
+  businessId: string;
   selectedDay?: string;
+  selectedDayId: string;
   startTime: string;
   endTime: string;
   bookingSlots?: BookingTimeRange[];
+  allBusinessHours: BusinessHours[];
+  allBookingSlotsMap: Record<string, BookingTimeRange[]>;
   onSlotsChange?: (slots: BookingTimeRange[]) => void;
 }
 
 export function ScheduleEditorPanel({
+  businessId,
   selectedDay,
+  selectedDayId,
   bookingSlots = [],
+  allBusinessHours,
+  allBookingSlotsMap,
   onSlotsChange,
 }: ScheduleEditorPanelProps) {
   const [slots, setSlots] = useState<BookingTimeRange[]>(bookingSlots);
+  const { updateOperatingHours } = useUpdateOperatingHours(businessId);
   const [editingSlot, setEditingSlot] = useState<BookingTimeRange | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -34,9 +46,31 @@ export function ScheduleEditorPanel({
     setSlots(bookingSlots);
   }, [bookingSlots]);
 
-  const updateSlots = (newSlots: BookingTimeRange[]) => {
+  const saveChanges = async (newSlots: BookingTimeRange[]) => {
+    // 1. Update local state and parent state
     setSlots(newSlots);
     onSlotsChange?.(newSlots);
+
+    // 2. Trigger API call
+    const newBookingSlotsMap = {
+      ...allBookingSlotsMap,
+      [selectedDayId]: newSlots,
+    };
+
+    const request = mapToUpdateOperatingHoursRequest(
+      allBusinessHours,
+      newBookingSlotsMap
+    );
+
+    try {
+      await updateOperatingHours(request);
+    } catch {
+      // Error handled in hook
+    }
+  };
+
+  const updateSlots = (newSlots: BookingTimeRange[]) => {
+    saveChanges(newSlots);
   };
 
   const handleAddClick = () => {

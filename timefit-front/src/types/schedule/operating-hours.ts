@@ -35,3 +35,36 @@ export interface GetOperatingHoursApiResponse {
   data?: OperatingHours;
   message?: string;
 }
+/**
+ * PUT API 요청: 예약 가능 시간대 입력
+ */
+export interface BookingTimeRangeInput {
+  startTime: string; // HH:mm
+  endTime: string; // HH:mm
+}
+
+/**
+ * PUT API 요청: 요일별 스케줄 입력
+ */
+export interface DayScheduleInput {
+  dayOfWeek: number; // 0=일요일 ~ 6=토요일
+  openTime: string | null; // HH:mm
+  closeTime: string | null; // HH:mm
+  isClosed: boolean;
+  bookingTimeRanges: BookingTimeRangeInput[];
+}
+
+/**
+ * PUT API 요청 바디
+ */
+export interface UpdateOperatingHoursRequest {
+  schedules: DayScheduleInput[]; // 7개 요일 전체
+}
+
+/**
+ * PUT API 응답
+ */
+export interface UpdateOperatingHoursResponse {
+  success: boolean;
+  data: OperatingHours;
+}
