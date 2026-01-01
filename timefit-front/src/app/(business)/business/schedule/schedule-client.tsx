@@ -11,18 +11,20 @@ import { WeekdayHoursPanel } from '@/components/business/schedule/weekday-hours-
 interface ScheduleClientProps {
   businessId: string;
   initialBusinessHours: BusinessHours[];
+  initialBookingSlotsMap: Record<string, BookingTimeRange[]>;
 }
 
 export function ScheduleClient({
   businessId,
   initialBusinessHours,
+  initialBookingSlotsMap,
 }: ScheduleClientProps) {
   const [businessHours, setBusinessHours] =
     useState<BusinessHours[]>(initialBusinessHours);
   const [selectedDayId, setSelectedDayId] = useState<string>('mon');
   const [bookingSlotsMap, setBookingSlotsMap] = useState<
     Record<string, BookingTimeRange[]>
-  >({});
+  >(initialBookingSlotsMap);
 
   const selectedDay = businessHours.find(d => d.id === selectedDayId);
   const selectedWeekday = WEEKDAYS.find(w => w.id === selectedDayId);

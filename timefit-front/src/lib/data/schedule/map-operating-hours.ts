@@ -1,4 +1,7 @@
-import type { OperatingHours } from '@/types/schedule/operating-hours';
+import type {
+  BookingTimeRange,
+  OperatingHours,
+} from '@/types/schedule/operating-hours';
 
 import type { BusinessHours, WeekdayId } from './weekdays';
 
@@ -31,6 +34,30 @@ export function mapOperatingHoursToBusinessHours(
     endTime: schedule.closeTime || '18:00',
     isEnabled: !schedule.isClosed,
   }));
+}
+
+/**
+ * 백엔드 OperatingHours에서 bookingTimeRanges를 추출하여 Map으로 변환
+ * @param operatingHours - 백엔드에서 받은 영업시간 데이터
+ * @returns WeekdayId를 키로 하는 BookingTimeRange[] 맵
+ */
+export function mapOperatingHoursToBookingSlotsMap(
+  operatingHours: OperatingHours
+): Record<string, BookingTimeRange[]> {
+  const bookingSlotsMap: Record<string, BookingTimeRange[]> = {};
+
+  operatingHours.schedules.forEach(schedule => {
+    const weekdayId = dayOfWeekToWeekdayId(schedule.dayOfWeek);
+    // id 필드를 추가하여 프론트엔드에서 관리하기 쉽게 함
+    bookingSlotsMap[weekdayId] = schedule.bookingTimeRanges.map(
+      (range, index) => ({
+        ...range,
+        id: `${weekdayId}-slot-${index}`,
+      })
+    );
+  });
+
+  return bookingSlotsMap;
 }
 /**
  * WeekdayId를 dayOfWeek 숫자로 변환

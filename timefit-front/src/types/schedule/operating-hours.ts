@@ -28,10 +28,9 @@ export interface OperatingHours {
 }
 
 /**
- * API 응답 구조
+ * API 응답 구조 (백엔드에서 직접 반환)
  */
 export interface GetOperatingHoursApiResponse {
-  success: boolean;
   data?: OperatingHours;
   message?: string;
 }
