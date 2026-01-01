@@ -31,15 +31,14 @@ public class OperatingHoursService {
         return commandService.setOperatingHours(businessId, request, currentUserId);
     }
 
-    // 특정 예약 시간대 휴무 토글
+    // 특정 요일 전체 시간대 휴무 토글
     @Transactional
-    public OperatingHoursResponseDto.OperatingHours toggleTimeSlotClosed(
+    public OperatingHoursResponseDto.OperatingHours toggleBusinessDayOpenStatus(
             UUID businessId,
             Integer dayOfWeek,
-            Integer sequence,
             UUID currentUserId) {
 
-        return commandService.toggleTimeSlotClosed(businessId, dayOfWeek, sequence, currentUserId);
+        return commandService.toggleBusinessDayOpenStatus(businessId, dayOfWeek, currentUserId);
     }
 
     // 영업시간 리셋 (디폴트 값으로)

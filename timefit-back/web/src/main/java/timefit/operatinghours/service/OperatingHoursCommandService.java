@@ -87,24 +87,22 @@ public class OperatingHoursCommandService {
     }
 
     /**
-     * 특정 예약 시간대 휴무 토글
-     * - 특정 요일의 특정 시간대(sequence)만 isClosed 토글
+     * 특정 요일 전체 시간대 휴무 토글
+     * - 해당 요일의 모든 OperatingHours를 일괄 토글
      * - 기존 예약은 유지, 신규 예약만 차단
      *
      * @param businessId 업체 ID
-     * @param dayOfWeek 요일 (0=일요일 ~ 6=토요일)
-     * @param sequence 해당 요일의 시간대 순서
+     * @param dayOfWeek 요일 (0=월요일 ~ 6=일요일)
      * @param currentUserId 현재 사용자 ID
      * @return 영업시간 전체 조회 결과
      */
-    public OperatingHoursResponseDto.OperatingHours toggleTimeSlotClosed(
+    public OperatingHoursResponseDto.OperatingHours toggleBusinessDayOpenStatus(
             UUID businessId,
             Integer dayOfWeek,
-            Integer sequence,
             UUID currentUserId) {
 
-        log.info("예약 시간대 휴무 토글 시작: businessId={}, dayOfWeek={}, sequence={}, userId={}",
-                businessId, dayOfWeek, sequence, currentUserId);
+        log.info("요일 전체 휴무 토글 시작: businessId={}, dayOfWeek={}, userId={}",
+                businessId, dayOfWeek, currentUserId);
 
         // 1. Business 조회
         Business business = businessValidator.validateBusinessExists(businessId);
@@ -115,21 +113,23 @@ public class OperatingHoursCommandService {
         // 3. DayOfWeek 변환
         DayOfWeek day = DayOfWeek.fromValue(dayOfWeek);
 
-        // 4. OperatingHours 조회
+        // 4. 해당 요일의 모든 OperatingHours 조회
         List<OperatingHours> operatingHoursList =
                 operatingHoursRepository.findByBusinessIdAndDayOfWeekOrderBySequenceAsc(businessId, day);
 
-        // 5. 해당 sequence의 OperatingHours 찾기
-        OperatingHours targetHours = operatingHoursList.stream()
-                .filter(oh -> oh.getSequence().equals(sequence))
-                .findFirst()
-                .orElseThrow(() -> new BusinessException(BusinessErrorCode.OPERATING_HOURS_NOT_FOUND));
+        // 5. 해당 요일에 OperatingHours가 없으면 에러
+        if (operatingHoursList.isEmpty()) {
+            throw new BusinessException(
+                    BusinessErrorCode.OPERATING_HOURS_NOT_FOUND,
+                    String.format("해당 요일의 영업시간이 없습니다. (dayOfWeek=%d)", dayOfWeek)
+            );
+        }
 
-        // 6. isClosed 토글
-        targetHours.toggle();
+        // 6. 모든 시간대 일괄 토글
+        operatingHoursList.forEach(OperatingHours::toggle);
 
-        log.info("예약 시간대 휴무 토글 완료: businessId={}, dayOfWeek={}, sequence={}, isClosed={}",
-                businessId, dayOfWeek, sequence, targetHours.getIsClosed());
+        log.info("요일 전체 휴무 토글 완료: businessId={}, dayOfWeek={}, 토글된 시간대 수={}",
+                businessId, dayOfWeek, operatingHoursList.size());
 
         // 7. 전체 영업시간 다시 조회하여 Response 생성
         return queryService.getOperatingHours(businessId);

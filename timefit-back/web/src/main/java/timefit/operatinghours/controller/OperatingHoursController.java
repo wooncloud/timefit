@@ -61,26 +61,25 @@ public class OperatingHoursController {
     }
 
     /**
-     * 특정 영업 시간 활성/비활성화 토글
-     * - 특정 요일의 특정 시간대(sequence)만 휴무 설정/해제
+     * 특정 영업 요일 전체 시간대 휴무 토글
+     * - 해당 요일의 모든 예약 시간대를 일괄 토글
      * - 기존 예약은 유지, 신규 예약만 차단
+     * @example 월요일 전체 휴무 설정 시 오전(seq=0), 오후(seq=1) 모두 토글
      */
-    @PatchMapping("/{dayOfWeek}/{sequence}/toggle")
-    public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHours>> toggleTimeSlotClosed(
+    @PatchMapping("/{dayOfWeek}/toggle")
+    public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHours>> toggleBusinessDayOpenStatus(
             @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
             @PathVariable UUID businessId,
-            @Parameter(description = "요일 (0=일요일, 1=월요일, ..., 6=토요일)", required = true, example = "0")
+            @Parameter(description = "요일 (0=월요일, 1=화요일, ..., 6=일요일)", required = true, example = "0")
             @PathVariable @Min(0) @Max(6) Integer dayOfWeek,
-            @Parameter(description = "시간대 순서 (0부터 시작)", required = true, example = "0")
-            @PathVariable @Min(0) Integer sequence,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
 
-        log.info("예약 시간대 휴무 토글 요청: businessId={}, dayOfWeek={}, sequence={}, userId={}",
-                businessId, dayOfWeek, sequence, currentUserId);
+        log.info("요일 전체 휴무 토글 요청: businessId={}, dayOfWeek={}, userId={}",
+                businessId, dayOfWeek, currentUserId);
 
         OperatingHoursResponseDto.OperatingHours response =
-                operatingHoursService.toggleTimeSlotClosed(businessId, dayOfWeek, sequence, currentUserId);
+                operatingHoursService.toggleBusinessDayOpenStatus(businessId, dayOfWeek, currentUserId);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
