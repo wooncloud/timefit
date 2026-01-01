@@ -1,10 +1,10 @@
 import 'server-only';
 
-import { getServerSession } from '@/lib/session/server';
 import type {
   CategoryListResponse,
   GetCategoryListApiResponse,
 } from '@/types/category/category';
+import { getServerSession } from '@/lib/session/server';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -40,5 +40,3 @@ export async function getCategoryList(
 
   return result.data;
 }
-
-

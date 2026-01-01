@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import type { UpdateBusinessRequest } from '@/types/business/business-detail';
 import { businessDetailService } from '@/services/business/business-detail-service.client';
 import { handleAuthError } from '@/lib/api/handle-auth-error';
-import type { UpdateBusinessRequest } from '@/types/business/business-detail';
 
 export function useUpdateBusiness(businessId: string) {
   const [updating, setUpdating] = useState(false);

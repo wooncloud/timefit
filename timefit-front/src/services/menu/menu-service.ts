@@ -1,10 +1,7 @@
 import 'server-only';
 
+import type { Menu, MenuListResponse } from '@/types/menu/menu';
 import { getServerSession } from '@/lib/session/server';
-import type {
-  MenuListResponse,
-  Menu,
-} from '@/types/menu/menu';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -100,4 +97,3 @@ export async function getMenuDetail(
 
   return result.data;
 }
-

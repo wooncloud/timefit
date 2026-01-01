@@ -1,5 +1,6 @@
-import { getCurrentUserFromSession } from '@/lib/session/server';
 import { getCategoryList } from '@/services/category/category-service';
+import { getCurrentUserFromSession } from '@/lib/session/server';
+
 import { CategoryClient } from './category-client';
 
 export default async function Page() {

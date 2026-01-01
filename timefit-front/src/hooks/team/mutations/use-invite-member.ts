@@ -1,16 +1,14 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import type { InviteMemberRequest } from '@/types/business/team-member';
 import { teamService } from '@/services/team/team-service.client';
 import { handleAuthError } from '@/lib/api/handle-auth-error';
-import type { InviteMemberRequest } from '@/types/business/team-member';
 
 export function useInviteMember(businessId: string) {
   const [loading, setLoading] = useState(false);
 
-  const inviteMember = async (
-    data: InviteMemberRequest
-  ): Promise<boolean> => {
+  const inviteMember = async (data: InviteMemberRequest): Promise<boolean> => {
     try {
       setLoading(true);
 

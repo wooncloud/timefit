@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
+
 import type { Category } from '@/types/category/category';
 import type { Product } from '@/types/product/product';
 import { Input } from '@/components/ui/input';
@@ -11,7 +13,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
 
 interface ProductBasicInfoSectionProps {
   formData: Partial<Product>;

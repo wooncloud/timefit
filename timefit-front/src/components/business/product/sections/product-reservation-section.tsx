@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
+
 import type { MenuType, Product } from '@/types/product/product';
 import { menuTypes } from '@/lib/constants/product-categories';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { toast } from 'sonner';
 
 interface ProductReservationSectionProps {
   formData: Partial<Product>;

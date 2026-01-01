@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import type { BusinessRole } from '@/types/business/team-member';
 import { teamService } from '@/services/team/team-service.client';
 import { handleAuthError } from '@/lib/api/handle-auth-error';
-import type { BusinessRole } from '@/types/business/team-member';
 
 export function useChangeMemberRole(businessId: string) {
   const [loading, setLoading] = useState(false);

@@ -1,5 +1,6 @@
-import { getCurrentUserFromSession } from '@/lib/session/server';
 import { getTeamMembers } from '@/services/team/team-service';
+import { getCurrentUserFromSession } from '@/lib/session/server';
+
 import { TeamClient } from './team-client';
 
 export default async function Page() {

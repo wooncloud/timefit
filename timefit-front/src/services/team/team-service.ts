@@ -1,10 +1,10 @@
 import 'server-only';
 
-import { getServerSession } from '@/lib/session/server';
 import type {
-  MemberListResponse,
   GetTeamMembersApiResponse,
+  MemberListResponse,
 } from '@/types/business/team-member';
+import { getServerSession } from '@/lib/session/server';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -40,4 +40,3 @@ export async function getTeamMembers(
 
   return result.data;
 }
-

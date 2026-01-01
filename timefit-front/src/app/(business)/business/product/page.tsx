@@ -1,6 +1,7 @@
-import { getCurrentUserFromSession } from '@/lib/session/server';
-import { getMenuList } from '@/services/menu/menu-service';
 import { getCategoryList } from '@/services/category/category-service';
+import { getMenuList } from '@/services/menu/menu-service';
+import { getCurrentUserFromSession } from '@/lib/session/server';
+
 import { ProductClient } from './product-client';
 
 export default async function Page() {

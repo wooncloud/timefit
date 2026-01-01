@@ -1,5 +1,6 @@
-import { getCurrentUserFromSession } from '@/lib/session/server';
 import { getBusinessDetail } from '@/services/business/business-detail-service';
+import { getCurrentUserFromSession } from '@/lib/session/server';
+
 import { SettingsClient } from './settings-client';
 
 export default async function Page() {
