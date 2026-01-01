@@ -31,6 +31,17 @@ public class OperatingHoursService {
         return commandService.setOperatingHours(businessId, request, currentUserId);
     }
 
+    // 특정 예약 시간대 휴무 토글
+    @Transactional
+    public OperatingHoursResponseDto.OperatingHours toggleTimeSlotClosed(
+            UUID businessId,
+            Integer dayOfWeek,
+            Integer sequence,
+            UUID currentUserId) {
+
+        return commandService.toggleTimeSlotClosed(businessId, dayOfWeek, sequence, currentUserId);
+    }
+
     // 영업시간 리셋 (디폴트 값으로)
     @Transactional
     public OperatingHoursResponseDto.OperatingHours resetToDefault(

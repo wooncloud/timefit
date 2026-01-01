@@ -1,0 +1,340 @@
+### ================================================================
+### Timefit Operating Hours Toggle 테스트
+### 📝 테스트 시나리오:
+###    1. Owner 로그인 (seed-bulk.sql 데이터 사용)
+###    2. 영업시간 전체 조회 (초기 상태 확인)
+###    3. 월요일 오전(sequence=0) 휴무 토글 → isClosed: false → true
+###    4. 영업시간 재조회 (변경 확인)
+###    5. 월요일 오전(sequence=0) 다시 토글 → isClosed: true → false
+###    6. 영업시간 재조회 (원복 확인)
+###    7. 월요일 오후(sequence=1) 휴무 토글 테스트
+###    8. 토요일(sequence=0) 휴무 토글 테스트
+###    9. 존재하지 않는 sequence 테스트 (에러 404)
+###    10. 권한 없는 사용자 테스트 (Customer로 시도 → 에러 403)
+### ================================================================
+###
+### 📌 사전 준비:
+###    - seed-bulk.sql 실행 필요
+###    - Business ID: 30000000-0000-0000-0000-000000000001 (Timefit Hair Salon)
+###    - Owner: owner1@timefit.com / password: password123
+###    - Customer: customer1@timefit.com / password: password123
+###
+### 📊 Operating Hours 초기 데이터:
+###    월~금: sequence=0 (09:00-12:00), sequence=1 (13:00-18:00)
+###    토~일: sequence=0 (09:00-14:00)
+###
+### 🔢 dayOfWeek 값 (Enum ORDINAL):
+###    0=MONDAY, 1=TUESDAY, 2=WEDNESDAY, 3=THURSDAY, 4=FRIDAY, 5=SATURDAY, 6=SUNDAY
+### ================================================================
+
+@baseUrl = http://localhost:8080
+@businessId = 30000000-0000-0000-0000-000000000001
+
+### ================================================================
+### 1. Owner 로그인 (seed-bulk.sql 데이터)
+### ================================================================
+
+# @name Owner로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "owner1@timefit.com",
+  "password": "password123"
+}
+
+> {%
+    client.test("로그인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    if (response.body.data && response.body.data.accessToken) {
+        client.global.set("ownerToken", response.body.data.accessToken);
+        console.log("✅ [1/10] Owner 로그인 성공");
+        console.log("   - Email: owner1@timefit.com");
+        console.log("   - User ID:", response.body.data.userId);
+    } else {
+        console.error("❌ 로그인 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 2. 영업시간 전체 조회 (초기 상태 확인)
+### ================================================================
+
+# @name 영업시간조회_초기
+GET {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("영업시간 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    if (response.status === 200) {
+        console.log("✅ [2/10] 영업시간 조회 성공");
+        console.log("   - Business:", response.body.data.businessName);
+
+        // 월요일(dayOfWeek=0) 확인
+        const monday = response.body.data.schedules.find(s => s.dayOfWeek === 0);
+        if (monday) {
+            console.log("   - 월요일 영업시간:", monday.openTime, "~", monday.closeTime);
+            console.log("   - 월요일 예약 시간대 개수:", monday.bookingTimeRanges.length);
+            monday.bookingTimeRanges.forEach(range => {
+                console.log("     * sequence=" + range.sequence + ":", range.startTime, "~", range.endTime, "/ isClosed:", range.isClosed);
+            });
+        }
+    } else {
+        console.error("❌ 조회 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 3. 월요일 오전(sequence=0) 휴무 토글 → isClosed: false → true
+### ================================================================
+
+# @name 월요일오전_휴무토글_1차
+PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/0/0/toggle
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("토글 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    if (response.status === 200) {
+        console.log("✅ [3/10] 월요일 오전(seq=0) 휴무 토글 성공");
+
+        const monday = response.body.data.schedules.find(s => s.dayOfWeek === 0);
+        const morningSlot = monday.bookingTimeRanges.find(r => r.sequence === 0);
+
+        console.log("   - 토글 결과: isClosed =", morningSlot.isClosed);
+        console.log("   - 시간대:", morningSlot.startTime, "~", morningSlot.endTime);
+
+        client.assert(morningSlot.isClosed === true, "isClosed가 true여야 함");
+    } else {
+        console.error("❌ 토글 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 4. 영업시간 재조회 (변경 확인)
+### ================================================================
+
+# @name 영업시간조회_1차토글후
+GET {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    if (response.status === 200) {
+        console.log("✅ [4/10] 토글 후 영업시간 재조회");
+
+        const monday = response.body.data.schedules.find(s => s.dayOfWeek === 0);
+        const morningSlot = monday.bookingTimeRanges.find(r => r.sequence === 0);
+        const afternoonSlot = monday.bookingTimeRanges.find(r => r.sequence === 1);
+
+        console.log("   - 월요일 오전(seq=0): isClosed =", morningSlot.isClosed, "(변경됨 ✓)");
+        console.log("   - 월요일 오후(seq=1): isClosed =", afternoonSlot.isClosed, "(그대로)");
+
+        client.assert(morningSlot.isClosed === true, "오전은 휴무여야 함");
+        client.assert(afternoonSlot.isClosed === false, "오후는 영업이어야 함");
+    } else {
+        console.error("❌ 조회 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 5. 월요일 오전(sequence=0) 다시 토글 → isClosed: true → false
+### ================================================================
+
+# @name 월요일오전_휴무토글_2차
+PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/0/0/toggle
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    if (response.status === 200) {
+        console.log("✅ [5/10] 월요일 오전(seq=0) 재토글 성공");
+
+        const monday = response.body.data.schedules.find(s => s.dayOfWeek === 0);
+        const morningSlot = monday.bookingTimeRanges.find(r => r.sequence === 0);
+
+        console.log("   - 재토글 결과: isClosed =", morningSlot.isClosed);
+
+        client.assert(morningSlot.isClosed === false, "isClosed가 false로 원복되어야 함");
+    } else {
+        console.error("❌ 재토글 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 6. 영업시간 재조회 (원복 확인)
+### ================================================================
+
+# @name 영업시간조회_2차토글후
+GET {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    if (response.status === 200) {
+        console.log("✅ [6/10] 재토글 후 영업시간 재조회");
+
+        const monday = response.body.data.schedules.find(s => s.dayOfWeek === 0);
+        const morningSlot = monday.bookingTimeRanges.find(r => r.sequence === 0);
+
+        console.log("   - 월요일 오전(seq=0): isClosed =", morningSlot.isClosed, "(원복됨 ✓)");
+
+        client.assert(morningSlot.isClosed === false, "오전이 다시 영업으로 돌아와야 함");
+    } else {
+        console.error("❌ 조회 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 7. 월요일 오후(sequence=1) 휴무 토글 테스트
+### ================================================================
+
+# @name 월요일오후_휴무토글
+PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/0/1/toggle
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    if (response.status === 200) {
+        console.log("✅ [7/10] 월요일 오후(seq=1) 휴무 토글 성공");
+
+        const monday = response.body.data.schedules.find(s => s.dayOfWeek === 0);
+        const afternoonSlot = monday.bookingTimeRanges.find(r => r.sequence === 1);
+
+        console.log("   - 토글 결과: isClosed =", afternoonSlot.isClosed);
+        console.log("   - 시간대:", afternoonSlot.startTime, "~", afternoonSlot.endTime);
+    } else {
+        console.error("❌ 토글 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 8. 토요일(sequence=0) 휴무 토글 테스트
+### 📌 토요일은 단일 시간대만 있음 (09:00-14:00, sequence=0)
+### ================================================================
+
+# @name 토요일_휴무토글
+PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/5/0/toggle
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    if (response.status === 200) {
+        console.log("✅ [8/10] 토요일(seq=0) 휴무 토글 성공");
+
+        const saturday = response.body.data.schedules.find(s => s.dayOfWeek === 5);
+        const saturdaySlot = saturday.bookingTimeRanges.find(r => r.sequence === 0);
+
+        console.log("   - 토글 결과: isClosed =", saturdaySlot.isClosed);
+        console.log("   - 시간대:", saturdaySlot.startTime, "~", saturdaySlot.endTime);
+    } else {
+        console.error("❌ 토글 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 9. 존재하지 않는 sequence 테스트 (에러 404 기대)
+### 📌 월요일은 sequence 0, 1만 있음 → sequence=99는 없음
+### ================================================================
+
+# @name 존재하지않는sequence_에러테스트
+PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/0/99/toggle
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("존재하지 않는 sequence 에러", function() {
+        client.assert(response.status === 404, "응답 코드가 404여야 함");
+    });
+
+    if (response.status === 404) {
+        console.log("✅ [9/10] 존재하지 않는 sequence 에러 발생 (정상)");
+        console.log("   - 에러 코드:", response.body.error.errorCode);
+        console.log("   - 에러 메시지:", response.body.error.message);
+
+        client.assert(response.body.error.errorCode === "OPERATING_HOURS_NOT_FOUND",
+            "에러 코드가 OPERATING_HOURS_NOT_FOUND여야 함");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 10. 권한 없는 사용자 테스트 (Customer로 시도 → 에러 403)
+### ================================================================
+
+# @name Customer로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "customer1@timefit.com",
+  "password": "password123"
+}
+
+> {%
+    if (response.body.data && response.body.data.accessToken) {
+        client.global.set("customerToken", response.body.data.accessToken);
+        console.log("📌 Customer 로그인 성공 (권한 테스트용)");
+    }
+%}
+
+###
+
+# @name 권한없는사용자_에러테스트
+PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/0/0/toggle
+Authorization: Bearer {{customerToken}}
+
+> {%
+    client.test("권한 없는 사용자 에러", function() {
+        client.assert(response.status === 403, "응답 코드가 403이어야 함");
+    });
+
+    if (response.status === 403) {
+        console.log("✅ [10/10] 권한 없는 사용자 에러 발생 (정상)");
+        console.log("   - 에러 코드:", response.body.error.errorCode);
+        console.log("   - 에러 메시지:", response.body.error.message);
+
+        client.assert(response.body.error.errorCode === "INSUFFICIENT_PERMISSION" ||
+            response.body.error.errorCode === "USER_NOT_BUSINESS_MEMBER",
+            "권한 관련 에러 코드여야 함");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 🎉 테스트 완료 체크리스트
+### ================================================================
+### ✅ 1. Owner 로그인
+### ✅ 2. 영업시간 전체 조회 (초기 상태)
+### ✅ 3. 월요일 오전 휴무 토글 (false → true)
+### ✅ 4. 변경 확인 (재조회)
+### ✅ 5. 월요일 오전 재토글 (true → false)
+### ✅ 6. 원복 확인 (재조회)
+### ✅ 7. 월요일 오후 휴무 토글
+### ✅ 8. 토요일 휴무 토글
+### ✅ 9. 존재하지 않는 sequence 에러 (404)
+### ✅ 10. 권한 없는 사용자 에러 (403)
+### ================================================================

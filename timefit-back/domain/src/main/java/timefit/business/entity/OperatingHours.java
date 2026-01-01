@@ -72,4 +72,10 @@ public class OperatingHours extends BaseEntity {
     public static OperatingHours createClosedDay(Business business, DayOfWeek dayOfWeek) {
         return createOperatingHours(business, dayOfWeek, null, null, true, 0);
     }
+
+    // 휴무 상태 토글
+    // 휴무로 변경 시 시간 정보는 유지 (재활성화를 위해)
+    public void toggle() {
+        this.isClosed = !this.isClosed;
+    }
 }

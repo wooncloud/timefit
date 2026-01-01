@@ -3,6 +3,8 @@ package timefit.operatinghours.controller;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +56,31 @@ public class OperatingHoursController {
 
         OperatingHoursResponseDto.OperatingHours response =
                 operatingHoursService.setOperatingHours(businessId, request, currentUserId);
+
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
+    /**
+     * 특정 영업 시간 활성/비활성화 토글
+     * - 특정 요일의 특정 시간대(sequence)만 휴무 설정/해제
+     * - 기존 예약은 유지, 신규 예약만 차단
+     */
+    @PatchMapping("/{dayOfWeek}/{sequence}/toggle")
+    public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHours>> toggleTimeSlotClosed(
+            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @PathVariable UUID businessId,
+            @Parameter(description = "요일 (0=일요일, 1=월요일, ..., 6=토요일)", required = true, example = "0")
+            @PathVariable @Min(0) @Max(6) Integer dayOfWeek,
+            @Parameter(description = "시간대 순서 (0부터 시작)", required = true, example = "0")
+            @PathVariable @Min(0) Integer sequence,
+            @Parameter(hidden = true)
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("예약 시간대 휴무 토글 요청: businessId={}, dayOfWeek={}, sequence={}, userId={}",
+                businessId, dayOfWeek, sequence, currentUserId);
+
+        OperatingHoursResponseDto.OperatingHours response =
+                operatingHoursService.toggleTimeSlotClosed(businessId, dayOfWeek, sequence, currentUserId);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }

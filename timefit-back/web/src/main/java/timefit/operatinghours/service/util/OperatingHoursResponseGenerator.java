@@ -46,19 +46,16 @@ public class OperatingHoursResponseGenerator {
         Map<DayOfWeek, List<OperatingHours>> operatingHoursMap = operatingHours.stream()
                 .collect(Collectors.groupingBy(OperatingHours::getDayOfWeek));
 
-        // 3. 요일별로 DaySchedule 생성
-        List<OperatingHoursResponseDto.DaySchedule> schedules = new ArrayList<>();
+        // 3. 각 요일별로 DaySchedule 생성
+        List<OperatingHoursResponseDto.DaySchedule> schedules = Arrays.stream(DayOfWeek.values())
+                .map(day -> createDaySchedule(
+                        day.getValue(),
+                        businessHoursMap.get(day),
+                        operatingHoursMap.getOrDefault(day, List.of())
+                ))
+                .collect(Collectors.toList());
 
-        for (DayOfWeek day : DayOfWeek.values()) {
-            BusinessHours bizHours = businessHoursMap.get(day);
-            List<OperatingHours> opHours = operatingHoursMap.getOrDefault(day, List.of());
-
-            schedules.add(createDaySchedule(day.getValue(), bizHours, opHours));
-        }
-
-        // 4. 요일 순으로 정렬
-        schedules.sort(Comparator.comparing(OperatingHoursResponseDto.DaySchedule::dayOfWeek));
-
+        // 4. 최종 Response DTO 생성
         return new OperatingHoursResponseDto.OperatingHours(
                 businessId,
                 businessName,
@@ -92,7 +89,6 @@ public class OperatingHoursResponseGenerator {
 
         // OperatingHours → TimeRange 변환 (활성 시간대만, sequence 순 정렬)
         List<OperatingHoursResponseDto.TimeRange> bookingTimeRanges = operatingHours.stream()
-                .filter(h -> !h.getIsClosed())
                 .sorted(Comparator.comparing(OperatingHours::getSequence))
                 .map(this::convertToTimeRange)
                 .collect(Collectors.toList());
@@ -109,8 +105,10 @@ public class OperatingHoursResponseGenerator {
     // OperatingHours Entity → TimeRange DTO 변환
     private OperatingHoursResponseDto.TimeRange convertToTimeRange(OperatingHours hours) {
         return new OperatingHoursResponseDto.TimeRange(
+                hours.getSequence(),
                 hours.getOpenTime().toString(),
-                hours.getCloseTime().toString()
+                hours.getCloseTime().toString(),
+                hours.getIsClosed()
         );
     }
 }

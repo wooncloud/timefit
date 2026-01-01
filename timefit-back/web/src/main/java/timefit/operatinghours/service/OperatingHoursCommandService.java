@@ -11,6 +11,8 @@ import timefit.business.repository.BusinessHoursRepository;
 import timefit.business.repository.OperatingHoursRepository;
 import timefit.business.service.validator.BusinessValidator;
 import timefit.common.entity.DayOfWeek;
+import timefit.exception.business.BusinessErrorCode;
+import timefit.exception.business.BusinessException;
 import timefit.operatinghours.dto.OperatingHoursRequestDto;
 import timefit.operatinghours.dto.OperatingHoursResponseDto;
 import timefit.operatinghours.service.util.BusinessHoursDefaultConfig;
@@ -40,6 +42,8 @@ public class OperatingHoursCommandService {
     private final OperatingHoursRepository operatingHoursRepository;
     private final BusinessValidator businessValidator;
     private final OperatingHoursResponseGenerator responseGenerator;
+
+    private final OperatingHoursQueryService queryService;
 
     /**
      * 영업시간 설정 (BusinessHours + OperatingHours 통합)
@@ -81,6 +85,56 @@ public class OperatingHoursCommandService {
                 newOperatingHours
         );
     }
+
+    /**
+     * 특정 예약 시간대 휴무 토글
+     * - 특정 요일의 특정 시간대(sequence)만 isClosed 토글
+     * - 기존 예약은 유지, 신규 예약만 차단
+     *
+     * @param businessId 업체 ID
+     * @param dayOfWeek 요일 (0=일요일 ~ 6=토요일)
+     * @param sequence 해당 요일의 시간대 순서
+     * @param currentUserId 현재 사용자 ID
+     * @return 영업시간 전체 조회 결과
+     */
+    public OperatingHoursResponseDto.OperatingHours toggleTimeSlotClosed(
+            UUID businessId,
+            Integer dayOfWeek,
+            Integer sequence,
+            UUID currentUserId) {
+
+        log.info("예약 시간대 휴무 토글 시작: businessId={}, dayOfWeek={}, sequence={}, userId={}",
+                businessId, dayOfWeek, sequence, currentUserId);
+
+        // 1. Business 조회
+        Business business = businessValidator.validateBusinessExists(businessId);
+
+        // 2. 권한 검증
+        businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+
+        // 3. DayOfWeek 변환
+        DayOfWeek day = DayOfWeek.fromValue(dayOfWeek);
+
+        // 4. OperatingHours 조회
+        List<OperatingHours> operatingHoursList =
+                operatingHoursRepository.findByBusinessIdAndDayOfWeekOrderBySequenceAsc(businessId, day);
+
+        // 5. 해당 sequence의 OperatingHours 찾기
+        OperatingHours targetHours = operatingHoursList.stream()
+                .filter(oh -> oh.getSequence().equals(sequence))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.OPERATING_HOURS_NOT_FOUND));
+
+        // 6. isClosed 토글
+        targetHours.toggle();
+
+        log.info("예약 시간대 휴무 토글 완료: businessId={}, dayOfWeek={}, sequence={}, isClosed={}",
+                businessId, dayOfWeek, sequence, targetHours.getIsClosed());
+
+        // 7. 전체 영업시간 다시 조회하여 Response 생성
+        return queryService.getOperatingHours(businessId);
+    }
+
 
     /**
      * 영업시간 리셋
