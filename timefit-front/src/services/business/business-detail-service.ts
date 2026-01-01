@@ -25,8 +25,6 @@ export async function getBusinessDetail(
     cache: 'no-store',
   });
 
-  console.log('@@@@ response', response);
-
   if (!response.ok) {
     throw new Error('업체 상세 정보를 가져오는 데 실패했습니다.');
   }
