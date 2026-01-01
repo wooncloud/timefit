@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
 
 import type { BookingTimeRange } from '@/types/schedule/operating-hours';
 import { WEEKDAYS } from '@/lib/data/schedule/weekdays';
@@ -10,13 +9,14 @@ import { ScheduleEditorPanel } from '@/components/business/schedule/schedule-edi
 import { WeekdayHoursPanel } from '@/components/business/schedule/weekday-hours-panel';
 
 interface ScheduleClientProps {
+  businessId: string;
   initialBusinessHours: BusinessHours[];
 }
 
-export function ScheduleClient({ initialBusinessHours }: ScheduleClientProps) {
-  const params = useParams();
-  const businessId = params.businessId as string;
-
+export function ScheduleClient({
+  businessId,
+  initialBusinessHours,
+}: ScheduleClientProps) {
   const [businessHours, setBusinessHours] =
     useState<BusinessHours[]>(initialBusinessHours);
   const [selectedDayId, setSelectedDayId] = useState<string>('mon');

@@ -21,5 +21,10 @@ export default async function SchedulePage() {
   const operatingHours = await getOperatingHours(businessId);
   const businessHours = mapOperatingHoursToBusinessHours(operatingHours);
 
-  return <ScheduleClient initialBusinessHours={businessHours} />;
+  return (
+    <ScheduleClient
+      businessId={businessId}
+      initialBusinessHours={businessHours}
+    />
+  );
 }
