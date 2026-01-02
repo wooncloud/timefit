@@ -1,18 +1,78 @@
+# ========================================
+# Scouter - Runtime 데이터
+# ========================================
+
+# Collector Database (런타임 데이터)
+scouter/server/database/
+scouter/server/#database/
+
+# Collector Logs
+scouter/server/logs/
+scouter/server/#logs/
+
+# Agent, webapp Logs
+scouter/agent.java/logs/
+scouter/agent.host/logs/
+scouter/agent.batch/logs/
+scouter/webapp/logs/
+
+# 설정 파일은 반드시 포함
+!scouter/server/conf/
+!scouter/server/conf/**
+!scouter/agent.java/conf/
+!scouter/agent.java/conf/**
+
+# 수정된 startup 파일은 포함
+!scouter/server/startup.bat
+!scouter/server/startup.sh
+
+# ========================================
+# Scouter - 다운로드 파일
+# ========================================
+
+# 압축 파일
+scouter/*.tar.gz
+scouter/*.zip
+scouter-all-*.tar.gz
+scouter-client-*.zip
+
+# ========================================
+# k6
+# ========================================
+
 # 테스트 결과
 results/*.html
 results/*.json
 results/*.csv
 results/*.txt
+results/*.xml
+results/dashboard/
 !results/.gitkeep
+
+# ========================================
 
 # 환경 설정 (민감 정보)
 config/local.json
 config/*.env
+*.env.local
+
+# 로그 파일
+*.log
+*.log.*
 
 # 임시 파일
 *.tmp
-*.log
+*.temp
+*.bak
+*.swp
+*~
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
