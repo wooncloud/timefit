@@ -31,7 +31,22 @@
     "// ========== 전체 실행 (실패해도 계속) ==========": "",
     "test:all:phase1:continue": "npm run test:pattern:l1:smoke; npm run test:pattern:l1:load; npm run test:pattern:l1:stress; npm run test:pattern:l1:soak; npm run test:pattern:l2:load; npm run test:pattern:l2:stress; npm run test:pattern:l2:spike; npm run test:pattern:l3:load; npm run test:pattern:l3:stress",
     "test:all:phase2:continue": "npm run test:booking:slot-generation; npm run test:booking:concurrent; npm run test:booking:query",
-    "test:all:continue": "npm run test:all:phase1:continue; npm run test:all:phase2:continue"
+    "test:all:continue": "npm run test:all:phase1:continue; npm run test:all:phase2:continue",
+
+    "// ========== Scouter APM (Windows) ==========": "",
+    "scouter:collector:win": "cd scouter/server && start cmd /k startup.bat",
+    "scouter:webapp:win": "cd scouter/webapp && start cmd /k startup.bat",
+    "scouter:stop:win": "taskkill /F /IM java.exe /FI \"WINDOWTITLE eq *scouter*\"",
+
+    "// ========== Scouter APM (Linux/Mac) ==========": "",
+    "scouter:collector:unix": "cd scouter/server && ./startup.sh",
+    "scouter:webapp:unix": "cd scouter/webapp && ./startup.sh",
+    "scouter:stop:unix": "pkill -f scouter",
+
+    "// ========== Scouter APM (Auto-detect) ==========": "",
+    "scouter:collector": "node -e \"process.platform === 'win32' ? require('child_process').execSync('npm run scouter:collector:win', {stdio:'inherit'}) : require('child_process').execSync('npm run scouter:collector:unix', {stdio:'inherit'})\"",
+    "scouter:webapp": "node -e \"process.platform === 'win32' ? require('child_process').execSync('npm run scouter:webapp:win', {stdio:'inherit'}) : require('child_process').execSync('npm run scouter:webapp:unix', {stdio:'inherit'})\"",
+    "scouter:stop": "node -e \"process.platform === 'win32' ? require('child_process').execSync('npm run scouter:stop:win', {stdio:'inherit'}) : require('child_process').execSync('npm run scouter:stop:unix', {stdio:'inherit'})\""
   },
   "author": "Sechang Jang",
   "license": "MIT",
