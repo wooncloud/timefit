@@ -48,3 +48,42 @@ bootJar {
     enabled = true
     archiveClassifier = ''
 }
+
+// ========================================
+// Scouter Agent 설정 (개발 환경)
+// ========================================
+
+bootRun {
+    // .env 파일 읽어서 환경 변수 설정
+    def envFile = file('../.env')
+    if (envFile.exists()) {
+        envFile.readLines().each { line ->
+            if (line && !line.startsWith('#')) {
+                def parts = line.split('=', 2)
+                if (parts.length == 2) {
+                    environment parts[0].trim(), parts[1].trim()
+                }
+            }
+        }
+    }
+
+    // Scouter Agent 설정 (상대 경로 + Profile 기반)
+    // Spring Boot active profile 읽기
+    def activeProfile = System.getProperty('spring.profiles.active')
+            ?: System.getenv('SPRING_PROFILES_ACTIVE')
+            ?: 'dev'
+
+    // Profile에 따른 obj_name 설정
+    def objName = "timefit-${activeProfile}"
+
+    // Scouter Agent 경로
+    def agentDir = file('../../timefit-test/scouter/agent.java').absolutePath
+    def agentJar = new File(agentDir, 'scouter.agent.jar').path
+    def agentConf = new File(agentDir, 'conf/scouter.conf').path
+
+    jvmArgs = [
+            "-javaagent:${agentJar}",
+            "-Dscouter.config=${agentConf}",
+            "-Dobj_name=${objName}"
+    ]
+}
