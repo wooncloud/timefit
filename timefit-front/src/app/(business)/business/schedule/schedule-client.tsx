@@ -5,6 +5,8 @@ import { useState } from 'react';
 import type { BookingTimeRange } from '@/types/schedule/operating-hours';
 import { WEEKDAYS } from '@/lib/data/schedule/weekdays';
 import type { BusinessHours } from '@/lib/data/schedule/weekdays';
+import { weekdayIdToDayOfWeek } from '@/types/business/operating-hours';
+import { useToggleOperatingHours } from '@/hooks/operating-hours/mutations/use-toggle-operating-hours';
 import { ScheduleEditorPanel } from '@/components/business/schedule/schedule-editor-panel';
 import { WeekdayHoursPanel } from '@/components/business/schedule/weekday-hours-panel';
 
@@ -26,14 +28,33 @@ export function ScheduleClient({
     Record<string, BookingTimeRange[]>
   >(initialBookingSlotsMap);
 
+  const { toggleOperatingHours } = useToggleOperatingHours(businessId);
+
   const selectedDay = businessHours.find(d => d.id === selectedDayId);
   const selectedWeekday = WEEKDAYS.find(w => w.id === selectedDayId);
   const selectedSlots = bookingSlotsMap[selectedDayId] || [];
 
-  const handleToggle = (id: string, enabled: boolean) => {
+  const handleToggle = async (id: string, enabled: boolean) => {
+    // 낙관적 UI 업데이트
     setBusinessHours(prev =>
       prev.map(day => (day.id === id ? { ...day, isEnabled: enabled } : day))
     );
+
+    // API 호출
+    const weekday = WEEKDAYS.find(w => w.id === id);
+    if (!weekday) return;
+
+    const dayOfWeek = weekdayIdToDayOfWeek(weekday.id);
+    const success = await toggleOperatingHours(dayOfWeek);
+
+    // 실패 시 롤백
+    if (!success) {
+      setBusinessHours(prev =>
+        prev.map(day =>
+          day.id === id ? { ...day, isEnabled: !enabled } : day
+        )
+      );
+    }
   };
 
   const handleTimeChange = (
