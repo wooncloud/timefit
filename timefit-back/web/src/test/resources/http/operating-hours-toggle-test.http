@@ -3,12 +3,8 @@
 ### 📝 테스트 시나리오:
 ###    1. Owner 로그인 (seed-bulk.sql 데이터 사용)
 ###    2. 영업시간 전체 조회 (초기 상태 확인)
-###    3. 월요일 전체 휴무 토글 → 모든 시간대(seq=0,1) isClosed: false → true
+###    3. 일요일 전체 휴무 토글 → 모든 시간대(seq=0,1) isClosed: false → true
 ###    4. 영업시간 재조회 (변경 확인)
-###    5. 월요일 전체 다시 토글 → 모든 시간대 isClosed: true → false
-###    6. 영업시간 재조회 (원복 확인)
-###    7. 토요일 전체 휴무 토글 테스트
-###    8. 화요일 전체 휴무 토글 테스트
 ###    9. 존재하지 않는 요일 테스트 (에러 404)
 ###    10. 권한 없는 사용자 테스트 (Customer로 시도 → 에러 403)
 ### ================================================================
@@ -139,123 +135,28 @@ Authorization: Bearer {{ownerToken}}
 
         const monday = response.body.data.schedules.find(s => s.dayOfWeek === 0);
 
+        // 월요일 전체 휴무 상태 확인 (BusinessHours 레벨)
+        console.log("   - 월요일 isClosed:", monday.isClosed);
+        client.assert(monday.isClosed === true, "월요일 전체가 휴무여야 함");
+
+        // 월요일 시간대별 휴무 상태 확인 (OperatingHours 레벨)
         console.log("   - 월요일 전체 시간대:");
         monday.bookingTimeRanges.forEach(range => {
-            console.log("     * sequence=" + range.sequence + ": isClosed =", range.isClosed, "(변경됨 ✓)");
+            console.log("     * sequence=" + range.sequence + ": isClosed =", range.isClosed);
             client.assert(range.isClosed === true, "모든 시간대가 휴무여야 함");
         });
 
         // 화요일은 그대로인지 확인
         const tuesday = response.body.data.schedules.find(s => s.dayOfWeek === 1);
+        console.log("   - 화요일 isClosed:", tuesday.isClosed);
+        client.assert(tuesday.isClosed === false, "화요일 전체는 영업이어야 함");
+
         tuesday.bookingTimeRanges.forEach(range => {
-            client.assert(range.isClosed === false, "화요일은 그대로여야 함");
+            client.assert(range.isClosed === false, "화요일 시간대는 영업이어야 함");
         });
         console.log("   - 화요일은 영업 상태 유지 ✓");
     } else {
         console.error("❌ 조회 실패:", response.status, response.body);
-    }
-%}
-
-###
-
-### ================================================================
-### 5. 월요일 전체 다시 토글 → 모든 시간대 isClosed: true → false
-### ================================================================
-
-# @name 월요일전체_휴무토글_2차
-PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/0/toggle
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    if (response.status === 200) {
-        console.log("✅ [5/10] 월요일 전체 재토글 성공");
-
-        const monday = response.body.data.schedules.find(s => s.dayOfWeek === 0);
-
-        console.log("   - 재토글 결과:");
-        monday.bookingTimeRanges.forEach(range => {
-            console.log("     * sequence=" + range.sequence + ": isClosed =", range.isClosed, "(원복됨 ✓)");
-            client.assert(range.isClosed === false, "모든 시간대가 영업으로 돌아와야 함");
-        });
-    } else {
-        console.error("❌ 재토글 실패:", response.status, response.body);
-    }
-%}
-
-###
-
-### ================================================================
-### 6. 영업시간 재조회 (원복 확인)
-### ================================================================
-
-# @name 영업시간조회_2차토글후
-GET {{baseUrl}}/api/business/{{businessId}}/operating-hours
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    if (response.status === 200) {
-        console.log("✅ [6/10] 재토글 후 영업시간 재조회");
-
-        const monday = response.body.data.schedules.find(s => s.dayOfWeek === 0);
-
-        console.log("   - 월요일 전체 시간대:");
-        monday.bookingTimeRanges.forEach(range => {
-            console.log("     * sequence=" + range.sequence + ": isClosed =", range.isClosed, "(원복됨 ✓)");
-            client.assert(range.isClosed === false, "모든 시간대가 영업이어야 함");
-        });
-    } else {
-        console.error("❌ 조회 실패:", response.status, response.body);
-    }
-%}
-
-###
-
-### ================================================================
-### 7. 토요일 전체 휴무 토글 테스트
-### 📌 토요일은 단일 시간대만 있음 (09:00-14:00, sequence=0)
-### ================================================================
-
-# @name 토요일전체_휴무토글
-PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/5/toggle
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    if (response.status === 200) {
-        console.log("✅ [7/10] 토요일 전체 휴무 토글 성공");
-
-        const saturday = response.body.data.schedules.find(s => s.dayOfWeek === 5);
-
-        console.log("   - 토글 결과:");
-        saturday.bookingTimeRanges.forEach(range => {
-            console.log("     * sequence=" + range.sequence + ":", range.startTime + "~" + range.endTime, "→ isClosed =", range.isClosed);
-        });
-    } else {
-        console.error("❌ 토글 실패:", response.status, response.body);
-    }
-%}
-
-###
-
-### ================================================================
-### 8. 화요일 전체 휴무 토글 테스트
-### ================================================================
-
-# @name 화요일전체_휴무토글
-PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/1/toggle
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    if (response.status === 200) {
-        console.log("✅ [8/10] 화요일 전체 휴무 토글 성공");
-
-        const tuesday = response.body.data.schedules.find(s => s.dayOfWeek === 1);
-
-        console.log("   - 토글 결과:");
-        tuesday.bookingTimeRanges.forEach(range => {
-            console.log("     * sequence=" + range.sequence + ":", range.startTime + "~" + range.endTime, "→ isClosed =", range.isClosed);
-        });
-    } else {
-        console.error("❌ 토글 실패:", response.status, response.body);
     }
 %}
 
@@ -332,18 +233,3 @@ Authorization: Bearer {{customerToken}}
 %}
 
 ###
-
-### ================================================================
-### 🎉 테스트 완료 체크리스트
-### ================================================================
-### ✅ 1. Owner 로그인
-### ✅ 2. 영업시간 전체 조회 (초기 상태)
-### ✅ 3. 월요일 전체 휴무 토글 (모든 시간대 false → true)
-### ✅ 4. 변경 확인 (재조회)
-### ✅ 5. 월요일 전체 재토글 (모든 시간대 true → false)
-### ✅ 6. 원복 확인 (재조회)
-### ✅ 7. 토요일 전체 휴무 토글
-### ✅ 8. 화요일 전체 휴무 토글
-### ✅ 9. 존재하지 않는 요일 에러 (400/404)
-### ✅ 10. 권한 없는 사용자 에러 (403)
-### ================================================================

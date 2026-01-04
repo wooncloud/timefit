@@ -104,6 +104,7 @@ public class OperatingHoursCommandService {
         log.info("요일 전체 휴무 토글 시작: businessId={}, dayOfWeek={}, userId={}",
                 businessId, dayOfWeek, currentUserId);
 
+        //   -------------     검증 페이즈
         // 1. Business 조회
         Business business = businessValidator.validateBusinessExists(businessId);
 
@@ -113,26 +114,41 @@ public class OperatingHoursCommandService {
         // 3. DayOfWeek 변환
         DayOfWeek day = DayOfWeek.fromValue(dayOfWeek);
 
-        // 4. 해당 요일의 모든 OperatingHours 조회
+        //    -------------    조회 페이즈
+        // 4. 해당 요일의 BusinessHours 조회
+        BusinessHours businessHours = businessHoursRepository
+                .findByBusinessIdAndDayOfWeek(businessId, day)
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.OPERATING_HOURS_NOT_FOUND));
+
+        // 5. 해당 요일의 모든 OperatingHours 조회
         List<OperatingHours> operatingHoursList =
                 operatingHoursRepository.findByBusinessIdAndDayOfWeekOrderBySequenceAsc(businessId, day);
 
-        // 5. 해당 요일에 OperatingHours가 없으면 에러
-        if (operatingHoursList.isEmpty()) {
-            throw new BusinessException(
-                    BusinessErrorCode.OPERATING_HOURS_NOT_FOUND,
-                    String.format("해당 요일의 영업시간이 없습니다. (dayOfWeek=%d)", dayOfWeek)
-            );
-        }
+        //     -------------   조회 페이즈
+        // 6. BusinessHours 토글 (요일 전체 휴무 상태)
+        businessHours.toggle();
 
-        // 6. 모든 시간대 일괄 토글
+        // 7. OperatingHours 토글 (해당 요일에 종속된 시간대별 휴무 상태)
         operatingHoursList.forEach(OperatingHours::toggle);
 
-        log.info("요일 전체 휴무 토글 완료: businessId={}, dayOfWeek={}, 토글된 시간대 수={}",
+        log.info("요일 전체 휴무 토글 완료: businessId={}, dayOfWeek={}, BusinessHours 토글됨, OperatingHours 토글 수={}",
                 businessId, dayOfWeek, operatingHoursList.size());
 
-        // 7. 전체 영업시간 다시 조회하여 Response 생성
-        return queryService.getOperatingHours(businessId);
+        // -------------  반환 페이즈
+        // 8. Response 생성에 필요한 전체 데이터 조회
+        List<BusinessHours> allBusinessHours =
+                businessHoursRepository.findByBusinessIdOrderByDayOfWeekAsc(businessId);
+
+        List<OperatingHours> allOperatingHours =
+                operatingHoursRepository.findByBusinessIdOrderByDayOfWeekAsc(businessId);
+
+        // 9. Response DTO 생성
+        return responseGenerator.generateResponse(
+                businessId,
+                business.getBusinessName(),
+                allBusinessHours,
+                allOperatingHours
+        );
     }
 
 
