@@ -19,9 +19,8 @@ import timefit.exception.business.BusinessErrorCode;
 import timefit.exception.business.BusinessException;
 import timefit.invitation.dto.InvitationResponseDto;
 import timefit.invitation.service.InvitationService;
-import timefit.operatinghours.service.util.BusinessHoursDefaultConfig;
+import timefit.operatinghours.service.helper.BusinessHoursDefaultConfig;
 import timefit.user.entity.User;
-import timefit.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.UUID;

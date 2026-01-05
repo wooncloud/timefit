@@ -1,4 +1,4 @@
-package timefit.operatinghours.service.util;
+package timefit.operatinghours.service.helper;
 
 import timefit.business.entity.Business;
 import timefit.business.entity.BusinessHours;
