@@ -4,6 +4,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import timefit.common.entity.DayOfWeek;
 import timefit.reservation.entity.QReservation;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
@@ -29,8 +31,8 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
 
     @Override
     public Page<Reservation> findMyReservationsWithFilters(UUID customerId, ReservationStatus status,
-                                                            LocalDate startDate, LocalDate endDate, UUID businessId,
-                                                            Pageable pageable) {
+                                                           LocalDate startDate, LocalDate endDate, UUID businessId,
+                                                           Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
         // 기본 조건: 내 예약만
@@ -171,5 +173,34 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
         }
 
         return orders.toArray(new OrderSpecifier[0]);
+    }
+
+    @Override
+    public List<Reservation> findFutureReservationsByBusinessAndDayOfWeek(
+            UUID businessId,
+            DayOfWeek dayOfWeek,
+            LocalDate currentDate) {
+
+        return queryFactory
+                .selectFrom(reservation)
+                .where(
+                        reservation.business.id.eq(businessId),
+                        reservation.reservationDate.goe(currentDate),
+                        reservation.status.in(
+                                ReservationStatus.PENDING,
+                                ReservationStatus.CONFIRMED
+                        ),
+                        // 요일 필터 (PostgreSQL EXTRACT 함수 사용)
+                        Expressions.numberTemplate(
+                                Integer.class,
+                                "EXTRACT(DOW FROM {0})",
+                                reservation.reservationDate
+                        ).eq(dayOfWeek.getValue())
+                )
+                .orderBy(
+                        reservation.reservationDate.asc(),
+                        reservation.reservationTime.asc()
+                )
+                .fetch();
     }
 }
