@@ -4,7 +4,6 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,6 +20,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -181,7 +181,8 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
             DayOfWeek dayOfWeek,
             LocalDate currentDate) {
 
-        return queryFactory
+        // 1. DB에서 미래 예약 전체 조회 (요일 필터 제외)
+        List<Reservation> allFutureReservations = queryFactory
                 .selectFrom(reservation)
                 .where(
                         reservation.business.id.eq(businessId),
@@ -189,18 +190,24 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
                         reservation.status.in(
                                 ReservationStatus.PENDING,
                                 ReservationStatus.CONFIRMED
-                        ),
-                        // 요일 필터 (PostgreSQL EXTRACT 함수 사용)
-                        Expressions.numberTemplate(
-                                Integer.class,
-                                "EXTRACT(DOW FROM {0})",
-                                reservation.reservationDate
-                        ).eq(dayOfWeek.getValue())
+                        )
                 )
                 .orderBy(
                         reservation.reservationDate.asc(),
                         reservation.reservationTime.asc()
                 )
                 .fetch();
+
+        // 2. Java에서 요일 필터링
+        // Java DayOfWeek: MONDAY=1 ~ SUNDAY=7
+        // DayOfWeek enum: SUNDAY=0, MONDAY=1 ~ SATURDAY=6
+        return allFutureReservations.stream()
+                .filter(r -> {
+                    java.time.DayOfWeek javaDayOfWeek = r.getReservationDate().getDayOfWeek();
+                    // Java DayOfWeek를 0-6 범위로 변환 (일요일=0)
+                    int dayValue = (javaDayOfWeek.getValue() % 7); // SUNDAY=7 -> 0, MONDAY=1 -> 1, ...
+                    return dayValue == dayOfWeek.getValue();
+                })
+                .collect(Collectors.toList());
     }
 }
