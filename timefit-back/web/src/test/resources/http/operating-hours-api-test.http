@@ -1,0 +1,253 @@
+### ================================================================
+### Timefit Operating Hours API - 검증 에러 테스트
+### 📝 테스트 시나리오:
+###    1. Owner 로그인
+###    2. BH-01 위반: 영업시간 설정 시 종료시간이 시작시간보다 이른 경우
+###    3. OH-01 위반: 예약 슬롯 시간이 영업시간 범위를 벗어나는 경우
+###    4. OH-05-v2 위반: 미래 예약이 존재하는 요일의 예약 슬롯 변경 시도
+### ================================================================
+###
+### 📌 사전 준비:
+###    - seed-bulk.sql 실행 필요 (Business, Menu 데이터)
+###    - 만약 test data 생성한 지 오래 되었다면 삭제 후 다시 생성하길 권장함 (미래예약검증 때문에)
+###    - Business ID: 30000000-0000-0000-0000-000000000001 (Timefit Hair Salon)
+###    - Owner: owner1@timefit.com / password: password123
+###
+###
+### 🎯 검증 규칙 (총 3개):
+###    - BH-01: 영업시간 범위 내 예약 슬롯 시간 검증 (closeTime > openTime)
+###    - OH-01: 예약 슬롯 시간 ⊆ 영업시간 검증 (bookingTimeRanges ⊆ businessHours)
+###    - OH-05-v2: 미래 예약 보호 (예약 존재 시 예약 슬롯 변경 차단)
+### ================================================================
+
+@baseUrl = http://localhost:8080
+@businessId = 30000000-0000-0000-0000-000000000001
+
+### ================================================================
+### 1. Owner 로그인
+### ================================================================
+
+# @name Owner로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "owner1@timefit.com",
+  "password": "password123"
+}
+
+> {%
+    client.test("로그인 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    if (response.body.data && response.body.data.accessToken) {
+        client.global.set("ownerToken", response.body.data.accessToken);
+        console.log("✅ [1/8] Owner 로그인 성공");
+    } else {
+        console.error("❌ 로그인 실패:", response.status, response.body);
+    }
+%}
+
+
+###
+
+
+### ================================================================
+### 2. BH-01 위반: 영업시간 설정 시 종료시간이 시작시간보다 이른 경우
+### Use Case: 사업자가 월요일 영업시간을 18:00 시작 ~ 09:00 종료로 잘못 입력
+### Expected: INVALID_OPERATING_HOURS (400)
+### ================================================================
+
+# @name BH01_시간순서위반
+PUT {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "schedules": [
+    { "dayOfWeek": 0, "isClosed": true, "openTime": null, "closeTime": null, "bookingTimeRanges": [] },
+    { "dayOfWeek": 1, "isClosed": false, "openTime": "18:00", "closeTime": "09:00", "bookingTimeRanges": [] },
+    { "dayOfWeek": 2, "isClosed": false, "openTime": "09:00", "closeTime": "18:00", "bookingTimeRanges": [] },
+    { "dayOfWeek": 3, "isClosed": false, "openTime": "09:00", "closeTime": "18:00", "bookingTimeRanges": [] },
+    { "dayOfWeek": 4, "isClosed": false, "openTime": "09:00", "closeTime": "18:00", "bookingTimeRanges": [] },
+    { "dayOfWeek": 5, "isClosed": false, "openTime": "09:00", "closeTime": "18:00", "bookingTimeRanges": [] },
+    { "dayOfWeek": 6, "isClosed": true, "openTime": null, "closeTime": null, "bookingTimeRanges": [] }
+  ]
+}
+
+> {%
+    client.test("BH-01 검증 에러", function() {
+        client.assert(response.status === 400, "응답 코드가 400이어야 함");
+        if (response.body.errorResponse) {
+            client.assert(
+                response.body.errorResponse.code === "INVALID_OPERATING_HOURS",
+                "INVALID_OPERATING_HOURS 에러여야 함"
+            );
+        }
+    });
+
+    if (response.status === 400) {
+        console.log("✅ [6/8] BH-01 검증 에러 발생 (정상)");
+        console.log("   - Use Case: 종료시간(09:00) < 시작시간(18:00)");
+        console.log("   - 에러 코드:", response.body.errorResponse?.code);
+        console.log("   - 에러 메시지:", response.body.errorResponse?.message);
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 3. OH-01 위반: 예약 슬롯 시간이 영업시간 범위를 벗어나는 경우
+### Use Case: 사업자가 영업시간(09:00-18:00) 밖의 예약 슬롯(08:00-12:00, 13:00-19:00) 설정 시도
+### Expected: OPERATING_HOURS_OUT_OF_RANGE (400)
+### ================================================================
+
+# @name OH01_범위초과
+PUT {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "schedules": [
+    { "dayOfWeek": 0, "isClosed": true, "openTime": null, "closeTime": null, "bookingTimeRanges": [] },
+    {
+      "dayOfWeek": 1,
+      "isClosed": false,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "bookingTimeRanges": [
+        { "startTime": "08:00", "endTime": "12:00" },
+        { "startTime": "13:00", "endTime": "19:00" }
+      ]
+    },
+    { "dayOfWeek": 2, "isClosed": false, "openTime": "09:00", "closeTime": "18:00", "bookingTimeRanges": [] },
+    { "dayOfWeek": 3, "isClosed": false, "openTime": "09:00", "closeTime": "18:00", "bookingTimeRanges": [] },
+    { "dayOfWeek": 4, "isClosed": false, "openTime": "09:00", "closeTime": "18:00", "bookingTimeRanges": [] },
+    { "dayOfWeek": 5, "isClosed": false, "openTime": "09:00", "closeTime": "18:00", "bookingTimeRanges": [] },
+    { "dayOfWeek": 6, "isClosed": true, "openTime": null, "closeTime": null, "bookingTimeRanges": [] }
+  ]
+}
+
+> {%
+    client.test("OH-01 검증 에러", function() {
+        client.assert(response.status === 400, "응답 코드가 400이어야 함");
+        if (response.body.errorResponse) {
+            client.assert(
+                response.body.errorResponse.code === "OPERATING_HOURS_OUT_OF_RANGE",
+                "OPERATING_HOURS_OUT_OF_RANGE 에러여야 함"
+            );
+        }
+    });
+
+    if (response.status === 400) {
+        console.log("✅ [7/8] OH-01 검증 에러 발생 (정상)");
+        console.log("   - Use Case: 예약 슬롯(08:00-19:00) ⊄ 영업시간(09:00-18:00)");
+        console.log("   - 에러 코드:", response.body.errorResponse?.code);
+        console.log("   - 에러 메시지:", response.body.errorResponse?.message);
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 4. OH-05-v2 위반: 미래 예약이 존재하는 요일의 예약 슬롯 변경 시도
+### Use Case: 사업자가 목요일(2026-02-05)에 확정된 미래 예약이 있는 상태에서
+###           목요일 예약 슬롯을 수정 시도
+### Expected: OPERATING_HOURS_HAS_FUTURE_RESERVATIONS(409)
+### ================================================================
+
+# @name OH05v2_미래예약보호
+PUT {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "schedules": [
+    {
+      "dayOfWeek": 0,
+      "isClosed": true,
+      "openTime": null,
+      "closeTime": null,
+      "bookingTimeRanges": []
+    },
+    {
+      "dayOfWeek": 1,
+      "isClosed": false,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "bookingTimeRanges": [
+        { "startTime": "09:00", "endTime": "12:00" },
+        { "startTime": "13:00", "endTime": "18:00" }
+      ]
+    },
+    {
+      "dayOfWeek": 2,
+      "isClosed": false,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "bookingTimeRanges": [
+        { "startTime": "09:00", "endTime": "12:00" },
+        { "startTime": "13:00", "endTime": "18:00" }
+      ]
+    },
+    {
+      "dayOfWeek": 3,
+      "isClosed": false,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "bookingTimeRanges": [
+        { "startTime": "09:00", "endTime": "12:00" },
+        { "startTime": "13:00", "endTime": "18:00" }
+      ]
+    },
+    {
+      "dayOfWeek": 4,
+      "isClosed": false,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "bookingTimeRanges": [
+        { "startTime": "09:00", "endTime": "12:00" },
+        { "startTime": "13:00", "endTime": "18:00" }
+      ]
+    },
+    {
+      "dayOfWeek": 5,
+      "isClosed": false,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "bookingTimeRanges": [
+        { "startTime": "09:00", "endTime": "12:00" },
+        { "startTime": "13:00", "endTime": "18:00" }
+      ]
+    },
+    {
+      "dayOfWeek": 6,
+      "isClosed": true,
+      "openTime": null,
+      "closeTime": null,
+      "bookingTimeRanges": []
+    }
+  ]
+}
+
+> {%
+    client.test("미래예약보호 설정 성공", function() {
+        client.assert(response.status === 409, "응답 코드가 409이어야 함");
+    });
+
+    if (response.status === 409) {
+        console.log("에러 검출 성공! 성공적으로 영업 슬롯 시간 수정을 Blocking 했습니다.");
+    } else {
+        console.error("❌ 테스트 실패:", response.status);
+        if (response.body && response.body.errorResponse) {
+            console.error("   - 에러:", response.body.errorResponse.message);
+        }
+    }
+%}
+
+###
