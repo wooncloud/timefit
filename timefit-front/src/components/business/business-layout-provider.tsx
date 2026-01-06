@@ -12,7 +12,7 @@ interface BusinessLayoutProviderProps {
 }
 
 /**
- * Business Layout Provider
+ * 비즈니스 레이아웃 프로바이더
  * - 세션 데이터를 Zustand store에 동기화
  * - 토큰은 제외하고 사용자/비즈니스 정보만 저장
  * - 비즈니스 데이터 로드 관리

@@ -54,7 +54,7 @@ export const GET = withAuth<GetTeamMembersHandlerResponse>(
         data: responseData.data,
       });
     } catch (error) {
-      console.error('Failed to fetch team members:', error);
+      console.error('팀 구성원 조회 실패:', error);
       return NextResponse.json(
         {
           success: false,

@@ -3,6 +3,7 @@
 # Timefit Test Data Initialization Script
 # ========================================
 # Always inserts BULK data (10,000 reservations)
+# Date Range: TODAY ~ +60 DAYS (No past dates!)
 # Sufficient for Level 1, 2, and 3 testing
 # ========================================
 

@@ -55,7 +55,7 @@ export const PATCH = withAuth<MemberStatusChangeHandlerResponse>(
         message: '구성원이 비활성화되었습니다.',
       });
     } catch (error) {
-      console.error('Failed to deactivate member:', error);
+      console.error('구성원 비활성화 실패:', error);
       return NextResponse.json(
         {
           success: false,

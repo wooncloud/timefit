@@ -102,6 +102,13 @@ public class BusinessHours extends BaseEntity {
         this.openTime = openTime;
         this.closeTime = closeTime;
     }
+    /**
+     * 휴무 상태 토글
+     * - 시간 정보(openTime, closeTime)는 유지
+     */
+    public void toggle() {
+        this.isClosed = !this.isClosed;
+    }
 
     // 특정 시간이 영업시간 내인지 확인
     public boolean isTimeWithinBusinessHours(LocalTime time) {

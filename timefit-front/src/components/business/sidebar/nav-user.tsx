@@ -44,11 +44,11 @@ export function NavUser() {
         router.push('/');
         router.refresh();
       } else {
-        console.error('Logout failed');
+        console.error('로그아웃 실패');
         setIsLoggingOut(false);
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('로그아웃 오류:', error);
       setIsLoggingOut(false);
     }
   };

@@ -68,7 +68,7 @@ export const POST = withAuth<InviteMemberHandlerResponse>(
         message: responseData.message || '구성원을 성공적으로 초대했습니다.',
       });
     } catch (error) {
-      console.error('Failed to invite member:', error);
+      console.error('구성원 초대 실패:', error);
       return NextResponse.json(
         {
           success: false,

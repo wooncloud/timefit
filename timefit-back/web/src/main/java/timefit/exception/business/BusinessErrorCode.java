@@ -36,7 +36,12 @@ public enum BusinessErrorCode {
     BUSINESS_ALREADY_DELETED("이미 삭제된 업체입니다", HttpStatus.BAD_REQUEST),
 
     // 예약 가능 시간 관련
-    AVAILABLE_SLOT_CONFLICT("예약 가능 시간이 중복됩니다", HttpStatus.CONFLICT);
+    OPERATING_HOURS_NOT_FOUND("해당 예약 시간대를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+
+    // 영업시간 검증 관련
+    INVALID_OPERATING_HOURS("유효하지 않은 영업시간입니다", HttpStatus.BAD_REQUEST),
+    OPERATING_HOURS_OUT_OF_RANGE("예약 가능 시간대가 영업시간 범위를 벗어났습니다", HttpStatus.BAD_REQUEST),
+    OPERATING_HOURS_HAS_FUTURE_RESERVATIONS("진행 중인 예약이 있어 영업시간을 변경할 수 없습니다", HttpStatus.CONFLICT);
 
     private final String message;
     private final HttpStatus httpStatus;

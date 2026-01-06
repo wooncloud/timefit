@@ -1,9 +1,9 @@
 /**
  * ========================================
- * Level 2: single-join - 메뉴 목록 조회 급증 테스트
+ * Spike Test - 트래픽 급증 회복력 확인
  * ========================================
  *
- * 목적: 트래픽 급증 시 시스템 회복력 확인
+ * 목적: 트래픽 급증 시 시스템 회복력(Resilience) 확인
  *
  * API: GET /api/business/{businessId}/menu
  * 쿼리:
@@ -12,22 +12,28 @@
  * JOIN: 1개
  * 권한: 인증 필요 (JWT 토큰)
  *
- * 테스트 시나리오:
- * - Stage 1: VU 100 (1분) - 정상 부하
- * - Stage 2: VU 100→2000 (10초) - 급증! ⚡
- * - Stage 3: VU 2000 (1분) - 피크 유지
- * - Stage 4: VU 2000→100 (10초) - 급감
- * - Stage 5: VU 100 (1분) - 회복 확인
+ * 근거:
+ * - VU 100 (1분): 정상 부하 (Baseline)
+ *
+ * - VU 100→500 (30초): 급증! ⚡
+ *   → 실제 상황: 마케팅 이벤트 시작, 특정 시간대 예약 몰림
+ *   → 30초 = 급격한 변화 (사용자는 기다리지 않음)
+ *
+ * - VU 500 (1분): 피크 유지
+ *   → 목적: 급증 후에도 안정적으로 유지되는가?
+ *
+ * - VU 500→100 (30초): 급감
+ *
+ * - VU 100 (1분): 회복 확인 ← 핵심!
+ *   → 목적: 원래 성능으로 복귀하는가?
  *
  * 예상 결과:
- * - 정상: avg 100ms
- * - 급증 시: avg 500-1000ms
- * - 회복 후: avg 100ms로 복귀
+ * - 정상: p95 ~ 100ms
+ * - 급증 시: p95 ~ 500ms (일시적 증가)
+ * - 회복 후: p95 ~ 100ms (원래대로 복귀) ✅
  *
- * 학습 포인트:
- * - "급증 시 얼마나 느려지는가?"
- * - "회복 속도는?"
- * - "에러가 발생하는가?"
+ * 실행 주기: 월 1회
+ * 소요 시간: 5분
  */
 
 import http from 'k6/http';
@@ -41,17 +47,17 @@ const menuDuration = new Trend('menu_query_duration');
 
 export const options = {
     stages: [
-        { duration: '1m', target: 100 },   // 정상 부하
-        { duration: '10s', target: 2000 }, // 급증! ⚡
-        { duration: '1m', target: 2000 },  // 피크 유지
-        { duration: '10s', target: 100 },  // 급감
-        { duration: '1m', target: 100 },   // 회복 확인
-        { duration: '30s', target: 0 },    // 종료
+        { duration: '1m', target: 100 },    // 정상 부하
+        { duration: '30s', target: 500 },   // 급증! ⚡
+        { duration: '1m', target: 500 },    // 피크 유지
+        { duration: '30s', target: 100 },   // 급감
+        { duration: '1m', target: 100 },    // 회복 확인 ✅
+        { duration: '30s', target: 0 },     // 종료
     ],
     thresholds: {
-        'http_req_duration': ['p(95)<3000'],
-        'http_req_failed': ['rate<0.2'],
-        'errors': ['rate<0.2'],
+        'http_req_duration': ['p(95)<1000'],  // 급증 시 일시적 증가 허용
+        'http_req_failed': ['rate<0.05'],
+        'errors': ['rate<0.05'],
     },
 };
 
@@ -63,8 +69,9 @@ const BUSINESS_IDS = [
 
 export function setup() {
     console.log('========================================');
-    console.log('Level 2: single-join - 메뉴 목록 조회 급증 테스트');
+    console.log('Level 2: single-join - Spike Test');
     console.log('========================================');
+    console.log(`Target URL: ${BASE_URL}`);
     console.log('');
 
     const loginRes = http.post(`${BASE_URL}/api/auth/signin`, JSON.stringify({
@@ -81,13 +88,9 @@ export function setup() {
     const body = JSON.parse(loginRes.body);
     console.log('✅ 로그인 성공');
     console.log('');
-    console.log('테스트 패턴: Spike Test');
-    console.log('  - VU 100 (정상) → 2000 (급증) → 100 (회복)');
-    console.log('');
-    console.log('학습 목표:');
-    console.log('  - 급증 시 응답 시간 얼마나 증가?');
-    console.log('  - 회복 속도는?');
-    console.log('  - 에러 발생하는가?');
+    console.log('목표: 급증 트래픽 회복력 확인');
+    console.log('  - VU 100 (정상) → 500 (급증) → 100 (회복)');
+    console.log('  - 회복 후 원래 성능으로 복귀?');
     console.log('========================================');
     console.log('');
 
@@ -120,17 +123,13 @@ export default function (data) {
 
 export function teardown(data) {
     console.log('');
-    console.log('========================================');
-    console.log('Level 2 Spike Test 완료');
-    console.log('========================================');
+    console.log('✅ Spike Test 완료');
     console.log('');
     console.log('분석 포인트:');
-    console.log('  - 급증 시: 응답 시간 V자 그래프?');
+    console.log('  - 급증 시: V자 그래프 확인');
     console.log('  - 회복 후: 원래 속도로 복귀?');
     console.log('  - 에러: 급증 시 일시적 발생?');
     console.log('');
-    console.log('다음 단계:');
-    console.log('  Level 3: multiple-join 테스트');
-    console.log('  npm run test:pattern:l3:load');
+    console.log('다음 단계: Level 3 (multiple-join) 테스트');
     console.log('');
 }

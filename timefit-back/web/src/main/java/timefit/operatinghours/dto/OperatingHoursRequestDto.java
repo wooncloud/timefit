@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class OperatingHoursRequestDto {
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotNull(message = "스케줄 목록은 필수입니다")
+            @Size(min=1, max=7, message = "월~일 중 최소 하나의 요일을 선택해야 합니다.")
             List<DaySchedule> schedules
     ) {}
 

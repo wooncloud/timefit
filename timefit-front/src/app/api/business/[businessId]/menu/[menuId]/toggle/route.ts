@@ -6,7 +6,7 @@ import { withAuth } from '@/lib/api/auth-middleware';
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 if (!BACKEND_URL) {
-  throw new Error('NEXT_PUBLIC_BACKEND_URL is not defined');
+  throw new Error('NEXT_PUBLIC_BACKEND_URL이 정의되지 않았습니다.');
 }
 
 export const PATCH = withAuth<UpdateMenuHandlerResponse>(
@@ -63,7 +63,7 @@ export const PATCH = withAuth<UpdateMenuHandlerResponse>(
         message: '메뉴 상태가 변경되었습니다',
       });
     } catch (error) {
-      console.error('Menu toggle error:', error);
+      console.error('메뉴 상태 변경 오류:', error);
       return NextResponse.json(
         {
           success: false,

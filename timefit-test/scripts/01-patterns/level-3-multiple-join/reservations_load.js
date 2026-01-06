@@ -1,9 +1,9 @@
 /**
  * ========================================
- * Level 3: multiple-join - 예약 목록 조회 부하 테스트
+ * Load Test - 일상적 부하 성능 확인
  * ========================================
  *
- * 목적: 복잡한 JOIN 쿼리의 실전 성능 측정
+ * 목적: 복잡한 JOIN 쿼리(3-4개)의 일상적 부하 성능 측정
  *
  * API: GET /api/business/{businessId}/reservations
  * 쿼리:
@@ -14,21 +14,20 @@
  * JOIN: 3-4개 (복잡!)
  * 권한: 인증 필요 (JWT 토큰)
  *
- * 테스트 시나리오:
- * - Stage 1: VU 50 (1분) - 워밍업
- * - Stage 2: VU 100 (3분) - 목표 부하 (Level 1/2보다 낮음!)
- * - Stage 3: VU 0 (30초) - 종료
- *
- * 예상 결과:
- * - avg: 200-300ms (Level 1의 10배!)
- * - p95: < 500ms (업계 표준)
- * - TPS: 50+ (VU 100 기준)
- * - 에러율: < 1%
+ * 근거:
+ * - VU 100: 일상적 부하 (실제 예상 피크 120명의 83%)
+ * - JOIN 4개 = Level 1(no-join)보다 훨씬 무거움
+ *   → Level 1: p95 ~ 50-80ms
+ *   → Level 2: p95 ~ 80-150ms
+ *   → Level 3: p95 ~ 150-250ms (예상)
  *
  * 학습 포인트:
  * - "JOIN 4개면 얼마나 느린가?"
- * - "Level 1(20ms) vs Level 3(250ms) = 12배!"
- * - "실전 쿼리는 이렇게 무겁구나!"
+ * - "Level 1 대비 성능 차이는?"
+ * - "실전 쿼리의 복잡도 체감"
+ *
+ * 실행 주기: 매일/매주 (예약 조회 로직 변경 시)
+ * 소요 시간: 5분
  */
 
 import http from 'k6/http';
@@ -42,16 +41,12 @@ const reservationDuration = new Trend('reservation_query_duration');
 
 export const options = {
     stages: [
-        { duration: '30s', target: 50 },   // 워밍업: 50 VU
-        { duration: '30s', target: 50 },   // 안정: 50 VU
-        { duration: '30s', target: 100 },  // 증가: 100 VU (Level 1/2보다 낮음!)
-        { duration: '3m', target: 100 },   // 유지: 100 VU
-        { duration: '30s', target: 0 },    // 종료
+        { duration: '1m', target: 100 },   // Ramp up
+        { duration: '3m', target: 100 },   // Steady state
+        { duration: '1m', target: 0 },     // Ramp down
     ],
     thresholds: {
-        // 업계 표준: 복잡한 쿼리는 p95 < 500ms
-        'http_req_duration': ['p(95)<500'],
-        // 에러율 1% 미만
+        'http_req_duration': ['p(95)<300'],
         'http_req_failed': ['rate<0.01'],
         'errors': ['rate<0.01'],
     },
@@ -62,8 +57,9 @@ const BUSINESS_ID = '30000000-0000-0000-0000-000000000001';
 
 export function setup() {
     console.log('========================================');
-    console.log('Level 3: multiple-join - 예약 목록 조회 부하 테스트');
+    console.log('Level 3: multiple-join - Load Test');
     console.log('========================================');
+    console.log(`Target URL: ${BASE_URL}`);
     console.log('');
 
     const loginRes = http.post(`${BASE_URL}/api/auth/signin`, JSON.stringify({
@@ -79,19 +75,11 @@ export function setup() {
 
     const body = JSON.parse(loginRes.body);
     console.log('✅ 로그인 성공: owner1@timefit.com');
-    console.log(`✅ 업체 ID: ${BUSINESS_ID} (owner1 소유)`);
+    console.log(`✅ 업체 ID: ${BUSINESS_ID}`);
     console.log('');
-    console.log('테스트 패턴: Load Test');
-    console.log('  - VU 100 (복잡한 쿼리라 낮게 설정)');
-    console.log('');
-    console.log('목표:');
-    console.log('  - p95 < 500ms (업계 표준)');
-    console.log('  - TPS: 50+');
-    console.log('');
-    console.log('학습 목표:');
-    console.log('  - JOIN 4개 = 얼마나 느린가?');
-    console.log('  - Level 1(20ms) vs Level 3(?)');
-    console.log('  - 실전 쿼리의 복잡도 체감');
+    console.log('목표: VU 100에서 JOIN 4개 쿼리 성능 확인');
+    console.log('  - Level 1/2와 성능 비교');
+    console.log('  - p95 < 300ms 달성');
     console.log('========================================');
     console.log('');
 
@@ -118,7 +106,7 @@ export default function (data) {
     const success = check(res, {
         '상태 코드 200': (r) => r.status === 200,
         '응답 본문 존재': (r) => r.body && r.body.length > 0,
-        '응답 시간 < 500ms': (r) => r.timings.duration < 500,
+        '응답 시간 < 300ms': (r) => r.timings.duration < 300,
     });
 
     errorRate.add(!success);
@@ -128,20 +116,12 @@ export default function (data) {
 
 export function teardown(data) {
     console.log('');
-    console.log('========================================');
-    console.log('Level 3 Load Test 완료');
-    console.log('========================================');
+    console.log('✅ Load Test 완료');
     console.log('');
     console.log('분석 포인트:');
-    console.log('  - Level 1(20ms) vs Level 2(60ms) vs Level 3(?ms)');
+    console.log('  - Level 1(50ms) vs Level 2(100ms) vs Level 3(?)');
     console.log('  - JOIN 개수에 따른 성능 차이 체감');
-    console.log('  - p95 < 500ms 달성?');
     console.log('');
-    console.log('💡 인사이트:');
-    console.log('  - 복잡도는 곱셈으로 증가!');
-    console.log('  - 쿼리 최적화가 필수!');
-    console.log('');
-    console.log('다음 단계:');
-    console.log('  npm run test:pattern:l3:stress');
+    console.log('다음 단계: npm run test:pattern:l3:stress');
     console.log('');
 }

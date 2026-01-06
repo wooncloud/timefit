@@ -62,7 +62,7 @@ export const DELETE = withAuth<DeleteMemberHandlerResponse>(
         message: '구성원이 삭제되었습니다.',
       });
     } catch (error) {
-      console.error('Failed to delete member:', error);
+      console.error('구성원 삭제 실패:', error);
       return NextResponse.json(
         {
           success: false,

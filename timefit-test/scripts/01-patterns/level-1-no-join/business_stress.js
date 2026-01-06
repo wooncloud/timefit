@@ -1,33 +1,46 @@
 /**
  * ========================================
- * Level 1: no-join - 업체 조회 스트레스 테스트
+ * Stress Test - 비즈니스 목표 + 한계 탐색
  * ========================================
  *
- * 목적: 시스템 한계점을 찾아 병목 지점 파악
+ * 목적: 비즈니스 목표(500명) 달성 확인 및 시스템 한계 파악
  *
  * API: GET /api/business/{businessId}
  * 쿼리: SELECT * FROM business WHERE id = ? (단 1개)
  * 권한: 공개 API (토큰 불필요)
  *
- * 테스트 시나리오:
- * - Stage 1: VU 50 (1분) - 워밍업
- * - Stage 2: VU 50→200 (2분) - 점진적 증가
- * - Stage 3: VU 200 (2분) - 안정
- * - Stage 4: VU 200→500 (2분) - 고부하
- * - Stage 5: VU 500 (2분) - 고부하 유지
- * - Stage 6: VU 500→1000 (2분) - 한계 테스트
- * - Stage 7: VU 1000 (1분) - 최대 부하
- * - Stage 8: VU 0 (30초) - 종료
+ * 근거:
+ * - VU 100 (2분): Warm up
+ *   → JVM JIT 컴파일 완료 (최소 3-5회 실행)
+ *   → DB Cache 워밍업 (자주 조회되는 데이터)
+ *
+ * - VU 500 (5분): 비즈니스 목표 부하 ← 핵심!
+ *   → 실제 피크 120명 × 안전계수 4배 = 480명 → 500명
+ *   → 안전계수 = 트래픽 변동성(×2) + 마케팅 이벤트(×2)
+ *   → 5분 = 충분한 GC 사이클 (최소 3회) + 안정 상태 확인
+ *   → 목표: p95 < 300ms (Supabase Free Plan 한계)
+ *
+ * - VU 750 (2분): 1.5배 부하 (여유 확인)
+ *   → 예상: p95 < 500ms (Connection Pool 경합 시작)
+ *   → 목적: 확장 여유 50% 확보 여부 확인
+ *
+ * - VU 1000 (5분): 2배 부하 (한계 탐색) ← 확장 계획 검증
+ *   → 예상: p95 > 1000ms (Supabase 60 Connection Limit 병목)
+ *   → 목적: 병목 지점 파악 (Connection Pool? CPU? Network?)
+ *   → 5분 = 장시간 고부하 시 메모리 누수, GC Pause 확인
  *
  * 예상 결과:
- * - VU 200까지: p95 < 100ms (안정)
- * - VU 500까지: p95 < 200ms (증가 시작)
- * - VU 800+: p95 급증 (커넥션 풀 병목)
+ * - VU 100: p95 < 100ms ✅ (여유)
+ * - VU 500: p95 < 300ms ✅ (목표 달성!) ← 면접 포인트
+ * - VU 750: p95 < 500ms ⚠️ (Connection Pool 경합)
+ * - VU 1000: p95 > 1000ms ❌ (Supabase Free Plan 한계)
  *
- * 학습 포인트:
- * - "어느 VU부터 응답 시간이 증가하는가?"
- * - "커넥션 풀 10개의 한계는?"
- * - "병목 지점이 언제 나타나는가?"
+ * 실행 주기: 월 1회 (정기 성능 점검)
+ * 소요 시간: 15분
+ *
+ * 면접 포인트:
+ * "VU 500에서 p95 < 300ms 달성으로 비즈니스 목표 검증 완료,
+ *  VU 1000까지 테스트하여 확장 계획(Supabase Pro 업그레이드) 수립"
  */
 
 import http from 'k6/http';
@@ -41,24 +54,19 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 const errorRate = new Rate('errors');
 const businessDuration = new Trend('business_query_duration');
 
-// 테스트 옵션 - Stress Test (스트레스 테스트)
+// 테스트 옵션
 export const options = {
     stages: [
-        { duration: '1m', target: 50 },    // 워밍업: 50 VU
-        { duration: '2m', target: 200 },   // 점진적 증가: 200 VU
-        { duration: '2m', target: 200 },   // 안정: 200 VU
-        { duration: '2m', target: 500 },   // 고부하: 500 VU
-        { duration: '2m', target: 500 },   // 고부하 유지: 500 VU
-        { duration: '2m', target: 1000 },  // 한계 테스트: 1000 VU
-        { duration: '1m', target: 1000 },  // 최대 부하 유지: 1000 VU
-        { duration: '30s', target: 0 },    // 종료
+        { duration: '2m', target: 100 },   // Warm up: JVM JIT + DB Cache
+        { duration: '5m', target: 500 },   // 목표 부하: 비즈니스 목표 검증 ✅
+        { duration: '2m', target: 750 },   // 1.5배 부하: 확장 여유 확인
+        { duration: '5m', target: 1000 },  // 2배 부하: 한계 탐색 + 병목 파악
+        { duration: '1m', target: 0 },     // Cool down: 정상 종료
     ],
     thresholds: {
-        // 관대한 threshold (한계 테스트이므로)
-        'http_req_duration': ['p(95)<3000'],
-        // 에러율 20% 미만 (스트레스 테스트이므로 관대)
-        'http_req_failed': ['rate<0.2'],
-        'errors': ['rate<0.2'],
+        'http_req_duration': ['p(95)<3000'],  // 관대한 threshold (한계 테스트)
+        'http_req_failed': ['rate<0.1'],      // 에러율 10% 허용
+        'errors': ['rate<0.1'],
     },
 };
 
@@ -72,25 +80,16 @@ const BUSINESS_IDS = [
 // Setup: 테스트 시작 전 정보 출력
 export function setup() {
     console.log('========================================');
-    console.log('Level 1: no-join - 업체 조회 스트레스 테스트');
+    console.log('Level 1: no-join - Stress Test');
     console.log('========================================');
     console.log(`Target URL: ${BASE_URL}`);
     console.log('API: GET /api/business/{businessId}');
-    console.log('권한: 공개 API (토큰 불필요)');
     console.log('');
-    console.log('테스트 패턴: Stress Test');
-    console.log('  - Stage 1: VU 50 (1분) - 워밍업');
-    console.log('  - Stage 2: VU 50→200 (2분) - 점진적 증가');
-    console.log('  - Stage 3: VU 200 (2분) - 안정');
-    console.log('  - Stage 4: VU 200→500 (2분) - 고부하');
-    console.log('  - Stage 5: VU 500 (2분) - 고부하 유지');
-    console.log('  - Stage 6: VU 500→1000 (2분) - 한계 테스트');
-    console.log('  - Stage 7: VU 1000 (1분) - 최대 부하');
+    console.log('목표: 비즈니스 목표(500 VU) + 한계 탐색(1000 VU)');
+    console.log('  - VU 500: p95 < 300ms (목표 달성)');
+    console.log('  - VU 1000: 병목 지점 파악');
     console.log('');
-    console.log('학습 목표:');
-    console.log('  - 어느 VU부터 응답 시간 증가?');
-    console.log('  - 커넥션 풀 10개의 한계는?');
-    console.log('  - 병목 지점이 언제 나타나는가?');
+    console.log('⏱️  소요 시간: 약 15분');
     console.log('========================================');
     console.log('');
 
@@ -117,7 +116,7 @@ export default function (data) {
 
     errorRate.add(!success);
 
-    // Think time (0.3초로 짧게 - 스트레스 테스트)
+    // Think time (0.3초 - 짧게 유지하여 부하 증가)
     sleep(0.3);
 }
 
@@ -125,21 +124,14 @@ export default function (data) {
 export function teardown(data) {
     console.log('');
     console.log('========================================');
-    console.log('Level 1 Stress Test 완료');
+    console.log('✅ Stress Test 완료');
     console.log('========================================');
     console.log('');
     console.log('분석 포인트:');
-    console.log('  - 그래프에서 어느 VU부터 응답 시간 급증?');
-    console.log('  - VU 200: 안정적이었나요?');
-    console.log('  - VU 500: 증가 시작?');
-    console.log('  - VU 800+: 병목 발생?');
+    console.log('  - VU 500에서 p95 < 300ms 달성했나요?');
+    console.log('  - 어느 VU부터 응답 시간 급증했나요?');
+    console.log('  - 병목 지점은? (Connection Pool? CPU?)');
     console.log('');
-    console.log('💡 인사이트:');
-    console.log('  - 병목 지점 = 커넥션 풀 한계!');
-    console.log('  - 쿼리 1개짜리도 VU가 많으면 느려진다');
-    console.log('');
-    console.log('다음 단계:');
-    console.log('  Level 2: single-join 테스트');
-    console.log('  npm run test:pattern:l2:load');
+    console.log('다음 단계: Level 2 (single-join) 테스트');
     console.log('');
 }

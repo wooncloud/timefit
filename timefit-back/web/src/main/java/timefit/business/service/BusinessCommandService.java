@@ -8,7 +8,9 @@ import timefit.auth.service.validator.AuthValidator;
 import timefit.business.dto.BusinessRequestDto;
 import timefit.business.dto.BusinessResponseDto;
 import timefit.business.entity.Business;
+import timefit.business.entity.BusinessHours;
 import timefit.business.entity.UserBusinessRole;
+import timefit.business.repository.BusinessHoursRepository;
 import timefit.business.repository.BusinessRepository;
 import timefit.business.repository.UserBusinessRoleRepository;
 import timefit.business.service.validator.BusinessValidator;
@@ -17,9 +19,10 @@ import timefit.exception.business.BusinessErrorCode;
 import timefit.exception.business.BusinessException;
 import timefit.invitation.dto.InvitationResponseDto;
 import timefit.invitation.service.InvitationService;
+import timefit.operatinghours.service.helper.BusinessHoursDefaultConfig;
 import timefit.user.entity.User;
-import timefit.user.repository.UserRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -30,6 +33,7 @@ public class BusinessCommandService {
 
     private final BusinessRepository businessRepository;
     private final UserBusinessRoleRepository userBusinessRoleRepository;
+    private final BusinessHoursRepository businessHoursRepository;
     private final InvitationService invitationService;
     private final BusinessValidator businessValidator;
     private final AuthValidator authValidator;
@@ -74,6 +78,11 @@ public class BusinessCommandService {
         UserBusinessRole savedOwnerRole = userBusinessRoleRepository.save(ownerRole);
         log.info("OWNER 권한 부여 완료: userId={}, businessId={}, role=OWNER",
                 ownerId, savedBusiness.getId());
+
+        // 최초 생성 시 영업 시간 초기값 설정 (평일 09:00~18:00 / 주말 휴무)
+        List<BusinessHours> defaultHours =
+                BusinessHoursDefaultConfig.createDefaultBusinessHours(business);
+        businessHoursRepository.saveAll(defaultHours);
 
         return BusinessResponseDto.BusinessResponse.of(savedBusiness, savedOwnerRole);
     }

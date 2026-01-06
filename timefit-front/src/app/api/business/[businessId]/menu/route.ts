@@ -10,7 +10,7 @@ import { withAuth } from '@/lib/api/auth-middleware';
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 if (!BACKEND_URL) {
-  throw new Error('NEXT_PUBLIC_BACKEND_URL is not defined');
+  throw new Error('NEXT_PUBLIC_BACKEND_URL이 정의되지 않았습니다.');
 }
 
 export const GET = withAuth<GetMenuListHandlerResponse>(
@@ -80,7 +80,7 @@ export const GET = withAuth<GetMenuListHandlerResponse>(
         data: result.data,
       });
     } catch (error) {
-      console.error('Menu list fetch error:', error);
+      console.error('메뉴 목록 조회 오류:', error);
       return NextResponse.json(
         {
           success: false,
@@ -147,7 +147,7 @@ export const POST = withAuth<CreateMenuHandlerResponse>(
         { status: 201 }
       );
     } catch (error) {
-      console.error('Menu creation error:', error);
+      console.error('메뉴 생성 오류:', error);
       return NextResponse.json(
         {
           success: false,

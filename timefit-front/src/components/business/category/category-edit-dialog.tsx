@@ -41,7 +41,7 @@ export function CategoryEditDialog({
   useEffect(() => {
     if (category) {
       setCategoryName(category.categoryName);
-      setCategoryNotice(category.categoryNotice);
+      setCategoryNotice(category.categoryNotice ?? '');
       setIsActive(category.isActive);
     }
   }, [category]);

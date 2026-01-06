@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import timefit.common.entity.DayOfWeek;
 import timefit.reservation.entity.QReservation;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
@@ -19,6 +20,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -29,8 +31,8 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
 
     @Override
     public Page<Reservation> findMyReservationsWithFilters(UUID customerId, ReservationStatus status,
-                                                            LocalDate startDate, LocalDate endDate, UUID businessId,
-                                                            Pageable pageable) {
+                                                           LocalDate startDate, LocalDate endDate, UUID businessId,
+                                                           Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
         // 기본 조건: 내 예약만
@@ -171,5 +173,41 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
         }
 
         return orders.toArray(new OrderSpecifier[0]);
+    }
+
+    @Override
+    public List<Reservation> findFutureReservationsByBusinessAndDayOfWeek(
+            UUID businessId,
+            DayOfWeek dayOfWeek,
+            LocalDate currentDate) {
+
+        // 1. DB에서 미래 예약 전체 조회 (요일 필터 제외)
+        List<Reservation> allFutureReservations = queryFactory
+                .selectFrom(reservation)
+                .where(
+                        reservation.business.id.eq(businessId),
+                        reservation.reservationDate.goe(currentDate),
+                        reservation.status.in(
+                                ReservationStatus.PENDING,
+                                ReservationStatus.CONFIRMED
+                        )
+                )
+                .orderBy(
+                        reservation.reservationDate.asc(),
+                        reservation.reservationTime.asc()
+                )
+                .fetch();
+
+        // 2. Java에서 요일 필터링
+        // Java DayOfWeek: MONDAY=1 ~ SUNDAY=7
+        // DayOfWeek enum: SUNDAY=0, MONDAY=1 ~ SATURDAY=6
+        return allFutureReservations.stream()
+                .filter(r -> {
+                    java.time.DayOfWeek javaDayOfWeek = r.getReservationDate().getDayOfWeek();
+                    // Java DayOfWeek를 0-6 범위로 변환 (일요일=0)
+                    int dayValue = (javaDayOfWeek.getValue() % 7); // SUNDAY=7 -> 0, MONDAY=1 -> 1, ...
+                    return dayValue == dayOfWeek.getValue();
+                })
+                .collect(Collectors.toList());
     }
 }

@@ -58,7 +58,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
   endpoint:
     health:
       show-details: always
@@ -73,6 +73,14 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
+
+    hikari:
+      maximum-pool-size: 200
+      minimum-idle: 50
+      connection-timeout: 30000
+      idle-timeout: 600000        # 10분 (유휴 커넥션 유지 시간)
+      max-lifetime: 1800000       # 30분 (커넥션 최대 수명)
+      connection-test-query: SELECT 1
   jpa:
     hibernate:
       ddl-auto: update
@@ -93,9 +101,17 @@ spring:
     username: ${SUPABASE_USER}
     password: ${SUPABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 100     # Supabase Free: 최대 500까지 허용
+      minimum-idle: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
   jpa:
     hibernate:
-      ddl-auto: create-drop # 임시: 초기 배포용
+      ddl-auto: update
     show-sql: false
 
 ---

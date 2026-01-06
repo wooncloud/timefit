@@ -11,7 +11,7 @@ import { withAuth } from '@/lib/api/auth-middleware';
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 if (!BACKEND_URL) {
-  throw new Error('NEXT_PUBLIC_BACKEND_URL is not defined');
+  throw new Error('NEXT_PUBLIC_BACKEND_URL이 정의되지 않았습니다.');
 }
 
 export const GET = withAuth<GetMenuDetailHandlerResponse>(
@@ -67,7 +67,7 @@ export const GET = withAuth<GetMenuDetailHandlerResponse>(
         data: result.data,
       });
     } catch (error) {
-      console.error('Menu detail fetch error:', error);
+      console.error('메뉴 상세 조회 오류:', error);
       return NextResponse.json(
         {
           success: false,
@@ -136,7 +136,7 @@ export const PATCH = withAuth<UpdateMenuHandlerResponse>(
         message: '메뉴가 수정되었습니다',
       });
     } catch (error) {
-      console.error('Menu update error:', error);
+      console.error('메뉴 수정 오류:', error);
       return NextResponse.json(
         {
           success: false,
@@ -199,7 +199,7 @@ export const DELETE = withAuth<DeleteMenuHandlerResponse>(
         message: '메뉴가 삭제되었습니다',
       });
     } catch (error) {
-      console.error('Menu delete error:', error);
+      console.error('메뉴 삭제 오류:', error);
       return NextResponse.json(
         {
           success: false,

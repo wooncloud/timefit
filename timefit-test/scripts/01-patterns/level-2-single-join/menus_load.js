@@ -1,9 +1,9 @@
 /**
  * ========================================
- * Level 2: single-join - 메뉴 목록 조회 부하 테스트
+ * Load Test - 일상적 부하 성능 확인
  * ========================================
  *
- * 목적: JOIN 1개 포함 쿼리의 성능 측정 및 Level 1과 비교
+ * 목적: JOIN 1개 포함 쿼리의 평균 부하 성능 측정
  *
  * API: GET /api/business/{businessId}/menu
  * 쿼리:
@@ -12,21 +12,19 @@
  * JOIN: 1개 (business_category)
  * 권한: 인증 필요 (JWT 토큰)
  *
- * 테스트 시나리오:
- * - Stage 1: VU 50 (1분) - 워밍업
- * - Stage 2: VU 200 (3분) - 목표 부하 유지
- * - Stage 3: VU 0 (30초) - 종료
- *
- * 예상 결과:
- * - avg: 60-100ms (Level 1의 3배)
- * - p95: < 200ms
- * - TPS: 100+ (Level 1보다 낮음)
- * - 에러율: < 1%
+ * 근거:
+ * - VU 100: 일상적 부하 (실제 예상 피크 120명의 83%)
+ * - JOIN 1개 추가 시 Level 1 대비 성능 비교
+ *   → Level 1 (no-join): p95 ~ 50-80ms
+ *   → Level 2 (single-join): p95 ~ 80-150ms (예상)
  *
  * 학습 포인트:
  * - "JOIN 1개 추가하면 얼마나 느려지는가?"
- * - "Level 1 대비 3배 느린가?"
- * - "VU 한계가 낮아지는가?"
+ * - "Level 1 대비 성능 차이는?"
+ * - "VU 100에서도 안정적인가?"
+ *
+ * 실행 주기: 매일/매주 (메뉴 조회 로직 변경 시)
+ * 소요 시간: 5분
  */
 
 import http from 'k6/http';
@@ -40,19 +38,15 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 const errorRate = new Rate('errors');
 const menuDuration = new Trend('menu_query_duration');
 
-// 테스트 옵션 - Load Test
+// 테스트 옵션
 export const options = {
     stages: [
-        { duration: '30s', target: 50 },   // 워밍업: 50 VU
-        { duration: '30s', target: 50 },   // 안정: 50 VU
-        { duration: '30s', target: 200 },  // 증가: 200 VU
-        { duration: '3m', target: 200 },   // 유지: 200 VU (목표 부하)
-        { duration: '30s', target: 0 },    // 종료
+        { duration: '1m', target: 100 },   // Ramp up: 점진적 증가
+        { duration: '3m', target: 100 },   // Steady state: 안정 상태
+        { duration: '1m', target: 0 },     // Ramp down: 정상 종료
     ],
     thresholds: {
-        // JOIN 1개: p95 < 200ms
-        'http_req_duration': ['p(95)<200'],
-        // 에러율 1% 미만
+        'http_req_duration': ['p(95)<300'],
         'http_req_failed': ['rate<0.01'],
         'errors': ['rate<0.01'],
     },
@@ -68,11 +62,10 @@ const BUSINESS_IDS = [
 // Setup: 로그인하여 JWT 토큰 획득
 export function setup() {
     console.log('========================================');
-    console.log('Level 2: single-join - 메뉴 목록 조회 부하 테스트');
+    console.log('Level 2: single-join - Load Test');
     console.log('========================================');
     console.log(`Target URL: ${BASE_URL}`);
     console.log('API: GET /api/business/{businessId}/menu');
-    console.log('권한: 인증 필요 (JWT 토큰)');
     console.log('');
 
     // 로그인
@@ -90,20 +83,11 @@ export function setup() {
     }
 
     const body = JSON.parse(loginRes.body);
-    console.log('✅ 로그인 성공 - 토큰 획득');
+    console.log('✅ 로그인 성공');
     console.log('');
-    console.log('테스트 패턴: Load Test');
-    console.log('  - Stage 1: VU 50 (1분) - 워밍업');
-    console.log('  - Stage 2: VU 200 (3분) - 목표 부하');
-    console.log('');
-    console.log('목표:');
-    console.log('  - p95 < 200ms');
-    console.log('  - TPS: 100+');
-    console.log('  - 에러율 < 1%');
-    console.log('');
-    console.log('학습 목표:');
-    console.log('  - JOIN 1개 추가 시 성능 비교');
-    console.log('  - Level 1 대비 얼마나 느린가?');
+    console.log('목표: VU 100에서 JOIN 1개 쿼리 성능 확인');
+    console.log('  - Level 1과 성능 비교');
+    console.log('  - p95 < 300ms 달성');
     console.log('========================================');
     console.log('');
 
@@ -133,7 +117,7 @@ export default function (data) {
     const success = check(res, {
         '상태 코드 200': (r) => r.status === 200,
         '응답 본문 존재': (r) => r.body && r.body.length > 0,
-        '응답 시간 < 200ms': (r) => r.timings.duration < 200,
+        '응답 시간 < 300ms': (r) => r.timings.duration < 300,
     });
 
     errorRate.add(!success);
@@ -145,16 +129,12 @@ export default function (data) {
 // Teardown: 테스트 종료 후 정보 출력
 export function teardown(data) {
     console.log('');
-    console.log('========================================');
-    console.log('Level 2 Load Test 완료');
-    console.log('========================================');
+    console.log('✅ Load Test 완료');
     console.log('');
     console.log('분석 포인트:');
     console.log('  - Level 1과 비교: 얼마나 느렸나요?');
-    console.log('  - JOIN 1개 추가 = 응답 시간 3배?');
-    console.log('  - VU 200에서도 안정적이었나요?');
+    console.log('  - VU 100에서도 안정적이었나요?');
     console.log('');
-    console.log('다음 단계:');
-    console.log('  npm run test:pattern:l2:stress');
+    console.log('다음 단계: npm run test:pattern:l2:stress');
     console.log('');
 }

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 
-import { clearAccessTokenCookie } from '@/lib/cookie';
 import { SessionData, sessionOptions } from '@/lib/session/options';
 
 export async function POST(request: NextRequest) {
@@ -21,12 +20,11 @@ export async function POST(request: NextRequest) {
     );
 
     session.destroy();
-
-    await clearAccessTokenCookie();
+    await session.save(); // 쿠키 삭제를 위해 저장 필요
 
     return responseJson;
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error('로그아웃 오류:', error);
     return NextResponse.json(
       {
         success: false,

@@ -1,0 +1,165 @@
+### ================================================================
+### Timefit Business 생성 시 영업시간 자동 초기화 테스트
+### 📝 테스트 시나리오:
+###    1. 회원가입 (새 사장 계정)
+###    2. 업체 생성
+###    3. 영업시간 조회 → 기본값이 자동 설정되어 있는지 확인
+###       - 월~금 (dayOfWeek: 1~5): 09:00-18:00 (영업)
+###       - 토~일 (dayOfWeek: 6, 0): 휴무 (isClosed: true)
+### ================================================================
+###
+### 🔢 dayOfWeek 매핑:
+###    0=일요일, 1=월요일, 2=화요일, 3=수요일, 4=목요일, 5=금요일, 6=토요일
+###
+### 🎯 테스트 목적:
+###    BusinessCommandService.createBusiness()에서
+###    BusinessHoursDefaultConfig.createDefaultBusinessHours()를 호출하여
+###    영업시간이 자동 초기화되는지 검증
+###
+### ✅ 기대 결과:
+###    - Business 생성 직후 영업시간 조회 시 7개 요일 데이터 존재
+###    - 월~금 (1~5): openTime="09:00", closeTime="18:00", isClosed=false
+###    - 토~일 (0, 6): openTime=null, closeTime=null, isClosed=true
+### ================================================================
+
+@baseUrl = http://localhost:8080
+
+### ================================================================
+### 1. 회원가입 (새 사장 계정)
+### ================================================================
+
+# @name 회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test-owner-openhours@timefit.com",
+  "password": "password123",
+  "name": "영업시간테스트사장",
+  "phoneNumber": "010-9999-8888"
+}
+
+> {%
+    client.test("회원가입 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+    });
+
+    if (response.body.data && response.body.data.accessToken) {
+        client.global.set("ownerToken", response.body.data.accessToken);
+        console.log("✅ [1/3] 회원가입 성공");
+        console.log("   - 이름:", response.body.data.name);
+        console.log("   - 이메일:", response.body.data.email);
+    } else {
+        console.error("❌ 회원가입 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 2. 업체 생성
+### ================================================================
+
+# @name 업체생성
+POST {{baseUrl}}/api/business
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessName": "타임핏 자동초기화 테스트샵",
+  "businessTypes": ["BD008"],
+  "businessNumber": "999-88-77777",
+  "address": "서울시 서초구 테스트로 123",
+  "contactPhone": "02-9999-8888",
+  "description": "영업시간 자동 초기화 테스트용 업체"
+}
+
+> {%
+    client.test("업체 생성 성공", function() {
+        client.assert(response.status === 201, "응답 코드가 201이어야 함");
+    });
+
+    if (response.body.data && response.body.data.businessId) {
+        client.global.set("businessId", response.body.data.businessId);
+        console.log("✅ [2/3] 업체 생성 성공");
+        console.log("   - Business ID:", response.body.data.businessId);
+        console.log("   - 업체명:", response.body.data.businessName);
+        console.log("   - 권한:", response.body.data.myRole);
+    } else {
+        console.error("❌ 업체 생성 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 3. 영업시간 조회 → 기본값 자동 설정 확인
+### ================================================================
+
+# @name 영업시간조회_자동초기화확인
+GET {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("영업시간 조회 성공", function() {
+        client.assert(response.status === 200, "응답 코드가 200이어야 함");
+    });
+
+    if (response.status === 200) {
+        console.log("✅ [3/3] 영업시간 자동 초기화 확인");
+        console.log("   - Business:", response.body.data.businessName);
+
+        const schedules = response.body.data.schedules;
+
+        // 전체 7개 요일 데이터 존재 확인
+        client.test("7개 요일 데이터 존재", function() {
+            client.assert(schedules.length === 7, "7개 요일 데이터가 있어야 함");
+        });
+        console.log("   ✓ 7개 요일 데이터 확인:", schedules.length + "개");
+
+        // 월~금 확인 (dayOfWeek: 1~5)
+        const weekdays = schedules.filter(s => s.dayOfWeek >= 1 && s.dayOfWeek <= 5);
+        console.log("\n   [월~금 영업시간 확인]");
+        weekdays.forEach(day => {
+            const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+            console.log("   - " + dayNames[day.dayOfWeek] + "요일: " +
+                day.openTime + "~" + day.closeTime +
+                " (휴무: " + day.isClosed + ")");
+
+            // 검증: 월~금은 09:00-18:00, isClosed=false
+            client.assert(day.openTime === "09:00", dayNames[day.dayOfWeek] + "요일 오픈 시간이 09:00이어야 함");
+            client.assert(day.closeTime === "18:00", dayNames[day.dayOfWeek] + "요일 마감 시간이 18:00이어야 함");
+            client.assert(day.isClosed === false, dayNames[day.dayOfWeek] + "요일은 영업이어야 함");
+        });
+
+        // 토~일 확인 (dayOfWeek: 0, 6)
+        const weekends = schedules.filter(s => s.dayOfWeek === 0 || s.dayOfWeek === 6);
+        console.log("\n   [토~일 휴무 확인]");
+        weekends.forEach(day => {
+            const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+            console.log("   - " + dayNames[day.dayOfWeek] + "요일: 휴무 (" + day.isClosed + ")");
+
+            // 검증: 토~일은 isClosed=true
+            client.assert(day.isClosed === true, dayNames[day.dayOfWeek] + "요일은 휴무여야 함");
+        });
+
+        console.log("\n   🎉 영업시간 자동 초기화 성공!");
+        console.log("   ✓ 업체 생성 직후 기본 영업시간이 자동으로 설정됨");
+
+    } else {
+        console.error("❌ 영업시간 조회 실패:", response.status, response.body);
+    }
+%}
+
+###
+
+### ================================================================
+### 🎉 테스트 완료 체크리스트
+### ================================================================
+### ✅ 1. 회원가입 성공
+### ✅ 2. 업체 생성 성공
+### ✅ 3. 영업시간 자동 초기화 확인
+###    - 7개 요일 데이터 존재
+###    - 월~금 (dayOfWeek: 1~5): 09:00-18:00 (영업)
+###    - 토~일 (dayOfWeek: 0, 6): 휴무
+### ================================================================
