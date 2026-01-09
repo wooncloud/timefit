@@ -86,13 +86,13 @@ import java.lang.annotation.Target;
         name = "businessId",
         description = "업체 ID",
         required = true,
-        example = "550e8400-e29b-41d4-a716-446655440001"
+        example = "30000000-0000-0000-0000-000000000001"
 )
 @Parameter(
         name = "categoryId",
         description = "카테고리 ID",
         required = true,
-        example = "550e8400-e29b-41d4-a716-446655440000"
+        example = "10000000-0000-0000-0000-000000000001"
 )
 public @interface UpdateCategoryOperation {
 }

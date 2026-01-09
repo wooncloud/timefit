@@ -19,19 +19,19 @@ public class AuthResponseDto {
     public record UserSignUp(
             @Schema(
                     description = "사용자 고유 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440000"
+                    example = "10000000-0000-0000-0000-000000000001"
             )
             UUID userId,
 
             @Schema(
                     description = "사용자 이메일",
-                    example = "user@example.com"
+                    example = "owner1@timefit.com"
             )
             String email,
 
             @Schema(
                     description = "사용자 이름",
-                    example = "홍길동",
+                    example = "Owner Kim",
                     minLength = 2,
                     maxLength = 50
             )
@@ -39,7 +39,7 @@ public class AuthResponseDto {
 
             @Schema(
                     description = "사용자 연락처",
-                    example = "010-1234-5678",
+                    example = "010-1111-1111",
                     nullable = true
             )
             String phoneNumber,
@@ -107,19 +107,19 @@ public class AuthResponseDto {
     public record UserSignIn(
             @Schema(
                     description = "사용자 고유 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440000"
+                    example = "10000000-0000-0000-0000-000000000001"
             )
             UUID userId,
 
             @Schema(
                     description = "사용자 이메일",
-                    example = "user@example.com"
+                    example = "owner1@timefit.com"
             )
             String email,
 
             @Schema(
                     description = "사용자 이름",
-                    example = "홍길동",
+                    example = "Owner Kim",
                     minLength = 2,
                     maxLength = 50
             )
@@ -127,7 +127,7 @@ public class AuthResponseDto {
 
             @Schema(
                     description = "사용자 연락처",
-                    example = "010-1234-5678",
+                    example = "010-1111-1111",
                     nullable = true
             )
             String phoneNumber,
@@ -203,26 +203,26 @@ public class AuthResponseDto {
     public record CustomerOAuth(
             @Schema(
                     description = "사용자 고유 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440000"
+                    example = "10000000-0000-0000-0000-000000000001"
             )
             UUID userId,
 
             @Schema(
                     description = "사용자 이메일",
-                    example = "user@example.com",
+                    example = "owner1@timefit.com",
                     nullable = true
             )
             String email,
 
             @Schema(
                     description = "사용자 이름",
-                    example = "홍길동"
+                    example = "Owner Kim"
             )
             String name,
 
             @Schema(
                     description = "사용자 연락처",
-                    example = "010-1234-5678",
+                    example = "010-1111-1111",
                     nullable = true
             )
             String phoneNumber,
@@ -340,7 +340,7 @@ public class AuthResponseDto {
     public record BusinessInfo(
             @Schema(
                     description = "업체 고유 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
@@ -369,7 +369,7 @@ public class AuthResponseDto {
 
             @Schema(
                     description = "업체 연락처",
-                    example = "02-1234-5678",
+                    example = "02-1111-1111",
                     nullable = true
             )
             String contactPhone,

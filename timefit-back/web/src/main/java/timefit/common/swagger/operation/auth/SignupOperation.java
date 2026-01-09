@@ -57,10 +57,10 @@ import java.lang.annotation.Target;
                         {
                           "success": true,
                           "data": {
-                            "userId": "550e8400-e29b-41d4-a716-446655440000",
-                            "email": "user@example.com",
-                            "name": "홍길동",
-                            "phoneNumber": "010-1234-5678",
+                            "userId": "10000000-0000-0000-0000-000000000001",
+                            "email": "owner1@timefit.com",
+                            "name": "Owner Kim",
+                            "phoneNumber": "010-1111-1111",
                             "role": "CUSTOMER",
                             "profileImageUrl": null,
                             "accessToken": "eyJhbGciOiJIUzI1NiJ9...",

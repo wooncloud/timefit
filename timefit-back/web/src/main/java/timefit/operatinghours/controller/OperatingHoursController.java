@@ -31,7 +31,7 @@ public class OperatingHoursController {
     @GetOperatingHoursOperation
     @GetMapping
     public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHours>> getOperatingHours(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId) {
 
         log.info("영업시간 조회 요청: businessId={}", businessId);
@@ -45,7 +45,7 @@ public class OperatingHoursController {
     @SetOperatingHoursOperation
     @PutMapping
     public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHours>> setOperatingHours(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @SetOperatingHoursRequestBody
             @Valid @RequestBody OperatingHoursRequestDto.SetOperatingHours request,
@@ -70,7 +70,7 @@ public class OperatingHoursController {
      */
     @PatchMapping("/{dayOfWeek}/toggle")
     public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHours>> toggleBusinessDayOpenStatus(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(description = "요일 (0=일요일, 1=월요일, ..., 6=토요일)", required = true, example = "0")
             @PathVariable @Min(0) @Max(6) Integer dayOfWeek,
@@ -91,7 +91,7 @@ public class OperatingHoursController {
     @ResetOperatingHoursOperation
     @PatchMapping("/reset")
     public ResponseEntity<ResponseData<OperatingHoursResponseDto.OperatingHours>> resetToDefault(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {

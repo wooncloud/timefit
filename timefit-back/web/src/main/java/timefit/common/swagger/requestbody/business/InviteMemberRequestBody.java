@@ -17,7 +17,7 @@ import java.lang.annotation.*;
                 examples = @ExampleObject(
                         value = """
                     {
-                      "email": "newmember@example.com"
+                      "email": "customer1@timefit.com"
                     }
                     """
                 )

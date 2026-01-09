@@ -21,13 +21,13 @@ public class BusinessResponseDto {
     public record BusinessResponse(
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
             @Schema(
                     description = "업체명",
-                    example = "홍길동 미용실"
+                    example = "Owner Kim 미용실"
             )
             String businessName,
 
@@ -45,7 +45,7 @@ public class BusinessResponseDto {
 
             @Schema(
                     description = "대표자명",
-                    example = "홍길동"
+                    example = "Owner Kim"
             )
             String ownerName,
 
@@ -57,7 +57,7 @@ public class BusinessResponseDto {
 
             @Schema(
                     description = "업체 연락처",
-                    example = "02-1234-5678"
+                    example = "02-1111-1111"
             )
             String contactPhone,
 
@@ -129,13 +129,13 @@ public class BusinessResponseDto {
     public record PublicBusinessResponse(
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
             @Schema(
                     description = "업체명",
-                    example = "홍길동 미용실"
+                    example = "Owner Kim 미용실"
             )
             String businessName,
 
@@ -147,7 +147,7 @@ public class BusinessResponseDto {
 
             @Schema(
                     description = "대표자명",
-                    example = "홍길동"
+                    example = "Owner Kim"
             )
             String ownerName,
 
@@ -159,7 +159,7 @@ public class BusinessResponseDto {
 
             @Schema(
                     description = "업체 연락처",
-                    example = "02-1234-5678"
+                    example = "02-1111-1111"
             )
             String contactPhone,
 
@@ -219,13 +219,13 @@ public class BusinessResponseDto {
         public record BusinessItem(
                 @Schema(
                         description = "업체 ID",
-                        example = "550e8400-e29b-41d4-a716-446655440001"
+                        example = "30000000-0000-0000-0000-000000000001"
                 )
                 UUID businessId,
 
                 @Schema(
                         description = "업체명",
-                        example = "홍길동 미용실"
+                        example = "Owner Kim 미용실"
                 )
                 String businessName,
 
@@ -289,13 +289,13 @@ public class BusinessResponseDto {
     public record MemberListResponse(
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
             @Schema(
                     description = "업체명",
-                    example = "홍길동 미용실"
+                    example = "Owner Kim 미용실"
             )
             String businessName,
 
@@ -349,7 +349,7 @@ public class BusinessResponseDto {
 
                 @Schema(
                         description = "초대자 이름",
-                        example = "홍길동",
+                        example = "Owner Kim",
                         nullable = true
                 )
                 String invitedByName,
@@ -410,19 +410,19 @@ public class BusinessResponseDto {
     public record DeleteBusinessResponse(
             @Schema(
                     description = "삭제된 업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
             @Schema(
                     description = "업체명",
-                    example = "홍길동 미용실"
+                    example = "Owner Kim 미용실"
             )
             String businessName,
 
             @Schema(
                     description = "삭제 처리 시각",
-                    example = "2025-11-23T16:00:00"
+                    example = "2025-11-23T14:00:00"
             )
             LocalDateTime deletedAt,
 

@@ -20,9 +20,9 @@ import java.lang.annotation.*;
                       "businessName": "타임핏 헤어샵",
                       "businessTypes": ["BD008"],
                       "businessNumber": "123-45-67890",
-                      "ownerName": "김철수",
-                      "address": "서울시 강남구 테헤란로 456",
-                      "contactPhone": "02-9876-5432",
+                      "ownerName": "Owner Kim",
+                      "address": "Seoul Gangnam 456",
+                      "contactPhone": "02-2222-2222",
                       "description": "트렌디한 헤어 디자인 전문",
                       "logoUrl": "https://example.com/new-logo.png",
                       "businessNotice": "주차 가능합니다"

@@ -18,9 +18,9 @@ import java.lang.annotation.*;
                 examples = @ExampleObject(
                         value = """
                     {
-                      "reservationDate": "2025-12-02",
-                      "reservationTime": "15:00:00",
-                      "customerPhone": "01087654321",
+                      "reservationDate": "2025-01-11",
+                      "reservationTime": "10:00:00",
+                      "customerPhone": "010-2222-0001",
                       "notes": "시간 변경 요청합니다",
                       "reason": "개인 사정으로 시간 변경"
                     }

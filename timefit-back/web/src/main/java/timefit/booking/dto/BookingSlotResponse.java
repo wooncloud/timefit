@@ -64,19 +64,19 @@ public class BookingSlotResponse {
     public record BookingSlot(
             @Schema(
                     description = "슬롯 고유 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440003"
+                    example = "50000000-0000-0000-0000-000000000001"
             )
             UUID slotId,
 
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
             @Schema(
                     description = "연결된 메뉴 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440002"
+                    example = "60000000-0000-0000-0000-000000000001"
             )
             UUID menuId,
 
@@ -88,7 +88,7 @@ public class BookingSlotResponse {
 
             @Schema(
                     description = "슬롯 날짜",
-                    example = "2025-12-01"
+                    example = "2025-01-10"
             )
             LocalDate slotDate,
 
@@ -146,19 +146,19 @@ public class BookingSlotResponse {
     public record BookingSlotList(
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
             @Schema(
                     description = "조회 시작 날짜",
-                    example = "2025-12-01"
+                    example = "2025-01-10"
             )
             LocalDate startDate,
 
             @Schema(
                     description = "조회 종료 날짜",
-                    example = "2025-12-31"
+                    example = "2025-01-31"
             )
             LocalDate endDate,
 

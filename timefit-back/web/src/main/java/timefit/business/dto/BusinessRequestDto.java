@@ -14,7 +14,7 @@ public class BusinessRequestDto {
     public record CreateBusinessRequest(
             @Schema(
                     description = "업체명",
-                    example = "홍길동 미용실",
+                    example = "Owner Kim 미용실",
                     requiredMode = Schema.RequiredMode.REQUIRED,
                     minLength = 2,
                     maxLength = 100
@@ -45,7 +45,7 @@ public class BusinessRequestDto {
 
             @Schema(
                     description = "대표자명",
-                    example = "홍길동",
+                    example = "Owner Kim",
                     maxLength = 50
             )
             @Size(max = 50, message = "대표자명은 50자 이하여야 합니다")
@@ -63,7 +63,7 @@ public class BusinessRequestDto {
 
             @Schema(
                     description = "업체 연락처",
-                    example = "02-1234-5678",
+                    example = "02-1111-1111",
                     requiredMode = Schema.RequiredMode.REQUIRED,
                     maxLength = 20
             )
@@ -99,7 +99,7 @@ public class BusinessRequestDto {
     public record UpdateBusinessRequest(
             @Schema(
                     description = "업체명",
-                    example = "홍길동 헤어샵",
+                    example = "Owner Kim 헤어샵",
                     nullable = true,
                     minLength = 2,
                     maxLength = 100
@@ -127,7 +127,7 @@ public class BusinessRequestDto {
 
             @Schema(
                     description = "대표자명",
-                    example = "홍길동",
+                    example = "Owner Kim",
                     nullable = true,
                     maxLength = 50
             )
@@ -145,7 +145,7 @@ public class BusinessRequestDto {
 
             @Schema(
                     description = "업체 연락처",
-                    example = "02-1234-5678",
+                    example = "02-1111-1111",
                     nullable = true,
                     maxLength = 20
             )

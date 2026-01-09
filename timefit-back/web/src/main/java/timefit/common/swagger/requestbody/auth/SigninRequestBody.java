@@ -24,8 +24,8 @@ import java.lang.annotation.Target;
                 examples = @ExampleObject(
                         value = """
                     {
-                      "email": "user@example.com",
-                      "password": "a12345678"
+                      "email": "owner1@timefit.com",
+                      "password": "password123"
                     }
                     """
                 )

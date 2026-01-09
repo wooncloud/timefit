@@ -51,8 +51,8 @@ import java.lang.annotation.Target;
                                           "data": {
                                             "categories": [
                                               {
-                                                "categoryId": "550e8400-e29b-41d4-a716-446655440000",
-                                                "businessId": "550e8400-e29b-41d4-a716-446655440001",
+                                                "categoryId": "10000000-0000-0000-0000-000000000001",
+                                                "businessId": "30000000-0000-0000-0000-000000000001",
                                                 "businessType": "BD008",
                                                 "categoryName": "헤어 컷",
                                                 "categoryNotice": "예약 시 주의사항을 확인해주세요.",
@@ -81,7 +81,7 @@ import java.lang.annotation.Target;
         name = "businessId",
         description = "업체 ID",
         required = true,
-        example = "550e8400-e29b-41d4-a716-446655440001"
+        example = "30000000-0000-0000-0000-000000000001"
 )
 @Parameter(
         name = "businessType",

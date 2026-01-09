@@ -13,13 +13,13 @@ public class OperatingHoursResponseDto {
     public record OperatingHours(
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
             @Schema(
                     description = "업체명",
-                    example = "홍길동 미용실"
+                    example = "Owner Kim 미용실"
             )
             String businessName,
 

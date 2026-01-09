@@ -13,7 +13,7 @@ public class AuthRequestDto {
     public record UserSignUp(
             @Schema(
                     description = "사용자 이메일 (로그인 ID)",
-                    example = "user@example.com",
+                    example = "owner1@timefit.com",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotBlank(message = "이메일은 필수입니다")
@@ -22,7 +22,7 @@ public class AuthRequestDto {
 
             @Schema(
                     description = "사용자 비밀번호 (최소 8자)",
-                    example = "a12345678",
+                    example = "password123",
                     requiredMode = Schema.RequiredMode.REQUIRED,
                     minLength = 8
             )
@@ -32,7 +32,7 @@ public class AuthRequestDto {
 
             @Schema(
                     description = "사용자 이름",
-                    example = "홍길동",
+                    example = "Owner Kim",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotBlank(message = "이름은 필수입니다")
@@ -40,7 +40,7 @@ public class AuthRequestDto {
 
             @Schema(
                     description = "사용자 연락처",
-                    example = "010-1234-5678",
+                    example = "010-1111-1111",
                     nullable = true
             )
             String phoneNumber
@@ -51,7 +51,7 @@ public class AuthRequestDto {
     public record UserSignIn(
             @Schema(
                     description = "사용자 이메일",
-                    example = "user@example.com",
+                    example = "owner1@timefit.com",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotBlank(message = "이메일은 필수입니다")
@@ -60,7 +60,7 @@ public class AuthRequestDto {
 
             @Schema(
                     description = "사용자 비밀번호",
-                    example = "a12345678",
+                    example = "password123",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotBlank(message = "비밀번호는 필수입니다")
@@ -88,7 +88,7 @@ public class AuthRequestDto {
 
             @Schema(
                     description = "OAuth 제공자의 사용자 고유 ID",
-                    example = "1234567890",
+                    example = "123-45-67890",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotBlank(message = "OAuth ID는 필수입니다")

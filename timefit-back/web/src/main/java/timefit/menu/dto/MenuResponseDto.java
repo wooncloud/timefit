@@ -19,13 +19,13 @@ public class MenuResponseDto {
     public record Menu(
             @Schema(
                     description = "메뉴 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440000"
+                    example = "10000000-0000-0000-0000-000000000001"
             )
             UUID menuId,
 
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
@@ -37,7 +37,7 @@ public class MenuResponseDto {
 
             @Schema(
                     description = "카테고리 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440002"
+                    example = "60000000-0000-0000-0000-000000000001"
             )
             UUID businessCategoryId,
 

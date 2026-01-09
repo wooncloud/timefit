@@ -26,7 +26,7 @@ public class BookingSlotRequest {
     public record BookingSlot(
             @Schema(
                     description = "예약 슬롯을 생성할 메뉴 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440002",
+                    example = "60000000-0000-0000-0000-000000000001",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotNull(message = "메뉴 ID는 필수입니다")
