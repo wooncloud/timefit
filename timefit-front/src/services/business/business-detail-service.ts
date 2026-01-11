@@ -4,7 +4,7 @@ import type {
   GetBusinessDetailApiResponse,
   PublicBusinessDetail,
 } from '@/types/business/business-detail';
-import { getServerSession } from '@/lib/session/server';
+import { apiFetch } from '@/lib/api/api-fetch';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -15,15 +15,10 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 export async function getBusinessDetail(
   businessId: string
 ): Promise<PublicBusinessDetail> {
-  const session = await getServerSession();
-
-  const response = await fetch(`${BACKEND_URL}/api/business/${businessId}`, {
-    headers: {
-      Authorization: `Bearer ${session.user?.accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    cache: 'no-store',
-  });
+  const response = await apiFetch(
+    `${BACKEND_URL}/api/business/${businessId}`,
+    { method: 'GET' }
+  );
 
   if (!response.ok) {
     throw new Error('업체 상세 정보를 가져오는 데 실패했습니다.');
