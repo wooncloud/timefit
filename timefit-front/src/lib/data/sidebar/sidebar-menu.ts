@@ -6,8 +6,8 @@ export const navItems = [
     icon: House,
     isActive: true,
     items: [
-      { title: '대시보드', url: '/business' },
-      { title: '캘린더', url: '/business/calendar' },
+      { title: '대시보드', url: '/b' },
+      { title: '캘린더', url: '/b/calendar' },
     ],
   },
   {
@@ -15,10 +15,10 @@ export const navItems = [
     icon: Store,
     isActive: true,
     items: [
-      { title: '영업 일정', url: '/business/schedule' },
-      { title: '카테고리', url: '/business/category' },
-      { title: '서비스/상품', url: '/business/product' },
-      { title: '예약 현황', url: '/business/reservations' },
+      { title: '영업 일정', url: '/b/schedule' },
+      { title: '카테고리', url: '/b/category' },
+      { title: '서비스/상품', url: '/b/product' },
+      { title: '예약 현황', url: '/b/reservations' },
     ],
   },
   {
@@ -26,9 +26,9 @@ export const navItems = [
     icon: User,
     isActive: true,
     items: [
-      { title: '고객 목록', url: '/business/customers' },
-      // { title: '고객 채팅', url: '/business/customers/chat' },
-      // { title: '공지', url: '/business/customers/notice' },
+      { title: '고객 목록', url: '/b/customers' },
+      // { title: '고객 채팅', url: '/b/customers/chat' },
+      // { title: '공지', url: '/b/customers/notice' },
     ],
   },
   {
@@ -36,8 +36,8 @@ export const navItems = [
     icon: Settings2,
     isActive: true,
     items: [
-      { title: '업체 정보', url: '/business/settings' },
-      { title: '팀 관리', url: '/business/settings/team' },
+      { title: '업체 정보', url: '/b/settings' },
+      { title: '팀 관리', url: '/b/settings/team' },
     ],
   },
 ];

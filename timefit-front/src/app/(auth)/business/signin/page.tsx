@@ -38,7 +38,7 @@ export default function BusinessSignInPage() {
             </h1>
             <div className="text-center text-sm">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="underline underline-offset-4">
+              <Link href="/business/signup" className="underline underline-offset-4">
                 Sign up
               </Link>
             </div>
@@ -114,7 +114,7 @@ export default function BusinessSignInPage() {
           </div>
           <hr />
           <div className="*:[a]:hover:text-primary *:[a]:underline *:[a]:underline-offset-4 text-balance text-center text-xs text-muted-foreground">
-            Go back to Homepage - <Link href="/">Timefit</Link>.
+            Go back to Homepage - <Link href="/business">Timefit</Link>.
           </div>
         </form>
       </div>

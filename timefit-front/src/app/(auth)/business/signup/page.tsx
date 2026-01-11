@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { CalendarClock } from 'lucide-react';
 
@@ -9,10 +8,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 
 export default function SignUpPage() {
-  const [isBusiness, setIsBusiness] = useState(false);
   const {
     formData,
     errors,
@@ -20,7 +17,7 @@ export default function SignUpPage() {
     message,
     handleInputChange,
     handleSubmit,
-  } = useSignup({ isBusiness });
+  } = useSignup();
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
@@ -41,7 +38,7 @@ export default function SignUpPage() {
             </h1>
             <div className="text-center text-sm">
               Already have an account?{' '}
-              <a href="/signin" className="underline underline-offset-4">
+              <a href="/business/signin" className="underline underline-offset-4">
                 Sign in
               </a>
             </div>
@@ -142,24 +139,9 @@ export default function SignUpPage() {
               <span className="text-sm text-red-500">{errors.phoneNumber}</span>
             )}
           </div>
-          <div className="flex items-center">
-            <Switch
-              id="businessRegister"
-              checked={isBusiness}
-              onCheckedChange={() => {
-                setIsBusiness(!isBusiness);
-              }}
-            />
-            <Label htmlFor="businessRegister" className="ms-2">
-              사업자로 회원가입
-            </Label>
-          </div>
+
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading
-              ? '회원가입 중...'
-              : isBusiness
-                ? '사업자 회원가입'
-                : '회원가입'}
+            {isLoading ? '회원가입 중...' : '사업자 회원가입'}
           </Button>
 
           {/* <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
@@ -184,7 +166,7 @@ export default function SignUpPage() {
           </div>
           <hr />
           <div className="*:[a]:hover:text-primary *:[a]:underline *:[a]:underline-offset-4 text-balance text-center text-xs text-muted-foreground">
-            Go back to Homepage - <Link href="/">Timefit</Link>.
+            Go back to Homepage - <Link href="/business">Timefit</Link>.
           </div>
         </form>
       </div>

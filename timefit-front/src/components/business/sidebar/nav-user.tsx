@@ -41,7 +41,7 @@ export function NavUser() {
       });
 
       if (response.ok) {
-        router.push('/');
+        router.push('/business');
         router.refresh();
       } else {
         console.error('로그아웃 실패');

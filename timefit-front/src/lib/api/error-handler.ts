@@ -34,7 +34,7 @@ export function handleApiError<T = unknown>(
         success: false,
         message,
         requiresLogout: true,
-        redirectTo: '/',
+        redirectTo: '/business',
       } as T,
       { status: 401 }
     );

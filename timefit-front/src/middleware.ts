@@ -7,9 +7,6 @@ import type { SessionData, SessionUser } from '@/lib/session/options';
 import { isTokenExpired } from '@/lib/utils/jwt';
 
 export async function middleware(request: NextRequest) {
-  const userAgent = request.headers.get('user-agent') || '';
-  const isMobile = /Mobile|Android|iPhone|iPad|Windows Phone/i.test(userAgent);
-
   const url = request.nextUrl.clone();
   const pathname = url.pathname;
 
@@ -19,12 +16,6 @@ export async function middleware(request: NextRequest) {
     pathname.includes('.')
   ) {
     return NextResponse.next();
-  }
-
-  // 2. 모바일 리다이렉트 처리
-  if (isMobile && pathname === '/') {
-    url.pathname = '/m';
-    return NextResponse.redirect(url);
   }
 
   // 3. 세션 토큰 리프레시 로직

@@ -13,13 +13,12 @@ import { formatPhoneNumber } from '@/lib/formatters/phone-formatter';
 import { validateSignupForm } from '@/lib/validators/auth-validators';
 
 interface UseSignupOptions {
-  isBusiness?: boolean;
   onSuccess?: () => void;
   onError?: (error: string) => void;
 }
 
 export function useSignup(options: UseSignupOptions = {}) {
-  const { isBusiness = false, onSuccess, onError } = options;
+  const { onSuccess, onError } = options;
   const router = useRouter();
 
   const [formData, setFormData] = useState<SignupFormData>({
@@ -79,14 +78,7 @@ export function useSignup(options: UseSignupOptions = {}) {
       const data = await authService.signup(requestBody);
 
       if (data.success) {
-        if (isBusiness) {
-          router.push('/signup/business');
-        } else {
-          setMessage('회원가입이 완료되었습니다. 메인 페이지로 이동합니다.');
-          setTimeout(() => {
-            router.push('/');
-          }, 2000);
-        }
+        router.push('/business/signup/step2');
         onSuccess?.();
       } else {
         const errorMessage = data.message || '회원가입에 실패했습니다.';
