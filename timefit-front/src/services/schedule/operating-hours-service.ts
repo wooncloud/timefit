@@ -27,7 +27,6 @@ export async function getOperatingHours(
 
   const result: GetOperatingHoursApiResponse = await response.json();
 
-
   if (!result.data) {
     throw new Error('영업시간 데이터를 찾을 수 없습니다.');
   }

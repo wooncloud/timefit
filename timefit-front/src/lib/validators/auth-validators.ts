@@ -79,11 +79,3 @@ export function validateSigninForm(
     errors,
   };
 }
-
-/**
- * 초기 로그인 폼 데이터
- */
-export const initialSigninForm: SigninFormData = {
-  email: '',
-  password: '',
-};

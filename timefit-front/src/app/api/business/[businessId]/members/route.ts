@@ -38,8 +38,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message:
-            responseData.message || '구성원 목록을 가져올 수 없습니다.',
+          message: responseData.message || '구성원 목록을 가져올 수 없습니다.',
         },
         { status: response.status }
       );

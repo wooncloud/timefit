@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 
+import { weekdayIdToDayOfWeek } from '@/types/business/operating-hours';
 import type { BookingTimeRange } from '@/types/schedule/operating-hours';
+import { useToggleOperatingHours } from '@/hooks/operating-hours/mutations/use-toggle-operating-hours';
 import { WEEKDAYS } from '@/lib/data/schedule/weekdays';
 import type { BusinessHours } from '@/lib/data/schedule/weekdays';
-import { weekdayIdToDayOfWeek } from '@/types/business/operating-hours';
-import { useToggleOperatingHours } from '@/hooks/operating-hours/mutations/use-toggle-operating-hours';
 import { ScheduleEditorPanel } from '@/components/business/schedule/schedule-editor-panel';
 import { WeekdayHoursPanel } from '@/components/business/schedule/weekday-hours-panel';
 
@@ -50,9 +50,7 @@ export function ScheduleClient({
     // 실패 시 롤백
     if (!success) {
       setBusinessHours(prev =>
-        prev.map(day =>
-          day.id === id ? { ...day, isEnabled: !enabled } : day
-        )
+        prev.map(day => (day.id === id ? { ...day, isEnabled: !enabled } : day))
       );
     }
   };

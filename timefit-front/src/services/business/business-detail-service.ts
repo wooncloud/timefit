@@ -15,10 +15,9 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 export async function getBusinessDetail(
   businessId: string
 ): Promise<PublicBusinessDetail> {
-  const response = await apiFetch(
-    `${BACKEND_URL}/api/business/${businessId}`,
-    { method: 'GET' }
-  );
+  const response = await apiFetch(`${BACKEND_URL}/api/business/${businessId}`, {
+    method: 'GET',
+  });
 
   if (!response.ok) {
     throw new Error('업체 상세 정보를 가져오는 데 실패했습니다.');

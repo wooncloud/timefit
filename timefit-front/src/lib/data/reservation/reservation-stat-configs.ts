@@ -2,7 +2,7 @@ import { Check, Clock, LucideIcon, Star, X } from 'lucide-react';
 
 import type { Reservation } from '@/components/business/reservations/reservation-table-row';
 
-export interface ReservationStatConfig {
+interface ReservationStatConfig {
   id: string;
   icon: LucideIcon;
   label: string;

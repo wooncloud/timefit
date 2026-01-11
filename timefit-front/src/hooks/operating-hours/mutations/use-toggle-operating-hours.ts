@@ -11,13 +11,13 @@ import { handleAuthError } from '@/lib/api/handle-auth-error';
 export function useToggleOperatingHours(businessId: string) {
   const [loading, setLoading] = useState(false);
 
-  const toggleOperatingHours = async (
-    dayOfWeek: number
-  ): Promise<boolean> => {
+  const toggleOperatingHours = async (dayOfWeek: number): Promise<boolean> => {
     try {
       setLoading(true);
-      const result =
-        await operatingHoursService.toggleOperatingHours(businessId, dayOfWeek);
+      const result = await operatingHoursService.toggleOperatingHours(
+        businessId,
+        dayOfWeek
+      );
 
       if (handleAuthError(result)) {
         return false;

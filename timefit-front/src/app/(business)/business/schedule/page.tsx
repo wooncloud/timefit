@@ -1,7 +1,7 @@
 import { getOperatingHours } from '@/services/schedule/operating-hours-service';
 import {
-  mapOperatingHoursToBusinessHours,
   mapOperatingHoursToBookingSlotsMap,
+  mapOperatingHoursToBusinessHours,
 } from '@/lib/data/schedule/map-operating-hours';
 import { getCurrentUserFromSession } from '@/lib/session/server';
 

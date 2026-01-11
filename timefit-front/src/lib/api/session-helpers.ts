@@ -1,7 +1,7 @@
 import 'server-only';
 
-import { getServerSession } from '@/lib/session/server';
 import type { SessionUser } from '@/lib/session/options';
+import { getServerSession } from '@/lib/session/server';
 
 /**
  * 세션의 토큰만 업데이트

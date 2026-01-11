@@ -50,30 +50,6 @@ export interface GetCategoryListApiResponse {
 }
 
 /**
- * 백엔드 API 응답 - 상세 조회
- */
-export interface GetCategoryDetailApiResponse {
-  data?: Category;
-  message?: string;
-}
-
-/**
- * 백엔드 API 응답 - 생성
- */
-export interface CreateCategoryApiResponse {
-  data?: Category;
-  message?: string;
-}
-
-/**
- * 백엔드 API 응답 - 수정
- */
-export interface UpdateCategoryApiResponse {
-  data?: Category;
-  message?: string;
-}
-
-/**
  * Next.js API 라우트 응답 - 목록 조회
  */
 export interface GetCategoryListHandlerResponse {
