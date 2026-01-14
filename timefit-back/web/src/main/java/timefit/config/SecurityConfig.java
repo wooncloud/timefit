@@ -116,7 +116,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/business/{businessId}").permitAll()  // 업체 정보 조회
 
                         // ========== 예약 슬롯 조회 (공개) ==========
-                        .requestMatchers(HttpMethod.GET, "/api/business/{businessId}/booking-slot/menu/{menuId}").permitAll()
+                        .requestMatchers(
+                                "/api/business/*/booking-slot",
+                                "/api/business/*/booking-slot/range",
+                                "/api/business/*/booking-slot/menu/*",
+                                "/api/business/*/booking-slot/upcoming"
+                        ).permitAll()
 
                         // ========== 업체 관련 인증 필요 API ==========
                         .requestMatchers("/api/business/**").authenticated()  // 나머지 업체 API는 인증 필요
