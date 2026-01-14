@@ -1,0 +1,654 @@
+### ================================================================
+### Timefit Phase 2 테스트 - 완전 Pure 환경 (더미 데이터 없음)
+### ================================================================
+###
+### 테스트 순서:
+### [Setup 1] 사장 회원가입 + 로그인
+### [Setup 2] 업체 생성
+### [Setup 3] 영업시간 설정
+### [Setup 4] 카테고리 생성
+### [Setup 5] 헤어컷 메뉴 생성 (60분)
+### [Setup 6] 파마 메뉴 생성 (120분)
+### [Phase 1] BookingSlot 조회 - 같은 시간대 2개 메뉴 슬롯 존재 확인
+### [Setup 7] 고객 회원가입 + 로그인
+### [Phase 2] 예약 시간대 충돌 테스트
+###   - Test 1: 파마 09:00-11:00 예약 (성공)
+###   - Test 2: 헤어컷 09:00-10:00 예약 (실패 - 충돌)
+###   - Test 3: 헤어컷 10:00-11:00 예약 (실패 - 충돌)
+###   - Test 4: 헤어컷 11:00-12:00 예약 (성공)
+###
+### ================================================================
+
+@baseUrl = http://localhost:8080
+
+### ================================================================
+### [Setup 1-1] 사장 회원가입
+### ================================================================
+
+# @name 사장회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "owner@test.com",
+  "password": "test1234!",
+  "name": "김사장",
+  "phoneNumber": "010-1234-5678",
+  "role": "BUSINESS"
+}
+
+> {%
+    console.log("\n[Setup 1-1] 사장 회원가입");
+    console.log("   - Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        console.log("✅ 사장 회원가입 성공");
+        console.log("   - Email: owner@test.com");
+        console.log("   - Role: BUSINESS");
+    } else {
+        console.error("❌ 사장 회원가입 실패");
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 1-2] 사장 로그인
+### ================================================================
+
+# @name 사장로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "owner@test.com",
+  "password": "test1234!"
+}
+
+> {%
+    console.log("\n[Setup 1-2] 사장 로그인");
+    console.log("   - Status:", response.status);
+
+    if (response.status === 200 && response.body.data && response.body.data.accessToken) {
+        client.global.set("ownerToken", response.body.data.accessToken);
+        console.log("✅ 사장 로그인 성공");
+        console.log("   - Token 저장 완료");
+    } else {
+        console.error("❌ 사장 로그인 실패");
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 2] 업체 생성
+### ================================================================
+
+# @name 업체생성
+POST {{baseUrl}}/api/business
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessName": "좋은헤어 강남점",
+  "businessTypes": ["BD008"],
+  "businessNumber": "123-45-67890",
+  "ownerName": "김사장",
+  "address": "서울시 강남구 테헤란로 123",
+  "contactPhone": "02-1234-5678",
+  "description": "고객 만족을 최우선으로 하는 헤어샵입니다."
+}
+
+> {%
+    console.log("\n[Setup 2] 업체 생성");
+    console.log("   - Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        if (response.body.data && response.body.data.businessId) {
+            client.global.set("businessId", response.body.data.businessId);
+            console.log("✅ 업체 생성 성공");
+            console.log("   - Business ID:", response.body.data.businessId);
+            console.log("   - 업체명:", response.body.data.businessName);
+        } else {
+            console.error("❌ 응답 구조 오류:", response.body);
+        }
+    } else {
+        console.error("❌ 업체 생성 실패");
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 3] 영업시간 설정 (월~금 09:00-18:00, 토~일 휴무)
+### ================================================================
+
+# @name 영업시간설정
+PUT {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "schedules": [
+    {
+      "dayOfWeek": 1,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 2,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 3,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 4,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 5,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 6,
+      "isClosed": true,
+      "bookingTimeRanges": []
+    },
+    {
+      "dayOfWeek": 0,
+      "isClosed": true,
+      "bookingTimeRanges": []
+    }
+  ]
+}
+
+> {%
+    console.log("\n[Setup 3] 영업시간 설정");
+    console.log("   - Status:", response.status);
+
+    if (response.status === 200) {
+        console.log("✅ 영업시간 설정 성공");
+        console.log("   - 월~금: 09:00-18:00");
+        console.log("   - 토~일: 휴무");
+    } else {
+        console.error("❌ 영업시간 설정 실패");
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 4] 카테고리 생성 (Hair)
+### ================================================================
+
+# @name 카테고리생성
+POST {{baseUrl}}/api/business/{{businessId}}/category
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "Hair"
+}
+
+> {%
+    console.log("\n[Setup 4] 카테고리 생성");
+    console.log("   - Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        if (response.body.data && response.body.data.categoryId) {
+            client.global.set("businessCategoryId", response.body.data.categoryId);
+            console.log("✅ 카테고리 생성 성공");
+            console.log("   - Category ID:", response.body.data.categoryId);
+            console.log("   - Type: BD008 (BEAUTY)");
+            console.log("   - Name: Hair");
+        } else {
+            console.error("❌ 응답 구조 오류:", response.body);
+        }
+    } else {
+        console.error("❌ 카테고리 생성 실패");
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+        console.error("\n⚠️  카테고리 생성 실패 시 이후 메뉴 생성이 불가능합니다!");
+    }
+%}
+
+### ================================================================
+### [Setup 5] 헤어컷 메뉴 생성 (60분)
+### ================================================================
+
+# @name 헤어컷메뉴생성
+POST {{baseUrl}}/api/business/{{businessId}}/menu
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "Hair",
+  "serviceName": "헤어컷",
+  "description": "기본 커트 서비스",
+  "price": 30000,
+  "durationMinutes": 60,
+  "orderType": "RESERVATION_BASED",
+  "autoGenerateSlots": true,
+  "slotSettings": {
+    "startDate": "2026-01-16",
+    "endDate": "2026-01-31",
+    "slotIntervalMinutes": 60,
+    "specificTimeRanges": [
+      {"startTime": "09:00", "endTime": "12:00"},
+      {"startTime": "13:00", "endTime": "18:00"}
+    ]
+  }
+}
+
+> {%
+    console.log("\n[Setup 5] 헤어컷 메뉴 생성");
+    console.log("   - Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        if (response.body.data && response.body.data.menuId) {
+            client.global.set("haircutMenuId", response.body.data.menuId);
+            console.log("✅ 헤어컷 메뉴 생성 성공");
+            console.log("   - Menu ID:", response.body.data.menuId);
+            console.log("   - 소요시간: 60분");
+            console.log("   - 슬롯 간격: 60분");
+            console.log("   - 기간: 2026-01-16 ~ 2026-01-31");
+            console.log("\n⚠️  서버 로그 확인:");
+            console.log("   → 'BookingSlot 생성 완료: 생성 개수=XXX' 로그 확인");
+        } else {
+            console.error("❌ 응답 구조 오류:", response.body);
+        }
+    } else {
+        console.error("❌ 헤어컷 메뉴 생성 실패");
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 6] 파마 메뉴 생성 (120분)
+### ================================================================
+
+# @name 파마메뉴생성
+POST {{baseUrl}}/api/business/{{businessId}}/menu
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "Hair",
+  "serviceName": "파마",
+  "description": "디지털 파마 서비스",
+  "price": 80000,
+  "durationMinutes": 120,
+  "orderType": "RESERVATION_BASED",
+  "autoGenerateSlots": true,
+  "slotSettings": {
+    "startDate": "2026-01-16",
+    "endDate": "2026-01-31",
+    "slotIntervalMinutes": 120,
+    "specificTimeRanges": [
+      {"startTime": "09:00", "endTime": "12:00"},
+      {"startTime": "13:00", "endTime": "18:00"}
+    ]
+  }
+}
+
+> {%
+    console.log("\n[Setup 6] 파마 메뉴 생성");
+    console.log("   - Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        if (response.body.data && response.body.data.menuId) {
+            client.global.set("permaMenuId", response.body.data.menuId);
+            console.log("✅ 파마 메뉴 생성 성공");
+            console.log("   - Menu ID:", response.body.data.menuId);
+            console.log("   - 소요시간: 120분");
+            console.log("   - 슬롯 간격: 120분");
+            console.log("   - 기간: 2026-01-16 ~ 2026-01-31");
+        } else {
+            console.error("❌ 응답 구조 오류:", response.body);
+        }
+    } else {
+        console.error("❌ 파마 메뉴 생성 실패");
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Phase 1] BookingSlot 조회 - 2026-01-16 (목요일)
+### ================================================================
+
+# @name 슬롯조회_2026-01-16
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot?date=2026-01-16
+
+> {%
+    console.log("\n========================================");
+    console.log("[Phase 1] BookingSlot 조회 - 2026-01-16");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200) {
+        const slots = response.body.data.slots || [];
+
+        console.log("전체 슬롯 개수:", slots.length);
+
+        if (slots.length === 0) {
+            console.error("\n❌ 슬롯이 하나도 없습니다!");
+            console.error("   - 메뉴 생성 실패");
+            console.error("   - BookingSlot 자동 생성 실패");
+            console.error("   - 서버 로그 확인 필요");
+        }
+
+        // 09:00 슬롯 필터링
+        const slots_09_00 = slots.filter(s => s.startTime === "09:00:00");
+
+        console.log("\n09:00 슬롯 개수:", slots_09_00.length);
+
+        // 각 슬롯 상세 정보 출력
+        slots_09_00.forEach((slot, idx) => {
+            console.log(`\n  [슬롯 ${idx + 1}]`);
+            console.log(`  - menuName: "${slot.menuName}"`);
+            console.log(`  - slotId: ${slot.slotId}`);
+            console.log(`  - startTime: ${slot.startTime}`);
+            console.log(`  - endTime: ${slot.endTime}`);
+        });
+
+        if (slots_09_00.length >= 2) {
+            console.log("\n✅ Phase 1 성공: 같은 시간대에 여러 메뉴 슬롯 공존!");
+        } else {
+            console.error("\n❌ Phase 1 실패: 09:00 슬롯이 2개 미만");
+        }
+
+        // 헤어컷 09:00 슬롯 ID 저장
+        const haircutSlot = slots_09_00.find(s => s.menuName === "헤어컷");
+        if (haircutSlot && haircutSlot.slotId) {
+            client.global.set("haircutSlot_09_00", haircutSlot.slotId);
+            console.log("\n✅ 헤어컷 09:00 슬롯 저장:", haircutSlot.slotId);
+        } else {
+            console.error("\n❌ 헤어컷 슬롯을 찾을 수 없습니다");
+            console.error("   - 가능한 menuName:", slots_09_00.map(s => `"${s.menuName}"`).join(", "));
+        }
+
+        // 파마 09:00 슬롯 ID 저장
+        const permaSlot = slots_09_00.find(s => s.menuName === "파마");
+        if (permaSlot && permaSlot.slotId) {
+            client.global.set("permaSlot_09_00", permaSlot.slotId);
+            console.log("✅ 파마 09:00 슬롯 저장:", permaSlot.slotId);
+
+            // 저장 확인
+            const savedValue = client.global.get("permaSlot_09_00");
+            console.log("   → 저장된 값 확인:", savedValue);
+        } else {
+            console.error("❌ 파마 슬롯을 찾을 수 없습니다");
+            console.error("   - 가능한 menuName:", slots_09_00.map(s => `"${s.menuName}"`).join(", "));
+        }
+
+        // 헤어컷 10:00, 11:00 슬롯도 저장
+        const slots_10_00 = slots.filter(s => s.startTime === "10:00:00" && s.menuName === "헤어컷");
+        if (slots_10_00.length > 0 && slots_10_00[0].slotId) {
+            client.global.set("haircutSlot_10_00", slots_10_00[0].slotId);
+            console.log("✅ 헤어컷 10:00 슬롯 저장:", slots_10_00[0].slotId);
+        }
+
+        const slots_11_00 = slots.filter(s => s.startTime === "11:00:00" && s.menuName === "헤어컷");
+        if (slots_11_00.length > 0 && slots_11_00[0].slotId) {
+            client.global.set("haircutSlot_11_00", slots_11_00[0].slotId);
+            console.log("✅ 헤어컷 11:00 슬롯 저장:", slots_11_00[0].slotId);
+        }
+
+        // 최종 변수 저장 상태 확인
+        console.log("\n=== 변수 저장 상태 확인 ===");
+        console.log("permaSlot_09_00:", client.global.get("permaSlot_09_00") || "❌ 미저장");
+        console.log("haircutSlot_09_00:", client.global.get("haircutSlot_09_00") || "❌ 미저장");
+        console.log("haircutSlot_10_00:", client.global.get("haircutSlot_10_00") || "❌ 미저장");
+        console.log("haircutSlot_11_00:", client.global.get("haircutSlot_11_00") || "❌ 미저장");
+
+    } else {
+        console.error("\n❌ 슬롯 조회 실패:", response.status);
+        console.error("   - 응답:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 7-1] 고객 회원가입
+### ================================================================
+
+# @name 고객회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "customer@test.com",
+  "password": "test1234!",
+  "name": "김고객",
+  "phoneNumber": "010-8765-4321",
+  "role": "CUSTOMER"
+}
+
+> {%
+    console.log("\n[Setup 7-1] 고객 회원가입");
+    console.log("   - Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        console.log("✅ 고객 회원가입 성공");
+        console.log("   - Email: customer@test.com");
+        console.log("   - Role: CUSTOMER");
+    } else {
+        console.error("❌ 고객 회원가입 실패");
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 7-2] 고객 로그인
+### ================================================================
+
+# @name 고객로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "customer@test.com",
+  "password": "test1234!"
+}
+
+> {%
+    console.log("\n[Setup 7-2] 고객 로그인");
+    console.log("   - Status:", response.status);
+
+    if (response.status === 200 && response.body.data && response.body.data.accessToken) {
+        client.global.set("customerToken", response.body.data.accessToken);
+        console.log("✅ 고객 로그인 성공");
+        console.log("   - Token 저장 완료");
+    } else {
+        console.error("❌ 고객 로그인 실패");
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Phase 2 Test 1/4] 파마 09:00-11:00 예약 생성 (성공 예상)
+### ================================================================
+
+# @name 파마예약_09_00
+POST {{baseUrl}}/api/reservation
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "menuId": "{{permaMenuId}}",
+  "bookingSlotId": "{{permaSlot_09_00}}",
+  "durationMinutes": 120,
+  "totalPrice": 80000,
+  "customerName": "김고객",
+  "customerPhone": "01087654321",
+  "notes": "파마 예약"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Phase 2-1/4] 파마 09:00-11:00 예약");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        client.global.set("permaReservationId", response.body.data.reservationId);
+        console.log("\n✅ 파마 예약 성공");
+        console.log("   - Reservation ID:", response.body.data.reservationId);
+        console.log("   - 시간대: 09:00-11:00 (120분)");
+    } else {
+        console.error("\n❌ 파마 예약 실패");
+        console.error("   - Status:", response.status);
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Phase 2 Test 2/4] 헤어컷 09:00-10:00 예약 생성 (충돌 - 실패 예상)
+### ================================================================
+
+# @name 헤어컷예약_09_00_충돌
+POST {{baseUrl}}/api/reservation
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "menuId": "{{haircutMenuId}}",
+  "bookingSlotId": "{{haircutSlot_09_00}}",
+  "durationMinutes": 60,
+  "totalPrice": 30000,
+  "customerName": "김고객",
+  "customerPhone": "01087654321",
+  "notes": "헤어컷 예약 (09:00)"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Phase 2-2/4] 헤어컷 09:00-10:00 예약 (충돌)");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 400 || response.status === 409) {
+        console.log("\n✅ 충돌 감지 성공!");
+        console.log("   - 파마 예약(09:00-11:00)과 충돌");
+        console.log("   - 에러:", response.body.error || response.body.message);
+    } else if (response.status === 200 || response.status === 201) {
+        console.error("\n❌ Phase 2 실패: 충돌을 감지하지 못함!");
+        console.error("   - 헤어컷 예약이 성공했지만, 충돌했어야 함");
+    } else {
+        console.error("\n❌ 예상치 못한 응답");
+        console.error("   - Status:", response.status);
+        console.error("   - 응답:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Phase 2 Test 3/4] 헤어컷 10:00-11:00 예약 생성 (충돌 - 실패 예상)
+### ================================================================
+
+# @name 헤어컷예약_10_00_충돌
+POST {{baseUrl}}/api/reservation
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "menuId": "{{haircutMenuId}}",
+  "bookingSlotId": "{{haircutSlot_10_00}}",
+  "durationMinutes": 60,
+  "totalPrice": 30000,
+  "customerName": "김고객",
+  "customerPhone": "01087654321",
+  "notes": "헤어컷 예약 (10:00)"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Phase 2-3/4] 헤어컷 10:00-11:00 예약 (충돌)");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 400 || response.status === 409) {
+        console.log("\n✅ 충돌 감지 성공!");
+        console.log("   - 파마 예약(09:00-11:00)과 충돌");
+        console.log("   - 에러:", response.body.error || response.body.message);
+    } else if (response.status === 200 || response.status === 201) {
+        console.error("\n❌ Phase 2 실패: 충돌을 감지하지 못함!");
+    } else {
+        console.error("\n❌ 예상치 못한 응답");
+        console.error("   - 응답:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Phase 2 Test 4/4] 헤어컷 11:00-12:00 예약 생성 (성공 예상)
+### ================================================================
+
+# @name 헤어컷예약_11_00_성공
+POST {{baseUrl}}/api/reservation
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "menuId": "{{haircutMenuId}}",
+  "bookingSlotId": "{{haircutSlot_11_00}}",
+  "durationMinutes": 60,
+  "totalPrice": 30000,
+  "customerName": "김고객",
+  "customerPhone": "01087654321",
+  "notes": "헤어컷 예약 (11:00)"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Phase 2-4/4] 헤어컷 11:00-12:00 예약");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        console.log("\n✅ 헤어컷 예약 성공");
+        console.log("   - Reservation ID:", response.body.data.reservationId);
+        console.log("   - 시간대: 11:00-12:00 (60분)");
+        console.log("\n========================================");
+        console.log("🎉 Phase 2 테스트 완료!");
+        console.log("========================================");
+        console.log("✅ Test 1: 파마 09:00 예약 성공");
+        console.log("✅ Test 2: 헤어컷 09:00 충돌 감지");
+        console.log("✅ Test 3: 헤어컷 10:00 충돌 감지");
+        console.log("✅ Test 4: 헤어컷 11:00 예약 성공");
+    } else {
+        console.error("\n❌ 헤어컷 예약 실패");
+        console.error("   - Status:", response.status);
+        console.error("   - 에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
