@@ -13,12 +13,13 @@ import timefit.business.entity.Business;
 import timefit.business.entity.OperatingHours;
 import timefit.business.repository.OperatingHoursRepository;
 import timefit.common.entity.DayOfWeek;
+import timefit.exception.booking.BookingErrorCode;
+import timefit.exception.booking.BookingException;
 import timefit.menu.entity.Menu;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -37,17 +38,14 @@ public class BookingSlotCreationHelper {
     private final BookingSlotGenerationUtil slotGenerationUtil;
 
     /**
-     * BookingSlot 생성
-     * 1. 모든 슬롯 생성
-     * 2. 중복 체크 (하나라도 중복이면 예외 발생)
+     * BookingSlot 일괄 생성
+     * [처리 흐름]
+     * 1. 날짜별 슬롯 생성 (OperatingHours 기반)
+     * 2. 중복 체크 (menu_id + date + startTime 기준)
      * 3. 일괄 저장
-     * 4. 결과 반환
-     * [트랜잭션 보장]
-     * - 중복 발견 시 즉시 예외 발생 → 전체 롤백
-     * - 부분 성공 절대 불가 (All or Nothing)
-     * [중복 체크]
-     * - API 경로: 사용자가 같은 날짜/시간 재생성 방지
-     * - Menu 경로: 같은 메뉴 재생성 시 기존 슬롯 감지
+     * [중복 체크 정책]
+     * - 같은 메뉴의 같은 시간대 슬롯만 중복으로 판단
+     * - 다른 메뉴는 같은 시간대에 슬롯 생성 가능
      *
      * @param business 업체
      * @param menu 메뉴
@@ -62,7 +60,7 @@ public class BookingSlotCreationHelper {
             List<DailySlotSchedule> schedules,
             Integer intervalMinutes) {
 
-        log.info("BookingSlot 생성 시작: businessId={}, menuId={}, 날짜 수={}",
+        log.info("BookingSlot 생성 시작: businessId={}, menuId={}, scheduleCount={}",
                 business.getId(), menu.getId(), schedules.size());
 
         List<BookingSlot> createdSlots = new ArrayList<>();
@@ -84,29 +82,26 @@ public class BookingSlotCreationHelper {
 
         // 2. 중복 체크 (하나라도 중복이면 예외 발생 → 전체 롤백)
         for (BookingSlot slot : createdSlots) {
-            // 2-1) 중복 여부 확인 (businessId + slotDate + startTime)
-            if (isDuplicate(business.getId(), slot)) {
-                // 2-2) 중복 발견 시 즉시 예외 발생 (전체 롤백)
-                log.error("중복 슬롯 발견 - 전체 롤백: date={}, startTime={}",
-                        slot.getSlotDate(), slot.getStartTime());
-                throw new timefit.exception.booking.BookingException(
-                        timefit.exception.booking.BookingErrorCode.AVAILABLE_SLOT_CONFLICT
-                );
+            // *** [Phase 1 변경] menu_id 기준으로 중복 체크 ***
+            if (isDuplicate(slot)) {
+                log.error("중복 슬롯 발견 - 전체 롤백: menuId={}, date={}, startTime={}",
+                        slot.getMenu().getId(), slot.getSlotDate(), slot.getStartTime());
+                throw new BookingException(BookingErrorCode.AVAILABLE_SLOT_CONFLICT);
             }
         }
 
         // 3. 일괄 저장 (중복 없음이 보장됨)
-        bookingSlotRepository.saveAll(createdSlots);
+        bookingSlotRepository.saveAllAndFlush(createdSlots);
 
-        log.info("BookingSlot 생성 완료: businessId={}, 생성 개수={}",
-                business.getId(), createdSlots.size());
+        log.info("BookingSlot 생성 완료: menuId={}, 생성 개수={}",
+                menu.getId(), createdSlots.size());
 
         // 4. 결과 반환 (생략 없음 - All or Nothing)
         // parameter : 요청 개수 , 생성 개수 (동일) , 생략 개수 (0 고정)
         return new BookingSlotResponse.CreationResult(
                 createdSlots.size(),
                 createdSlots.size(),
-                0                      // all or nothing 이기 때문에 skip is 0 fixed.
+                0  // all or nothing이기 때문에 skip은 0 고정
         );
     }
 
@@ -160,18 +155,21 @@ public class BookingSlotCreationHelper {
 
     /**
      * 중복 체크
-     * - businessId + slotDate + startTime 조합으로 중복 여부 확인
-     * [중요]
-     * - 같은 업체, 같은 날짜, 같은 시작 시간이면 중복으로 판단
-     * - endTime은 체크하지 않음 (startTime만으로 충분)
+     * [변경 전] business_id + date + startTime 기준
+     * [변경 후] menu_id + date + startTime 기준
+     * 예시:
+     * - 헤어컷 08:00 슬롯 생성 ✅
+     * - 파마 08:00 슬롯 생성 ✅ (다른 메뉴이므로 허용)
+     * - 헤어컷 08:00 슬롯 재생성 ❌ (같은 메뉴, 같은 시간 중복)
      *
-     * @param businessId 업체 ID
      * @param slot 체크할 슬롯
      * @return true: 중복, false: 중복 아님
      */
-    private boolean isDuplicate(UUID businessId, BookingSlot slot) {
-        return bookingSlotRepository.existsByBusinessIdAndSlotDateAndStartTime(
-                businessId, slot.getSlotDate(), slot.getStartTime()
+    private boolean isDuplicate(BookingSlot slot) {
+        return bookingSlotRepository.existsByMenuIdAndSlotDateAndStartTime(
+                slot.getMenu().getId(),  // business_id → menu_id 변경
+                slot.getSlotDate(),
+                slot.getStartTime()
         );
     }
 }

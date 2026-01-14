@@ -6,10 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.booking.entity.BookingSlot;
 import timefit.booking.repository.BookingSlotRepository;
-import timefit.booking.service.validator.BookingSlotValidator;
 import timefit.business.entity.Business;
 import timefit.business.repository.BusinessRepository;
 import timefit.business.service.validator.BusinessValidator;
+import timefit.exception.auth.AuthErrorCode;
+import timefit.exception.auth.AuthException;
 import timefit.exception.booking.BookingErrorCode;
 import timefit.exception.booking.BookingException;
 import timefit.exception.business.BusinessErrorCode;
@@ -25,12 +26,12 @@ import timefit.reservation.dto.ReservationResponseDto;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
 import timefit.reservation.repository.ReservationRepository;
-import timefit.reservation.service.util.ReservationNumberUtil;
 import timefit.reservation.service.util.ReservationConverter;
 import timefit.reservation.service.validator.ReservationValidator;
 import timefit.user.entity.User;
 import timefit.user.repository.UserRepository;
 
+import java.time.LocalTime;
 import java.util.UUID;
 
 /**
@@ -55,10 +56,6 @@ public class ReservationCommandService {
     // Validator
     private final ReservationValidator reservationValidator;
     private final BusinessValidator businessValidator;
-    private final BookingSlotValidator bookingSlotValidator;
-
-    // Util
-    private final ReservationNumberUtil reservationNumberUtil;
     private final ReservationConverter converter;
 
     // ========== 예약 생성 ==========
@@ -69,39 +66,46 @@ public class ReservationCommandService {
     public ReservationResponseDto.CustomerReservation createReservationBased(
             ReservationRequestDto.CreateReservation request, UUID customerId) {
 
-        log.info("슬롯 기반 예약 생성: customerId={}, bookingSlotId={}",
-                customerId, request.bookingSlotId());
+        log.info("예약 생성 (RESERVATION_BASED): customerId={}, businessId={}, menuId={}",
+                customerId, request.businessId(), request.menuId());
 
-        // 1. Entity 조회
+        // 1. 엔티티 조회 및 검증
         User customer = getUserEntity(customerId);
         Business business = getBusinessEntity(request.businessId());
         Menu menu = getMenuEntity(request.menuId());
         BookingSlot bookingSlot = getBookingSlotEntity(request.bookingSlotId());
 
-        // 2. 검증
+        // 2. 연관관계 검증
         validateMenuBelongsToBusiness(menu, business.getId());
         validateBookingSlotBelongsToBusiness(bookingSlot, business.getId());
-        bookingSlotValidator.validateBookableSlot(bookingSlot.getId(), business.getId());
 
-        // 3. Entity 생성 (정적 팩토리)
-        Reservation reservation = Reservation.createReservationBased(
-                customer,
-                business,
-                menu,
-                bookingSlot,
-                request.customerName(),
-                request.customerPhone(),
-                request.notes()
+        // 3. 날짜 검증
+        reservationValidator.validateNotPastDate(bookingSlot.getSlotDate());
+
+        // 4. [Phase 2] 시간대 충돌 체크
+        LocalTime startTime = bookingSlot.getStartTime();
+        LocalTime endTime = startTime.plusMinutes(menu.getDurationMinutes());
+
+        reservationValidator.validateTimeSlotConflict(
+                business.getId(),
+                bookingSlot.getSlotDate(),
+                startTime,
+                endTime,
+                menu.getId()
         );
 
-        // 4. 저장 및 예약 번호 생성
+        // 5. 예약 생성
+        Reservation reservation = Reservation.createReservationBased(
+                customer, business, menu, bookingSlot,
+                request.customerName(), request.customerPhone(), request.notes()
+        );
+
+        // 6. 저장
         Reservation saved = reservationRepository.save(reservation);
-        saved.updateReservationNumber(reservationNumberUtil.generate());
 
-        log.info("슬롯 기반 예약 생성 완료: reservationId={}, number={}",
-                saved.getId(), saved.getReservationNumber());
+        log.info("예약 생성 완료: reservationId={}", saved.getId());
 
-        // 5. DTO 변환
+        // 7. DTO 변환
         return converter.toCustomerReservation(saved);
     }
 
@@ -111,38 +115,33 @@ public class ReservationCommandService {
     public ReservationResponseDto.CustomerReservation createOnDemandBased(
             ReservationRequestDto.CreateReservation request, UUID customerId) {
 
-        log.info("즉시 주문 예약 생성: customerId={}, date={}",
-                customerId, request.reservationDate());
+        log.info("예약 생성 (ONDEMAND_BASED): customerId={}, businessId={}, menuId={}",
+                customerId, request.businessId(), request.menuId());
 
-        // 1. Entity 조회
+        // 1. 엔티티 조회 및 검증
         User customer = getUserEntity(customerId);
         Business business = getBusinessEntity(request.businessId());
         Menu menu = getMenuEntity(request.menuId());
 
-        // 2. 검증
+        // 2. 연관관계 검증
         validateMenuBelongsToBusiness(menu, business.getId());
+
+        // 3. 날짜 검증
         reservationValidator.validateNotPastDate(request.reservationDate());
 
-        // 3. Entity 생성
+        // 4. 예약 생성 (ONDEMAND는 시간대 충돌 체크 불필요)
         Reservation reservation = Reservation.createOnDemandBased(
-                customer,
-                business,
-                menu,
-                request.reservationDate(),
-                request.reservationTime(),
-                request.customerName(),
-                request.customerPhone(),
-                request.notes()
+                customer, business, menu,
+                request.reservationDate(), request.reservationTime(),
+                request.customerName(), request.customerPhone(), request.notes()
         );
 
-        // 4. 저장 및 예약 번호 생성
+        // 5. 저장
         Reservation saved = reservationRepository.save(reservation);
-        saved.updateReservationNumber(reservationNumberUtil.generate());
 
-        log.info("즉시 주문 예약 생성 완료: reservationId={}, number={}",
-                saved.getId(), saved.getReservationNumber());
+        log.info("예약 생성 완료: reservationId={}", saved.getId());
 
-        // 5. DTO 변환
+        // 6. DTO 변환
         return converter.toCustomerReservation(saved);
     }
 
@@ -340,7 +339,7 @@ public class ReservationCommandService {
         log.info("노쇼 처리 완료: reservationId={}", reservationId);
 
         // 5. DTO 변환
-        String message = "고객이 나타나지 않았습니다";
+        String message = "노쇼 처리되었습니다";
         if (notes != null && !notes.trim().isEmpty()) {
             message += " - " + notes;
         }
@@ -348,11 +347,11 @@ public class ReservationCommandService {
         return converter.toActionResult(reservation, previousStatus, message);
     }
 
-    // ========== Private 헬퍼 메서드 ==========
+    // ========== Private Helper Methods ==========
 
     private User getUserEntity(UUID userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
     }
 
     private Business getBusinessEntity(UUID businessId) {
@@ -368,8 +367,8 @@ public class ReservationCommandService {
     /**
      * BookingSlot 엔티티 조회
      */
-    private BookingSlot getBookingSlotEntity(UUID slotId) {
-        return bookingSlotRepository.findById(slotId)
+    private BookingSlot getBookingSlotEntity(UUID bookingSlotId) {
+        return bookingSlotRepository.findById(bookingSlotId)
                 .orElseThrow(() -> new BookingException(BookingErrorCode.AVAILABLE_SLOT_NOT_FOUND));
     }
 

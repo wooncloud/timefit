@@ -210,4 +210,32 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
                 })
                 .collect(Collectors.toList());
     }
+
+    /**
+     * [Phase 2] 특정 업체의 특정 날짜 활성 예약 조회
+     *
+     * QueryDSL 구현:
+     * - menu 페치 조인으로 N+1 방지
+     * - PENDING, CONFIRMED 상태만 조회
+     * - reservationTime 오름차순 정렬
+     */
+    @Override
+    public List<Reservation> findActiveReservationsByBusinessAndDate(
+            UUID businessId,
+            LocalDate date) {
+
+        return queryFactory
+                .selectFrom(reservation)
+                .join(reservation.menu).fetchJoin()  // menu 페치 조인
+                .where(
+                        reservation.business.id.eq(businessId),
+                        reservation.reservationDate.eq(date),
+                        reservation.status.in(
+                                ReservationStatus.PENDING,
+                                ReservationStatus.CONFIRMED
+                        )
+                )
+                .orderBy(reservation.reservationTime.asc())
+                .fetch();
+    }
 }

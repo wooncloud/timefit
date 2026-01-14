@@ -41,4 +41,22 @@ public interface ReservationQueryRepository {
             DayOfWeek dayOfWeek,
             LocalDate currentDate
     );
+
+    /**
+     * 특정 업체의 특정 날짜 활성 예약 조회
+     * 활성 예약 정의:
+     * - PENDING (확정 대기) 또는 CONFIRMED (확정됨) 상태
+     * - CANCELLED, NO_SHOW, COMPLETED는 제외
+     * 사용 예시:
+     * - 파마 08:00-10:00 예약 (CONFIRMED)
+     * - 헤어컷 08:00 시도 시 → 충돌 체크용 조회
+     *
+     * @param businessId 업체 ID
+     * @param date 예약 날짜
+     * @return 활성 예약 리스트 (reservationTime 순서, menu 페치 조인)
+     */
+    List<Reservation> findActiveReservationsByBusinessAndDate(
+            UUID businessId,
+            LocalDate date
+    );
 }
