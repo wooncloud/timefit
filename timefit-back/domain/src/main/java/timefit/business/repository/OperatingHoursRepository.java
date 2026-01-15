@@ -25,6 +25,16 @@ public interface OperatingHoursRepository extends JpaRepository<OperatingHours, 
             DayOfWeek dayOfWeek
     );
 
+    /**
+     * 업체의 모든 운영시간 조회 (캐싱용)
+     * [용도] BookingSlot 생성 시 OperatingHours 일괄 조회
+     * [정렬] day_of_week ASC, sequence ASC
+     *
+     * @param businessId 업체 ID
+     * @return OperatingHours 목록 (요일 및 순서 정렬)
+     */
+    List<OperatingHours> findByBusinessIdOrderByDayOfWeekAscSequenceAsc(UUID businessId);
+
     // 업체의 모든 영업시간 조회 (요일 순서)
     List<OperatingHours> findByBusinessIdOrderByDayOfWeekAsc(UUID businessId);
 

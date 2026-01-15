@@ -62,15 +62,20 @@ public class BookingSlotCreationHelper {
 
         List<BookingSlot> createdSlots = new ArrayList<>();
 
+        // 0. OperatingHours 전체 조회 (1번의 SELECT)
+        Map<DayOfWeek, List<OperatingHours>> operatingHoursMap =
+                loadOperatingHoursMap(business.getId());
+
         // 1. 날짜별 루프 - 모든 슬롯 생성
         for (DailySlotSchedule schedule : schedules) {
-            // 1-1) 각 날짜의 슬롯 생성
+            // 1-1) 각 날짜의 슬롯 생성 (Map에서 조회)
             List<BookingSlot> dailySlots = generateSlotsForDate(
                     business,
                     menu,
                     schedule.date(),
                     schedule.timeRanges(),
-                    intervalMinutes
+                    intervalMinutes,
+                    operatingHoursMap
             );
 
             // 1-2) 생성 목록에 추가
@@ -97,7 +102,7 @@ public class BookingSlotCreationHelper {
     /**
      * 특정 날짜의 슬롯 생성 (핵심 로직)
      * 1. 요일 추출
-     * 2. 해당 요일의 OperatingHours 조회 및 필터링
+     * 2. 메모리 내 생성된 Map에서 해당 요일의 OperatingHours 조회
      * 3. BookingSlotGenerationUtil 호출
      *
      * @param business 업체
@@ -105,6 +110,7 @@ public class BookingSlotCreationHelper {
      * @param date 대상 날짜
      * @param timeRanges 시간대 목록 (null이면 전체 운영시간)
      * @param intervalMinutes 슬롯 간격 (분)
+     * @param operatingHoursMap 요일별 운영시간 Map (캐싱)
      * @return 생성된 BookingSlot 목록
      */
     private List<BookingSlot> generateSlotsForDate(
@@ -112,15 +118,16 @@ public class BookingSlotCreationHelper {
             Menu menu,
             LocalDate date,
             List<AvailableTimeRange> timeRanges,
-            Integer intervalMinutes) {
+            Integer intervalMinutes,
+            Map<DayOfWeek, List<OperatingHours>> operatingHoursMap) {
 
         // 1. 요일 추출
         int dayOfWeekValue = date.getDayOfWeek().getValue();
         DayOfWeek dayOfWeek = DayOfWeek.fromValue(dayOfWeekValue);
 
-        // 2. OperatingHours 조회 및 필터링
-        List<OperatingHours> operatingHours = operatingHoursRepository
-                .findByBusinessIdAndDayOfWeekOrderBySequenceAsc(business.getId(), dayOfWeek)
+        // 2. Map에서 OperatingHours 조회 (메모리)
+        List<OperatingHours> operatingHours = operatingHoursMap
+                .getOrDefault(dayOfWeek, Collections.emptyList())
                 .stream()
                 .filter(oh -> !oh.getIsClosed())
                 .collect(Collectors.toList());
@@ -135,6 +142,35 @@ public class BookingSlotCreationHelper {
         return slotGenerationUtil.generateSlotsForDay(
                 business, menu, date, operatingHours, timeRanges, intervalMinutes
         );
+    }
+
+    /**
+     * OperatingHours 전체 조회 및 캐싱
+     * [처리 흐름]
+     * 1. businessId로 전체 OperatingHours 조회 (1번의 SELECT)
+     * 2. DayOfWeek로 그룹핑하여 Map 생성
+     * 3. 이후 generateSlotsForDate에서 메모리 조회
+     *
+     * @param businessId 업체 ID
+     * @return 요일별 OperatingHours Map
+     */
+    private Map<DayOfWeek, List<OperatingHours>> loadOperatingHoursMap(UUID businessId) {
+        // 1. 전체 OperatingHours 조회 (1번의 SELECT) ✅
+        List<OperatingHours> allOperatingHours = operatingHoursRepository
+                .findByBusinessIdOrderByDayOfWeekAscSequenceAsc(businessId);
+
+        // 2. DayOfWeek로 그룹핑
+        Map<DayOfWeek, List<OperatingHours>> operatingHoursMap =
+                allOperatingHours.stream()
+                        .collect(Collectors.groupingBy(
+                                OperatingHours::getDayOfWeek,
+                                Collectors.toList()
+                        ));
+
+        log.debug("OperatingHours 캐싱 완료: businessId={}, 총 {}개, 요일 {}개",
+                businessId, allOperatingHours.size(), operatingHoursMap.size());
+
+        return operatingHoursMap;
     }
 
     /**
