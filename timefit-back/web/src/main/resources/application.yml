@@ -89,6 +89,10 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 500
+          order_inserts: true
+          order_updates: true
 
 ---
 # 운영 환경
