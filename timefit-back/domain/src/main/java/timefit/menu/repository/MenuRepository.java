@@ -12,9 +12,7 @@ import java.util.UUID;
 @Repository
 public interface MenuRepository extends JpaRepository<Menu, UUID> {
 
-    /**
-     * 특정 업체의 특정 주문 유형 메뉴 조회
-     */
+    // 특정 업체의 특정 주문 유형 메뉴 조회
     List<Menu> findByBusinessIdAndOrderType(UUID businessId, OrderType orderType);
 
 
@@ -27,6 +25,14 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     default List<Menu> findOnDemandBasedMenusByBusinessId(UUID businessId) {
         return findByBusinessIdAndOrderType(businessId, OrderType.ONDEMAND_BASED);
     }
+
+    /**
+     * Menu 중복 체크
+     * @param businessId 업체 ID
+     * @param serviceName 서비스명
+     * @return true: 중복, false: 중복 아님
+     */
+    boolean existsByBusinessIdAndServiceName(UUID businessId, String serviceName);
 
     long countByBusinessCategoryIdAndIsActiveTrue(UUID categoryId);
 }

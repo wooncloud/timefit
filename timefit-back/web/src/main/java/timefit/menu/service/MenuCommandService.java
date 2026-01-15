@@ -60,18 +60,21 @@ public class MenuCommandService {
         // 1. 권한 검증
         Business business = businessValidator.validateBusinessAccess(currentUserId, businessId);
 
-        // 2. 생성 요청 검증
+        // 2. 메뉴 이름 중복 검증
+        menuValidator.validateMenuNotDuplicate(businessId, request.serviceName());
+
+        // 3. 생성 요청 검증
         menuValidator.validateMenuCreateRequest(request);
 
-        // 3. Menu Entity 생성
+        // 4. Menu Entity 생성
         Menu menu = menuEntityFactory.createMenu(business, request);
 
-        // 4. 저장
+        // 5. Menu DB에 저장
         menuRepository.save(menu);
         log.info("메뉴 생성 완료: menuId={}, serviceName={}",
                 menu.getId(), menu.getServiceName());
 
-        // 5. BookingSlot 생성 위임
+        // 6. BookingSlot 생성 위임
         menuBookingSlotHelper.generateForMenu(menu, request);
 
         return MenuResponseDto.Menu.from(menu);

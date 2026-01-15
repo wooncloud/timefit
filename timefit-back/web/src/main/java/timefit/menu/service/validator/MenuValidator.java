@@ -60,6 +60,25 @@ public class MenuValidator {
     }
 
     /**
+     * Menu 중복 생성 방지
+     * @param businessId 업체 ID
+     * @param serviceName 서비스명
+     * @throws MenuException 중복 메뉴 발견 시
+     */
+    public void validateMenuNotDuplicate(UUID businessId, String serviceName) {
+        boolean exists = menuRepository.existsByBusinessIdAndServiceName(businessId, serviceName);
+
+        if (exists) {
+            log.error("중복 메뉴 생성 시도: businessId={}, serviceName={}",
+                    businessId, serviceName);
+            throw new MenuException(MenuErrorCode.MENU_ALREADY_EXISTS);
+        }
+
+        log.debug("메뉴 중복 체크 통과: businessId={}, serviceName={}",
+                businessId, serviceName);
+    }
+
+    /**
      * Menu가 활성 상태인지 검증 (Reservation 에서 사용 해야함)
      *
      * @param menu 검증할 Menu 엔티티
