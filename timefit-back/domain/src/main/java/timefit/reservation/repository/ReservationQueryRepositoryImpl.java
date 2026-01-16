@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static timefit.business.entity.QBusiness.business;
+
 @Repository
 @RequiredArgsConstructor
 public class ReservationQueryRepositoryImpl implements ReservationQueryRepository {
@@ -64,6 +66,7 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
         // 쿼리 실행
         List<Reservation> reservations = queryFactory
                 .selectFrom(reservation)
+                .join(reservation.business, business).fetchJoin()
                 .where(builder)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -87,6 +90,7 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
 
         List<Reservation> reservations = queryFactory
                 .selectFrom(reservation)
+                .join(reservation.business, business).fetchJoin()
                 .where(
                         businessIdEq(businessId),
                         statusEq(status),
