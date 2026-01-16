@@ -19,6 +19,7 @@ import java.util.UUID;
  * Reservation 검증 전담 클래스
  * 역할:
  * - 예약 존재 여부, 소유권, 취소 가능 여부 등 검증
+ * - 예약 타입 판별 및 검증 (RESERVATION_BASED / ONDEMAND_BASED)
  * - Entity 메서드 활용 (isCancellable 등)
  */
 @Slf4j
@@ -237,6 +238,32 @@ public class ReservationValidator {
         }
 
         log.debug("시간대 충돌 없음: 예약 가능");
+    }
+
+    /**
+     * 예약 타입 판별 (RESERVATION_BASED vs ONDEMAND_BASED)
+     *
+     * @param bookingSlotId 슬롯 ID (RESERVATION_BASED일 때 필수)
+     * @param reservationDate 예약 날짜 (ONDEMAND_BASED일 때 필수)
+     * @param reservationTime 예약 시간 (ONDEMAND_BASED일 때 필수)
+     * @return true: RESERVATION_BASED, false: ONDEMAND_BASED
+     * @throws ReservationException 유효하지 않은 예약 타입일 경우
+     */
+    public boolean isReservationBased(UUID bookingSlotId, LocalDate reservationDate, LocalTime reservationTime) {
+        // RESERVATION_BASED 체크
+        if (bookingSlotId != null) {
+            return true;
+        }
+
+        // ONDEMAND_BASED 체크
+        if (reservationDate != null && reservationTime != null) {
+            return false;
+        }
+
+        // 둘 다 아닌 경우
+        log.warn("유효하지 않은 예약 타입: bookingSlotId={}, reservationDate={}, reservationTime={}",
+                bookingSlotId, reservationDate, reservationTime);
+        throw new ReservationException(ReservationErrorCode.INVALID_RESERVATION_TYPE);
     }
 
     /**
