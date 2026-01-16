@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import static timefit.business.entity.QBusiness.business;
+import static timefit.menu.entity.QMenu.menu;
 import static timefit.reservation.entity.QReservation.reservation;
 
 
@@ -25,6 +27,8 @@ public class BookingSlotQueryRepositoryImpl implements BookingSlotQueryRepositor
     public List<BookingSlot> findAvailableSlotsByBusinessAndDate(UUID businessId, LocalDate slotDate) {
         return queryFactory
                 .selectFrom(bookingSlot)
+                .join(bookingSlot.menu, menu).fetchJoin()
+                .join(bookingSlot.business, business).fetchJoin()
                 .where(
                         bookingSlot.business.id.eq(businessId)
                                 .and(bookingSlot.slotDate.eq(slotDate))
@@ -38,6 +42,8 @@ public class BookingSlotQueryRepositoryImpl implements BookingSlotQueryRepositor
     public List<BookingSlot> findByBusinessIdAndDateRange(UUID businessId, LocalDate startDate, LocalDate endDate) {
         return queryFactory
                 .selectFrom(bookingSlot)
+                .join(bookingSlot.menu, menu).fetchJoin()
+                .join(bookingSlot.business, business).fetchJoin()
                 .where(
                         bookingSlot.business.id.eq(businessId)
                                 .and(bookingSlot.slotDate.between(startDate, endDate))
@@ -53,6 +59,8 @@ public class BookingSlotQueryRepositoryImpl implements BookingSlotQueryRepositor
     public List<BookingSlot> findUpcomingActiveSlotsByBusinessId(UUID businessId) {
         return queryFactory
                 .selectFrom(bookingSlot)
+                .join(bookingSlot.menu, menu).fetchJoin()
+                .join(bookingSlot.business, business).fetchJoin()
                 .where(
                         bookingSlot.business.id.eq(businessId)
                                 .and(bookingSlot.slotDate.goe(LocalDate.now()))
@@ -81,7 +89,8 @@ public class BookingSlotQueryRepositoryImpl implements BookingSlotQueryRepositor
     public List<BookingSlot> findSlotsWithBookingCountByBusinessAndDate(UUID businessId, LocalDate date) {
         return queryFactory
                 .selectFrom(bookingSlot)
-                .leftJoin(bookingSlot.business).fetchJoin()
+                .join(bookingSlot.menu, menu).fetchJoin()
+                .join(bookingSlot.business, business).fetchJoin()
                 .where(
                         bookingSlot.business.id.eq(businessId)
                                 .and(bookingSlot.slotDate.eq(date))
