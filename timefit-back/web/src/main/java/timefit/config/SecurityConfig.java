@@ -113,7 +113,7 @@ public class SecurityConfig {
 
                         // ========== 업체 관련 공개 API ==========
                         .requestMatchers("/api/business/search/**").permitAll()  // 업체 검색 (쿼리 파라미터 포함) |  ** 와일드 카드를 통해 ?name=헤어샵&page=1 같은 쿼리 지원
-                        .requestMatchers(HttpMethod.GET, "/api/business/{businessId}").permitAll()  // 업체 정보 조회
+                        .requestMatchers(HttpMethod.GET, "/api/business/*/**").permitAll()
 
                         // ========== 예약 슬롯 조회 (공개) ==========
                         .requestMatchers(
