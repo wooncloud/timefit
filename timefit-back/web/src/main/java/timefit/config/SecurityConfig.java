@@ -105,18 +105,20 @@ public class SecurityConfig {
                 // 경로별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         // ========== 인증 관련 API ==========
-                        .requestMatchers("/api/auth/signup").permitAll()   // 회원가입 (공개)
-                        .requestMatchers("/api/auth/signin").permitAll()   // 로그인 (공개)
-                        .requestMatchers("/api/auth/refresh").permitAll()  // 리프레시 토큰 (공개)
-                        .requestMatchers("/api/auth/health").permitAll()   // health check
+                        .requestMatchers("/api/auth/signup", "/api/auth/signin",
+                                "/api/auth/refresh", "/api/auth/oauth",
+                                "/api/auth/health").permitAll()
                         .requestMatchers("/api/auth/**").authenticated()   // 나머지는 인증 필요 (logout, refresh 등)
 
                         // ========== 업체 관련 공개 API ==========
-                        .requestMatchers("/api/business/search/**").permitAll()  // 업체 검색 (쿼리 파라미터 포함) |  ** 와일드 카드를 통해 ?name=헤어샵&page=1 같은 쿼리 지원
-                        .requestMatchers(HttpMethod.GET, "/api/business/*/**").permitAll()
+                        .requestMatchers("/api/business/search", "/api/business/search/**").permitAll()  // 업체 검색 (쿼리 파라미터 포함) |  ** 와일드 카드를 통해 ?name=헤어샵&page=1 같은 쿼리 지원
+                        .requestMatchers(HttpMethod.GET, "/api/business/*").permitAll()                      // 업체 상세
+                        .requestMatchers(HttpMethod.GET, "/api/business/*/operating-hours").permitAll()      // 영업시간
+                        .requestMatchers(HttpMethod.GET, "/api/business/*/menu").permitAll()                 // 메뉴 목록
+                        .requestMatchers(HttpMethod.GET, "/api/business/*/menu/*").permitAll()
 
                         // ========== 예약 슬롯 조회 (공개) ==========
-                        .requestMatchers(
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/business/*/booking-slot",
                                 "/api/business/*/booking-slot/range",
                                 "/api/business/*/booking-slot/menu/*",

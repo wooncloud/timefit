@@ -98,8 +98,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             "/api/auth/health",
 
             // 업체 관련 공개 API
+            "/api/business/search",
             "/api/business/search/**",                              // 업체 검색 (쿼리 파라미터 포함)
-            "/api/business/*/**",                                      // GET 업체 정보 조회 (SecurityConfig에서 메서드 구분)
 
             // 예약 슬롯
             "/api/business/*/booking-slot",
