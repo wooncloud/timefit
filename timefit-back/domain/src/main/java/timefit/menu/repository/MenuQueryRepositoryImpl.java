@@ -10,6 +10,9 @@ import timefit.menu.entity.QMenu;
 import java.util.List;
 import java.util.UUID;
 
+import static timefit.business.entity.QBusiness.business;
+import static timefit.business.entity.QBusinessCategory.businessCategory;
+
 @Repository
 @RequiredArgsConstructor
 public class MenuQueryRepositoryImpl implements MenuQueryRepository {
@@ -21,6 +24,8 @@ public class MenuQueryRepositoryImpl implements MenuQueryRepository {
     public List<Menu> findActiveMenusByBusinessId(UUID businessId) {
         return queryFactory
                 .selectFrom(menu)
+                .join(menu.business, business).fetchJoin()
+                .join(menu.businessCategory, businessCategory).fetchJoin()
                 .where(
                         menu.business.id.eq(businessId)
                                 .and(menu.isActive.eq(true))
@@ -40,6 +45,8 @@ public class MenuQueryRepositoryImpl implements MenuQueryRepository {
 
         return queryFactory
                 .selectFrom(menu)
+                .join(menu.business, business).fetchJoin()
+                .join(menu.businessCategory, businessCategory).fetchJoin()
                 .where(
                         menu.business.id.eq(businessId),
                         serviceNameContains(serviceName),
