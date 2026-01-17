@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import timefit.exception.reservation.ReservationErrorCode;
 import timefit.exception.reservation.ReservationException;
 import timefit.reservation.entity.Reservation;
+import timefit.reservation.entity.ReservationStatus;
 import timefit.reservation.repository.ReservationRepository;
 import timefit.reservation.repository.ReservationQueryRepository;
 
@@ -263,7 +264,39 @@ public class ReservationValidator {
         // 둘 다 아닌 경우
         log.warn("유효하지 않은 예약 타입: bookingSlotId={}, reservationDate={}, reservationTime={}",
                 bookingSlotId, reservationDate, reservationTime);
-        throw new ReservationException(ReservationErrorCode.INVALID_RESERVATION_TYPE);
+        throw new ReservationException(
+                ReservationErrorCode.INVALID_RESERVATION_TYPE);
+    }
+
+    /**
+     * Menu가 특정 Business에 속하는지 검증
+     *
+     * @param menu 검증할 메뉴
+     * @param businessId 업체 ID
+     * @throws MenuException Menu가 해당 Business에 속하지 않을 경우
+     */
+    public void validateMenuBelongsToBusiness(timefit.menu.entity.Menu menu, UUID businessId) {
+        if (!menu.getBusiness().getId().equals(businessId)) {
+            log.warn("메뉴가 해당 업체에 속하지 않음: menuId={}, businessId={}",
+                    menu.getId(), businessId);
+            throw new timefit.exception.menu.MenuException(timefit.exception.menu.MenuErrorCode.MENU_NOT_FOUND);
+        }
+    }
+
+    /**
+     * 예약이 승인/거절 가능한 상태인지 검증
+     * - PENDING 상태만 승인/거절 가능
+     * - 다른 상태(CONFIRMED, CANCELLED 등)는 불가
+     *
+     * @param reservation 검증할 예약
+     * @throws ReservationException PENDING 상태가 아닐 경우
+     */
+    public void validateStatusForApproval(Reservation reservation) {
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            log.warn("승인/거절 불가능한 상태: reservationId={}, status={}",
+                    reservation.getId(), reservation.getStatus());
+            throw new ReservationException(ReservationErrorCode.RESERVATION_INVALID_STATUS);
+        }
     }
 
     /**

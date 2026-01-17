@@ -43,18 +43,8 @@ public class ReservationController {
         log.info("예약 생성 요청: businessId={}, menuId={}, customerId={}",
                 request.businessId(), request.menuId(), customerId);
 
-        ReservationResponseDto.CustomerReservation response;
-
-        // 예약 타입 판별 로직 (DTO 에서 제거됨)
-        if (request.bookingSlotId() != null) {
-            // RESERVATION_BASED
-            response = reservationService.createReservationBased(request, customerId);
-        } else if (request.reservationDate() != null && request.reservationTime() != null) {
-            // ONDEMAND_BASED
-            response = reservationService.createOnDemandBased(request, customerId);
-        } else {
-            throw new IllegalArgumentException("유효하지 않은 예약 타입입니다");
-        }
+        ReservationResponseDto.CustomerReservation response =
+                reservationService.createReservation(request, customerId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseData.of(response));
     }
