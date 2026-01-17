@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import timefit.booking.entity.BookingSlot;
 import timefit.common.entity.DayOfWeek;
 import timefit.reservation.entity.QReservation;
 import timefit.reservation.entity.Reservation;
@@ -19,6 +20,7 @@ import timefit.reservation.entity.ReservationStatus;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -241,5 +243,40 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
                 )
                 .orderBy(reservation.reservationTime.asc())
                 .fetch();
+    }
+
+    /**
+     * 예약 생성을 위한 BookingSlot 조회 (fetch join)
+     * N+1 방지: BookingSlot + Business + Menu를 한 번에 조회
+     */
+    @Override
+    public Optional<BookingSlot> findBookingSlotWithBusinessAndMenu(UUID slotId) {
+        timefit.booking.entity.QBookingSlot bookingSlot = timefit.booking.entity.QBookingSlot.bookingSlot;
+
+        timefit.booking.entity.BookingSlot result = queryFactory
+                .selectFrom(bookingSlot)
+                .join(bookingSlot.business).fetchJoin()
+                .join(bookingSlot.menu).fetchJoin()
+                .where(bookingSlot.id.eq(slotId))
+                .fetchOne();
+
+        return Optional.ofNullable(result);
+    }
+
+    /**
+     * 예약 생성을 위한 Menu 조회 (fetch join)
+     * N+1 방지: Menu + Business를 한 번에 조회
+     */
+    @Override
+    public Optional<timefit.menu.entity.Menu> findMenuWithBusiness(UUID menuId) {
+        timefit.menu.entity.QMenu menu = timefit.menu.entity.QMenu.menu;
+
+        timefit.menu.entity.Menu result = queryFactory
+                .selectFrom(menu)
+                .join(menu.business).fetchJoin()
+                .where(menu.id.eq(menuId))
+                .fetchOne();
+
+        return Optional.ofNullable(result);
     }
 }

@@ -2,12 +2,15 @@ package timefit.reservation.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import timefit.booking.entity.BookingSlot;
 import timefit.common.entity.DayOfWeek;
+import timefit.menu.entity.Menu;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 // 복잡한 검색 조건이나 동적 쿼리, 페이징 처리만 QueryDSL로 구현
@@ -59,4 +62,22 @@ public interface ReservationQueryRepository {
             UUID businessId,
             LocalDate date
     );
+
+    /**
+     * 예약 생성을 위한 BookingSlot 조회 (fetch join)
+     * N+1 방지: BookingSlot + Business + Menu를 한 번에 조회
+     *
+     * @param slotId BookingSlot ID
+     * @return BookingSlot (Business, Menu fetch join)
+     */
+    Optional<BookingSlot> findBookingSlotWithBusinessAndMenu(UUID slotId);
+
+    /**
+     * 예약 생성을 위한 Menu 조회 (fetch join)
+     * N+1 방지: Menu + Business를 한 번에 조회
+     *
+     * @param menuId Menu ID
+     * @return Menu (Business fetch join)
+     */
+    Optional<Menu> findMenuWithBusiness(UUID menuId);
 }
