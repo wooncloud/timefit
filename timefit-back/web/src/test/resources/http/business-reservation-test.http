@@ -1,0 +1,529 @@
+### ================================================================
+### Timefit 예약 Happy Path 테스트 - 최소 시나리오
+### ================================================================
+###
+### 테스트 순서:
+### [Setup 1] 사장 회원가입 + 로그인
+### [Setup 2] 업체 생성
+### [Setup 3] 영업시간 설정
+### [Setup 4] 카테고리 생성
+### [Setup 5] 메뉴 생성 (헤어컷 60분)
+### [Setup 6] BookingSlot 조회
+### [Setup 7] 고객 회원가입 + 로그인
+### [Test 1] 예약 생성 (고객)
+### [Test 2] 업체 예약 목록 조회 (사장)
+### [Test 3] 고객 예약 목록 조회 (고객)
+###
+### ================================================================
+
+@baseUrl = http://localhost:8080
+
+### ================================================================
+### [Setup 1-1] 사장 회원가입
+### ================================================================
+
+# @name 사장회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "owner@happypath.com",
+  "password": "test1234!",
+  "name": "김사장",
+  "phoneNumber": "010-1111-2222",
+  "role": "BUSINESS"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 1-1] 사장 회원가입");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        console.log("✅ 사장 회원가입 성공");
+        console.log("   Email: owner@happypath.com");
+        console.log("   Role: BUSINESS");
+    } else {
+        console.error("❌ 사장 회원가입 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 1-2] 사장 로그인
+### ================================================================
+
+# @name 사장로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "owner@happypath.com",
+  "password": "test1234!"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 1-2] 사장 로그인");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200 && response.body.data && response.body.data.accessToken) {
+        client.global.set("ownerToken", response.body.data.accessToken);
+        console.log("✅ 사장 로그인 성공");
+        console.log("   Token 저장 완료");
+        console.log("   User ID:", response.body.data.userId);
+    } else {
+        console.error("❌ 사장 로그인 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 2] 업체 생성
+### ================================================================
+
+# @name 업체생성
+POST {{baseUrl}}/api/business
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessName": "HappyPath 헤어샵",
+  "businessTypes": ["BD008"],
+  "businessNumber": "123-45-67890",
+  "ownerName": "김사장",
+  "address": "서울시 강남구 테헤란로 1",
+  "contactPhone": "02-1111-2222",
+  "description": "최소 테스트를 위한 헤어샵입니다."
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 2] 업체 생성");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        if (response.body.data && response.body.data.businessId) {
+            client.global.set("businessId", response.body.data.businessId);
+            console.log("✅ 업체 생성 성공");
+            console.log("   Business ID:", response.body.data.businessId);
+            console.log("   업체명:", response.body.data.businessName);
+        } else {
+            console.error("❌ 응답 구조 오류:", response.body);
+        }
+    } else {
+        console.error("❌ 업체 생성 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 3] 영업시간 설정 (월~금 09:00-18:00)
+### ================================================================
+
+# @name 영업시간설정
+PUT {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "schedules": [
+    {
+      "dayOfWeek": 1,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 2,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 3,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 4,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 5,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 6,
+      "isClosed": true,
+      "bookingTimeRanges": []
+    },
+    {
+      "dayOfWeek": 0,
+      "isClosed": true,
+      "bookingTimeRanges": []
+    }
+  ]
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 3] 영업시간 설정");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200) {
+        console.log("✅ 영업시간 설정 성공");
+        console.log("   월~금: 09:00-18:00");
+        console.log("   토~일: 휴무");
+    } else {
+        console.error("❌ 영업시간 설정 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 4] 카테고리 생성 (Hair)
+### ================================================================
+
+# @name 카테고리생성
+POST {{baseUrl}}/api/business/{{businessId}}/category
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "Hair"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 4] 카테고리 생성");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        if (response.body.data && response.body.data.categoryId) {
+            client.global.set("businessCategoryId", response.body.data.categoryId);
+            console.log("✅ 카테고리 생성 성공");
+            console.log("   Category ID:", response.body.data.categoryId);
+            console.log("   Type: BD008 (BEAUTY)");
+            console.log("   Name: Hair");
+        } else {
+            console.error("❌ 응답 구조 오류:", response.body);
+        }
+    } else {
+        console.error("❌ 카테고리 생성 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 5] 헤어컷 메뉴 생성 (60분)
+### ================================================================
+
+# @name 헤어컷메뉴생성
+POST {{baseUrl}}/api/business/{{businessId}}/menu
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "Hair",
+  "serviceName": "헤어컷",
+  "description": "기본 커트 서비스",
+  "price": 30000,
+  "durationMinutes": 60,
+  "orderType": "RESERVATION_BASED",
+  "autoGenerateSlots": true,
+  "slotSettings": {
+    "startDate": "2026-01-20",
+    "endDate": "2026-01-31",
+    "slotIntervalMinutes": 60,
+    "specificTimeRanges": [
+      {"startTime": "09:00", "endTime": "18:00"}
+    ]
+  }
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 5] 헤어컷 메뉴 생성");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        if (response.body.data && response.body.data.menuId) {
+            client.global.set("haircutMenuId", response.body.data.menuId);
+            console.log("✅ 헤어컷 메뉴 생성 성공");
+            console.log("   Menu ID:", response.body.data.menuId);
+            console.log("   메뉴명: 헤어컷");
+            console.log("   가격: 30,000원");
+            console.log("   소요시간: 60분");
+        } else {
+            console.error("❌ 응답 구조 오류:", response.body);
+        }
+    } else {
+        console.error("❌ 헤어컷 메뉴 생성 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 6] BookingSlot 조회 - 다음 주 월요일
+### ================================================================
+
+# @name BookingSlot조회
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot?date=2026-01-20
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 6] BookingSlot 조회");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200) {
+        const slotsData = response.body.data;
+        const slots = slotsData.slots; // 배열 추출
+
+        console.log("✅ 슬롯 조회 성공");
+        console.log("   총 슬롯 수:", slots.length);
+
+        // 첫 번째 슬롯의 ID 저장 (09:00 슬롯)
+        if (slots && slots.length > 0) {
+            const firstSlotId = slots[0].slotId;
+            client.global.set("haircutSlot_09_00", firstSlotId);
+            console.log("\n✅ 첫 번째 슬롯 ID 저장");
+            console.log("   Slot ID:", firstSlotId);
+            console.log("   시간:", slots[0].startTime, "~", slots[0].endTime);
+        } else {
+            console.error("❌ 슬롯이 없습니다");
+        }
+    } else {
+        console.error("❌ 슬롯 조회 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 7-1] 고객 회원가입
+### ================================================================
+
+# @name 고객회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "customer@happypath.com",
+  "password": "test1234!",
+  "name": "김고객",
+  "phoneNumber": "010-3333-4444",
+  "role": "CUSTOMER"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 7-1] 고객 회원가입");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        console.log("✅ 고객 회원가입 성공");
+        console.log("   Email: customer@happypath.com");
+        console.log("   Role: CUSTOMER");
+    } else {
+        console.error("❌ 고객 회원가입 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Setup 7-2] 고객 로그인
+### ================================================================
+
+# @name 고객로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "customer@happypath.com",
+  "password": "test1234!"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 7-2] 고객 로그인");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200 && response.body.data && response.body.data.accessToken) {
+        client.global.set("customerToken", response.body.data.accessToken);
+        console.log("✅ 고객 로그인 성공");
+        console.log("   Token 저장 완료");
+        console.log("   User ID:", response.body.data.userId);
+    } else {
+        console.error("❌ 고객 로그인 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Test 1] 예약 생성 (고객)
+### ================================================================
+
+# @name 예약생성
+POST {{baseUrl}}/api/reservation
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "menuId": "{{haircutMenuId}}",
+  "bookingSlotId": "{{haircutSlot_09_00}}",
+  "durationMinutes": 60,
+  "totalPrice": 30000,
+  "customerName": "김고객",
+  "customerPhone": "01033334444",
+  "notes": "헤어컷 예약입니다"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Test 1] 예약 생성 (고객)");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200 || response.status === 201) {
+        if (response.body.data && response.body.data.reservationId) {
+            client.global.set("reservationId", response.body.data.reservationId);
+            console.log("✅ 예약 생성 성공");
+            console.log("   Reservation ID:", response.body.data.reservationId);
+            console.log("   메뉴: 헤어컷");
+            console.log("   시간대: 09:00-10:00");
+            console.log("   가격: 30,000원");
+            console.log("   상태:", response.body.data.status);
+        } else {
+            console.error("❌ 응답 구조 오류:", response.body);
+        }
+    } else {
+        console.error("❌ 예약 생성 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Test 2] 업체 예약 목록 조회 (사장) - 지금 테스트하려는 API
+### ================================================================
+
+# @name 업체예약목록조회
+GET {{baseUrl}}/api/business/{{businessId}}/reservations?status=PENDING&startDate=2026-01-01&endDate=2026-12-31&page=0&size=20
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Test 2] 업체 예약 목록 조회 (사장)");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200) {
+        const data = response.body.data;
+        console.log("✅ 업체 예약 목록 조회 성공");
+        console.log("   총 예약 수:", data.totalElements || data.length);
+
+        if (data.content && data.content.length > 0) {
+            console.log("\n=== 예약 목록 ===");
+            data.content.forEach((reservation, idx) => {
+                console.log(`\n[${idx + 1}] Reservation ID:`, reservation.reservationId);
+                console.log("   고객명:", reservation.customerName);
+                console.log("   메뉴:", reservation.menuName);
+                console.log("   시간:", reservation.startTime, "~", reservation.endTime);
+                console.log("   상태:", reservation.status);
+            });
+        } else if (Array.isArray(data) && data.length > 0) {
+            console.log("\n=== 예약 목록 ===");
+            data.forEach((reservation, idx) => {
+                console.log(`\n[${idx + 1}] Reservation ID:`, reservation.reservationId);
+                console.log("   고객명:", reservation.customerName);
+                console.log("   메뉴:", reservation.menuName);
+                console.log("   시간:", reservation.startTime, "~", reservation.endTime);
+                console.log("   상태:", reservation.status);
+            });
+        } else {
+            console.log("   예약이 없습니다.");
+        }
+    } else {
+        console.error("❌ 업체 예약 목록 조회 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
+
+### ================================================================
+### [Test 3] 고객 예약 목록 조회 (고객)
+### ================================================================
+
+# @name 고객예약목록조회
+GET {{baseUrl}}/api/reservations
+Authorization: Bearer {{customerToken}}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Test 3] 고객 예약 목록 조회 (고객)");
+    console.log("========================================");
+    console.log("Status:", response.status);
+
+    if (response.status === 200) {
+        const reservations = response.body.data;
+        console.log("✅ 고객 예약 목록 조회 성공");
+        console.log("   총 예약 수:", reservations.length);
+
+        if (reservations.length > 0) {
+            console.log("\n=== 내 예약 목록 ===");
+            reservations.forEach((reservation, idx) => {
+                console.log(`\n[${idx + 1}] Reservation ID:`, reservation.reservationId);
+                console.log("   업체:", reservation.businessName);
+                console.log("   메뉴:", reservation.menuName);
+                console.log("   날짜:", reservation.reservationDate);
+                console.log("   시간:", reservation.startTime, "~", reservation.endTime);
+                console.log("   상태:", reservation.status);
+            });
+        } else {
+            console.log("   예약이 없습니다.");
+        }
+
+        console.log("\n========================================");
+        console.log("🎉 Happy Path 테스트 완료!");
+        console.log("========================================");
+        console.log("✅ Setup: 사장 가입 → 업체 생성 → 영업시간 → 카테고리 → 메뉴");
+        console.log("✅ Setup: 고객 가입 → 로그인");
+        console.log("✅ Test 1: 예약 생성 (고객)");
+        console.log("✅ Test 2: 업체 예약 목록 조회 (사장)");
+        console.log("✅ Test 3: 고객 예약 목록 조회 (고객)");
+    } else {
+        console.error("❌ 고객 예약 목록 조회 실패");
+        console.error("   에러:", JSON.stringify(response.body, null, 2));
+    }
+%}
