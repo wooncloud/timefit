@@ -1,5 +1,7 @@
 package timefit.booking.entity;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import timefit.business.entity.Business;
 import timefit.menu.entity.Menu;
 import timefit.common.entity.BaseEntity;
@@ -26,6 +28,7 @@ public class BookingSlot extends BaseEntity {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Menu menu;
 
     @NotNull

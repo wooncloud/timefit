@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import timefit.common.entity.BaseEntity;
 
 import java.util.UUID;
@@ -30,6 +32,7 @@ public class BusinessCategory extends BaseEntity {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Business business;
 
     /**
