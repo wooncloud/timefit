@@ -21,7 +21,8 @@ public enum MenuErrorCode {
     CANNOT_DEACTIVATE_MENU_WITH_RESERVATIONS("이 메뉴에 미래 예약이 존재하여 삭제 / 비활성화할 수 없습니다", HttpStatus.BAD_REQUEST),
     CANNOT_CHANGE_DURATION_WITH_RESERVATIONS("이 메뉴에 미래 예약이 존재하여 소요 시간을 변경할 수 없습니다", HttpStatus.BAD_REQUEST),
     CANNOT_CHANGE_ORDER_TYPE("메뉴 타입(예약형/주문형)은 변경할 수 없습니다", HttpStatus.BAD_REQUEST),
-
+    MENU_NOT_BELONG_TO_BUSINESS("해당 업체의 메뉴가 아닙니다.", HttpStatus.CONFLICT),
+    MENU_HAS_ACTIVE_RESERVATIONS("활성 예약이 있는 메뉴는 삭제할 수 없습니다", HttpStatus.CONFLICT),
     // 권한 관련
     MENU_ACCESS_DENIED("해당 메뉴에 대한 권한이 없습니다", HttpStatus.FORBIDDEN),
 

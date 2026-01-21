@@ -34,6 +34,8 @@ public enum BusinessErrorCode {
     // 삭제 관련
     DELETE_CONFIRMATION_REQUIRED("삭제 확인이 필요합니다", HttpStatus.BAD_REQUEST),
     BUSINESS_ALREADY_DELETED("이미 삭제된 업체입니다", HttpStatus.BAD_REQUEST),
+    BUSINESS_HAS_ACTIVE_RESERVATIONS("활성 예약이 있는 업체는 삭제할 수 없습니다", HttpStatus.BAD_REQUEST),
+    BUSINESS_HAS_ACTIVE_MENUS("활성 메뉴가 있는 업체는 삭제할 수 없습니다. 먼저 메뉴를 삭제해주세요", HttpStatus.BAD_REQUEST),
 
     // 예약 가능 시간 관련
     OPERATING_HOURS_NOT_FOUND("해당 예약 시간대를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
