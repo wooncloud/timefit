@@ -4,12 +4,15 @@ import type {
   MemberStatusChangeApiResponse,
   MemberStatusChangeHandlerResponse,
 } from '@/types/business/team-member';
-import { withAuth } from '@/lib/api/auth-middleware';
+import { apiFetch } from '@/lib/api/api-fetch';
+import { handleApiError } from '@/lib/api/error-handler';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export const PATCH = withAuth<MemberStatusChangeHandlerResponse>(
-  async (request: NextRequest, { accessToken }) => {
+export async function PATCH(
+  request: NextRequest
+): Promise<NextResponse<MemberStatusChangeHandlerResponse>> {
+  try {
     // Extract businessId and userId from URL
     const url = new URL(request.url);
     const pathSegments = url.pathname.split('/');
@@ -26,43 +29,28 @@ export const PATCH = withAuth<MemberStatusChangeHandlerResponse>(
       );
     }
 
-    try {
-      const response = await fetch(
-        `${BACKEND_API_URL}/api/business/${businessId}/member/${userId}/activate`,
-        {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+    const response = await apiFetch(
+      `${BACKEND_API_URL}/api/business/${businessId}/member/${userId}/activate`,
+      { method: 'PATCH' }
+    );
 
-      const responseData: MemberStatusChangeApiResponse = await response.json();
+    const responseData: MemberStatusChangeApiResponse = await response.json();
 
-      if (!response.ok) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: responseData.message || '활성화에 실패했습니다.',
-          },
-          { status: response.status }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: '구성원이 활성화되었습니다.',
-      });
-    } catch (error) {
-      console.error('구성원 활성화 실패:', error);
+    if (!response.ok) {
       return NextResponse.json(
         {
           success: false,
-          message: '활성화 중 오류가 발생했습니다.',
+          message: responseData.message || '활성화에 실패했습니다.',
         },
-        { status: 500 }
+        { status: response.status }
       );
     }
+
+    return NextResponse.json({
+      success: true,
+      message: '구성원이 활성화되었습니다.',
+    });
+  } catch (error) {
+    return handleApiError<MemberStatusChangeHandlerResponse>(error);
   }
-);
+}

@@ -38,10 +38,10 @@ import java.lang.annotation.*;
                         {
                             "success": true,
                             "data": {
-                            "menuId": "550e8400-e29b-41d4-a716-446655440000",
-                            "businessId": "550e8400-e29b-41d4-a716-446655440001",
+                            "menuId": "10000000-0000-0000-0000-000000000001",
+                            "businessId": "30000000-0000-0000-0000-000000000001",
                             "serviceName": "헤어 컷",
-                            "businessCategoryId": "550e8400-e29b-41d4-a716-446655440002",
+                            "businessCategoryId": "60000000-0000-0000-0000-000000000001",
                             "businessType": "BD003",
                             "categoryName": "헤어",
                             "price": 30000,

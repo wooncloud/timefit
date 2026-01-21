@@ -17,6 +17,7 @@ public enum ReservationErrorCode {
 
     // 예약 시간/조건 관련
     RESERVATION_TIME_UNAVAILABLE("선택한 시간대는 예약할 수 없습니다", HttpStatus.BAD_REQUEST),
+    RESERVATION_TIME_SLOT_CONFLICT("해당 시간대에 이미 다른 예약이 있습니다", HttpStatus.CONFLICT),
     RESERVATION_SLOT_UNAVAILABLE("영업 시간 내에서만 예약할 수 있습니다",  HttpStatus.BAD_REQUEST),
     RESERVATION_BUSINESS_CLOSED("해당 날짜는 영업하지 않습니다", HttpStatus.BAD_REQUEST),
     RESERVATION_CAPACITY_EXCEEDED("예약 인원을 다시 확인해주세요", HttpStatus.BAD_REQUEST),
@@ -35,7 +36,7 @@ public enum ReservationErrorCode {
 
     // 유효성 검사
     INVALID_DATE_FORMAT("날짜 형식이 올바르지 않습니다", HttpStatus.BAD_REQUEST),
-    INVALID_STATUS("예약 상태 값이 올바르지 않습니다", HttpStatus.BAD_REQUEST),
+    INVALID_RESERVATION_TYPE("유효하지 않은 예약 타입입니다. RESERVATION_BASED 또는 ONDEMAND_BASED 중 하나를 선택해야 합니다.", HttpStatus.BAD_REQUEST),
     INVALID_PAGE_NUMBER("페이지 번호가 올바르지 않습니다", HttpStatus.BAD_REQUEST),
     INVALID_PAGE_SIZE("페이지 크기가 올바르지 않습니다", HttpStatus.BAD_REQUEST);
 

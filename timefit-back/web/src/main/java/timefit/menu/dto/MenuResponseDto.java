@@ -19,13 +19,13 @@ public class MenuResponseDto {
     public record Menu(
             @Schema(
                     description = "메뉴 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440000"
+                    example = "10000000-0000-0000-0000-000000000001"
             )
             UUID menuId,
 
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
@@ -37,7 +37,7 @@ public class MenuResponseDto {
 
             @Schema(
                     description = "카테고리 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440002"
+                    example = "60000000-0000-0000-0000-000000000001"
             )
             UUID businessCategoryId,
 
@@ -149,6 +149,33 @@ public class MenuResponseDto {
                     .toList();
 
             return new MenuList(menus, menus.size());
+        }
+    }
+
+    /**
+     * 메뉴 삭제 결과
+     */
+    @Schema(description = "메뉴 삭제 결과")
+    public record DeleteResult(
+            @Schema(description = "삭제된 메뉴 ID", example = "4bc7b5db-47dd-4d23-9e0f-f5b820ae1e43")
+            UUID menuId,
+
+            @Schema(description = "삭제된 메뉴명", example = "헤어컷")
+            String menuName,
+
+            @Schema(description = "결과 메시지", example = "메뉴가 성공적으로 삭제되었습니다")
+            String message,
+
+            @Schema(description = "삭제 시간", example = "2026-01-21T02:31:38")
+            LocalDateTime deletedAt
+    ) {
+        public static DeleteResult of(UUID menuId, String menuName, String message) {
+            return new DeleteResult(
+                    menuId,
+                    menuName,
+                    message,
+                    LocalDateTime.now()
+            );
         }
     }
 }

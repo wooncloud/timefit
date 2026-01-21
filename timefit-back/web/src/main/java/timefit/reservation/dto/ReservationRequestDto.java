@@ -18,7 +18,7 @@ public class ReservationRequestDto {
     public record CreateReservation(
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001",
+                    example = "30000000-0000-0000-0000-000000000001",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotNull(message = "업체 ID는 필수입니다")
@@ -26,7 +26,7 @@ public class ReservationRequestDto {
 
             @Schema(
                     description = "메뉴 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440002",
+                    example = "60000000-0000-0000-0000-000000000001",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotNull(message = "메뉴 ID는 필수입니다")
@@ -35,7 +35,7 @@ public class ReservationRequestDto {
             // RESERVATION_BASED 예약 시 필수 (슬롯 기반)
             @Schema(
                     description = "슬롯 ID (RESERVATION_BASED일 때 필수)",
-                    example = "550e8400-e29b-41d4-a716-446655440003",
+                    example = "50000000-0000-0000-0000-000000000001",
                     nullable = true
             )
             UUID bookingSlotId,
@@ -43,14 +43,14 @@ public class ReservationRequestDto {
             // ONDEMAND_BASED 예약 시 필수 (즉시 예약)
             @Schema(
                     description = "예약 날짜 (ONDEMAND_BASED일 때 필수)",
-                    example = "2025-12-01",
+                    example = "2025-01-10",
                     nullable = true
             )
             LocalDate reservationDate,
 
             @Schema(
                     description = "예약 시간 (ONDEMAND_BASED일 때 필수)",
-                    example = "14:00:00",
+                    example = "09:00:00",
                     nullable = true
             )
             LocalTime reservationTime,
@@ -76,7 +76,7 @@ public class ReservationRequestDto {
 
             @Schema(
                     description = "예약자 이름 (최대 50자)",
-                    example = "홍길동",
+                    example = "Owner Kim",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotBlank(message = "예약자 이름은 필수입니다")
@@ -85,7 +85,7 @@ public class ReservationRequestDto {
 
             @Schema(
                     description = "연락처 (10~11자리 숫자)",
-                    example = "01012345678",
+                    example = "010-1111-1111",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotBlank(message = "연락처는 필수입니다")
@@ -121,28 +121,28 @@ public class ReservationRequestDto {
     public record UpdateReservation(
             @Schema(
                     description = "예약 날짜",
-                    example = "2025-12-02",
+                    example = "2025-01-11",
                     nullable = true
             )
             LocalDate reservationDate,
 
             @Schema(
                     description = "예약 시간",
-                    example = "15:00:00",
+                    example = "10:00:00",
                     nullable = true
             )
             LocalTime reservationTime,
 
             @Schema(
                     description = "예약자 이름",
-                    example = "홍길동",
+                    example = "Owner Kim",
                     nullable = true
             )
             String customerName,
 
             @Schema(
                     description = "연락처",
-                    example = "01087654321",
+                    example = "010-2222-0001",
                     nullable = true
             )
             String customerPhone,

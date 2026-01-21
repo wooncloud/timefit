@@ -53,19 +53,19 @@ import java.lang.annotation.Target;
                         {
                           "success": true,
                           "data": {
-                            "userId": "550e8400-e29b-41d4-a716-446655440000",
-                            "email": "user@example.com",
-                            "name": "홍길동",
-                            "phoneNumber": "010-1234-5678",
+                            "userId": "10000000-0000-0000-0000-000000000001",
+                            "email": "owner1@timefit.com",
+                            "name": "Owner Kim",
+                            "phoneNumber": "010-1111-1111",
                             "role": "BUSINESS",
                             "profileImageUrl": null,
                             "businesses": [
                               {
-                                "businessId": "550e8400-e29b-41d4-a716-446655440001",
+                                "businessId": "30000000-0000-0000-0000-000000000001",
                                 "businessName": "강남 헤어샵",
                                 "businessTypes": ["BD008"],
                                 "address": "서울시 강남구",
-                                "contactPhone": "02-1234-5678",
+                                "contactPhone": "02-1111-1111",
                                 "userRole": "OWNER",
                                 "isBusinessActive": true,
                                 "joinedAt": "2025-11-01T10:00:00"

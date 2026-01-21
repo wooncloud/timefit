@@ -17,7 +17,7 @@ import java.lang.annotation.*;
                 examples = @ExampleObject(
                         value = """
                     {
-                        "confirmationText": "홍길동 미용실"
+                        "confirmationText": "Owner Kim 미용실"
                     }
                     """
                 )

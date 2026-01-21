@@ -22,7 +22,7 @@ public class ReservationResponseDto {
     public record CustomerReservation(
             @Schema(
                     description = "예약 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440000"
+                    example = "10000000-0000-0000-0000-000000000001"
             )
             UUID reservationId,
 
@@ -53,14 +53,14 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "취소 일시",
-                    example = "2025-11-23T16:00:00",
+                    example = "2025-11-23T14:00:00",
                     nullable = true
             )
             LocalDateTime cancelledAt,
 
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
@@ -78,7 +78,7 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "업체 연락처",
-                    example = "02-1234-5678"
+                    example = "02-1111-1111"
             )
             String businessContactPhone,
 
@@ -91,13 +91,13 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "예약 날짜",
-                    example = "2025-12-01"
+                    example = "2025-01-10"
             )
             LocalDate reservationDate,
 
             @Schema(
                     description = "예약 시간",
-                    example = "14:00:00"
+                    example = "09:00:00"
             )
             LocalTime reservationTime,
 
@@ -128,13 +128,13 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "예약자 이름 (스냅샷)",
-                    example = "홍길동"
+                    example = "Owner Kim"
             )
             String customerNameSnapshot,
 
             @Schema(
                     description = "예약자 연락처 (스냅샷)",
-                    example = "01012345678"
+                    example = "010-1111-1111"
             )
             String customerPhoneSnapshot
     ) {
@@ -191,7 +191,7 @@ public class ReservationResponseDto {
     public record CustomerReservationItem(
             @Schema(
                     description = "예약 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440000"
+                    example = "10000000-0000-0000-0000-000000000001"
             )
             UUID reservationId,
 
@@ -210,7 +210,7 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
@@ -229,13 +229,13 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "예약 날짜",
-                    example = "2025-12-01"
+                    example = "2025-01-10"
             )
             LocalDate reservationDate,
 
             @Schema(
                     description = "예약 시간",
-                    example = "14:00:00"
+                    example = "09:00:00"
             )
             LocalTime reservationTime,
 
@@ -293,7 +293,7 @@ public class ReservationResponseDto {
     public record BusinessReservation(
             @Schema(
                     description = "예약 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440000"
+                    example = "10000000-0000-0000-0000-000000000001"
             )
             UUID reservationId,
 
@@ -324,14 +324,14 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "취소 일시",
-                    example = "2025-11-23T16:00:00",
+                    example = "2025-11-23T14:00:00",
                     nullable = true
             )
             LocalDateTime cancelledAt,
 
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
@@ -349,7 +349,7 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "업체 연락처",
-                    example = "02-1234-5678"
+                    example = "02-1111-1111"
             )
             String businessContactPhone,
 
@@ -361,13 +361,13 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "고객 이름",
-                    example = "홍길동"
+                    example = "Owner Kim"
             )
             String customerName,
 
             @Schema(
                     description = "고객 연락처",
-                    example = "01012345678"
+                    example = "010-1111-1111"
             )
             String customerPhone,
 
@@ -380,7 +380,7 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "메뉴 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440002"
+                    example = "60000000-0000-0000-0000-000000000001"
             )
             UUID menuId,
 
@@ -438,19 +438,19 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "예약 날짜",
-                    example = "2025-12-01"
+                    example = "2025-01-10"
             )
             LocalDate reservationDate,
 
             @Schema(
                     description = "예약 시간",
-                    example = "14:00:00"
+                    example = "09:00:00"
             )
             LocalTime reservationTime,
 
             @Schema(
                     description = "슬롯 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440003",
+                    example = "50000000-0000-0000-0000-000000000001",
                     nullable = true
             )
             UUID bookingSlotId,
@@ -469,13 +469,13 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "예약자 이름 (스냅샷)",
-                    example = "홍길동"
+                    example = "Owner Kim"
             )
             String customerNameSnapshot,
 
             @Schema(
                     description = "예약자 연락처 (스냅샷)",
-                    example = "01012345678"
+                    example = "010-1111-1111"
             )
             String customerPhoneSnapshot,
 
@@ -533,7 +533,7 @@ public class ReservationResponseDto {
     public record BusinessReservationList(
             @Schema(
                     description = "업체 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440001"
+                    example = "30000000-0000-0000-0000-000000000001"
             )
             UUID businessId,
 
@@ -551,7 +551,7 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "업체 연락처",
-                    example = "02-1234-5678"
+                    example = "02-1111-1111"
             )
             String businessContactPhone,
 
@@ -579,7 +579,7 @@ public class ReservationResponseDto {
     public record BusinessReservationItem(
             @Schema(
                     description = "예약 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440000"
+                    example = "10000000-0000-0000-0000-000000000001"
             )
             UUID reservationId,
 
@@ -604,25 +604,25 @@ public class ReservationResponseDto {
 
             @Schema(
                     description = "고객 이름",
-                    example = "홍길동"
+                    example = "Owner Kim"
             )
             String customerName,
 
             @Schema(
                     description = "고객 연락처",
-                    example = "01012345678"
+                    example = "010-1111-1111"
             )
             String customerPhone,
 
             @Schema(
                     description = "예약 날짜",
-                    example = "2025-12-01"
+                    example = "2025-01-10"
             )
             LocalDate reservationDate,
 
             @Schema(
                     description = "예약 시간",
-                    example = "14:00:00"
+                    example = "09:00:00"
             )
             LocalTime reservationTime,
 
@@ -677,7 +677,7 @@ public class ReservationResponseDto {
     public record ReservationActionResult(
             @Schema(
                     description = "예약 ID",
-                    example = "550e8400-e29b-41d4-a716-446655440000"
+                    example = "10000000-0000-0000-0000-000000000001"
             )
             UUID reservationId,
 

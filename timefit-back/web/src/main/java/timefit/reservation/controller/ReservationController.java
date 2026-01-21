@@ -43,18 +43,8 @@ public class ReservationController {
         log.info("예약 생성 요청: businessId={}, menuId={}, customerId={}",
                 request.businessId(), request.menuId(), customerId);
 
-        ReservationResponseDto.CustomerReservation response;
-
-        // 예약 타입 판별 로직 (DTO 에서 제거됨)
-        if (request.bookingSlotId() != null) {
-            // RESERVATION_BASED
-            response = reservationService.createReservationBased(request, customerId);
-        } else if (request.reservationDate() != null && request.reservationTime() != null) {
-            // ONDEMAND_BASED
-            response = reservationService.createOnDemandBased(request, customerId);
-        } else {
-            throw new IllegalArgumentException("유효하지 않은 예약 타입입니다");
-        }
+        ReservationResponseDto.CustomerReservation response =
+                reservationService.createReservation(request, customerId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseData.of(response));
     }
@@ -71,7 +61,7 @@ public class ReservationController {
             @RequestParam(required = false) String startDate,
             @Parameter(description = "종료 날짜 (YYYY-MM-DD)", example = "2025-11-30")
             @RequestParam(required = false) String endDate,
-            @Parameter(description = "업체 ID 필터", example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID 필터", example = "30000000-0000-0000-0000-000000000001")
             @RequestParam(required = false) UUID businessId,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
@@ -90,7 +80,7 @@ public class ReservationController {
     @GetReservationDetailOperation
     @GetMapping("/api/reservation/{reservationId}")
     public ResponseEntity<ResponseData<ReservationResponseDto.CustomerReservation>> getReservationDetail(
-            @Parameter(description = "예약 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "예약 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID reservationId,
             @Parameter(hidden = true)
             @CurrentUserId UUID customerId) {
@@ -105,7 +95,7 @@ public class ReservationController {
     @UpdateReservationOperation
     @PutMapping("/api/reservation/{reservationId}")
     public ResponseEntity<ResponseData<ReservationResponseDto.CustomerReservation>> updateReservation(
-            @Parameter(description = "예약 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "예약 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID reservationId,
             @UpdateReservationRequestBody
             @Valid @RequestBody ReservationRequestDto.UpdateReservation request,
@@ -120,9 +110,9 @@ public class ReservationController {
     }
 
     @CancelReservationOperation
-    @DeleteMapping("/api/reservation/{reservationId}")
+    @PostMapping("/api/reservation/{reservationId}/cancel")
     public ResponseEntity<ResponseData<ReservationResponseDto.ReservationActionResult>> cancelReservation(
-            @Parameter(description = "예약 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "예약 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID reservationId,
             @CancelReservationRequestBody
             @Valid @RequestBody ReservationRequestDto.CancelReservation request,
@@ -143,7 +133,7 @@ public class ReservationController {
     @GetBusinessReservationsOperation
     @GetMapping("/api/business/{businessId}/reservations")
     public ResponseEntity<ResponseData<ReservationResponseDto.BusinessReservationList>> getBusinessReservations(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(description = "예약 상태", example = "PENDING")
             @RequestParam(required = false) String status,
@@ -170,9 +160,9 @@ public class ReservationController {
     @GetBusinessReservationDetailOperation
     @GetMapping("/api/business/{businessId}/reservation/{reservationId}")
     public ResponseEntity<ResponseData<ReservationResponseDto.BusinessReservation>> getBusinessReservationDetail(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "예약 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "예약 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID reservationId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
@@ -189,9 +179,9 @@ public class ReservationController {
     @ApproveReservationOperation
     @PostMapping("/api/business/{businessId}/reservation/{reservationId}/approve")
     public ResponseEntity<ResponseData<ReservationResponseDto.ReservationActionResult>> approveReservation(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "예약 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "예약 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID reservationId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
@@ -208,9 +198,9 @@ public class ReservationController {
     @RejectReservationOperation
     @PostMapping("/api/business/{businessId}/reservation/{reservationId}/reject")
     public ResponseEntity<ResponseData<ReservationResponseDto.ReservationActionResult>> rejectReservation(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "예약 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "예약 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID reservationId,
             @Parameter(description = "거절 사유", example = "예약 가능 시간이 아닙니다")
             @RequestBody(required = false) String notes,
@@ -228,9 +218,9 @@ public class ReservationController {
     @CompleteReservationOperation
     @PostMapping("/api/business/{businessId}/reservation/{reservationId}/complete")
     public ResponseEntity<ResponseData<ReservationResponseDto.ReservationActionResult>> completeReservation(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "예약 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "예약 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID reservationId,
             @Parameter(description = "완료 메모", example = "서비스가 정상적으로 완료되었습니다")
             @RequestBody(required = false) String notes,
@@ -249,9 +239,9 @@ public class ReservationController {
     @MarkAsNoShowOperation
     @PostMapping("/api/business/{businessId}/reservation/{reservationId}/no-show")
     public ResponseEntity<ResponseData<ReservationResponseDto.ReservationActionResult>> markAsNoShow(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "예약 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "예약 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID reservationId,
             @Parameter(description = "노쇼 메모", example = "예약 시간에 나타나지 않음")
             @RequestBody(required = false) String notes,

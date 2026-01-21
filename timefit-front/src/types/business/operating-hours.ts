@@ -18,17 +18,6 @@ export function weekdayIdToDayOfWeek(id: WeekdayId): number {
 }
 
 /**
- * API 응답 타입: 운영 시간 토글
- */
-export interface ToggleOperatingHoursApiResponse {
-  data?: {
-    dayOfWeek: number;
-    isEnabled: boolean;
-  };
-  message?: string;
-}
-
-/**
  * Next.js 핸들러 응답 타입: 운영 시간 토글
  */
 export interface ToggleOperatingHoursHandlerResponse {

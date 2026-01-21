@@ -13,20 +13,15 @@ import timefit.business.entity.Business;
 import timefit.business.entity.OperatingHours;
 import timefit.business.repository.OperatingHoursRepository;
 import timefit.common.entity.DayOfWeek;
+import timefit.exception.booking.BookingErrorCode;
+import timefit.exception.booking.BookingException;
 import timefit.menu.entity.Menu;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.time.LocalTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * BookingSlot 생성 헬퍼
- * - BookingSlot 생성 비즈니스 로직
- * - 날짜별 슬롯 생성
- * - 중복 체크 및 저장
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -37,17 +32,17 @@ public class BookingSlotCreationHelper {
     private final BookingSlotGenerationUtil slotGenerationUtil;
 
     /**
-     * BookingSlot 생성
-     * 1. 모든 슬롯 생성
-     * 2. 중복 체크 (하나라도 중복이면 예외 발생)
-     * 3. 일괄 저장
-     * 4. 결과 반환
-     * [트랜잭션 보장]
-     * - 중복 발견 시 즉시 예외 발생 → 전체 롤백
-     * - 부분 성공 절대 불가 (All or Nothing)
-     * [중복 체크]
-     * - API 경로: 사용자가 같은 날짜/시간 재생성 방지
-     * - Menu 경로: 같은 메뉴 재생성 시 기존 슬롯 감지
+     * BookingSlot 일괄 생성
+     * [처리 흐름]
+     * 1. 날짜별 슬롯 생성 (OperatingHours 기반)
+     * 2. 중복 체크 (menu_id + date + startTime 기준) - 일괄 조회 최적화
+     * 3. 일괄 저장 (Batch Insert)
+     * [중복 체크 정책]
+     * - 같은 메뉴의 같은 시간대 슬롯만 중복으로 판단
+     * - 다른 메뉴는 같은 시간대에 슬롯 생성 가능
+     * [변경 사항 perf]
+     * - 중복 체크: 390번 SELECT → 1번 SELECT
+     * - 저장: Batch Insert (1~2번)
      *
      * @param business 업체
      * @param menu 메뉴
@@ -62,58 +57,52 @@ public class BookingSlotCreationHelper {
             List<DailySlotSchedule> schedules,
             Integer intervalMinutes) {
 
-        log.info("BookingSlot 생성 시작: businessId={}, menuId={}, 날짜 수={}",
+        log.info("BookingSlot 생성 시작: businessId={}, menuId={}, scheduleCount={}",
                 business.getId(), menu.getId(), schedules.size());
 
         List<BookingSlot> createdSlots = new ArrayList<>();
 
+        // 0. OperatingHours 전체 조회 (1번의 SELECT)
+        Map<DayOfWeek, List<OperatingHours>> operatingHoursMap =
+                loadOperatingHoursMap(business.getId());
+
         // 1. 날짜별 루프 - 모든 슬롯 생성
         for (DailySlotSchedule schedule : schedules) {
-            // 1-1) 각 날짜의 슬롯 생성
+            // 1-1) 각 날짜의 슬롯 생성 (Map에서 조회)
             List<BookingSlot> dailySlots = generateSlotsForDate(
                     business,
                     menu,
                     schedule.date(),
                     schedule.timeRanges(),
-                    intervalMinutes
+                    intervalMinutes,
+                    operatingHoursMap
             );
 
             // 1-2) 생성 목록에 추가
             createdSlots.addAll(dailySlots);
         }
 
-        // 2. 중복 체크 (하나라도 중복이면 예외 발생 → 전체 롤백)
-        for (BookingSlot slot : createdSlots) {
-            // 2-1) 중복 여부 확인 (businessId + slotDate + startTime)
-            if (isDuplicate(business.getId(), slot)) {
-                // 2-2) 중복 발견 시 즉시 예외 발생 (전체 롤백)
-                log.error("중복 슬롯 발견 - 전체 롤백: date={}, startTime={}",
-                        slot.getSlotDate(), slot.getStartTime());
-                throw new timefit.exception.booking.BookingException(
-                        timefit.exception.booking.BookingErrorCode.AVAILABLE_SLOT_CONFLICT
-                );
-            }
-        }
+        // 2. 중복 체크 - 일괄 조회 (1번의 SELECT)
+        checkDuplicates(menu.getId(), createdSlots);
 
-        // 3. 일괄 저장 (중복 없음이 보장됨)
+        // 3. 일괄 저장 (Batch Insert, 중복 없음이 보장됨)
         bookingSlotRepository.saveAll(createdSlots);
 
-        log.info("BookingSlot 생성 완료: businessId={}, 생성 개수={}",
-                business.getId(), createdSlots.size());
+        log.info("BookingSlot 생성 완료: menuId={}, 생성 개수={}",
+                menu.getId(), createdSlots.size());
 
         // 4. 결과 반환 (생략 없음 - All or Nothing)
-        // parameter : 요청 개수 , 생성 개수 (동일) , 생략 개수 (0 고정)
         return new BookingSlotResponse.CreationResult(
                 createdSlots.size(),
                 createdSlots.size(),
-                0                      // all or nothing 이기 때문에 skip is 0 fixed.
+                0  // all or nothing이기 때문에 skip은 0 고정
         );
     }
 
     /**
      * 특정 날짜의 슬롯 생성 (핵심 로직)
      * 1. 요일 추출
-     * 2. 해당 요일의 OperatingHours 조회 및 필터링
+     * 2. 메모리 내 생성된 Map에서 해당 요일의 OperatingHours 조회
      * 3. BookingSlotGenerationUtil 호출
      *
      * @param business 업체
@@ -121,6 +110,7 @@ public class BookingSlotCreationHelper {
      * @param date 대상 날짜
      * @param timeRanges 시간대 목록 (null이면 전체 운영시간)
      * @param intervalMinutes 슬롯 간격 (분)
+     * @param operatingHoursMap 요일별 운영시간 Map (캐싱)
      * @return 생성된 BookingSlot 목록
      */
     private List<BookingSlot> generateSlotsForDate(
@@ -128,21 +118,18 @@ public class BookingSlotCreationHelper {
             Menu menu,
             LocalDate date,
             List<AvailableTimeRange> timeRanges,
-            Integer intervalMinutes) {
+            Integer intervalMinutes,
+            Map<DayOfWeek, List<OperatingHours>> operatingHoursMap) {
 
         // 1. 요일 추출
-        // - LocalDate → DayOfWeek enum 변환
         int dayOfWeekValue = date.getDayOfWeek().getValue();
         DayOfWeek dayOfWeek = DayOfWeek.fromValue(dayOfWeekValue);
 
-        // 2. OperatingHours 조회 및 필터링
-        List<OperatingHours> operatingHours = operatingHoursRepository
-                // 2-1) 해당 업체의 해당 요일 운영시간 조회 (sequence 순서대로)
-                .findByBusinessIdAndDayOfWeekOrderBySequenceAsc(business.getId(), dayOfWeek)
+        // 2. Map에서 OperatingHours 조회 (메모리)
+        List<OperatingHours> operatingHours = operatingHoursMap
+                .getOrDefault(dayOfWeek, Collections.emptyList())
                 .stream()
-                // 2-2) 휴무일 제외 (isClosed = false만)
                 .filter(oh -> !oh.getIsClosed())
-                // 2-3) 실제 운영하는 시간만 리스트로 수집
                 .collect(Collectors.toList());
 
         // 3. 운영시간 없으면 빈 리스트 반환
@@ -151,27 +138,103 @@ public class BookingSlotCreationHelper {
             return new ArrayList<>();
         }
 
-        // 4. 슬롯 생성 (실제 생성 로직)
-        // - BookingSlotGenerationUtil이 OperatingHours와 timeRanges를 조합하여 슬롯 생성
+        // 4. 슬롯 생성
         return slotGenerationUtil.generateSlotsForDay(
                 business, menu, date, operatingHours, timeRanges, intervalMinutes
         );
     }
 
     /**
-     * 중복 체크
-     * - businessId + slotDate + startTime 조합으로 중복 여부 확인
-     * [중요]
-     * - 같은 업체, 같은 날짜, 같은 시작 시간이면 중복으로 판단
-     * - endTime은 체크하지 않음 (startTime만으로 충분)
+     * OperatingHours 전체 조회 및 캐싱
+     * [처리 흐름]
+     * 1. businessId로 전체 OperatingHours 조회 (1번의 SELECT)
+     * 2. DayOfWeek로 그룹핑하여 Map 생성
+     * 3. 이후 generateSlotsForDate에서 메모리 조회
      *
      * @param businessId 업체 ID
-     * @param slot 체크할 슬롯
-     * @return true: 중복, false: 중복 아님
+     * @return 요일별 OperatingHours Map
      */
-    private boolean isDuplicate(UUID businessId, BookingSlot slot) {
-        return bookingSlotRepository.existsByBusinessIdAndSlotDateAndStartTime(
-                businessId, slot.getSlotDate(), slot.getStartTime()
-        );
+    private Map<DayOfWeek, List<OperatingHours>> loadOperatingHoursMap(UUID businessId) {
+        // 1. 전체 OperatingHours 조회 (1번의 SELECT) ✅
+        List<OperatingHours> allOperatingHours = operatingHoursRepository
+                .findByBusinessIdOrderByDayOfWeekAscSequenceAsc(businessId);
+
+        // 2. DayOfWeek로 그룹핑
+        Map<DayOfWeek, List<OperatingHours>> operatingHoursMap =
+                allOperatingHours.stream()
+                        .collect(Collectors.groupingBy(
+                                OperatingHours::getDayOfWeek,
+                                Collectors.toList()
+                        ));
+
+        log.debug("OperatingHours 캐싱 완료: businessId={}, 총 {}개, 요일 {}개",
+                businessId, allOperatingHours.size(), operatingHoursMap.size());
+
+        return operatingHoursMap;
+    }
+
+    /**
+     * 중복 체크 - 일괄 조회 최적화
+     * [처리 흐름]
+     * 1. 날짜 범위 추출 (min, max)
+     * 2. 기존 슬롯 일괄 조회 (1번의 SELECT)
+     * 3. 메모리에서 중복 체크 (Set 사용)
+     *
+     * [중복 판단 기준]
+     * - menu_id + slot_date + start_time
+     *
+     * @param menuId 메뉴 ID
+     * @param slots 생성할 슬롯 목록
+     * @throws BookingException 중복 슬롯 발견 시
+     */
+    private void checkDuplicates(UUID menuId, List<BookingSlot> slots) {
+        if (slots.isEmpty()) {
+            return;
+        }
+
+        // 1. 날짜 범위 추출
+        LocalDate minDate = slots.stream()
+                .map(BookingSlot::getSlotDate)
+                .min(LocalDate::compareTo)
+                .orElseThrow();
+
+        LocalDate maxDate = slots.stream()
+                .map(BookingSlot::getSlotDate)
+                .max(LocalDate::compareTo)
+                .orElseThrow();
+
+        // 2. 기존 슬롯 일괄 조회 (1번의 SELECT)
+        List<BookingSlot> existingSlots = bookingSlotRepository
+                .findByMenuIdAndSlotDateBetween(menuId, minDate, maxDate);
+
+        // 3. 메모리에서 중복 체크 (Set 사용)
+        Set<String> existingKeys = existingSlots.stream()
+                .map(slot -> makeKey(slot.getSlotDate(), slot.getStartTime()))
+                .collect(Collectors.toSet());
+
+        // 4. 중복 검사
+        for (BookingSlot slot : slots) {
+            String key = makeKey(slot.getSlotDate(), slot.getStartTime());
+            if (existingKeys.contains(key)) {
+                log.error("중복 슬롯 발견 - 전체 롤백: menuId={}, date={}, startTime={}",
+                        menuId, slot.getSlotDate(), slot.getStartTime());
+                throw new BookingException(BookingErrorCode.AVAILABLE_SLOT_CONFLICT);
+            }
+        }
+
+        log.debug("중복 체크 완료: menuId={}, 기존 슬롯={}, 신규 슬롯={}",
+                menuId, existingSlots.size(), slots.size());
+    }
+
+    /**
+     * 중복 체크용 키 생성
+     * Format: "YYYY-MM-DD_HH:mm:ss"
+     *
+     * @param date 슬롯 날짜
+     * @param time 시작 시간
+     * @return 중복 체크용 키
+     */
+    private String makeKey(LocalDate date, LocalTime time) {
+        return date.toString() + "_" + time.toString();
     }
 }

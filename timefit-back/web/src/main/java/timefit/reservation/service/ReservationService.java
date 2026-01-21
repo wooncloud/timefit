@@ -30,15 +30,9 @@ public class ReservationService {
     // ========== 예약 생성 ==========
 
     @Transactional
-    public ReservationResponseDto.CustomerReservation createReservationBased(
+    public ReservationResponseDto.CustomerReservation createReservation(
             ReservationRequestDto.CreateReservation request, UUID customerId) {
-        return commandService.createReservationBased(request, customerId);
-    }
-
-    @Transactional
-    public ReservationResponseDto.CustomerReservation createOnDemandBased(
-            ReservationRequestDto.CreateReservation request, UUID customerId) {
-        return commandService.createOnDemandBased(request, customerId);
+        return commandService.createReservation(request, customerId);
     }
 
     // ========== 예약 수정/취소 (고객) ==========

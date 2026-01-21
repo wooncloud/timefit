@@ -1,11 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { withAuth } from '@/lib/api/auth-middleware';
+import { apiFetch } from '@/lib/api/api-fetch';
+import { handleApiError } from '@/lib/api/error-handler';
 
 const BACKEND_API_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
-export const PUT = withAuth(async (request, { accessToken }) => {
+export async function PUT(request: NextRequest): Promise<NextResponse> {
   try {
     // URL에서 businessId 추출 (예: /api/business/[businessId]/operating-hours)
     const url = new URL(request.url);
@@ -15,14 +16,10 @@ export const PUT = withAuth(async (request, { accessToken }) => {
 
     const body = await request.json();
 
-    const response = await fetch(
+    const response = await apiFetch(
       `${BACKEND_API_URL}/api/business/${businessId}/operating-hours`,
       {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
         body: JSON.stringify(body),
       }
     );
@@ -53,13 +50,6 @@ export const PUT = withAuth(async (request, { accessToken }) => {
       message: '영업시간이 수정되었습니다.',
     });
   } catch (error) {
-    console.error('영업시간 수정 오류:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: '서버 오류가 발생했습니다.',
-      },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
-});
+}

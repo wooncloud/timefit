@@ -125,7 +125,7 @@ public class MenuRequestDto {
     public record BookingSlotSettings(
             @Schema(
                     description = "슬롯 시작 날짜",
-                    example = "2025-12-01",
+                    example = "2025-01-10",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotNull(message = "슬롯 시작 날짜는 필수입니다")
@@ -133,7 +133,7 @@ public class MenuRequestDto {
 
             @Schema(
                     description = "슬롯 종료 날짜",
-                    example = "2025-12-31",
+                    example = "2025-01-31",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
             @NotNull(message = "슬롯 종료 날짜는 필수입니다")

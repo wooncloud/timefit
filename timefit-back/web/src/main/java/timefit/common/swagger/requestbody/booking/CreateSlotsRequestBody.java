@@ -18,11 +18,11 @@ import java.lang.annotation.*;
                 examples = @ExampleObject(
                         value = """
                     {
-                      "menuId": "550e8400-e29b-41d4-a716-446655440002",
+                      "menuId": "60000000-0000-0000-0000-000000000001",
                       "slotIntervalMinutes": 30,
                       "schedules": [
                         {
-                          "date": "2025-12-01",
+                          "date": "2025-01-10",
                           "timeRanges": [
                             {
                               "startTime": "09:00",
@@ -35,7 +35,7 @@ import java.lang.annotation.*;
                           ]
                         },
                         {
-                          "date": "2025-12-02",
+                          "date": "2025-01-11",
                           "timeRanges": []
                         }
                       ]

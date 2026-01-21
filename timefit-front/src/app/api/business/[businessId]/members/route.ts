@@ -4,12 +4,15 @@ import type {
   GetTeamMembersApiResponse,
   GetTeamMembersHandlerResponse,
 } from '@/types/business/team-member';
-import { withAuth } from '@/lib/api/auth-middleware';
+import { apiFetch } from '@/lib/api/api-fetch';
+import { handleApiError } from '@/lib/api/error-handler';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export const GET = withAuth<GetTeamMembersHandlerResponse>(
-  async (request: NextRequest, { accessToken }) => {
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<GetTeamMembersHandlerResponse>> {
+  try {
     const url = new URL(request.url);
     const pathSegments = url.pathname.split('/');
     const businessId = pathSegments[pathSegments.indexOf('business') + 1];
@@ -24,44 +27,28 @@ export const GET = withAuth<GetTeamMembersHandlerResponse>(
       );
     }
 
-    try {
-      const response = await fetch(
-        `${BACKEND_API_URL}/api/business/${businessId}/members`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+    const response = await apiFetch(
+      `${BACKEND_API_URL}/api/business/${businessId}/members`,
+      { method: 'GET' }
+    );
 
-      const responseData: GetTeamMembersApiResponse = await response.json();
+    const responseData: GetTeamMembersApiResponse = await response.json();
 
-      if (!response.ok) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              responseData.message || '구성원 목록을 가져올 수 없습니다.',
-          },
-          { status: response.status }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: responseData.data,
-      });
-    } catch (error) {
-      console.error('팀 구성원 조회 실패:', error);
+    if (!response.ok) {
       return NextResponse.json(
         {
           success: false,
-          message: '구성원 목록을 가져오는 중 오류가 발생했습니다.',
+          message: responseData.message || '구성원 목록을 가져올 수 없습니다.',
         },
-        { status: 500 }
+        { status: response.status }
       );
     }
+
+    return NextResponse.json({
+      success: true,
+      data: responseData.data,
+    });
+  } catch (error) {
+    return handleApiError<GetTeamMembersHandlerResponse>(error);
   }
-);
+}

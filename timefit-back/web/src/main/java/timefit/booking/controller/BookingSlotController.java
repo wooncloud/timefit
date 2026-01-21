@@ -31,7 +31,7 @@ public class BookingSlotController {
     @CreateSlotsOperation
     @PostMapping
     public ResponseEntity<ResponseData<BookingSlotResponse.CreationResult>> createSlots(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @CreateSlotsRequestBody
             @Valid @RequestBody BookingSlotRequest.BookingSlot request,
@@ -49,9 +49,9 @@ public class BookingSlotController {
     @GetSlotsByDateOperation
     @GetMapping
     public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlotList>> getSlotsByDate(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "조회할 날짜 (YYYY-MM-DD)", required = true, example = "2025-12-01")
+            @Parameter(description = "조회할 날짜 (YYYY-MM-DD)", required = true, example = "2025-01-10")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         log.info("특정 날짜 슬롯 조회 요청: businessId={}, date={}", businessId, date);
@@ -65,11 +65,11 @@ public class BookingSlotController {
     @GetSlotsByDateRangeOperation
     @GetMapping("/range")
     public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlotList>> getSlotsByDateRange(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "조회 시작 날짜 (YYYY-MM-DD)", required = true, example = "2025-12-01")
+            @Parameter(description = "조회 시작 날짜 (YYYY-MM-DD)", required = true, example = "2025-01-10")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @Parameter(description = "조회 종료 날짜 (YYYY-MM-DD)", required = true, example = "2025-12-31")
+            @Parameter(description = "조회 종료 날짜 (YYYY-MM-DD)", required = true, example = "2025-01-31")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         log.info("기간별 슬롯 조회 요청: businessId={}, startDate={}, endDate={}",
@@ -84,13 +84,13 @@ public class BookingSlotController {
     @GetSlotsByMenuOperation
     @GetMapping("/menu/{menuId}")
     public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlotList>> getSlotsByMenu(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "메뉴 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440002")
+            @Parameter(description = "메뉴 ID", required = true, example = "60000000-0000-0000-0000-000000000001")
             @PathVariable UUID menuId,
-            @Parameter(description = "조회 시작 날짜 (YYYY-MM-DD)", required = true, example = "2025-12-01")
+            @Parameter(description = "조회 시작 날짜 (YYYY-MM-DD)", required = true, example = "2025-01-10")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @Parameter(description = "조회 종료 날짜 (YYYY-MM-DD)", required = true, example = "2025-12-31")
+            @Parameter(description = "조회 종료 날짜 (YYYY-MM-DD)", required = true, example = "2025-01-31")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         log.info("메뉴별 슬롯 조회 요청: businessId={}, menuId={}, startDate={}, endDate={}",
@@ -105,7 +105,7 @@ public class BookingSlotController {
     @GetUpcomingSlotsOperation
     @GetMapping("/upcoming")
     public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlotList>> getUpcomingSlots(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId) {
 
         log.info("향후 활성 슬롯 조회 요청: businessId={}", businessId);
@@ -118,9 +118,9 @@ public class BookingSlotController {
     @DeleteSlotOperation
     @DeleteMapping("/{slotId}")
     public ResponseEntity<ResponseData<Void>> deleteSlot(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "슬롯 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440003")
+            @Parameter(description = "슬롯 ID", required = true, example = "50000000-0000-0000-0000-000000000001")
             @PathVariable UUID slotId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
@@ -135,9 +135,9 @@ public class BookingSlotController {
     @DeactivateSlotOperation
     @PatchMapping("/{slotId}/deactivate")
     public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlot>> deactivateSlot(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "슬롯 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440003")
+            @Parameter(description = "슬롯 ID", required = true, example = "50000000-0000-0000-0000-000000000001")
             @PathVariable UUID slotId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
@@ -153,9 +153,9 @@ public class BookingSlotController {
     @ActivateSlotOperation
     @PatchMapping("/{slotId}/activate")
     public ResponseEntity<ResponseData<BookingSlotResponse.BookingSlot>> activateSlot(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "슬롯 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440003")
+            @Parameter(description = "슬롯 ID", required = true, example = "50000000-0000-0000-0000-000000000001")
             @PathVariable UUID slotId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
@@ -171,7 +171,7 @@ public class BookingSlotController {
     @DeletePastSlotsOperation
     @DeleteMapping("/past")
     public ResponseEntity<ResponseData<Integer>> deletePastSlots(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {

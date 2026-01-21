@@ -10,7 +10,10 @@ import timefit.menu.dto.MenuRequestDto;
 import timefit.menu.entity.Menu;
 import timefit.menu.entity.OrderType;
 import timefit.menu.repository.MenuRepository;
+import timefit.reservation.entity.ReservationStatus;
+import timefit.reservation.repository.ReservationRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -28,6 +31,7 @@ public class MenuValidator {
 
     private final MenuRepository menuRepository;
     private final BookingSlotValidator bookingSlotValidator;
+    private final ReservationRepository reservationRepository;
 
     /**
      * Menu 존재 여부 검증 및 조회
@@ -57,6 +61,25 @@ public class MenuValidator {
                     menu.getId(), businessId);
             throw new MenuException(MenuErrorCode.MENU_ACCESS_DENIED);
         }
+    }
+
+    /**
+     * Menu 중복 생성 방지
+     * @param businessId 업체 ID
+     * @param serviceName 서비스명
+     * @throws MenuException 중복 메뉴 발견 시
+     */
+    public void validateMenuNotDuplicate(UUID businessId, String serviceName) {
+        boolean exists = menuRepository.existsByBusinessIdAndServiceName(businessId, serviceName);
+
+        if (exists) {
+            log.error("중복 메뉴 생성 시도: businessId={}, serviceName={}",
+                    businessId, serviceName);
+            throw new MenuException(MenuErrorCode.MENU_ALREADY_EXISTS);
+        }
+
+        log.debug("메뉴 중복 체크 통과: businessId={}, serviceName={}",
+                businessId, serviceName);
     }
 
     /**
@@ -141,6 +164,22 @@ public class MenuValidator {
             }
 
             bookingSlotValidator.validateSlotSettings(request.slotSettings());
+        }
+    }
+
+    /**
+     * Menu에 활성 예약이 없는지 검증
+     * - 활성 예약: PENDING, CONFIRMED
+     * - 활성 예약이 있으면 삭제 불가
+     */
+    public void validateNoActiveReservations(UUID menuId) {
+        boolean hasActiveReservations = reservationRepository
+                .existsByMenuIdAndStatusIn(
+                        menuId, List.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED)
+                );
+
+        if (hasActiveReservations) {
+            throw new MenuException(MenuErrorCode.MENU_HAS_ACTIVE_RESERVATIONS);
         }
     }
 

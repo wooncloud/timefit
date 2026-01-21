@@ -149,12 +149,20 @@ public class BusinessCommandService {
         // 2. 권한 확인 (OWNER만 가능)
         businessValidator.validateOwnerRole(currentUserId, businessId);
 
-        // 3. 업체 비활성화
+        // 3. 삭제 가능 여부 확인 (활성 예약/메뉴)
+        businessValidator.validateCanBeDeleted(businessId);
+
+        // 4. 삭제 요청 검증 및 기본값 제공
+        BusinessRequestDto.DeleteBusinessRequest validatedRequest =
+                businessValidator.validateAndGetDeleteRequest(request);
+
+        // 5. 업체 비활성화 (Soft Delete)
         business.deactivate();
 
-        log.info("업체 삭제 완료: businessId={}, deleteReason={}", businessId, request.deleteReason());
+        log.info("업체 삭제 완료: businessId={}, deleteReason={}",
+                businessId, validatedRequest.deleteReason());
 
-        return BusinessResponseDto.DeleteBusinessResponse.of(business, request.deleteReason());
+        return BusinessResponseDto.DeleteBusinessResponse.of(business, validatedRequest.deleteReason());
     }
 
     /**

@@ -42,7 +42,7 @@ public class BusinessController {
     @GetBusinessDetailOperation
     @GetMapping("/{businessId}")
     public ResponseEntity<ResponseData<BusinessResponseDto.PublicBusinessResponse>> getBusinessDetail(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId) {
 
         log.info("업체 상세 조회 요청: businessId={}", businessId);
@@ -91,7 +91,7 @@ public class BusinessController {
     @GetBusinessProfileOperation
     @GetMapping("/{businessId}/profile")
     public ResponseEntity<ResponseData<BusinessResponseDto.BusinessResponse>> getBusinessProfile(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
@@ -118,7 +118,7 @@ public class BusinessController {
     @UpdateBusinessOperation
     @PutMapping("/{businessId}")
     public ResponseEntity<ResponseData<BusinessResponseDto.BusinessResponse>> updateBusiness(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @UpdateBusinessRequestBody
             @Valid @RequestBody BusinessRequestDto.UpdateBusinessRequest request,
@@ -133,10 +133,10 @@ public class BusinessController {
     @DeleteBusinessOperation
     @DeleteMapping("/{businessId}")
     public ResponseEntity<ResponseData<BusinessResponseDto.DeleteBusinessResponse>> deleteBusiness(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @DeleteBusinessRequestBody
-            @Valid @RequestBody BusinessRequestDto.DeleteBusinessRequest request,
+            @RequestBody(required = false) BusinessRequestDto.DeleteBusinessRequest request,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
 
@@ -148,7 +148,7 @@ public class BusinessController {
     @GetMembersListOperation
     @GetMapping("/{businessId}/members")
     public ResponseEntity<ResponseData<BusinessResponseDto.MemberListResponse>> getMembersList(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
@@ -161,7 +161,7 @@ public class BusinessController {
     @InviteMemberOperation
     @PostMapping("/{businessId}/member")
     public ResponseEntity<ResponseData<BusinessResponseDto.MemberListResponse.MemberResponse>> inviteMember(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @InviteMemberRequestBody
             @Valid @RequestBody BusinessRequestDto.InviteMemberRequest request,
@@ -178,7 +178,7 @@ public class BusinessController {
     @ChangeMemberRoleOperation
     @PatchMapping("/{businessId}/member/{userId}/role")
     public ResponseEntity<ResponseData<Void>> changeMemberRole(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(description = "대상 사용자 ID", required = true, example = "660e8400-e29b-41d4-a716-446655440002")
             @PathVariable UUID userId,
@@ -198,7 +198,7 @@ public class BusinessController {
     @DeleteMapping("/{businessId}/member/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<ResponseData<Void>> removeMember(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(description = "대상 사용자 ID", required = true, example = "660e8400-e29b-41d4-a716-446655440002")
             @PathVariable UUID userId,
@@ -215,7 +215,7 @@ public class BusinessController {
     @ActivateMemberOperation
     @PatchMapping("/{businessId}/member/{userId}/activate")
     public ResponseEntity<ResponseData<Void>> activateMember(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(description = "대상 사용자 ID", required = true, example = "660e8400-e29b-41d4-a716-446655440002")
             @PathVariable UUID userId,
@@ -232,7 +232,7 @@ public class BusinessController {
     @DeactivateMemberOperation
     @PatchMapping("/{businessId}/member/{userId}/deactivate")
     public ResponseEntity<ResponseData<Void>> deactivateMember(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(description = "대상 사용자 ID", required = true, example = "660e8400-e29b-41d4-a716-446655440002")
             @PathVariable UUID userId,

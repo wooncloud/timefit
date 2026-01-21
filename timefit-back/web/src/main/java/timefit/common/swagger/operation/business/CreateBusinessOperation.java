@@ -49,13 +49,13 @@ import java.lang.annotation.*;
                         {
                           "success": true,
                           "data": {
-                            "businessId": "550e8400-e29b-41d4-a716-446655440001",
-                            "businessName": "홍길동 미용실",
+                            "businessId": "30000000-0000-0000-0000-000000000001",
+                            "businessName": "Owner Kim 미용실",
                             "businessTypes": ["BD008"],
                             "businessNumber": "123-45-67890",
-                            "ownerName": "홍길동",
+                            "ownerName": "Owner Kim",
                             "address": "서울특별시 강남구 테헤란로 123",
-                            "contactPhone": "02-1234-5678",
+                            "contactPhone": "02-1111-1111",
                             "description": "20년 경력의 전문 미용실입니다.",
                             "logoUrl": "https://example.com/logo.png",
                             "businessNotice": "영업시간 변경: 평일 10:00-20:00",

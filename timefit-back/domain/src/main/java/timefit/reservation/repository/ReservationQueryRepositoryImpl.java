@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import timefit.booking.entity.BookingSlot;
 import timefit.common.entity.DayOfWeek;
 import timefit.reservation.entity.QReservation;
 import timefit.reservation.entity.Reservation;
@@ -19,8 +20,11 @@ import timefit.reservation.entity.ReservationStatus;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static timefit.business.entity.QBusiness.business;
 
 @Repository
 @RequiredArgsConstructor
@@ -64,6 +68,7 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
         // 쿼리 실행
         List<Reservation> reservations = queryFactory
                 .selectFrom(reservation)
+                .join(reservation.business, business).fetchJoin()
                 .where(builder)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -87,6 +92,7 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
 
         List<Reservation> reservations = queryFactory
                 .selectFrom(reservation)
+                .join(reservation.business, business).fetchJoin()
                 .where(
                         businessIdEq(businessId),
                         statusEq(status),
@@ -209,5 +215,68 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
                     return dayValue == dayOfWeek.getValue();
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * [Phase 2] 특정 업체의 특정 날짜 활성 예약 조회
+     *
+     * QueryDSL 구현:
+     * - menu 페치 조인으로 N+1 방지
+     * - PENDING, CONFIRMED 상태만 조회
+     * - reservationTime 오름차순 정렬
+     */
+    @Override
+    public List<Reservation> findActiveReservationsByBusinessAndDate(
+            UUID businessId,
+            LocalDate date) {
+
+        return queryFactory
+                .selectFrom(reservation)
+                .join(reservation.menu).fetchJoin()  // menu 페치 조인
+                .where(
+                        reservation.business.id.eq(businessId),
+                        reservation.reservationDate.eq(date),
+                        reservation.status.in(
+                                ReservationStatus.PENDING,
+                                ReservationStatus.CONFIRMED
+                        )
+                )
+                .orderBy(reservation.reservationTime.asc())
+                .fetch();
+    }
+
+    /**
+     * 예약 생성을 위한 BookingSlot 조회 (fetch join)
+     * N+1 방지: BookingSlot + Business + Menu를 한 번에 조회
+     */
+    @Override
+    public Optional<BookingSlot> findBookingSlotWithBusinessAndMenu(UUID slotId) {
+        timefit.booking.entity.QBookingSlot bookingSlot = timefit.booking.entity.QBookingSlot.bookingSlot;
+
+        timefit.booking.entity.BookingSlot result = queryFactory
+                .selectFrom(bookingSlot)
+                .join(bookingSlot.business).fetchJoin()
+                .join(bookingSlot.menu).fetchJoin()
+                .where(bookingSlot.id.eq(slotId))
+                .fetchOne();
+
+        return Optional.ofNullable(result);
+    }
+
+    /**
+     * 예약 생성을 위한 Menu 조회 (fetch join)
+     * N+1 방지: Menu + Business를 한 번에 조회
+     */
+    @Override
+    public Optional<timefit.menu.entity.Menu> findMenuWithBusiness(UUID menuId) {
+        timefit.menu.entity.QMenu menu = timefit.menu.entity.QMenu.menu;
+
+        timefit.menu.entity.Menu result = queryFactory
+                .selectFrom(menu)
+                .join(menu.business).fetchJoin()
+                .where(menu.id.eq(menuId))
+                .fetchOne();
+
+        return Optional.ofNullable(result);
     }
 }

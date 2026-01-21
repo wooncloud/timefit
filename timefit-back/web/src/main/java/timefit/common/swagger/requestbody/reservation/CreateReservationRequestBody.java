@@ -20,13 +20,13 @@ import java.lang.annotation.*;
                                 name = "예약형 서비스 (슬롯 기반)",
                                 value = """
                         {
-                          "businessId": "550e8400-e29b-41d4-a716-446655440001",
-                          "menuId": "550e8400-e29b-41d4-a716-446655440002",
-                          "bookingSlotId": "550e8400-e29b-41d4-a716-446655440003",
+                          "businessId": "30000000-0000-0000-0000-000000000001",
+                          "menuId": "60000000-0000-0000-0000-000000000001",
+                          "bookingSlotId": "50000000-0000-0000-0000-000000000001",
                           "durationMinutes": 60,
                           "totalPrice": 30000,
-                          "customerName": "홍길동",
-                          "customerPhone": "01012345678",
+                          "customerName": "Owner Kim",
+                          "customerPhone": "010-1111-1111",
                           "notes": "처음 방문입니다"
                         }
                         """
@@ -35,14 +35,14 @@ import java.lang.annotation.*;
                                 name = "현장 주문형 서비스 (즉시 예약)",
                                 value = """
                         {
-                          "businessId": "550e8400-e29b-41d4-a716-446655440001",
-                          "menuId": "550e8400-e29b-41d4-a716-446655440002",
-                          "reservationDate": "2025-12-01",
+                          "businessId": "30000000-0000-0000-0000-000000000001",
+                          "menuId": "60000000-0000-0000-0000-000000000001",
+                          "reservationDate": "2025-01-10",
                           "reservationTime": "12:00:00",
                           "durationMinutes": 30,
                           "totalPrice": 8000,
-                          "customerName": "홍길동",
-                          "customerPhone": "01012345678"
+                          "customerName": "Owner Kim",
+                          "customerPhone": "010-1111-1111"
                         }
                         """
                         )

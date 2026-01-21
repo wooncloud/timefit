@@ -57,13 +57,13 @@ import java.lang.annotation.*;
                         {
                           "success": true,
                           "data": {
-                            "reservationId": "550e8400-e29b-41d4-a716-446655440000",
+                            "reservationId": "10000000-0000-0000-0000-000000000001",
                             "reservationNumber": "R20251123001",
                             "status": "PENDING",
                             "businessName": "강남 헤어샵",
                             "menuServiceName": "헤어 컷",
-                            "reservationDate": "2025-12-01",
-                            "reservationTime": "14:00:00",
+                            "reservationDate": "2025-01-10",
+                            "reservationTime": "09:00:00",
                             "reservationPrice": 30000
                           }
                         }

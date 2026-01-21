@@ -30,9 +30,9 @@ public class MenuController {
     @GetMenuOperation
     @GetMapping("/{menuId}")
     public ResponseEntity<ResponseData<MenuResponseDto.Menu>> getMenu(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "메뉴 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "메뉴 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID menuId) {
 
         log.info("메뉴 상세 조회 요청: businessId={}, menuId={}", businessId, menuId);
@@ -44,11 +44,11 @@ public class MenuController {
     @GetMenuListOperation
     @GetMapping
     public ResponseEntity<ResponseData<MenuResponseDto.MenuList>> getMenuListWithFilters(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(description = "서비스명 검색 (부분 일치)", example = "헤어")
             @RequestParam(required = false) String serviceName,
-            @Parameter(description = "카테고리 ID", example = "550e8400-e29b-41d4-a716-446655440002")
+            @Parameter(description = "카테고리 ID", example = "60000000-0000-0000-0000-000000000001")
             @RequestParam(required = false) UUID businessCategoryId,
             @Parameter(description = "최소 가격", example = "10000")
             @RequestParam(required = false) Integer minPrice,
@@ -70,7 +70,7 @@ public class MenuController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ResponseData<MenuResponseDto.Menu>> createMenu(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @CreateMenuRequestBody
             @Valid @RequestBody MenuRequestDto.CreateUpdateMenu request,
@@ -86,9 +86,9 @@ public class MenuController {
     @UpdateMenuOperation
     @PatchMapping("/{menuId}")
     public ResponseEntity<ResponseData<MenuResponseDto.Menu>> updateMenu(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "메뉴 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "메뉴 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID menuId,
             @UpdateMenuRequestBody
             @Valid @RequestBody MenuRequestDto.CreateUpdateMenu request,
@@ -105,9 +105,9 @@ public class MenuController {
     @ToggleMenuActiveOperation
     @PatchMapping("/{menuId}/toggle")
     public ResponseEntity<ResponseData<MenuResponseDto.Menu>> toggleMenuActive(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "메뉴 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "메뉴 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID menuId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
@@ -122,10 +122,10 @@ public class MenuController {
     @DeleteMenuOperation
     @DeleteMapping("/{menuId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<Void> deleteMenu(
-            @Parameter(description = "업체 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440001")
+    public ResponseEntity<ResponseData<MenuResponseDto.DeleteResult>> deleteMenu(
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
-            @Parameter(description = "메뉴 ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+            @Parameter(description = "메뉴 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID menuId,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
@@ -133,7 +133,9 @@ public class MenuController {
         log.info("메뉴 삭제 요청: businessId={}, menuId={}, userId={}",
                 businessId, menuId, currentUserId);
 
-        menuService.deleteMenu(businessId, menuId, currentUserId);
-        return ResponseEntity.noContent().build();
+        MenuResponseDto.DeleteResult response = menuService.deleteMenu(
+                businessId, menuId, currentUserId);
+
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 }

@@ -33,7 +33,7 @@ import java.util.UUID;
  * HTTP 요청 → Servlet Container → [JwtAuthFilter] → SecurityFilterChain → Controller
  *
  * 주요 기능:
- * - 공개 API 여부 판단 (PUBLIC_PATHS 패턴 매칭)
+ * - 공개 API 여부 판단 (HTTP Method 고려한 패턴 매칭)
  * - JWT 토큰 추출 및 유효성 검증
  * - 검증된 사용자 ID를 request에 저장하여 Controller에서 사용 가능하도록 처리
  * - SecurityContext에 Authentication 설정 (Spring Security 인증 통과)
@@ -47,8 +47,8 @@ import java.util.UUID;
  * - 인증 에러 발생 시 401 응답 처리
  *
  * 동작 순서:
- * 1. HTTP 요청 수신
- * 2. 요청 URI가 공개 API인지 확인 (PUBLIC_PATHS 패턴 매칭)
+ * 1. HTTP 요청 수신 (URI + HTTP Method)
+ * 2. 요청 URI와 Method가 공개 API인지 확인 (requiresAuthentication)
  * 3. 인증 필요 시: Authorization 헤더에서 JWT 토큰 추출
  * 4. TokenValidator로 토큰 검증
  * 5. 토큰에서 userId 추출하여 request.setAttribute("userId", userId) 저장
@@ -57,7 +57,8 @@ import java.util.UUID;
  *
  * SecurityConfig와의 관계:
  * - 이 필터는 SecurityFilterChain보다 먼저 실행됨
- * - PUBLIC_PATHS는 SecurityConfig의 permitAll() 설정과 일치해야 함
+ * - GET 전용 공개 API는 이 필터에서 HTTP Method로 구분
+ * - SecurityConfig의 permitAll()과 일치하도록 유지 필요
  * - 이 필터에서 userId를 추출하고 Authentication을 설정하면, Spring Security의 .authenticated() 체크를 통과
  * - Controller에서 @CurrentUserId로 사용 가능
  *
@@ -65,6 +66,7 @@ import java.util.UUID;
  * - OncePerRequestFilter를 상속하여 요청당 한 번만 실행됨
  * - 인증 실패 시 FilterChain을 중단하고 즉시 401 응답 반환
  * - SecurityContext에 Authentication을 설정해야 Spring Security가 인증된 것으로 판단
+ * - HTTP Method를 고려하여 GET 전용 공개 API를 정확히 판별
  */
 @Slf4j
 @Component
@@ -75,20 +77,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     /**
-     * 공개 API 경로 목록 (인증 불필요)
+     * 모든 HTTP Method에서 공개 API 경로 목록 (인증 불필요)
      * SecurityConfig의 permitAll() 설정과 동일하게 유지해야 함
      * AntPathMatcher를 사용하여 와일드카드 패턴 지원
      *
      * 공개 API 목록:
-     * 1. /api/auth/signup, /api/auth/signin - 회원가입, 로그인
+     * 1. /api/auth/signup, /api/auth/signin, /api/auth/refresh, /api/auth/health
      * 2. /api/business/search/** - 업체 검색 (쿼리 파라미터 포함)
-     * 3. /api/business/{businessId} (GET만, SecurityConfig에서 HTTP 메서드로 구분)
-     * 4. /api/business/{businessId}/booking-slot/menu/{menuId} (GET만)
-     * 5. /api/validation/** - 검증 API
-     * 6. 개발/모니터링 도구
+     * 3. /api/business/{businessId}/booking-slot/** - 예약 슬롯 조회 (GET 전용)
+     * 4. /api/validation/** - 검증 API
+     * 5. 개발/모니터링 도구
      *
-     * 참고: GET 메서드만 공개인 경우, SecurityConfig에서 HttpMethod로 구분하므로
-     *      여기서는 경로만 체크하고, Spring Security가 최종 판단
+     * 참고: GET 메서드만 공개인 경로는 requiresAuthentication()에서 별도 처리
+     *      예: GET /api/business/{businessId} (공개)
+     *         POST /api/business/{businessId} (인증 필요)
      */
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
             // 인증 관련 API (회원가입, 로그인만 공개)
@@ -98,9 +100,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             "/api/auth/health",
 
             // 업체 관련 공개 API
+            "/api/business/search",
             "/api/business/search/**",                              // 업체 검색 (쿼리 파라미터 포함)
-            "/api/business/*",                                      // GET 업체 정보 조회 (SecurityConfig에서 메서드 구분)
-            "/api/business/*/booking-slot/menu/*",                  // GET 예약 슬롯 조회
+
+//            // 예약 슬롯 (GET만 공개)
+//            "/api/business/*/booking-slot",
+//            "/api/business/*/booking-slot/range",
+//            "/api/business/*/booking-slot/menu/*",                  // GET 예약 슬롯 조회
+//            "/api/business/*/booking-slot/upcoming",
 
             // 검증 API
             "/api/validation/**",
@@ -119,8 +126,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
      * 필터 실행 메서드
      * 모든 HTTP 요청에 대해 JWT 인증을 수행합니다.
      * 처리 흐름:
-     * 1. 요청 URI 추출
-     * 2. 공개 API 여부 확인 (requiresAuthentication)
+     * 1. 요청 URI 및 HTTP Method 추출
+     * 2. 공개 API 여부 확인 (requiresAuthentication) - HTTP Method 고려
      * 3. 인증 필요 시: JWT 토큰 검증 및 userId 추출 (validateTokenAndSetUser)
      * 4. 다음 필터로 요청 전달 (filterChain.doFilter)
      * 5. 인증 실패 시: 401 응답 반환 (handleAuthenticationError)
@@ -138,49 +145,116 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
 
         String requestURI = request.getRequestURI();
-        log.debug("JWT 필터 처리: {}", requestURI);
+        String method = request.getMethod();
+        log.debug("JWT 필터 처리: {} {}", method, requestURI);
 
         try {
-            // 인증이 필요한 경로인지 확인
-            if (requiresAuthentication(requestURI)) {
+            // 인증이 필요한 경로인지 확인 (HTTP Method 고려)
+            if (requiresAuthentication(request)) {
                 validateTokenAndSetUser(request);
             }
 
             filterChain.doFilter(request, response);
 
         } catch (AuthException e) {
-            log.warn("JWT 인증 실패: {} - {}", requestURI, e.getMessage());
+            log.warn("JWT 인증 실패: {} {} - {}", method, requestURI, e.getMessage());
             handleAuthenticationError(response, e);
         }
     }
 
     /**
      * 인증이 필요한 경로인지 확인
-     * AntPathMatcher를 사용하여 PUBLIC_PATHS와 요청 URI를 패턴 매칭합니다.
+     * HTTP Method와 URI를 모두 고려하여 인증 필요 여부를 판단합니다.
+     *
      * 판단 로직:
-     * 1. PUBLIC_PATHS 목록과 패턴 매칭 → 공개 API면 인증 불필요 (false 반환)
-     * 2. /api/로 시작하는 경로 → 인증 필요 (true 반환)
-     * 3. 그 외 경로 → 인증 불필요 (false 반환)
+     * 1. GET 메서드 전용 공개 API 확인 (업체 조회, 메뉴 조회 등)
+     * 2. 모든 메서드 공개 API 확인 (PUBLIC_PATHS)
+     * 3. /api/로 시작하는 경로 → 인증 필요
+     * 4. 그 외 경로 → 인증 불필요
      *
-     * 참고: GET 메서드만 공개인 경로는 SecurityConfig에서 최종 판단
-     *      예: /api/business/{businessId}는 GET만 공개, PUT/DELETE는 인증 필요
+     * 예시:
+     * - GET  /api/business/{businessId} → 공개 (고객이 업체 정보 조회)
+     * - POST /api/business/{businessId} → 인증 필요 (업체 정보 수정)
+     * - GET  /api/business/{businessId}/menu → 공개 (고객이 메뉴 조회)
+     * - POST /api/business/{businessId}/menu → 인증 필요 (메뉴 생성)
      *
-     * @param requestURI 요청 URI
+     * @param request HTTP 요청 객체
      * @return 인증 필요 여부 (true: 인증 필요, false: 인증 불필요)
      */
-    private boolean requiresAuthentication(String requestURI) {
-        // 공개 API인지 확인 (AntPathMatcher 사용)
-        for (String publicPath : PUBLIC_PATHS) {
-            if (pathMatcher.match(publicPath, requestURI)) {
-                log.debug("공개 API 접근: {}", requestURI);
+    private boolean requiresAuthentication(HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+        String method = request.getMethod();
+
+        // ========== GET 메서드만 공개인 경로 확인 ==========
+        if ("GET".equals(method)) {
+            // 업체 상세 조회
+            if (pathMatcher.match("/api/business/*", requestURI)) {
+                log.debug("공개 API 접근 (GET): 업체 상세 조회 - {}", requestURI);
+                return false;
+            }
+
+            // 영업시간 조회
+            if (pathMatcher.match("/api/business/*/operating-hours", requestURI)) {
+                log.debug("공개 API 접근 (GET): 영업시간 조회 - {}", requestURI);
+                return false;
+            }
+
+            // 메뉴 목록 조회
+            if (pathMatcher.match("/api/business/*/menu", requestURI)) {
+                log.debug("공개 API 접근 (GET): 메뉴 목록 조회 - {}", requestURI);
+                return false;
+            }
+
+            // 메뉴 상세 조회
+            if (pathMatcher.match("/api/business/*/menu/*", requestURI)) {
+                log.debug("공개 API 접근 (GET): 메뉴 상세 조회 - {}", requestURI);
+                return false;
+            }
+
+            // ========== 예약 슬롯 조회 (GET만 공개) ==========
+            // 특정 날짜 슬롯 조회
+            if (pathMatcher.match("/api/business/*/booking-slot", requestURI)) {
+                log.debug("공개 API 접근 (GET): 예약 슬롯 조회 - {}", requestURI);
+                return false;
+            }
+
+            // 기간별 슬롯 조회
+            if (pathMatcher.match("/api/business/*/booking-slot/range", requestURI)) {
+                log.debug("공개 API 접근 (GET): 기간별 슬롯 조회 - {}", requestURI);
+                return false;
+            }
+
+            // 메뉴별 슬롯 조회
+            if (pathMatcher.match("/api/business/*/booking-slot/menu/*", requestURI)) {
+                log.debug("공개 API 접근 (GET): 메뉴별 슬롯 조회 - {}", requestURI);
+                return false;
+            }
+
+            // 향후 활성 슬롯 조회
+            if (pathMatcher.match("/api/business/*/booking-slot/upcoming", requestURI)) {
+                log.debug("공개 API 접근 (GET): 향후 슬롯 조회 - {}", requestURI);
+                return false;
+            }
+
+            // 기타 슬롯 관련 GET 요청
+            if (pathMatcher.match("/api/business/*/booking-slot/**", requestURI)) {
+                log.debug("공개 API 접근 (GET): 슬롯 관련 조회 - {}", requestURI);
                 return false;
             }
         }
 
-        // /api/로 시작하는 경로는 인증 필요
+        // ========== 모든 메서드 공개 API 확인 (PUBLIC_PATHS) ==========
+        for (String publicPath : PUBLIC_PATHS) {
+            if (pathMatcher.match(publicPath, requestURI)) {
+                log.debug("공개 API 접근 (모든 메서드): {} - {}", method, requestURI);
+                return false;
+            }
+        }
+
+        // ========== /api/로 시작하는 경로는 인증 필요 ==========
         boolean requiresAuth = requestURI.startsWith("/api/");
         if (requiresAuth) {
-            log.debug("인증 필요 API: {}", requestURI);
+            log.debug("인증 필요 API: {} {}", method, requestURI);
         }
         return requiresAuth;
     }

@@ -23,15 +23,15 @@ export async function Navbar() {
           {/* Desktop Auth Buttons */}
           <div className="hidden items-center space-x-4 md:flex">
             {isAuthenticated ? (
-              <Link href="/business">
+              <Link href="/b">
                 <Button>사업자 페이지</Button>
               </Link>
             ) : (
               <>
-                <Link href="/signin">
+                <Link href="/business/signin">
                   <Button>로그인</Button>
                 </Link>
-                <Link href="/signup">
+                <Link href="/business/signup">
                   <Button variant="outline">회원가입</Button>
                 </Link>
               </>

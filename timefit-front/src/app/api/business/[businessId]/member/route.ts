@@ -5,12 +5,15 @@ import type {
   InviteMemberHandlerResponse,
   InviteMemberRequest,
 } from '@/types/business/team-member';
-import { withAuth } from '@/lib/api/auth-middleware';
+import { apiFetch } from '@/lib/api/api-fetch';
+import { handleApiError } from '@/lib/api/error-handler';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export const POST = withAuth<InviteMemberHandlerResponse>(
-  async (request: NextRequest, { accessToken }) => {
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<InviteMemberHandlerResponse>> {
+  try {
     const url = new URL(request.url);
     const pathSegments = url.pathname.split('/');
     const businessId = pathSegments[pathSegments.indexOf('business') + 1];
@@ -25,57 +28,44 @@ export const POST = withAuth<InviteMemberHandlerResponse>(
       );
     }
 
-    try {
-      const body: InviteMemberRequest = await request.json();
+    const body: InviteMemberRequest = await request.json();
 
-      if (!body.email) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: '이메일은 필수입니다.',
-          },
-          { status: 400 }
-        );
-      }
-
-      const response = await fetch(
-        `${BACKEND_API_URL}/api/business/${businessId}/member`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(body),
-        }
-      );
-
-      const responseData: InviteMemberApiResponse = await response.json();
-
-      if (!response.ok) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: responseData.message || '구성원 초대에 실패했습니다.',
-          },
-          { status: response.status }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: responseData.data,
-        message: responseData.message || '구성원을 성공적으로 초대했습니다.',
-      });
-    } catch (error) {
-      console.error('구성원 초대 실패:', error);
+    if (!body.email) {
       return NextResponse.json(
         {
           success: false,
-          message: '구성원 초대 중 오류가 발생했습니다.',
+          message: '이메일은 필수입니다.',
         },
-        { status: 500 }
+        { status: 400 }
       );
     }
+
+    const response = await apiFetch(
+      `${BACKEND_API_URL}/api/business/${businessId}/member`,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }
+    );
+
+    const responseData: InviteMemberApiResponse = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: responseData.message || '구성원 초대에 실패했습니다.',
+        },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: responseData.data,
+      message: responseData.message || '구성원을 성공적으로 초대했습니다.',
+    });
+  } catch (error) {
+    return handleApiError<InviteMemberHandlerResponse>(error);
   }
-);
+}

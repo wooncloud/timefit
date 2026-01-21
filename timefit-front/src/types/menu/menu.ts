@@ -69,7 +69,7 @@ export interface MenuListResponse {
 /**
  * 예약 슬롯 시간 범위
  */
-export interface TimeRange {
+interface TimeRange {
   startTime: string;
   endTime: string;
 }

@@ -4,7 +4,7 @@ import type {
   CategoryListResponse,
   GetCategoryListApiResponse,
 } from '@/types/category/category';
-import { getServerSession } from '@/lib/session/server';
+import { apiFetch } from '@/lib/api/api-fetch';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -15,17 +15,9 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 export async function getCategoryList(
   businessId: string
 ): Promise<CategoryListResponse> {
-  const session = await getServerSession();
-
-  const response = await fetch(
+  const response = await apiFetch(
     `${BACKEND_URL}/api/business/${businessId}/categories`,
-    {
-      headers: {
-        Authorization: `Bearer ${session.user?.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    }
+    { method: 'GET' }
   );
 
   if (!response.ok) {

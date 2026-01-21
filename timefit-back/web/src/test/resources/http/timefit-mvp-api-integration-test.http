@@ -1,0 +1,935 @@
+### ================================================================
+### Timefit 전체 API 테스트 - Integration Test
+### ================================================================
+###
+### 테스트 범위:
+### ✅ 01. 인증/인가 (OAuth 제외)
+### ✅ 02. 업체 관리 (구성원 초대 제외)
+### ✅ 03. 영업시간 관리
+### ✅ 04. 메뉴 카테고리
+### ✅ 05. 메뉴 관리
+### ✅ 06. 예약 슬롯
+### ✅ 07. 예약 관리 (고객용/업체용)
+### ❌ 08. 초대 관리 (제외)
+### ❌ user-controller (제외)
+###
+### 🔧 수정 사항:
+### - 영업시간 토글/리셋을 슬롯 조회 이후로 이동
+### - 슬롯이 생성된 후 영업시간 변경 테스트
+###
+### ================================================================
+
+@baseUrl = http://localhost:8080
+
+### ================================================================
+### [Setup 1] Owner 회원가입 + 로그인
+### ================================================================
+
+# @name Health체크
+GET {{baseUrl}}/api/auth/health
+
+> {%
+    console.log("\n[01-1] Health Check");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name Owner회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "owner.test@timefit.com",
+  "password": "owner1234!",
+  "name": "김사장",
+  "phoneNumber": "010-1111-1111",
+  "role": "BUSINESS"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 1-1] Owner 회원가입");
+    console.log("========================================");
+    if (response.status === 200 || response.status === 201) {
+        console.log("✅ Owner 회원가입 성공");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name Owner로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "owner.test@timefit.com",
+  "password": "owner1234!"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 1-2] Owner 로그인");
+    console.log("   - Status:", response.status);
+    console.log("========================================");
+    if (response.status === 200 && response.body.data && response.body.data.accessToken) {
+        client.global.set("ownerToken", response.body.data.accessToken);
+        client.global.set("ownerRefreshToken", response.body.data.refreshToken);
+        console.log("✅ Owner 로그인 성공 - Token 저장");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+### [Setup 2] Customer 회원가입 + 로그인
+### ================================================================
+
+# @name Customer회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "customer.test@timefit.com",
+  "password": "customer1234!",
+  "name": "이고객",
+  "phoneNumber": "010-2222-2222",
+  "role": "CUSTOMER"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 2-1] Customer 회원가입");
+    console.log("========================================");
+    if (response.status === 200 || response.status === 201) {
+        console.log("✅ Customer 회원가입 성공");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name Customer로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "customer.test@timefit.com",
+  "password": "customer1234!"
+}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 2-2] Customer 로그인");
+    console.log("========================================");
+    if (response.status === 200 && response.body.data.accessToken) {
+        client.global.set("customerToken", response.body.data.accessToken);
+        client.global.set("customerRefreshToken", response.body.data.refreshToken);
+        console.log("✅ Customer 로그인 성공 - Token 저장");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+### [Test 1] 인증/인가 API
+### ================================================================
+
+# @name Token갱신_Owner
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{ownerRefreshToken}}"
+}
+
+> {%
+    console.log("\n[01-2] Owner Token 갱신");
+    if (response.status === 200 && response.body.data.accessToken) {
+        client.global.set("ownerToken", response.body.data.accessToken);
+        client.global.set("ownerRefreshToken", response.body.data.refreshToken);
+        console.log("✅ 성공 - 새 Token 저장");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name Token갱신_Customer
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{customerRefreshToken}}"
+}
+
+> {%
+    console.log("\n[01-3] Customer Token 갱신");
+    if (response.status === 200 && response.body.data.accessToken) {
+        client.global.set("customerToken", response.body.data.accessToken);
+        client.global.set("customerRefreshToken", response.body.data.refreshToken);
+        console.log("✅ 성공 - 새 Token 저장");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+### [Test 2] 업체 관리 API
+### ================================================================
+
+# @name 업체생성
+POST {{baseUrl}}/api/business
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessName": "Timefit 테스트 헤어샵",
+  "businessTypes": ["BD008"],
+  "businessNumber": "123-45-67890",
+  "ownerName": "김사장",
+  "address": "서울시 강남구 테헤란로 1",
+  "contactPhone": "02-1111-1111",
+  "description": "종합 테스트를 위한 헤어샵입니다."
+}
+
+> {%
+    console.log("\n[02-1] 업체 생성");
+    if (response.status === 200 || response.status === 201) {
+        client.global.set("businessId", response.body.data.businessId);
+        console.log("✅ 성공 - Business ID:", response.body.data.businessId);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 업체검색
+GET {{baseUrl}}/api/business/search?keyword=테스트&page=0&size=10
+
+> {%
+    console.log("\n[02-2] 업체 검색 (공개)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 업체공개상세조회
+GET {{baseUrl}}/api/business/{{businessId}}
+
+> {%
+    console.log("\n[02-3] 업체 공개 상세 조회");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 업체상세조회_사업자용
+GET {{baseUrl}}/api/business/{{businessId}}/profile
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[02-4] 업체 상세 조회 (사업자용)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+## @name 내업체목록조회
+#GET {{baseUrl}}/api/business/my-businesses
+#Authorization: Bearer {{ownerToken}}
+#
+#> {%
+#    console.log("\n[02-5] 내 업체 목록 조회");
+#    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+#%}
+
+
+### ================================================================
+
+# @name 업체정보수정
+PUT {{baseUrl}}/api/business/{{businessId}}
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessName": "Timefit 테스트 헤어샵 (수정됨)",
+  "businessTypes": ["BD008"],
+  "address": "서울시 강남구 테헤란로 2",
+  "contactPhone": "02-2222-2222",
+  "description": "업체 정보 수정 테스트"
+}
+
+> {%
+    console.log("\n[02-6] 업체 정보 수정");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+### [Test 3-1] 영업시간 관리 API - 조회 및 설정
+### ================================================================
+
+# @name 영업시간조회
+GET {{baseUrl}}/api/business/{{businessId}}/operating-hours
+
+> {%
+    console.log("\n[03-1] 영업시간 조회 (공개)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 영업시간설정
+PUT {{baseUrl}}/api/business/{{businessId}}/operating-hours
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "schedules": [
+    {
+      "dayOfWeek": 1,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 2,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 3,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 4,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 5,
+      "openTime": "09:00",
+      "closeTime": "18:00",
+      "isClosed": false,
+      "bookingTimeRanges": [
+        {"startTime": "09:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "dayOfWeek": 6,
+      "isClosed": true,
+      "bookingTimeRanges": []
+    },
+    {
+      "dayOfWeek": 0,
+      "isClosed": true,
+      "bookingTimeRanges": []
+    }
+  ]
+}
+
+> {%
+    console.log("\n[03-2] 영업시간 설정");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+### [Test 4] 메뉴 카테고리 API
+### ================================================================
+
+# @name 카테고리생성
+POST {{baseUrl}}/api/business/{{businessId}}/category
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "Hair"
+}
+
+> {%
+    console.log("\n[04-1] 카테고리 생성");
+    if (response.status === 200 || response.status === 201) {
+        client.global.set("categoryId", response.body.data.categoryId);
+        console.log("✅ 성공 - Category ID:", response.body.data.categoryId);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 카테고리목록조회
+GET {{baseUrl}}/api/business/{{businessId}}/categories
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[04-2] 카테고리 목록 조회");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 카테고리상세조회
+GET {{baseUrl}}/api/business/{{businessId}}/category/{{categoryId}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[04-3] 카테고리 상세 조회");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 카테고리수정
+PATCH {{baseUrl}}/api/business/{{businessId}}/category/{{categoryId}}
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "categoryName": "Hair Style",
+  "categoryNotice": "카테고리 수정 테스트"
+}
+
+> {%
+    console.log("\n[04-4] 카테고리 수정");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+### [Test 5] 메뉴 관리 API
+### ================================================================
+
+# @name 메뉴생성_헤어컷
+POST {{baseUrl}}/api/business/{{businessId}}/menu
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "Hair Style",
+  "serviceName": "헤어컷",
+  "description": "기본 커트 서비스",
+  "price": 30000,
+  "durationMinutes": 60,
+  "orderType": "RESERVATION_BASED",
+  "autoGenerateSlots": true,
+  "slotSettings": {
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-10",
+    "slotIntervalMinutes": 60,
+    "specificTimeRanges": [
+      {"startTime": "09:00", "endTime": "18:00"}
+    ]
+  }
+}
+
+> {%
+    console.log("\n[05-1] 메뉴 생성 (헤어컷)");
+    if (response.status === 200 || response.status === 201) {
+        client.global.set("menuId1", response.body.data.menuId);
+        console.log("✅ 성공 - Menu ID:", response.body.data.menuId);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 메뉴생성_파마
+POST {{baseUrl}}/api/business/{{businessId}}/menu
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "businessType": "BD008",
+  "categoryName": "Hair Style",
+  "serviceName": "파마",
+  "description": "파마 서비스",
+  "price": 80000,
+  "durationMinutes": 120,
+  "orderType": "RESERVATION_BASED",
+  "autoGenerateSlots": true,
+  "slotSettings": {
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-10",
+    "slotIntervalMinutes": 60,
+    "specificTimeRanges": [
+      {"startTime": "09:00", "endTime": "18:00"}
+    ]
+  }
+}
+
+> {%
+    console.log("\n[05-2] 메뉴 생성 (파마)");
+    if (response.status === 200 || response.status === 201) {
+        client.global.set("menuId2", response.body.data.menuId);
+        console.log("✅ 성공 - Menu ID:", response.body.data.menuId);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 메뉴목록조회_공개
+GET {{baseUrl}}/api/business/{{businessId}}/menu
+
+> {%
+    console.log("\n[05-3] 메뉴 목록 조회 (공개)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 메뉴상세조회_공개
+GET {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId1}}
+
+> {%
+    console.log("\n[05-4] 메뉴 상세 조회 (공개)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 메뉴수정
+PATCH {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId1}}
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "serviceName": "헤어컷 프리미엄",
+  "businessType": "BD008",
+  "orderType": "RESERVATION_BASED",
+  "categoryName": "Hair Style",
+  "description": "프리미엄 커트 서비스",
+  "price": 35000,
+  "durationMinutes": 60
+}
+
+> {%
+    console.log("\n[05-5] 메뉴 수정");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 메뉴활성비활성토글
+PATCH {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId1}}/toggle
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[05-6] 메뉴 활성/비활성 토글");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+### [Test 6] 예약 슬롯 API
+### ================================================================
+
+# @name 예약슬롯조회_특정날짜_공개
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot?date=2026-01-21
+
+> {%
+    console.log("\n[06-1] 예약 슬롯 조회 - 특정 날짜 (공개)");
+    if (response.status === 200) {
+        const slots = response.body.data.slots;
+
+        if (slots && slots.length >= 4) {
+            // 슬롯 4개 저장
+            client.global.set("slotId1", slots[0].slotId);
+            client.global.set("slotId2", slots[1].slotId);
+            client.global.set("slotId3", slots[2].slotId);
+            client.global.set("slotId4", slots[3].slotId);
+
+            console.log("✅ 성공 - 슬롯 4개 저장 완료");
+            console.log("   Slot1 (예약1-완료용):", slots[0].slotId);
+            console.log("   Slot2 (예약2-거절용):", slots[1].slotId);
+            console.log("   Slot3 (예약3-노쇼용):", slots[2].slotId);
+            console.log("   Slot4 (예약4-취소용):", slots[3].slotId);
+
+            // 저장 확인
+            console.log("\n=== 변수 저장 상태 확인 ===");
+            console.log("slotId1:", client.global.get("slotId1") || "❌ 미저장");
+            console.log("slotId2:", client.global.get("slotId2") || "❌ 미저장");
+            console.log("slotId3:", client.global.get("slotId3") || "❌ 미저장");
+            console.log("slotId4:", client.global.get("slotId4") || "❌ 미저장");
+        } else {
+            console.error("❌ 슬롯 부족! 필요: 4개, 실제:", slots ? slots.length : 0);
+            console.error("⚠️ 메뉴 생성 시 slotIntervalMinutes를 60분으로 설정했는지 확인");
+            console.error("⚠️ 영업시간이 09:00-18:00 (9시간)이면 최소 9개 슬롯 생성됨");
+        }
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 예약슬롯조회_향후활성_공개
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/upcoming?days=7
+
+> {%
+    console.log("\n[06-2] 예약 슬롯 조회 - 향후 활성 (공개)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 예약슬롯조회_기간별_공개
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/range?startDate=2026-01-05&endDate=2026-01-05
+
+> {%
+    console.log("\n[06-3] 예약 슬롯 조회 - 기간별 (공개)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 예약슬롯조회_메뉴별_공개
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/menu/{{menuId1}}?startDate=2026-01-05&endDate=2026-01-05
+
+> {%
+    console.log("\n[06-4] 예약 슬롯 조회 - 메뉴별 (공개)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 예약슬롯일괄생성
+POST {{baseUrl}}/api/business/{{businessId}}/booking-slot
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "menuId": "{{menuId1}}",
+  "slotIntervalMinutes": 60,
+  "schedules": [
+    {
+      "date": "2026-10-01",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-02",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-03",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-04",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-05",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-06",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-07",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    }
+  ]
+}
+
+> {%
+    console.log("\n[06-5] 예약 슬롯 일괄 생성");
+    if (response.status === 200 || response.status === 201) {
+        console.log("✅ 성공");
+        console.log("   - 생성된 슬롯:", response.body.data.created);
+        console.log("   - 건너뛴 슬롯:", response.body.data.skipped);
+        console.log("   - 총 요청:", response.body.data.totalRequested);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 예약슬롯비활성화
+PATCH {{baseUrl}}/api/business/{{businessId}}/booking-slot/{{slotId1}}/deactivate
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[06-6] 예약 슬롯 비활성화");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 예약슬롯활성화
+PATCH {{baseUrl}}/api/business/{{businessId}}/booking-slot/{{slotId1}}/activate
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[06-7] 예약 슬롯 활성화");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+### [Test 3-2] 영업시간 관리 API - 토글 및 리셋 (슬롯 생성 후)
+### ================================================================
+
+# @name 영업시간토글
+PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/1/toggle
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[03-3] 영업시간 토글 (월요일)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 영업시간리셋
+PATCH {{baseUrl}}/api/business/{{businessId}}/operating-hours/reset
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[03-4] 영업시간 리셋");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+### [Test 7] 예약 관리 API - 고객용
+### ================================================================
+
+# @name 예약생성_고객
+POST {{baseUrl}}/api/reservation
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "businessId": "{{businessId}}",
+  "menuId": "{{menuId1}}",
+  "bookingSlotId": "{{slotId1}}",
+  "durationMinutes": 60,
+  "totalPrice": 35000,
+  "customerName": "이고객",
+  "customerPhone": "01022222222",
+  "notes": "예약 생성 테스트"
+}
+
+> {%
+    console.log("\n[07-1] 예약 생성 (고객)");
+    if (response.status === 200 || response.status === 201) {
+        client.global.set("reservationId", response.body.data.reservationId);
+        console.log("✅ 성공 - Reservation ID:", response.body.data.reservationId);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 내예약목록조회_고객
+GET {{baseUrl}}/api/reservations
+Authorization: Bearer {{customerToken}}
+
+> {%
+    console.log("\n[07-2] 내 예약 목록 조회 (고객)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 예약상세조회_고객
+GET {{baseUrl}}/api/reservation/{{reservationId}}
+Authorization: Bearer {{customerToken}}
+
+> {%
+    console.log("\n[07-3] 예약 상세 조회 (고객)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 예약승인_취소용
+POST {{baseUrl}}/api/business/{{businessId}}/reservation/{{reservationId}}/approve
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[08-7-1] 예약 승인 (예약4 - 취소용)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 예약취소_고객
+POST {{baseUrl}}/api/reservation/{{reservationId}}/cancel
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "reason": "개인 사정으로 취소합니다"
+}
+
+> {%
+    console.log("\n[08-7-2] 예약 취소 (예약4 - 고객) 🆕 POST /cancel");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+### [Test 9] Cleanup (간소화 + 슬롯 일괄 삭제)
+### ================================================================
+
+# @name 과거슬롯일괄삭제
+DELETE {{baseUrl}}/api/business/{{businessId}}/booking-slot/past
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n========================================");
+    console.log("[09] Cleanup");
+    console.log("========================================");
+    console.log("\n[Level 3] BookingSlot 삭제 (과거 슬롯 일괄)");
+    console.log("[09-1] 과거 슬롯 일괄 삭제");
+    console.log("   💡 Menu FK 제약 해소");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 메뉴삭제_1
+DELETE {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId1}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[Level 2] Menu 삭제");
+    console.log("[09-2] 메뉴1 삭제 (헤어컷)");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - 삭제된 메뉴:", response.body.data.menuName);
+        console.log("   - 메시지:", response.body.data.message);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 메뉴삭제_2
+DELETE {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId2}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[09-3] 메뉴2 삭제 (파마)");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - 삭제된 메뉴:", response.body.data.menuName);
+        console.log("   - 메시지:", response.body.data.message);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 카테고리삭제
+DELETE {{baseUrl}}/api/business/{{businessId}}/category/{{categoryId}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[Level 1.5] Category 삭제");
+    console.log("[09-4] 카테고리 삭제");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 업체삭제
+DELETE {{baseUrl}}/api/business/{{businessId}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[Level 1] Business 삭제");
+    console.log("[09-5] 업체 삭제");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 로그아웃_Owner
+POST {{baseUrl}}/api/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "currentToken": "{{ownerToken}}"
+}
+
+> {%
+    console.log("\n[09-6] 로그아웃 (Owner)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
+# @name 로그아웃_Customer
+POST {{baseUrl}}/api/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "currentToken": "{{customerToken}}"
+}
+
+> {%
+    console.log("\n[09-7] 로그아웃 (Customer)");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+
+    console.log("\n========================================");
+    console.log("🎉 전체 API 테스트 완료!");
+    console.log("========================================");
+    console.log("📝 변경 사항:");
+    console.log("  ✅ 예약 취소: POST /api/reservation/{id}/cancel");
+    console.log("  ✅ Cleanup: 과거 슬롯 일괄 삭제 추가");
+    console.log("  💡 Reservation: 상태 변경만 (영구 보존)");
+    console.log("  💡 BookingSlot: 과거 슬롯 일괄 삭제 → Menu 삭제 가능");
+    console.log("========================================");
+%}

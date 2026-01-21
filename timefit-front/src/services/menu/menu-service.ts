@@ -1,7 +1,7 @@
 import 'server-only';
 
-import type { Menu, MenuListResponse } from '@/types/menu/menu';
-import { getServerSession } from '@/lib/session/server';
+import type { MenuListResponse } from '@/types/menu/menu';
+import { apiFetch } from '@/lib/api/api-fetch';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -21,8 +21,6 @@ export async function getMenuList(
   businessId: string,
   options?: GetMenuListOptions
 ): Promise<MenuListResponse> {
-  const session = await getServerSession();
-
   const params = new URLSearchParams();
   if (options?.serviceName) {
     params.append('serviceName', options.serviceName);
@@ -43,13 +41,7 @@ export async function getMenuList(
   const queryString = params.toString();
   const url = `${BACKEND_URL}/api/business/${businessId}/menu${queryString ? `?${queryString}` : ''}`;
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${session.user?.accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    cache: 'no-store',
-  });
+  const response = await apiFetch(url, { method: 'GET' });
 
   if (!response.ok) {
     throw new Error('메뉴 목록을 가져오는 데 실패했습니다.');
@@ -59,40 +51,6 @@ export async function getMenuList(
 
   if (!result.data) {
     throw new Error('메뉴 데이터를 찾을 수 없습니다.');
-  }
-
-  return result.data;
-}
-
-/**
- * 서버 측 함수: 메뉴 상세 정보 조회
- * SSR을 위한 서버 컴포넌트에서 사용됨
- */
-export async function getMenuDetail(
-  businessId: string,
-  menuId: string
-): Promise<Menu> {
-  const session = await getServerSession();
-
-  const response = await fetch(
-    `${BACKEND_URL}/api/business/${businessId}/menu/${menuId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${session.user?.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('메뉴 상세 정보를 가져오는 데 실패했습니다.');
-  }
-
-  const result = await response.json();
-
-  if (!result.data) {
-    throw new Error('메뉴 상세 데이터를 찾을 수 없습니다.');
   }
 
   return result.data;

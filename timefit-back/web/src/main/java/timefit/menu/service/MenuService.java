@@ -72,9 +72,9 @@ public class MenuService {
         return menuCommandService.toggleMenuActive(businessId, menuId, currentUserId);
     }
 
-    // 메뉴 삭제 (비활성화)
+    // 메뉴 삭제
     @Transactional
-    public void deleteMenu(UUID businessId, UUID menuId, UUID currentUserId) {
-        menuCommandService.deleteMenu(businessId, menuId, currentUserId);
+    public MenuResponseDto.DeleteResult deleteMenu(UUID businessId, UUID menuId, UUID currentUserId) {
+        return menuCommandService.deleteMenu(businessId, menuId, currentUserId);
     }
 }

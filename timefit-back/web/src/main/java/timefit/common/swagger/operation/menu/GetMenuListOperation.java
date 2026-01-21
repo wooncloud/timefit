@@ -46,7 +46,7 @@ import java.lang.annotation.*;
                             "data": {
                             "menus": [
                                 {
-                                "menuId": "550e8400-e29b-41d4-a716-446655440000",
+                                "menuId": "10000000-0000-0000-0000-000000000001",
                                 "serviceName": "헤어 컷",
                                 "price": 30000,
                                 "orderType": "RESERVATION_BASED",

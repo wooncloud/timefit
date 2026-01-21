@@ -36,15 +36,6 @@ timefit:
     # 초대 수락 페이지 경로 (프론트엔드 라우팅 path)
     invite-path: ${TIMEFIT_FRONTEND_INVITE_PATH}
 
-logging:
-  level:
-    root: INFO
-    org.springframework.web: INFO
-    org.hibernate: INFO
-    org.example.timefit: DEBUG
-    org.springframework.security: WARN
-    me.paulschwarz.springdotenv: INFO
-
 jwt:
   secret: ${JWT_SECRET}
   issuer: timefit
@@ -89,6 +80,38 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 500
+          order_inserts: true
+          order_updates: true
+
+# P6Spy 설정 (개발 환경에만 활성화)
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true       # P6Spy 활성화
+      multiline: true            # 쿼리를 여러 줄로 보기 좋게
+      logging: slf4j             # SLF4J 로깅 사용
+      tracing:
+        include-parameter-values: true  # 파라미터 값 포함
+
+# 개발 환경 로깅 설정
+logging:
+  file:
+    name: logs/dev/application.log  # 로그 파일 경로
+    max-size: 100MB                 # 파일당 최대 크기
+    max-history: 30                 # 최대 30일 보관
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %clr(%-5level) %clr(%logger{36}){cyan} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.hibernate: INFO
+    org.example.timefit: DEBUG
+    org.springframework.security: WARN
+    me.paulschwarz.springdotenv: INFO
+    p6spy: INFO
 
 ---
 # 운영 환경
@@ -109,10 +132,43 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
       connection-test-query: SELECT 1
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 500
+          order_inserts: true
+          order_updates: true
+
+# P6Spy 비활성화 (운영 환경)
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: false      # 운영에서는 P6Spy 비활성화
+
+# 운영 환경 로깅 설정
+logging:
+  file:
+    name: logs/prod/application.log  # 운영 로그 파일
+    max-size: 500MB                  # 운영은 더 큰 파일 허용
+    max-history: 90                  # 90일 보관
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN                      # Hibernate는 경고만
+    org.example.timefit: INFO                # 애플리케이션 정보 로그
+    org.springframework.security: WARN       # Security 경고만
+    me.paulschwarz.springdotenv: WARN
+    com.zaxxer.hikari: INFO                  # 커넥션 풀 정보만
 
 ---
 

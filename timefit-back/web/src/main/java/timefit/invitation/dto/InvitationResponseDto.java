@@ -16,10 +16,10 @@ public class InvitationResponseDto {
      */
     @Schema(description = "초대 정보")
     public record Invitation(
-            @Schema(description = "초대 ID", example = "550e8400-e29b-41d4-a716-446655440000")
+            @Schema(description = "초대 ID", example = "10000000-0000-0000-0000-000000000001")
             UUID invitationId,
 
-            @Schema(description = "초대받은 이메일", example = "user@example.com")
+            @Schema(description = "초대받은 이메일", example = "owner1@timefit.com")
             String email,
 
             @Schema(description = "초대 역할 (OWNER/MANAGER/STAFF)", example = "MANAGER")
@@ -28,7 +28,7 @@ public class InvitationResponseDto {
             @Schema(description = "초대 상태 (PENDING/ACCEPTED/EXPIRED/CANCELED)", example = "PENDING")
             InvitationStatus status,
 
-            @Schema(description = "초대한 사람 이름", example = "홍길동")
+            @Schema(description = "초대한 사람 이름", example = "Owner Kim")
             String invitedByName,
 
             @Schema(description = "초대 만료 시간", example = "2025-12-15T23:59:59")
@@ -74,7 +74,7 @@ public class InvitationResponseDto {
      */
     @Schema(description = "초대 수락 결과")
     public record AcceptResult(
-            @Schema(description = "업체 ID", example = "550e8400-e29b-41d4-a716-446655440001")
+            @Schema(description = "업체 ID", example = "30000000-0000-0000-0000-000000000001")
             UUID businessId,
 
             @Schema(description = "업체명", example = "강남 헤어샵")

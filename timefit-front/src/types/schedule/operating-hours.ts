@@ -37,7 +37,7 @@ export interface GetOperatingHoursApiResponse {
 /**
  * PUT API 요청: 예약 가능 시간대 입력
  */
-export interface BookingTimeRangeInput {
+interface BookingTimeRangeInput {
   startTime: string; // HH:mm
   endTime: string; // HH:mm
 }

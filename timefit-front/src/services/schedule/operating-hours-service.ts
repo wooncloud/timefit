@@ -4,7 +4,7 @@ import type {
   GetOperatingHoursApiResponse,
   OperatingHours,
 } from '@/types/schedule/operating-hours';
-import { getServerSession } from '@/lib/session/server';
+import { apiFetch } from '@/lib/api/api-fetch';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -16,17 +16,9 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 export async function getOperatingHours(
   businessId: string
 ): Promise<OperatingHours> {
-  const session = await getServerSession();
-
-  const response = await fetch(
+  const response = await apiFetch(
     `${BACKEND_URL}/api/business/${businessId}/operating-hours`,
-    {
-      headers: {
-        Authorization: `Bearer ${session.user?.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    }
+    { method: 'GET' }
   );
 
   if (!response.ok) {
@@ -34,7 +26,6 @@ export async function getOperatingHours(
   }
 
   const result: GetOperatingHoursApiResponse = await response.json();
-
 
   if (!result.data) {
     throw new Error('영업시간 데이터를 찾을 수 없습니다.');
