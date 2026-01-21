@@ -3,6 +3,7 @@ package timefit.business.service.validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import timefit.business.dto.BusinessRequestDto;
 import timefit.business.entity.Business;
 import timefit.business.entity.UserBusinessRole;
 import timefit.business.repository.BusinessRepository;
@@ -10,7 +11,13 @@ import timefit.business.repository.UserBusinessRoleRepository;
 import timefit.common.entity.BusinessRole;
 import timefit.exception.business.BusinessErrorCode;
 import timefit.exception.business.BusinessException;
+import timefit.exception.validation.ValidationErrorCode;
+import timefit.exception.validation.ValidationException;
+import timefit.menu.repository.MenuRepository;
+import timefit.reservation.entity.ReservationStatus;
+import timefit.reservation.repository.ReservationRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -24,6 +31,8 @@ public class BusinessValidator {
 
     private final BusinessRepository businessRepository;
     private final UserBusinessRoleRepository userBusinessRoleRepository;
+    private final ReservationRepository reservationRepository;
+    private final MenuRepository menuRepository;
 
     /**
      * Business 존재 여부 검증 및 조회
@@ -158,5 +167,60 @@ public class BusinessValidator {
         Business business = validateBusinessExists(businessId);
         validateManagerOrOwnerRole(userId, businessId);
         return business;
+    }
+
+    /**
+     * 업체 삭제 가능 여부 검증
+     * - 활성 예약 확인
+     * - 활성 메뉴 확인
+     */
+    public void validateCanBeDeleted(UUID businessId) {
+        // 1. 활성 예약 확인
+        boolean hasActiveReservations = reservationRepository
+                .existsByBusinessIdAndStatusIn(
+                        businessId,
+                        List.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED)
+                );
+
+        if (hasActiveReservations) {
+            throw new BusinessException(
+                    BusinessErrorCode.BUSINESS_HAS_ACTIVE_RESERVATIONS
+            );
+        }
+
+        // 2. 활성 메뉴 확인
+        boolean hasActiveMenus = menuRepository
+                .existsByBusinessIdAndIsActiveTrue(businessId);
+
+        if (hasActiveMenus) {
+            throw new BusinessException(
+                    BusinessErrorCode.BUSINESS_HAS_ACTIVE_MENUS
+            );
+        }
+    }
+
+    public BusinessRequestDto.DeleteBusinessRequest validateAndGetDeleteRequest(
+            BusinessRequestDto.DeleteBusinessRequest request) {
+
+        if (request == null) {
+            log.debug("삭제 요청 본문 없음 - 기본 사유 생성");
+            return new BusinessRequestDto.DeleteBusinessRequest("사용자 요청에 의한 삭제");
+        }
+
+        // request가 있을 때 deleteReason 검증
+        String deleteReason = request.deleteReason();
+
+        if (deleteReason == null || deleteReason.isBlank()) {
+            log.warn("삭제 사유가 비어있음");
+            throw new ValidationException(ValidationErrorCode.INVALID_INPUT) ;
+        }
+
+        if (deleteReason.length() > 500) {
+            log.warn("삭제 사유가 너무 김: {} characters", deleteReason.length());
+            throw new ValidationException(ValidationErrorCode.INVALID_INPUT) ;
+        }
+
+        log.debug("삭제 요청 본문 확인 - 사유: {}", deleteReason);
+        return request;
     }
 }
