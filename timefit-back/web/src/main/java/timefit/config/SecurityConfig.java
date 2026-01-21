@@ -122,7 +122,8 @@ public class SecurityConfig {
                                 "/api/business/*/booking-slot",
                                 "/api/business/*/booking-slot/range",
                                 "/api/business/*/booking-slot/menu/*",
-                                "/api/business/*/booking-slot/upcoming"
+                                "/api/business/*/booking-slot/upcoming",
+                                "/api/business/*/booking-slot/**"
                         ).permitAll()
 
                         // ========== 업체 관련 인증 필요 API ==========
