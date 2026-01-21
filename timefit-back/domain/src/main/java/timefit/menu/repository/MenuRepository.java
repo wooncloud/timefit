@@ -34,5 +34,8 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
      */
     boolean existsByBusinessIdAndServiceName(UUID businessId, String serviceName);
 
+    // Business의 활성 메뉴 존재 여부
+    boolean existsByBusinessIdAndIsActiveTrue(UUID businessId);
+
     long countByBusinessCategoryIdAndIsActiveTrue(UUID categoryId);
 }
