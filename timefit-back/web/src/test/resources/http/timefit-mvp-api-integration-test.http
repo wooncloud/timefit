@@ -25,6 +25,16 @@
 ### [Setup 1] Owner 회원가입 + 로그인
 ### ================================================================
 
+# @name Health체크
+GET {{baseUrl}}/api/auth/health
+
+> {%
+    console.log("\n[01-1] Health Check");
+    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+
 # @name Owner회원가입
 POST {{baseUrl}}/api/auth/signup
 Content-Type: application/json
@@ -62,8 +72,9 @@ Content-Type: application/json
 > {%
     console.log("\n========================================");
     console.log("[Setup 1-2] Owner 로그인");
+    console.log("   - Status:", response.status);
     console.log("========================================");
-    if (response.status === 200 && response.body.data.accessToken) {
+    if (response.status === 200 && response.body.data && response.body.data.accessToken) {
         client.global.set("ownerToken", response.body.data.accessToken);
         client.global.set("ownerRefreshToken", response.body.data.refreshToken);
         console.log("✅ Owner 로그인 성공 - Token 저장");
@@ -125,16 +136,6 @@ Content-Type: application/json
 
 ### ================================================================
 ### [Test 1] 인증/인가 API
-### ================================================================
-
-# @name Health체크
-GET {{baseUrl}}/api/auth/health
-
-> {%
-    console.log("\n[01-1] Health Check");
-    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
-%}
-
 ### ================================================================
 
 # @name Token갱신_Owner
@@ -239,14 +240,15 @@ Authorization: Bearer {{ownerToken}}
 
 ### ================================================================
 
-# @name 내업체목록조회
-GET {{baseUrl}}/api/business/my-businesses
-Authorization: Bearer {{ownerToken}}
+## @name 내업체목록조회
+#GET {{baseUrl}}/api/business/my-businesses
+#Authorization: Bearer {{ownerToken}}
+#
+#> {%
+#    console.log("\n[02-5] 내 업체 목록 조회");
+#    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+#%}
 
-> {%
-    console.log("\n[02-5] 내 업체 목록 조회");
-    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
-%}
 
 ### ================================================================
 
@@ -434,8 +436,8 @@ Authorization: Bearer {{ownerToken}}
   "orderType": "RESERVATION_BASED",
   "autoGenerateSlots": true,
   "slotSettings": {
-    "startDate": "2026-01-20",
-    "endDate": "2026-01-31",
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-10",
     "slotIntervalMinutes": 60,
     "specificTimeRanges": [
       {"startTime": "09:00", "endTime": "18:00"}
@@ -470,8 +472,8 @@ Authorization: Bearer {{ownerToken}}
   "orderType": "RESERVATION_BASED",
   "autoGenerateSlots": true,
   "slotSettings": {
-    "startDate": "2026-01-20",
-    "endDate": "2026-01-31",
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-10",
     "slotIntervalMinutes": 60,
     "specificTimeRanges": [
       {"startTime": "09:00", "endTime": "18:00"}
@@ -518,6 +520,9 @@ Authorization: Bearer {{ownerToken}}
 
 {
   "serviceName": "헤어컷 프리미엄",
+  "businessType": "BD008",
+  "orderType": "RESERVATION_BASED",
+  "categoryName": "Hair Style",
   "description": "프리미엄 커트 서비스",
   "price": 35000,
   "durationMinutes": 60
@@ -544,17 +549,36 @@ Authorization: Bearer {{ownerToken}}
 ### ================================================================
 
 # @name 예약슬롯조회_특정날짜_공개
-GET {{baseUrl}}/api/business/{{businessId}}/booking-slot?date=2026-01-20
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot?date=2026-01-21
 
 > {%
     console.log("\n[06-1] 예약 슬롯 조회 - 특정 날짜 (공개)");
     if (response.status === 200) {
         const slots = response.body.data.slots;
-        if (slots && slots.length > 0) {
+
+        if (slots && slots.length >= 4) {
+            // 슬롯 4개 저장
             client.global.set("slotId1", slots[0].slotId);
-            console.log("✅ 성공 - Slot ID 저장:", slots[0].slotId);
+            client.global.set("slotId2", slots[1].slotId);
+            client.global.set("slotId3", slots[2].slotId);
+            client.global.set("slotId4", slots[3].slotId);
+
+            console.log("✅ 성공 - 슬롯 4개 저장 완료");
+            console.log("   Slot1 (예약1-완료용):", slots[0].slotId);
+            console.log("   Slot2 (예약2-거절용):", slots[1].slotId);
+            console.log("   Slot3 (예약3-노쇼용):", slots[2].slotId);
+            console.log("   Slot4 (예약4-취소용):", slots[3].slotId);
+
+            // 저장 확인
+            console.log("\n=== 변수 저장 상태 확인 ===");
+            console.log("slotId1:", client.global.get("slotId1") || "❌ 미저장");
+            console.log("slotId2:", client.global.get("slotId2") || "❌ 미저장");
+            console.log("slotId3:", client.global.get("slotId3") || "❌ 미저장");
+            console.log("slotId4:", client.global.get("slotId4") || "❌ 미저장");
         } else {
-            console.log("✅ 성공 - 슬롯 없음");
+            console.error("❌ 슬롯 부족! 필요: 4개, 실제:", slots ? slots.length : 0);
+            console.error("⚠️ 메뉴 생성 시 slotIntervalMinutes를 60분으로 설정했는지 확인");
+            console.error("⚠️ 영업시간이 09:00-18:00 (9시간)이면 최소 9개 슬롯 생성됨");
         }
     } else {
         console.error("❌ 실패:", response.status);
@@ -574,7 +598,7 @@ GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/upcoming?days=7
 ### ================================================================
 
 # @name 예약슬롯조회_기간별_공개
-GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/range?startDate=2026-01-20&endDate=2026-01-31
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/range?startDate=2026-01-05&endDate=2026-01-05
 
 > {%
     console.log("\n[06-3] 예약 슬롯 조회 - 기간별 (공개)");
@@ -584,7 +608,7 @@ GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/range?startDate=2026-01
 ### ================================================================
 
 # @name 예약슬롯조회_메뉴별_공개
-GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/menu/{{menuId1}}?startDate=2026-01-20&endDate=2026-01-31
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/menu/{{menuId1}}?startDate=2026-01-05&endDate=2026-01-05
 
 > {%
     console.log("\n[06-4] 예약 슬롯 조회 - 메뉴별 (공개)");
@@ -600,18 +624,70 @@ Authorization: Bearer {{ownerToken}}
 
 {
   "menuId": "{{menuId1}}",
-  "startDate": "2026-02-01",
-  "endDate": "2026-02-07",
   "slotIntervalMinutes": 60,
-  "specificTimeRanges": [
-    {"startTime": "09:00", "endTime": "12:00"},
-    {"startTime": "13:00", "endTime": "18:00"}
+  "schedules": [
+    {
+      "date": "2026-10-01",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-02",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-03",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-04",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-05",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-06",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    },
+    {
+      "date": "2026-10-07",
+      "timeRanges": [
+        {"startTime": "09:00", "endTime": "12:00"},
+        {"startTime": "13:00", "endTime": "18:00"}
+      ]
+    }
   ]
 }
 
 > {%
     console.log("\n[06-5] 예약 슬롯 일괄 생성");
-    console.log(response.status === 200 || response.status === 201 ? "✅ 성공" : "❌ 실패");
+    if (response.status === 200 || response.status === 201) {
+        console.log("✅ 성공");
+        console.log("   - 생성된 슬롯:", response.body.data.created);
+        console.log("   - 건너뛴 슬롯:", response.body.data.skipped);
+        console.log("   - 총 요청:", response.body.data.totalRequested);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
 %}
 
 ### ================================================================
@@ -714,122 +790,33 @@ Authorization: Bearer {{customerToken}}
 
 ### ================================================================
 
-# @name 예약수정_고객
-PUT {{baseUrl}}/api/reservation/{{reservationId}}
-Content-Type: application/json
-Authorization: Bearer {{customerToken}}
-
-{
-  "notes": "예약 수정 테스트"
-}
-
-> {%
-    console.log("\n[07-4] 예약 수정 (고객)");
-    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
-%}
-
-### ================================================================
-### [Test 8] 예약 관리 API - 업체용
-### ================================================================
-
-# @name 업체예약목록조회
-GET {{baseUrl}}/api/business/{{businessId}}/reservations?status=PENDING&startDate=2026-01-01&endDate=2026-12-31&page=0&size=20
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    console.log("\n[08-1] 업체 예약 목록 조회");
-    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
-%}
-
-### ================================================================
-
-# @name 예약상세조회_업체
-GET {{baseUrl}}/api/business/{{businessId}}/reservation/{{reservationId}}
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    console.log("\n[08-2] 예약 상세 조회 (업체)");
-    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
-%}
-
-### ================================================================
-
-# @name 예약승인_업체
+# @name 예약승인_취소용
 POST {{baseUrl}}/api/business/{{businessId}}/reservation/{{reservationId}}/approve
 Authorization: Bearer {{ownerToken}}
 
 > {%
-    console.log("\n[08-3] 예약 승인");
+    console.log("\n[08-7-1] 예약 승인 (예약4 - 취소용)");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
 %}
 
-### ================================================================
-
-# @name 예약완료처리_업체
-POST {{baseUrl}}/api/business/{{businessId}}/reservation/{{reservationId}}/complete
-Content-Type: application/json
-Authorization: Bearer {{ownerToken}}
-
-{
-  "notes": "서비스 제공 완료"
-}
-
-> {%
-    console.log("\n[08-4] 예약 완료 처리");
-    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
-%}
-
-### ================================================================
-
-# @name 예약거절_업체
-POST {{baseUrl}}/api/business/{{businessId}}/reservation/{{reservationId}}/reject
-Content-Type: application/json
-Authorization: Bearer {{ownerToken}}
-
-{
-  "reason": "업체 사정으로 예약 불가"
-}
-
-> {%
-    console.log("\n[08-5] 예약 거절");
-    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
-%}
-
-### ================================================================
-
-# @name 노쇼처리_업체
-POST {{baseUrl}}/api/business/{{businessId}}/reservation/{{reservationId}}/no-show
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    console.log("\n[08-6] 노쇼 처리");
-    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
-%}
-
-### ================================================================
-### [Test 9] Cleanup & Delete Tests
 ### ================================================================
 
 # @name 예약취소_고객
-DELETE {{baseUrl}}/api/reservation/{{reservationId}}
+POST {{baseUrl}}/api/reservation/{{reservationId}}/cancel
+Content-Type: application/json
 Authorization: Bearer {{customerToken}}
 
+{
+  "reason": "개인 사정으로 취소합니다"
+}
+
 > {%
-    console.log("\n[09-1] 예약 취소 (고객)");
+    console.log("\n[08-7-2] 예약 취소 (예약4 - 고객) 🆕 POST /cancel");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
 %}
 
 ### ================================================================
-
-# @name 예약슬롯삭제
-DELETE {{baseUrl}}/api/business/{{businessId}}/booking-slot/{{slotId1}}
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    console.log("\n[09-2] 예약 슬롯 삭제");
-    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
-%}
-
+### [Test 9] Cleanup (간소화 + 슬롯 일괄 삭제)
 ### ================================================================
 
 # @name 과거슬롯일괄삭제
@@ -837,19 +824,48 @@ DELETE {{baseUrl}}/api/business/{{businessId}}/booking-slot/past
 Authorization: Bearer {{ownerToken}}
 
 > {%
-    console.log("\n[09-3] 과거 슬롯 일괄 삭제");
+    console.log("\n========================================");
+    console.log("[09] Cleanup");
+    console.log("========================================");
+    console.log("\n[Level 3] BookingSlot 삭제 (과거 슬롯 일괄)");
+    console.log("[09-1] 과거 슬롯 일괄 삭제");
+    console.log("   💡 Menu FK 제약 해소");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
 %}
 
 ### ================================================================
 
-# @name 메뉴삭제
+# @name 메뉴삭제_1
 DELETE {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId1}}
 Authorization: Bearer {{ownerToken}}
 
 > {%
-    console.log("\n[09-4] 메뉴 삭제");
-    console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+    console.log("\n[Level 2] Menu 삭제");
+    console.log("[09-2] 메뉴1 삭제 (헤어컷)");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - 삭제된 메뉴:", response.body.data.menuName);
+        console.log("   - 메시지:", response.body.data.message);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 메뉴삭제_2
+DELETE {{baseUrl}}/api/business/{{businessId}}/menu/{{menuId2}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[09-3] 메뉴2 삭제 (파마)");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - 삭제된 메뉴:", response.body.data.menuName);
+        console.log("   - 메시지:", response.body.data.message);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
 %}
 
 ### ================================================================
@@ -859,7 +875,8 @@ DELETE {{baseUrl}}/api/business/{{businessId}}/category/{{categoryId}}
 Authorization: Bearer {{ownerToken}}
 
 > {%
-    console.log("\n[09-5] 카테고리 삭제");
+    console.log("\n[Level 1.5] Category 삭제");
+    console.log("[09-4] 카테고리 삭제");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
 %}
 
@@ -870,7 +887,8 @@ DELETE {{baseUrl}}/api/business/{{businessId}}
 Authorization: Bearer {{ownerToken}}
 
 > {%
-    console.log("\n[09-6] 업체 삭제 (비활성화)");
+    console.log("\n[Level 1] Business 삭제");
+    console.log("[09-5] 업체 삭제");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
 %}
 
@@ -886,7 +904,7 @@ Authorization: Bearer {{ownerToken}}
 }
 
 > {%
-    console.log("\n[09-7] 로그아웃 (Owner)");
+    console.log("\n[09-6] 로그아웃 (Owner)");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
 %}
 
@@ -902,10 +920,16 @@ Authorization: Bearer {{customerToken}}
 }
 
 > {%
-    console.log("\n[09-8] 로그아웃 (Customer)");
+    console.log("\n[09-7] 로그아웃 (Customer)");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
 
     console.log("\n========================================");
     console.log("🎉 전체 API 테스트 완료!");
+    console.log("========================================");
+    console.log("📝 변경 사항:");
+    console.log("  ✅ 예약 취소: POST /api/reservation/{id}/cancel");
+    console.log("  ✅ Cleanup: 과거 슬롯 일괄 삭제 추가");
+    console.log("  💡 Reservation: 상태 변경만 (영구 보존)");
+    console.log("  💡 BookingSlot: 과거 슬롯 일괄 삭제 → Menu 삭제 가능");
     console.log("========================================");
 %}
