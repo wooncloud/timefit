@@ -110,7 +110,7 @@ public class ReservationController {
     }
 
     @CancelReservationOperation
-    @DeleteMapping("/api/reservation/{reservationId}")
+    @PostMapping("/api/reservation/{reservationId}/cancel")
     public ResponseEntity<ResponseData<ReservationResponseDto.ReservationActionResult>> cancelReservation(
             @Parameter(description = "예약 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
             @PathVariable UUID reservationId,
