@@ -1,4 +1,6 @@
 import { ReactNode } from 'react';
+import { CustomerHeader } from '@/components/customer/customer-header';
+import { CustomerBottomNav } from '@/components/customer/customer-bottom-nav';
 
 interface CustomerLayoutProps {
   children: ReactNode;
@@ -6,30 +8,18 @@ interface CustomerLayoutProps {
 
 export default function CustomerLayout({ children }: CustomerLayoutProps) {
   return (
-    <div className="min-h-screen pb-16">
-      {/* 메인 컨텐츠 */}
-      <main>{children}</main>
+    <div className="min-h-screen bg-gray-50 flex justify-center">
+      {/* 모바일 컨테이너 */}
+      <div className="w-full max-w-md flex flex-col bg-white min-h-screen shadow-xl relative">
+        {/* 상단 헤더 */}
+        <CustomerHeader />
 
-      {/* 하단 탭 바 (Bottom Navigation) */}
-      <nav className="fixed bottom-0 left-0 right-0 border-t bg-background">
-        <div className="flex h-16 items-center justify-around">
-          <a href="/" className="flex flex-col items-center gap-1">
-            <span>홈</span>
-          </a>
-          <a href="/search" className="flex flex-col items-center gap-1">
-            <span>검색</span>
-          </a>
-          <a href="/bookings" className="flex flex-col items-center gap-1">
-            <span>예약</span>
-          </a>
-          <a href="/wishlist" className="flex flex-col items-center gap-1">
-            <span>찜</span>
-          </a>
-          <a href="/mypage" className="flex flex-col items-center gap-1">
-            <span>마이</span>
-          </a>
-        </div>
-      </nav>
+        {/* 메인 컨텐츠 */}
+        <main className="flex-1 pb-20">{children}</main>
+
+        {/* 하단 네비게이션 */}
+        <CustomerBottomNav />
+      </div>
     </div>
   );
 }
