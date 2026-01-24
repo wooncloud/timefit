@@ -1,23 +1,12 @@
 import { getTeamMembers } from '@/services/team/team-service';
-import { getCurrentUserFromSession } from '@/lib/session/server';
+import { getBusinessContext } from '@/lib/business/get-business-context';
 
 import { TeamClient } from './team-client';
 
 export default async function Page() {
-  const sessionUser = await getCurrentUserFromSession();
+  const { businessId, userId } = await getBusinessContext();
 
-  if (!sessionUser) {
-    throw new Error('세션 사용자 정보를 찾을 수 없습니다.');
-  }
-
-  const businessId = sessionUser.businesses?.[0]?.businessId;
-  const currentUserId = sessionUser.userId;
-
-  if (!businessId) {
-    throw new Error('업체 ID를 찾을 수 없습니다.');
-  }
-
-  if (!currentUserId) {
+  if (!userId) {
     throw new Error('사용자 ID를 찾을 수 없습니다.');
   }
 
@@ -27,7 +16,7 @@ export default async function Page() {
     <TeamClient
       initialMembers={members}
       businessId={businessId}
-      currentUserId={currentUserId}
+      currentUserId={userId}
     />
   );
 }
