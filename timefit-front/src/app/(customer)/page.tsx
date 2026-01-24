@@ -1,14 +1,22 @@
 import Link from 'next/link';
-import { Search, SlidersHorizontal, Sparkles, Dumbbell, Coffee, Heart } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import {
+  Coffee,
+  Dumbbell,
+  Heart,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+} from 'lucide-react';
+
 import { PlaceCard } from '@/components/customer/cards/place-card';
+import { Input } from '@/components/ui/input';
 
 // 카테고리 더미 데이터
 const categories = [
   { id: 'beauty', name: '뷰티', icon: Sparkles, color: '#3ec0c7' },
   { id: 'sports', name: '스포츠', icon: Dumbbell, color: '#f97316' },
   { id: 'cafe', name: '카페', icon: Coffee, color: '#8b5cf6' },
-  { id: 'health', name: '건강', icon: Heart, color: '#ec4899' }
+  { id: 'health', name: '건강', icon: Heart, color: '#ec4899' },
 ];
 
 // 장소 더미 데이터
@@ -20,7 +28,7 @@ const places = [
     distance: '3.5km',
     rating: 4.8,
     image: '/images/placeholder.jpg',
-    badge: '신규'
+    badge: '신규',
   },
   {
     id: '2',
@@ -29,7 +37,7 @@ const places = [
     distance: '0.8km',
     rating: 4.6,
     image: '/images/placeholder.jpg',
-    badge: null
+    badge: null,
   },
   {
     id: '3',
@@ -38,7 +46,7 @@ const places = [
     distance: '1.1km',
     rating: 4.9,
     image: '/images/placeholder.jpg',
-    badge: '인기'
+    badge: '인기',
   },
   {
     id: '4',
@@ -47,7 +55,7 @@ const places = [
     distance: '1.2km',
     rating: 4.9,
     image: '/images/placeholder.jpg',
-    badge: null
+    badge: null,
   },
   {
     id: '5',
@@ -56,8 +64,8 @@ const places = [
     distance: '0.5km',
     rating: 4.8,
     image: '/images/placeholder.jpg',
-    badge: null
-  }
+    badge: null,
+  },
 ];
 
 export default function HomePage() {
@@ -85,12 +93,15 @@ export default function HomePage() {
       <div className="mb-6">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">카테고리</h2>
-          <Link href="/categories" className="text-sm font-medium text-[#3ec0c7]">
+          <Link
+            href="/categories"
+            className="text-sm font-medium text-[#3ec0c7]"
+          >
             전체보기
           </Link>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-2">
-          {categories.map((category) => {
+          {categories.map(category => {
             const Icon = category.icon;
             return (
               <Link
@@ -104,7 +115,9 @@ export default function HomePage() {
                 >
                   <Icon className="h-7 w-7" style={{ color: category.color }} />
                 </div>
-                <span className="text-sm font-medium text-gray-600">{category.name}</span>
+                <span className="text-sm font-medium text-gray-600">
+                  {category.name}
+                </span>
               </Link>
             );
           })}
@@ -115,7 +128,7 @@ export default function HomePage() {
       <div>
         <h2 className="mb-4 text-lg font-semibold text-gray-900">추천 장소</h2>
         <div className="space-y-4">
-          {places.map((place) => (
+          {places.map(place => (
             <PlaceCard
               key={place.id}
               id={place.id}

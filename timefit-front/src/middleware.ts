@@ -11,10 +11,7 @@ export async function middleware(request: NextRequest) {
   const pathname = url.pathname;
 
   // 1. static files 및 API 경로는 미들웨어 최소화
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.includes('.')
-  ) {
+  if (pathname.startsWith('/_next') || pathname.includes('.')) {
     return NextResponse.next();
   }
 
@@ -32,7 +29,10 @@ export async function middleware(request: NextRequest) {
     if (user?.accessToken && user?.refreshToken) {
       // 토큰이 만료되었거나 임박(5분 전)한 경우 리프레시 시도
       if (isTokenExpired(user.accessToken, 300)) {
-        console.log('[Middleware] 토큰 만료 임박 감지, 리프레시 시도:', pathname);
+        console.log(
+          '[Middleware] 토큰 만료 임박 감지, 리프레시 시도:',
+          pathname
+        );
         const newTokens = await attemptTokenRefresh(user.refreshToken);
 
         if (newTokens) {
@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
         } else {
           console.log('[Middleware] 토큰 리프레시 실패, 세션 초기화');
           session.destroy();
-          // 여기서 강제 로그아웃 리다이렉트를 할 수도 있지만, 
+          // 여기서 강제 로그아웃 리다이렉트를 할 수도 있지만,
           // 일단은 세션만 비우고 각 페이지의 권한 체크 로직에 맡깁니다.
         }
       }

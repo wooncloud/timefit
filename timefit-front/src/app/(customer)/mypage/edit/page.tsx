@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Camera, ChevronRight } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 // 사용자 더미 데이터
@@ -12,7 +13,7 @@ const initialUserData = {
   name: '김민지',
   email: 'minji.kim@timefit.com',
   phone: '010-1234-5678',
-  lastLogin: '2024년 1월 24일 09:41'
+  lastLogin: '2024년 1월 24일 09:41',
 };
 
 export default function ProfileEditPage() {
@@ -20,7 +21,7 @@ export default function ProfileEditPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,7 +34,10 @@ export default function ProfileEditPage() {
     <div className="flex flex-col bg-white">
       {/* 헤더 */}
       <div className="flex items-center gap-3 border-b px-4 py-3">
-        <Link href="/mypage" className="flex h-10 w-10 items-center justify-center">
+        <Link
+          href="/mypage"
+          className="flex h-10 w-10 items-center justify-center"
+        >
           <ChevronLeft className="h-6 w-6 text-gray-700" />
         </Link>
         <h1 className="text-lg font-semibold">프로필 편집</h1>
@@ -54,7 +58,7 @@ export default function ProfileEditPage() {
         </div>
 
         {/* 폼 필드 */}
-        <div className="flex-1 px-4 space-y-5">
+        <div className="flex-1 space-y-5 px-4">
           {/* 이름 */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-gray-500">

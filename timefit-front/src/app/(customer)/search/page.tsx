@@ -1,15 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Clock, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Clock, Search, X } from 'lucide-react';
+
 import { PlaceCard } from '@/components/customer/cards/place-card';
+import { Input } from '@/components/ui/input';
 
 // 최근 검색어 더미 데이터
 const recentSearches = [
   { id: '1', text: '근처 요가' },
   { id: '2', text: '남성 헤어컷' },
-  { id: '3', text: '마사지' }
+  { id: '3', text: '마사지' },
 ];
 
 // 검색 결과 더미 데이터
@@ -19,29 +20,29 @@ const searchResults = [
     name: '젠 요가 스튜디오',
     description: '마음챙김과 균형',
     distance: '3.5km',
-    rating: 4.8
+    rating: 4.8,
   },
   {
     id: '2',
     name: '페이드 마스터스',
     description: '클래식 컷 & 쉐이브',
     distance: '0.8km',
-    rating: 4.6
+    rating: 4.6,
   },
   {
     id: '3',
     name: '럭스 스파 리트릿',
     description: '마사지 & 사우나',
     distance: '1.2km',
-    rating: 4.9
+    rating: 4.9,
   },
   {
     id: '4',
     name: '그린볼 컴퍼니',
     description: '유기농 & 신선한 음식',
     distance: '1.1km',
-    rating: 4.9
-  }
+    rating: 4.9,
+  },
 ];
 
 export default function SearchPage() {
@@ -55,7 +56,7 @@ export default function SearchPage() {
   };
 
   const handleRemoveSearch = (id: string) => {
-    setSearches(searches.filter((s) => s.id !== id));
+    setSearches(searches.filter(s => s.id !== id));
   };
 
   const handleRecentClick = (text: string) => {
@@ -64,7 +65,7 @@ export default function SearchPage() {
 
   // 검색 결과 필터링 (간단한 더미 로직)
   const filteredResults = searchResults.filter(
-    (place) =>
+    place =>
       place.name.toLowerCase().includes(query.toLowerCase()) ||
       place.description.toLowerCase().includes(query.toLowerCase())
   );
@@ -78,7 +79,7 @@ export default function SearchPage() {
           type="text"
           placeholder="오늘 어디로 가고 싶으세요?"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={e => setQuery(e.target.value)}
           className="h-12 rounded-xl border-gray-200 pl-10 pr-10"
           autoFocus
         />
@@ -100,7 +101,10 @@ export default function SearchPage() {
               최근 검색어
             </h2>
             {searches.length > 0 && (
-              <button onClick={handleClearAll} className="text-sm font-medium text-[#3ec0c7]">
+              <button
+                onClick={handleClearAll}
+                className="text-sm font-medium text-[#3ec0c7]"
+              >
                 전체 삭제
               </button>
             )}
@@ -108,7 +112,7 @@ export default function SearchPage() {
 
           {searches.length > 0 ? (
             <div className="space-y-1">
-              {searches.map((search) => (
+              {searches.map(search => (
                 <div
                   key={search.id}
                   className="flex items-center justify-between rounded-lg py-3"
@@ -130,7 +134,9 @@ export default function SearchPage() {
               ))}
             </div>
           ) : (
-            <p className="py-8 text-center text-sm text-gray-400">최근 검색어가 없습니다</p>
+            <p className="py-8 text-center text-sm text-gray-400">
+              최근 검색어가 없습니다
+            </p>
           )}
         </div>
       ) : (
@@ -142,7 +148,7 @@ export default function SearchPage() {
 
           {filteredResults.length > 0 ? (
             <div className="space-y-3">
-              {filteredResults.map((place) => (
+              {filteredResults.map(place => (
                 <PlaceCard
                   key={place.id}
                   id={place.id}
@@ -157,7 +163,9 @@ export default function SearchPage() {
           ) : (
             <div className="py-12 text-center">
               <p className="text-gray-500">검색 결과가 없습니다</p>
-              <p className="mt-1 text-sm text-gray-400">다른 키워드로 검색해보세요</p>
+              <p className="mt-1 text-sm text-gray-400">
+                다른 키워드로 검색해보세요
+              </p>
             </div>
           )}
         </div>

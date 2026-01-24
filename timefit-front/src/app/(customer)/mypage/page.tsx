@@ -1,12 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { Bell, Pencil, Settings, HelpCircle, ChevronRight, LogOut } from 'lucide-react';
+import {
+  Bell,
+  ChevronRight,
+  HelpCircle,
+  LogOut,
+  Pencil,
+  Settings,
+} from 'lucide-react';
 
 // 사용자 더미 데이터
 const userData = {
   name: '김민지',
-  email: 'minji.kim@timefit.com'
+  email: 'minji.kim@timefit.com',
 };
 
 const menuItems = [
@@ -14,14 +21,14 @@ const menuItems = [
     id: 'settings',
     label: '설정',
     icon: Settings,
-    href: '/mypage/edit'
+    href: '/mypage/edit',
   },
   {
     id: 'help',
     label: '고객센터',
     icon: HelpCircle,
-    href: '/help'
-  }
+    href: '/help',
+  },
 ];
 
 export default function MypagePage() {
@@ -55,17 +62,24 @@ export default function MypagePage() {
         </div>
 
         {/* 이름 및 프로필 편집 링크 */}
-        <h2 className="mt-4 text-xl font-bold text-gray-900">{userData.name}</h2>
-        <Link href="/mypage/edit" className="mt-1 text-sm font-medium text-[#3ec0c7]">
+        <h2 className="mt-4 text-xl font-bold text-gray-900">
+          {userData.name}
+        </h2>
+        <Link
+          href="/mypage/edit"
+          className="mt-1 text-sm font-medium text-[#3ec0c7]"
+        >
           프로필 편집
         </Link>
       </div>
 
       {/* 메뉴 섹션 */}
       <div className="px-4 py-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">계정</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+          계정
+        </p>
         <div className="space-y-1">
-          {menuItems.map((item) => {
+          {menuItems.map(item => {
             const Icon = item.icon;
             return (
               <Link
@@ -75,7 +89,9 @@ export default function MypagePage() {
               >
                 <div className="flex items-center gap-3">
                   <Icon className="h-5 w-5 text-gray-500" />
-                  <span className="font-medium text-gray-700">{item.label}</span>
+                  <span className="font-medium text-gray-700">
+                    {item.label}
+                  </span>
                 </div>
                 <ChevronRight className="h-5 w-5 text-gray-400" />
               </Link>

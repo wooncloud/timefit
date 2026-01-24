@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Calendar } from 'lucide-react';
+import { Calendar, Search } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { BookingCard } from '@/components/customer/cards/booking-card';
 
@@ -26,7 +27,7 @@ const bookingsData: Booking[] = [
     placeName: '제니스 피트니스 스튜디오',
     serviceName: '1:1 필라테스 세션',
     status: 'confirmed',
-    dateTime: '2024.01.20 14:00'
+    dateTime: '2024.01.20 14:00',
   },
   {
     id: '2',
@@ -34,7 +35,7 @@ const bookingsData: Booking[] = [
     placeName: '아쿠아 웰니스 센터',
     serviceName: '수중 테라피 패스',
     status: 'pending',
-    dateTime: '2024.01.22 10:00'
+    dateTime: '2024.01.22 10:00',
   },
   {
     id: '3',
@@ -42,7 +43,7 @@ const bookingsData: Booking[] = [
     placeName: '아이언 피스트 복싱',
     serviceName: 'HIIT 복싱 클래스',
     status: 'completed',
-    dateTime: '2024.01.15 18:30'
+    dateTime: '2024.01.15 18:30',
   },
   {
     id: '4',
@@ -50,11 +51,9 @@ const bookingsData: Booking[] = [
     placeName: '럭스 스파 리트릿',
     serviceName: '딥티슈 마사지',
     status: 'cancelled',
-    dateTime: '2024.01.10 16:00'
-  }
+    dateTime: '2024.01.10 16:00',
+  },
 ];
-
-
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('upcoming');
@@ -62,11 +61,13 @@ export default function BookingsPage() {
   const getFilteredBookings = () => {
     switch (activeTab) {
       case 'upcoming':
-        return bookingsData.filter((b) => b.status === 'confirmed' || b.status === 'pending');
+        return bookingsData.filter(
+          b => b.status === 'confirmed' || b.status === 'pending'
+        );
       case 'completed':
-        return bookingsData.filter((b) => b.status === 'completed');
+        return bookingsData.filter(b => b.status === 'completed');
       case 'cancelled':
-        return bookingsData.filter((b) => b.status === 'cancelled');
+        return bookingsData.filter(b => b.status === 'cancelled');
       default:
         return [];
     }
@@ -90,8 +91,8 @@ export default function BookingsPage() {
           {[
             { id: 'upcoming', label: '이용 예정' },
             { id: 'completed', label: '이용 완료' },
-            { id: 'cancelled', label: '취소됨' }
-          ].map((tab) => (
+            { id: 'cancelled', label: '취소됨' },
+          ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
@@ -112,7 +113,7 @@ export default function BookingsPage() {
       <div className="flex-1 px-4 py-4">
         {filteredBookings.length > 0 ? (
           <div className="space-y-4">
-            {filteredBookings.map((booking) => (
+            {filteredBookings.map(booking => (
               <BookingCard
                 key={booking.id}
                 id={booking.id}

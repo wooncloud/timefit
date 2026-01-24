@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
-import { CustomerHeader } from '@/components/customer/layout/customer-header';
+
 import { CustomerBottomNav } from '@/components/customer/layout/customer-bottom-nav';
+import { CustomerHeader } from '@/components/customer/layout/customer-header';
 
 interface CustomerLayoutProps {
   children: ReactNode;
@@ -8,9 +9,9 @@ interface CustomerLayoutProps {
 
 export default function CustomerLayout({ children }: CustomerLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center">
+    <div className="flex min-h-screen justify-center bg-gray-50">
       {/* 모바일 컨테이너 */}
-      <div className="w-full max-w-md flex flex-col bg-white min-h-screen shadow-xl relative">
+      <div className="relative flex min-h-screen w-full max-w-md flex-col bg-white shadow-xl">
         {/* 상단 헤더 */}
         <CustomerHeader />
 

@@ -2,23 +2,24 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, CalendarCheck, Heart, User } from 'lucide-react';
+import { CalendarCheck, Heart, Home, User } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', icon: Home, label: '홈' },
   { href: '/bookings', icon: CalendarCheck, label: '내 예약' },
   { href: '/wishlist', icon: Heart, label: '찜' },
-  { href: '/mypage', icon: User, label: '마이페이지' }
+  { href: '/mypage', icon: User, label: '마이페이지' },
 ];
 
 export function CustomerBottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 border-t bg-white">
+    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-md -translate-x-1/2 border-t bg-white">
       <div className="flex h-16 items-center justify-around">
-        {navItems.map((item) => {
+        {navItems.map(item => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
 

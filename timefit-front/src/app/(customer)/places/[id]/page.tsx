@@ -3,10 +3,18 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ChevronLeft, Share2, Heart, Star, Info, Megaphone } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import {
+  ChevronLeft,
+  Heart,
+  Info,
+  Megaphone,
+  Share2,
+  Star,
+} from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { ServiceCard } from '@/components/customer/cards/service-card';
+import { Button } from '@/components/ui/button';
 
 // 업체 더미 데이터
 const placeData = {
@@ -16,8 +24,9 @@ const placeData = {
   rating: 4.9,
   description:
     '루미에르 웰니스 스튜디오는 도심 속 힐링을 제공하는 프리미엄 웰니스 공간입니다. 전문 테라피스트들이 고객 맞춤형 서비스를 제공합니다.',
-  notice: '예약 시간 10분 전까지 도착해주세요. 노쇼 시 예약이 취소될 수 있습니다.',
-  images: ['/images/place1.jpg', '/images/place2.jpg', '/images/place3.jpg']
+  notice:
+    '예약 시간 10분 전까지 도착해주세요. 노쇼 시 예약이 취소될 수 있습니다.',
+  images: ['/images/place1.jpg', '/images/place2.jpg', '/images/place3.jpg'],
 };
 
 // 서비스 더미 데이터
@@ -27,29 +36,29 @@ const services = [
     name: '딥티슈 마사지',
     description: '근육과 결합 조직의 심한 긴장을 완화합니다.',
     duration: 60,
-    price: 90000
+    price: 90000,
   },
   {
     id: '2',
     name: '오가닉 페이셜 글로우',
     description: '천연 유기농 성분으로 피부를 리쥬버네이팅합니다.',
     duration: 45,
-    price: 75000
+    price: 75000,
   },
   {
     id: '3',
     name: '아로마테라피 세션',
     description: '에센셜 오일을 사용하여 신체적, 정서적 웰빙을 개선합니다.',
     duration: 30,
-    price: 50000
+    price: 50000,
   },
   {
     id: '4',
     name: '스웨디시 마사지',
     description: '부드러운 압력으로 전신 이완과 혈액순환을 촉진합니다.',
     duration: 50,
-    price: 70000
-  }
+    price: 70000,
+  },
 ];
 
 type TabType = 'info' | 'services' | 'reviews';
@@ -61,14 +70,16 @@ export default function PlaceDetailPage() {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const toggleService = (serviceId: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(serviceId) ? prev.filter((id) => id !== serviceId) : [...prev, serviceId]
+    setSelectedServices(prev =>
+      prev.includes(serviceId)
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
     );
   };
 
   const selectedCount = selectedServices.length;
   const totalPrice = services
-    .filter((s) => selectedServices.includes(s.id))
+    .filter(s => selectedServices.includes(s.id))
     .reduce((sum, s) => sum + s.price, 0);
 
   const formatPrice = (price: number) => {
@@ -106,13 +117,17 @@ export default function PlaceDetailPage() {
       <div className="px-4 py-4">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{placeData.name}</h1>
+            <h1 className="text-xl font-bold text-gray-900">
+              {placeData.name}
+            </h1>
             <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
               <span>{placeData.category}</span>
               <span>•</span>
               <div className="flex items-center gap-1">
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-medium text-gray-700">{placeData.rating}</span>
+                <span className="font-medium text-gray-700">
+                  {placeData.rating}
+                </span>
               </div>
             </div>
           </div>
@@ -135,7 +150,9 @@ export default function PlaceDetailPage() {
             <Info className="h-4 w-4 text-[#3ec0c7]" />
             <span>업체 소개</span>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-gray-600">{placeData.description}</p>
+          <p className="mt-2 text-sm leading-relaxed text-gray-600">
+            {placeData.description}
+          </p>
         </div>
 
         {/* 업체 공지 */}
@@ -144,7 +161,9 @@ export default function PlaceDetailPage() {
             <Megaphone className="h-4 w-4" />
             <span>공지사항</span>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-amber-600">{placeData.notice}</p>
+          <p className="mt-2 text-sm leading-relaxed text-amber-600">
+            {placeData.notice}
+          </p>
         </div>
       </div>
 
@@ -154,8 +173,8 @@ export default function PlaceDetailPage() {
           {[
             { id: 'info', label: '정보' },
             { id: 'services', label: '서비스' },
-            { id: 'reviews', label: '리뷰' }
-          ].map((tab) => (
+            { id: 'reviews', label: '리뷰' },
+          ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
@@ -178,11 +197,13 @@ export default function PlaceDetailPage() {
           <div>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-semibold text-gray-900">인기 서비스</h2>
-              <button className="text-sm font-medium text-[#3ec0c7]">전체보기</button>
+              <button className="text-sm font-medium text-[#3ec0c7]">
+                전체보기
+              </button>
             </div>
 
             <div className="space-y-4">
-              {services.map((service) => (
+              {services.map(service => (
                 <ServiceCard
                   key={service.id}
                   id={service.id}
@@ -216,8 +237,12 @@ export default function PlaceDetailPage() {
         <div className="sticky bottom-16 border-t bg-white px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <p className="text-sm text-gray-500">{selectedCount}개 서비스 선택됨</p>
-              <p className="font-semibold text-gray-900">{formatPrice(totalPrice)}</p>
+              <p className="text-sm text-gray-500">
+                {selectedCount}개 서비스 선택됨
+              </p>
+              <p className="font-semibold text-gray-900">
+                {formatPrice(totalPrice)}
+              </p>
             </div>
             <Link href={`/places/${params.id}/reserve`}>
               <Button className="h-12 rounded-xl bg-[#3ec0c7] px-6 text-base font-semibold text-white hover:bg-[#35adb3]">

@@ -1,9 +1,9 @@
 import { getOperatingHours } from '@/services/schedule/operating-hours-service';
+import { getBusinessId } from '@/lib/business/get-business-context';
 import {
   mapOperatingHoursToBookingSlotsMap,
   mapOperatingHoursToBusinessHours,
 } from '@/lib/data/schedule/map-operating-hours';
-import { getBusinessId } from '@/lib/business/get-business-context';
 
 import { ScheduleClient } from './schedule-client';
 

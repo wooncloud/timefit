@@ -30,13 +30,13 @@ export function useBusinessSignup(options: UseBusinessSignupOptions = {}) {
   const [formData, setFormData] = useState<BusinessSignupFormData>(
     process.env.NODE_ENV === 'development'
       ? {
-        businessName: '타임핏 주식회사',
-        businessTypes: ['BD005'],
-        businessNumber: '123-45-67890',
-        address: '서울시 강남구 테헤란로 123',
-        contactPhone: '02-1234-5678',
-        description: '피트니스/스포츠 사업을 운영하고 있습니다.',
-      }
+          businessName: '타임핏 주식회사',
+          businessTypes: ['BD005'],
+          businessNumber: '123-45-67890',
+          address: '서울시 강남구 테헤란로 123',
+          contactPhone: '02-1234-5678',
+          description: '피트니스/스포츠 사업을 운영하고 있습니다.',
+        }
       : initialBusinessSignupForm
   );
 

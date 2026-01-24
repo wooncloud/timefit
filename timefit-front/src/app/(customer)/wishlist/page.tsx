@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { SlidersHorizontal, Heart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Heart, SlidersHorizontal } from 'lucide-react';
+
 import { PlaceCard } from '@/components/customer/cards/place-card';
+import { Button } from '@/components/ui/button';
 
 interface WishlistItem {
   id: string;
@@ -22,29 +23,29 @@ const initialWishlist: WishlistItem[] = [
     name: '제니스 피트니스 스튜디오',
     category: '필라테스 & 요가',
     rating: 4.9,
-    reviewCount: 120
+    reviewCount: 120,
   },
   {
     id: '2',
     name: '아쿠아 웰니스 센터',
     category: '수중 테라피',
     rating: 4.7,
-    reviewCount: 85
+    reviewCount: 85,
   },
   {
     id: '3',
     name: '아이언 피스트 복싱',
     category: '복싱 & HIIT',
     rating: 4.8,
-    reviewCount: 210
-  }
+    reviewCount: 210,
+  },
 ];
 
 export default function WishlistPage() {
   const [wishlist, setWishlist] = useState(initialWishlist);
 
   const handleRemove = (id: string) => {
-    setWishlist(wishlist.filter((item) => item.id !== id));
+    setWishlist(wishlist.filter(item => item.id !== id));
   };
 
   return (
@@ -61,7 +62,7 @@ export default function WishlistPage() {
       <div className="flex-1 px-4">
         {wishlist.length > 0 ? (
           <div className="space-y-4">
-            {wishlist.map((item) => (
+            {wishlist.map(item => (
               <PlaceCard
                 key={item.id}
                 id={item.id}

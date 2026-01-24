@@ -38,7 +38,10 @@ export default function BusinessSignInPage() {
             </h1>
             <div className="text-center text-sm">
               Don&apos;t have an account?{' '}
-              <Link href="/business/signup" className="underline underline-offset-4">
+              <Link
+                href="/business/signup"
+                className="underline underline-offset-4"
+              >
                 Sign up
               </Link>
             </div>
