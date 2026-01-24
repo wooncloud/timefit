@@ -1,6 +1,7 @@
-import './globals.css';
-
+import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+
+import './globals.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -12,7 +13,16 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export const metadata: Metadata = {
+  title: 'TimeFit',
+  description: '비즈니스를 위한 스마트한 예약 관리 솔루션',
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="ko">
       <body

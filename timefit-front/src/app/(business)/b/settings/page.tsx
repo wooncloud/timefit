@@ -1,20 +1,10 @@
 import { getBusinessDetail } from '@/services/business/business-detail-service';
-import { getCurrentUserFromSession } from '@/lib/session/server';
+import { getBusinessId } from '@/lib/business/get-business-context';
 
 import { SettingsClient } from './settings-client';
 
 export default async function Page() {
-  const sessionUser = await getCurrentUserFromSession();
-
-  if (!sessionUser) {
-    throw new Error('세션 사용자 정보를 찾을 수 없습니다.');
-  }
-
-  const businessId = sessionUser.businesses?.[0]?.businessId;
-
-  if (!businessId) {
-    throw new Error('업체 ID를 찾을 수 없습니다.');
-  }
+  const businessId = await getBusinessId();
 
   const business = await getBusinessDetail(businessId);
 

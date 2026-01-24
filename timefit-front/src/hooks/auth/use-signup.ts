@@ -13,12 +13,13 @@ import { formatPhoneNumber } from '@/lib/formatters/phone-formatter';
 import { validateSignupForm } from '@/lib/validators/auth-validators';
 
 interface UseSignupOptions {
+  redirectTo?: string;
   onSuccess?: () => void;
   onError?: (error: string) => void;
 }
 
 export function useSignup(options: UseSignupOptions = {}) {
-  const { onSuccess, onError } = options;
+  const { redirectTo = '/business/signup/step2', onSuccess, onError } = options;
   const router = useRouter();
 
   const [formData, setFormData] = useState<SignupFormData>({
@@ -78,7 +79,7 @@ export function useSignup(options: UseSignupOptions = {}) {
       const data = await authService.signup(requestBody);
 
       if (data.success) {
-        router.push('/business/signup/step2');
+        router.push(redirectTo);
         onSuccess?.();
       } else {
         const errorMessage = data.message || '회원가입에 실패했습니다.';

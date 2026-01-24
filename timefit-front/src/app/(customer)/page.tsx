@@ -1,0 +1,138 @@
+import Link from 'next/link';
+import {
+  Coffee,
+  Dumbbell,
+  Heart,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+} from 'lucide-react';
+
+import { PlaceCard } from '@/components/customer/cards/place-card';
+import { Input } from '@/components/ui/input';
+
+// 카테고리 더미 데이터
+const categories = [
+  { id: 'beauty', name: '뷰티', icon: Sparkles, color: '#3ec0c7' },
+  { id: 'sports', name: '스포츠', icon: Dumbbell, color: '#f97316' },
+  { id: 'cafe', name: '카페', icon: Coffee, color: '#8b5cf6' },
+  { id: 'health', name: '건강', icon: Heart, color: '#ec4899' },
+];
+
+// 장소 더미 데이터
+const places = [
+  {
+    id: '1',
+    name: '젠 요가 스튜디오',
+    description: '마음챙김과 균형',
+    distance: '3.5km',
+    rating: 4.8,
+    image: '/images/placeholder.jpg',
+    badge: '신규',
+  },
+  {
+    id: '2',
+    name: '페이드 마스터스',
+    description: '클래식 컷 & 쉐이브',
+    distance: '0.8km',
+    rating: 4.6,
+    image: '/images/placeholder.jpg',
+    badge: null,
+  },
+  {
+    id: '3',
+    name: '그린볼 컴퍼니',
+    description: '유기농 & 신선한 음식',
+    distance: '1.1km',
+    rating: 4.9,
+    image: '/images/placeholder.jpg',
+    badge: '인기',
+  },
+  {
+    id: '4',
+    name: '럭스 스파 리트릿',
+    description: '마사지 & 사우나',
+    distance: '1.2km',
+    rating: 4.9,
+    image: '/images/placeholder.jpg',
+    badge: null,
+  },
+  {
+    id: '5',
+    name: '아이언 짐',
+    description: '피트니스 & 웨이트',
+    distance: '0.5km',
+    rating: 4.8,
+    image: '/images/placeholder.jpg',
+    badge: null,
+  },
+];
+
+export default function HomePage() {
+  return (
+    <div className="bg-white px-4 py-6">
+      {/* 타이틀 */}
+      <h1 className="mb-4 text-2xl font-bold text-gray-900">
+        나만의 <span className="text-[#3ec0c7]">완벽한 시간</span>을 찾아보세요
+      </h1>
+
+      {/* 검색바 */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="요가, 마사지 등을 검색해보세요..."
+          className="h-12 rounded-xl border-gray-200 pl-10 pr-12"
+        />
+      </div>
+
+      {/* 카테고리 */}
+      <div className="mb-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">카테고리</h2>
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-2">
+          {categories.map(category => {
+            const Icon = category.icon;
+            return (
+              <Link
+                key={category.id}
+                href={`/search?category=${category.id}`}
+                className="flex flex-col items-center gap-2"
+              >
+                <div
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `${category.color}15` }}
+                >
+                  <Icon className="h-7 w-7" style={{ color: category.color }} />
+                </div>
+                <span className="text-sm font-medium text-gray-600">
+                  {category.name}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 장소 리스트 */}
+      <div>
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">추천 장소</h2>
+        <div className="space-y-4">
+          {places.map(place => (
+            <PlaceCard
+              key={place.id}
+              id={place.id}
+              name={place.name}
+              description={place.description}
+              rating={place.rating}
+              distance={place.distance}
+              badge={place.badge}
+              image={place.image}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
