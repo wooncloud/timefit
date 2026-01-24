@@ -122,7 +122,7 @@ public class MenuController {
     @DeleteMenuOperation
     @DeleteMapping("/{menuId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<Void> deleteMenu(
+    public ResponseEntity<ResponseData<MenuResponseDto.DeleteResult>> deleteMenu(
             @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @Parameter(description = "메뉴 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
@@ -133,7 +133,9 @@ public class MenuController {
         log.info("메뉴 삭제 요청: businessId={}, menuId={}, userId={}",
                 businessId, menuId, currentUserId);
 
-        menuService.deleteMenu(businessId, menuId, currentUserId);
-        return ResponseEntity.noContent().build();
+        MenuResponseDto.DeleteResult response = menuService.deleteMenu(
+                businessId, menuId, currentUserId);
+
+        return ResponseEntity.ok(ResponseData.of(response));
     }
 }

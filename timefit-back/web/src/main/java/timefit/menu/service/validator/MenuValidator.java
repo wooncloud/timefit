@@ -10,7 +10,10 @@ import timefit.menu.dto.MenuRequestDto;
 import timefit.menu.entity.Menu;
 import timefit.menu.entity.OrderType;
 import timefit.menu.repository.MenuRepository;
+import timefit.reservation.entity.ReservationStatus;
+import timefit.reservation.repository.ReservationRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -28,6 +31,7 @@ public class MenuValidator {
 
     private final MenuRepository menuRepository;
     private final BookingSlotValidator bookingSlotValidator;
+    private final ReservationRepository reservationRepository;
 
     /**
      * Menu 존재 여부 검증 및 조회
@@ -160,6 +164,22 @@ public class MenuValidator {
             }
 
             bookingSlotValidator.validateSlotSettings(request.slotSettings());
+        }
+    }
+
+    /**
+     * Menu에 활성 예약이 없는지 검증
+     * - 활성 예약: PENDING, CONFIRMED
+     * - 활성 예약이 있으면 삭제 불가
+     */
+    public void validateNoActiveReservations(UUID menuId) {
+        boolean hasActiveReservations = reservationRepository
+                .existsByMenuIdAndStatusIn(
+                        menuId, List.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED)
+                );
+
+        if (hasActiveReservations) {
+            throw new MenuException(MenuErrorCode.MENU_HAS_ACTIVE_RESERVATIONS);
         }
     }
 

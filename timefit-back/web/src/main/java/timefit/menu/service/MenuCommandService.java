@@ -153,7 +153,7 @@ public class MenuCommandService {
      * 3. 미래 예약 검증
      * 4. 영구 삭제
      */
-    public void deleteMenu(
+    public MenuResponseDto.DeleteResult deleteMenu(
             UUID businessId,
             UUID menuId,
             UUID currentUserId) {
@@ -167,12 +167,20 @@ public class MenuCommandService {
         // 2. Menu 조회
         Menu menu = menuValidator.validateMenuOfBusiness(menuId, businessId);
 
-        // 3. 미래 예약 검증
-        menuReservationValidator.validateActiveReservations(menuId);
+        // 3. 활성 예약 확인
+        menuValidator.validateNoActiveReservations(menuId);
 
-        // 4. 영구 삭제
+        // 4. 삭제 전 정보 저장
+        String menuName = menu.getServiceName();
+
+        // 5. CASCADE 삭제
         menuRepository.delete(menu);
 
-        log.info("메뉴 삭제 완료: menuId={}", menuId);
+        log.info("메뉴 삭제 완료: menuId={}, menuName={}", menuId, menuName);
+
+        // 6. 결과 반환
+        return MenuResponseDto.DeleteResult.of(
+                menuId, menuName, "메뉴가 성공적으로 삭제되었습니다"
+        );
     }
 }

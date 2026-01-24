@@ -136,7 +136,7 @@ public class BusinessController {
             @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
             @PathVariable UUID businessId,
             @DeleteBusinessRequestBody
-            @Valid @RequestBody BusinessRequestDto.DeleteBusinessRequest request,
+            @RequestBody(required = false) BusinessRequestDto.DeleteBusinessRequest request,
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
 

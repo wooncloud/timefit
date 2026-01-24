@@ -2,6 +2,8 @@ package timefit.reservation.entity;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import timefit.business.entity.Business;
 import timefit.booking.entity.BookingSlot;
 import timefit.menu.entity.Menu;
@@ -36,11 +38,13 @@ public class Reservation extends BaseEntity {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Business business;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Menu menu;
 
     /**
@@ -49,6 +53,7 @@ public class Reservation extends BaseEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_slot_id")  // slot_id → booking_slot_id
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private BookingSlot bookingSlot;  // slot → bookingSlot
 
     @NotNull(message = "예약 날짜는 필수입니다")
@@ -248,6 +253,44 @@ public class Reservation extends BaseEntity {
     // 취소 가능한 상태인지 확인
     public boolean isCancellable() {
         return status == ReservationStatus.PENDING || status == ReservationStatus.CONFIRMED;
+    }
+
+    /**
+     * 예약 취소 가능 시간인지 확인 (서비스 소요 시간 고려)
+     * [취소 마감 시간 계산]
+     * 취소 마감 = 예약 시간 - 서비스 소요 시간
+     * [목적]
+     * 서비스 시작 직전 취소로 인한 업체 손해 방지
+     * 업체가 대체 고객을 찾을 수 있는 충분한 시간 확보
+     * [예시]
+     * - 예약 시간: 16:00 (오후 4시)
+     * - 서비스 소요: 60분
+     * - 취소 마감: 15:00 (오후 3시)
+     * - 현재 14:30 → true (취소 가능)
+     * - 현재 15:30 → false (취소 불가)
+     *
+     * @return 취소 가능한 시간인지 여부
+     */
+    public boolean isCancellableByTime() {
+        // 1. 예약 시작 시간
+        LocalDateTime reservationDateTime = reservationDate.atTime(reservationTime);
+
+        // 2. 취소 마감 시간 = 예약 시간 - 서비스 소요 시간
+        LocalDateTime cancelDeadline = reservationDateTime.minusMinutes(reservationDuration);
+
+        // 3. 현재 시간이 취소 마감 시간 이전이어야 취소 가능
+        return LocalDateTime.now().isBefore(cancelDeadline);
+    }
+
+    /**
+     * 취소 마감 시간 반환
+     * - 예약 시간 - 서비스 소요 시간
+     * - 고객에게 "언제까지 취소 가능한지" 안내용
+     * @return 취소 마감 시간
+     */
+    public LocalDateTime getCancelDeadline() {
+        LocalDateTime reservationDateTime = reservationDate.atTime(reservationTime);
+        return reservationDateTime.minusMinutes(reservationDuration);
     }
 
     // 과거 예약인지 확인

@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ValidationErrorCode {
     // 검증 관련
-    VALIDATION_ERROR("입력값이 올바르지 않습니다", HttpStatus.BAD_REQUEST),
+    INVALID_INPUT("입력값이 올바르지 않습니다", HttpStatus.BAD_REQUEST),
     REQUIRED_FIELD_MISSING("필수 항목이 누락되었습니다", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL_FORMAT("유효한 이메일 주소를 입력해주세요", HttpStatus.BAD_REQUEST),
     INVALID_PHONE_FORMAT("올바른 전화번호 형식이 아닙니다", HttpStatus.BAD_REQUEST),

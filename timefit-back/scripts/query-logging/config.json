@@ -1,0 +1,64 @@
+{
+  "input": {
+    "logFileRelativePath": "logs/dev/application.log",
+    "encoding": "UTF8",
+    "readMode": "safe"
+  },
+  "extraction": {
+    "sqlPatterns": [
+      {
+        "name": "SELECT",
+        "regex": "SELECT\\s+.*?FROM",
+        "enabled": true
+      },
+      {
+        "name": "INSERT",
+        "regex": "INSERT\\s+INTO",
+        "enabled": true
+      },
+      {
+        "name": "UPDATE",
+        "regex": "UPDATE\\s+.*?SET",
+        "enabled": true
+      },
+      {
+        "name": "DELETE",
+        "regex": "DELETE\\s+FROM",
+        "enabled": true
+      }
+    ],
+    "cleanupRules": [
+      {
+        "description": "Remove P6Spy prefix",
+        "pattern": "^.*?\\|\\s*statement\\s*\\|",
+        "replace": ""
+      },
+      {
+        "description": "Remove Hibernate prefix",
+        "pattern": "^.*?Hibernate:\\s*",
+        "replace": ""
+      },
+      {
+        "description": "Remove leading/trailing spaces",
+        "pattern": "^\\s+|\\s+$",
+        "replace": ""
+      }
+    ]
+  },
+  "processing": {
+    "removeDuplicates": true,
+    "sortByType": false,
+    "maxQueriesPerType": 0
+  },
+  "output": {
+    "fileRelativePath": "extracted-queries.txt",
+    "encoding": "UTF8",
+    "format": {
+      "includeHeader": true,
+      "includeTimestamp": true,
+      "includeQueryType": true,
+      "includeQueryNumber": true,
+      "commentPrefix": "-- "
+    }
+  }
+}
