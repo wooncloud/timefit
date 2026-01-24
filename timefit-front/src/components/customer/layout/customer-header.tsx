@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Timer, Search, Bell } from 'lucide-react';
+import { Search, Timer } from 'lucide-react';
 
 export function CustomerHeader() {
   return (
@@ -23,11 +23,6 @@ export function CustomerHeader() {
           >
             <Search className="h-5 w-5 text-gray-600" />
           </Link>
-          <button className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100">
-            <Bell className="h-5 w-5 text-gray-600" />
-            {/* 알림 뱃지 */}
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-          </button>
         </div>
       </div>
     </header>

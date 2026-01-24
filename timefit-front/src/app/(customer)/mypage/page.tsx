@@ -42,10 +42,6 @@ export default function MypagePage() {
       {/* 헤더 */}
       <div className="flex items-center justify-between px-4 py-4">
         <h1 className="text-xl font-bold text-gray-900">마이페이지</h1>
-        <button className="relative flex h-10 w-10 items-center justify-center">
-          <Bell className="h-5 w-5 text-gray-600" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-        </button>
       </div>
 
       {/* 프로필 섹션 */}
@@ -75,9 +71,6 @@ export default function MypagePage() {
 
       {/* 메뉴 섹션 */}
       <div className="px-4 py-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-          계정
-        </p>
         <div className="space-y-1">
           {menuItems.map(item => {
             const Icon = item.icon;

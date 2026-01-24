@@ -84,21 +84,12 @@ export default function HomePage() {
           placeholder="요가, 마사지 등을 검색해보세요..."
           className="h-12 rounded-xl border-gray-200 pl-10 pr-12"
         />
-        <button className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg border border-gray-200 p-1.5">
-          <SlidersHorizontal className="h-4 w-4 text-gray-500" />
-        </button>
       </div>
 
       {/* 카테고리 */}
       <div className="mb-6">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">카테고리</h2>
-          <Link
-            href="/categories"
-            className="text-sm font-medium text-[#3ec0c7]"
-          >
-            전체보기
-          </Link>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-2">
           {categories.map(category => {

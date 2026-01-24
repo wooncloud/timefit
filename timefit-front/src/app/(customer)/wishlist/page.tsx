@@ -53,9 +53,6 @@ export default function WishlistPage() {
       {/* 헤더 */}
       <div className="flex items-center justify-between px-4 py-4">
         <h1 className="text-xl font-bold text-gray-900">찜 목록</h1>
-        <button className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200">
-          <SlidersHorizontal className="h-5 w-5 text-gray-600" />
-        </button>
       </div>
 
       {/* 찜 목록 */}

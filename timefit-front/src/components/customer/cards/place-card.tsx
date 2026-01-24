@@ -106,15 +106,7 @@ export function PlaceCard({
                     예약
                   </Button>
                 </Link>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 rounded-full border-gray-200 text-xs font-medium"
-                >
-                  보기
-                </Button>
-              )}
+              ) : null}
             </>
           )}
         </div>

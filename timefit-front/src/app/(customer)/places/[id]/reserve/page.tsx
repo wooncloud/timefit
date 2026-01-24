@@ -82,7 +82,7 @@ export default function ReservePage() {
   return (
     <div className="flex flex-col bg-white">
       {/* 헤더 */}
-      <div className="flex items-center gap-3 border-b px-4 py-3">
+      <div className="flex items-center gap-3 px-4 py-3">
         <Link
           href={`/places/${params.id}`}
           className="flex h-10 w-10 items-center justify-center"

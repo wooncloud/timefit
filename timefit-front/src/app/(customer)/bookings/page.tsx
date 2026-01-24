@@ -78,12 +78,6 @@ export default function BookingsPage() {
   return (
     <div className="flex flex-col bg-white">
       {/* 헤더 */}
-      <div className="flex items-center justify-between px-4 py-4">
-        <h1 className="text-xl font-bold text-gray-900">내 예약</h1>
-        <button className="flex h-10 w-10 items-center justify-center">
-          <Search className="h-5 w-5 text-gray-600" />
-        </button>
-      </div>
 
       {/* 탭 */}
       <div className="border-b px-4">
