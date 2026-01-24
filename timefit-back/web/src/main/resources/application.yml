@@ -28,6 +28,14 @@ spring:
 server:
   port: 8080
 
+  tomcat:
+    threads:
+      max: 200              # (Connection Pool과 1:1)
+      min-spare: 50
+    accept-count: 100
+    max-connections: 400
+    connection-timeout: 20000  # 20초 동안 응답 없으면 끊김
+
 timefit:
   # 프론트엔드 URL 설정
   frontend:
