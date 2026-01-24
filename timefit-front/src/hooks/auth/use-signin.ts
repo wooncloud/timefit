@@ -12,12 +12,13 @@ import { authService } from '@/services/auth/auth-service';
 import { validateSigninForm } from '@/lib/validators/auth-validators';
 
 interface UseSigninOptions {
+  redirectTo?: string;
   onSuccess?: () => void;
   onError?: (error: string) => void;
 }
 
 export function useSignin(options: UseSigninOptions = {}) {
-  const { onSuccess, onError } = options;
+  const { redirectTo = '/business', onSuccess, onError } = options;
   const router = useRouter();
 
   const [formData, setFormData] = useState<SigninFormData>({
@@ -72,7 +73,7 @@ export function useSignin(options: UseSigninOptions = {}) {
       if (data.success) {
         setMessage('로그인에 성공했습니다. 메인 페이지로 이동합니다.');
         setTimeout(() => {
-          router.replace('/business');
+          router.replace(redirectTo);
         }, 1500);
         onSuccess?.();
       } else {

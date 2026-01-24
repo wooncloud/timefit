@@ -2,21 +2,25 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Timer, Mail, Eye, EyeOff } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Eye, EyeOff, Mail, Timer } from 'lucide-react';
+
+import { useSignin } from '@/hooks/auth/use-signin';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function SigninPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: 로그인 로직 구현
-    console.log('로그인 시도:', { email, password });
-  };
+  const {
+    formData,
+    errors,
+    isLoading,
+    message,
+    handleInputChange,
+    handleSubmit,
+  } = useSignin({ redirectTo: '/' });
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
@@ -29,6 +33,20 @@ export default function SigninPage() {
         <p className="mt-1 text-sm text-gray-500">다시 오신 것을 환영합니다</p>
       </div>
 
+      {/* 메시지 표시 */}
+      {message && (
+        <div
+          className={cn(
+            'mb-4 w-full max-w-sm rounded-md p-3 text-center text-sm',
+            message.includes('성공')
+              ? 'border border-green-200 bg-green-50 text-green-700'
+              : 'border border-red-200 bg-red-50 text-red-700'
+          )}
+        >
+          {message}
+        </div>
+      )}
+
       {/* 로그인 폼 */}
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
         {/* 이메일 입력 */}
@@ -39,40 +57,66 @@ export default function SigninPage() {
           <div className="relative">
             <Input
               id="email"
+              name="email"
               type="email"
               placeholder="이메일을 입력하세요"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-12 rounded-xl border-gray-200 pr-10"
+              value={formData.email}
+              onChange={handleInputChange}
+              className={cn(
+                'h-12 rounded-xl border-gray-200 pr-10',
+                errors.email && 'border-red-500'
+              )}
+              required
             />
             <Mail className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#3ec0c7]" />
           </div>
+          {errors.email && (
+            <span className="text-sm text-red-500">{errors.email}</span>
+          )}
         </div>
 
         {/* 비밀번호 입력 */}
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+          <Label
+            htmlFor="password"
+            className="text-sm font-medium text-gray-700"
+          >
             비밀번호
           </Label>
           <div className="relative">
             <Input
               id="password"
+              name="password"
               type={showPassword ? 'text' : 'password'}
               placeholder="비밀번호를 입력하세요"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-12 rounded-xl border-gray-200 pr-10"
+              value={formData.password}
+              onChange={handleInputChange}
+              className={cn(
+                'h-12 rounded-xl border-gray-200 pr-10',
+                errors.password && 'border-red-500'
+              )}
+              required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#3ec0c7]"
             >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
             </button>
           </div>
+          {errors.password && (
+            <span className="text-sm text-red-500">{errors.password}</span>
+          )}
           <div className="text-right">
-            <Link href="/forgot-password" className="text-sm text-[#3ec0c7] hover:underline">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-[#3ec0c7] hover:underline"
+            >
               비밀번호를 잊으셨나요?
             </Link>
           </div>
@@ -82,8 +126,9 @@ export default function SigninPage() {
         <Button
           type="submit"
           className="h-12 w-full rounded-xl bg-[#3ec0c7] text-base font-semibold text-white hover:bg-[#35adb3]"
+          disabled={isLoading}
         >
-          로그인
+          {isLoading ? '로그인 중...' : '로그인'}
         </Button>
 
         {/* 구분선 */}
@@ -137,7 +182,10 @@ export default function SigninPage() {
         {/* 회원가입 링크 */}
         <p className="text-center text-sm text-gray-500">
           계정이 없으신가요?{' '}
-          <Link href="/signup" className="font-semibold text-[#3ec0c7] hover:underline">
+          <Link
+            href="/signup"
+            className="font-semibold text-[#3ec0c7] hover:underline"
+          >
             회원가입
           </Link>
         </p>
