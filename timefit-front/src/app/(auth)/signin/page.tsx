@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Mail, Timer } from 'lucide-react';
 
 import { useSignin } from '@/hooks/auth/use-signin';
@@ -12,6 +13,8 @@ import { Label } from '@/components/ui/label';
 
 export default function SigninPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
 
   const {
     formData,
@@ -20,7 +23,7 @@ export default function SigninPage() {
     message,
     handleInputChange,
     handleSubmit,
-  } = useSignin({ redirectTo: '/' });
+  } = useSignin({ redirectTo: callbackUrl });
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
