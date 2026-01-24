@@ -84,11 +84,6 @@ export function PlaceCard({
               </span>
               <span className="text-sm text-gray-400">({reviewCount})</span>
             </div>
-          ) : distance ? (
-            <div className="flex items-center gap-1 text-sm text-[#3ec0c7]">
-              <MapPin className="h-4 w-4" />
-              <span>{distance}</span>
-            </div>
           ) : null}
 
           {showAction && (
