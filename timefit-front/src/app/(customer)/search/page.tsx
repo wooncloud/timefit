@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { Search, Clock, X, Star, MapPin } from 'lucide-react';
+import { Search, Clock, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { PlaceCard } from '@/components/customer/cards/place-card';
 
 // 최근 검색어 더미 데이터
 const recentSearches = [
@@ -143,32 +143,15 @@ export default function SearchPage() {
           {filteredResults.length > 0 ? (
             <div className="space-y-3">
               {filteredResults.map((place) => (
-                <Link
+                <PlaceCard
                   key={place.id}
-                  href={`/places/${place.id}`}
-                  className="flex gap-4 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
-                >
-                  {/* 이미지 플레이스홀더 */}
-                  <div className="h-20 w-20 flex-shrink-0 rounded-xl bg-gray-200" />
-
-                  {/* 정보 */}
-                  <div className="flex flex-1 flex-col justify-between py-1">
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-900">{place.name}</h3>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium text-gray-700">{place.rating}</span>
-                        </div>
-                      </div>
-                      <p className="mt-0.5 text-sm text-gray-500">{place.description}</p>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-[#3ec0c7]">
-                      <MapPin className="h-4 w-4" />
-                      <span>{place.distance}</span>
-                    </div>
-                  </div>
-                </Link>
+                  id={place.id}
+                  name={place.name}
+                  description={place.description}
+                  rating={place.rating}
+                  distance={place.distance}
+                  showAction={false}
+                />
               ))}
             </div>
           ) : (

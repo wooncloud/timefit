@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { SlidersHorizontal, Star, Heart } from 'lucide-react';
+import { SlidersHorizontal, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PlaceCard } from '@/components/customer/cards/place-card';
 
 interface WishlistItem {
   id: string;
@@ -61,46 +62,16 @@ export default function WishlistPage() {
         {wishlist.length > 0 ? (
           <div className="space-y-4">
             {wishlist.map((item) => (
-              <div
+              <PlaceCard
                 key={item.id}
-                className="flex gap-4 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm"
-              >
-                {/* 이미지 */}
-                <div className="h-24 w-24 flex-shrink-0 rounded-xl bg-gray-200" />
-
-                {/* 정보 */}
-                <div className="flex flex-1 flex-col justify-between py-1">
-                  <div>
-                    <div className="flex items-start justify-between">
-                      <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                      <button
-                        onClick={() => handleRemove(item.id)}
-                        className="flex h-8 w-8 items-center justify-center"
-                      >
-                        <Heart className="h-5 w-5 fill-[#3ec0c7] text-[#3ec0c7]" />
-                      </button>
-                    </div>
-                    <p className="text-sm text-gray-500">{item.category}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium text-gray-700">{item.rating}</span>
-                      <span className="text-sm text-gray-400">({item.reviewCount})</span>
-                    </div>
-                    <Link href={`/places/${item.id}/reserve`}>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 rounded-full border-[#3ec0c7] px-4 text-xs font-medium text-[#3ec0c7] hover:bg-[#3ec0c7] hover:text-white"
-                      >
-                        예약
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+                id={item.id}
+                name={item.name}
+                description={item.category}
+                rating={item.rating}
+                reviewCount={item.reviewCount}
+                variant="wishlist"
+                onRemove={handleRemove}
+              />
             ))}
           </div>
         ) : (

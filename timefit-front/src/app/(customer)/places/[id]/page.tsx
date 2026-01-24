@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ChevronLeft, Share2, Heart, Star, Clock, Info, Megaphone } from 'lucide-react';
+import { ChevronLeft, Share2, Heart, Star, Info, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { ServiceCard } from '@/components/customer/cards/service-card';
 
 // 업체 더미 데이터
 const placeData = {
@@ -181,61 +182,18 @@ export default function PlaceDetailPage() {
             </div>
 
             <div className="space-y-4">
-              {services.map((service) => {
-                const isSelected = selectedServices.includes(service.id);
-                return (
-                  <div
-                    key={service.id}
-                    onClick={() => toggleService(service.id)}
-                    className={cn(
-                      'flex cursor-pointer gap-4 rounded-2xl border p-3 transition-all',
-                      isSelected ? 'border-[#3ec0c7] bg-[#f0fafa]' : 'border-gray-100'
-                    )}
-                  >
-                    {/* 이미지 */}
-                    <div className="h-20 w-20 flex-shrink-0 rounded-xl bg-gray-200" />
-
-                    {/* 정보 */}
-                    <div className="flex flex-1 flex-col justify-between py-0.5">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{service.name}</h3>
-                        <p className="mt-0.5 line-clamp-2 text-xs text-gray-500">
-                          {service.description}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span>{service.duration}분</span>
-                        </div>
-                        <span className="font-semibold text-[#3ec0c7]">
-                          {formatPrice(service.price)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 선택 표시 */}
-                    <div className="flex items-center">
-                      <div
-                        className={cn(
-                          'flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors',
-                          isSelected ? 'border-[#3ec0c7] bg-[#3ec0c7]' : 'border-gray-300'
-                        )}
-                      >
-                        {isSelected && (
-                          <svg className="h-3.5 w-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {services.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  id={service.id}
+                  name={service.name}
+                  description={service.description}
+                  duration={service.duration}
+                  price={service.price}
+                  isSelected={selectedServices.includes(service.id)}
+                  onToggle={toggleService}
+                />
+              ))}
             </div>
           </div>
         )}

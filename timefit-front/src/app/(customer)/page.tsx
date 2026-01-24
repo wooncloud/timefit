@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { Search, SlidersHorizontal, Star, MapPin, Sparkles, Dumbbell, Coffee, Heart } from 'lucide-react';
+import { Search, SlidersHorizontal, Sparkles, Dumbbell, Coffee, Heart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { PlaceCard } from '@/components/customer/cards/place-card';
 
 // 카테고리 더미 데이터
 const categories = [
@@ -116,51 +116,16 @@ export default function HomePage() {
         <h2 className="mb-4 text-lg font-semibold text-gray-900">추천 장소</h2>
         <div className="space-y-4">
           {places.map((place) => (
-            <Link
+            <PlaceCard
               key={place.id}
-              href={`/places/${place.id}`}
-              className="flex gap-4 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
-            >
-              {/* 이미지 */}
-              <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-gray-200">
-                {place.badge && (
-                  <span
-                    className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-xs font-semibold text-white ${
-                      place.badge === '신규' ? 'bg-[#3ec0c7]' : 'bg-orange-500'
-                    }`}
-                  >
-                    {place.badge}
-                  </span>
-                )}
-              </div>
-
-              {/* 정보 */}
-              <div className="flex flex-1 flex-col justify-between py-1">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900">{place.name}</h3>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium text-gray-700">{place.rating}</span>
-                    </div>
-                  </div>
-                  <p className="mt-0.5 text-sm text-gray-500">{place.description}</p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-sm text-[#3ec0c7]">
-                    <MapPin className="h-4 w-4" />
-                    <span>{place.distance}</span>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 rounded-full border-gray-200 text-xs font-medium"
-                  >
-                    보기
-                  </Button>
-                </div>
-              </div>
-            </Link>
+              id={place.id}
+              name={place.name}
+              description={place.description}
+              rating={place.rating}
+              distance={place.distance}
+              badge={place.badge}
+              image={place.image}
+            />
           ))}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { CustomerHeader } from '@/components/customer/customer-header';
-import { CustomerBottomNav } from '@/components/customer/customer-bottom-nav';
+import { CustomerHeader } from '@/components/customer/layout/customer-header';
+import { CustomerBottomNav } from '@/components/customer/layout/customer-bottom-nav';
 
 interface CustomerLayoutProps {
   children: ReactNode;
