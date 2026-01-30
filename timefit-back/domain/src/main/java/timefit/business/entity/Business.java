@@ -11,7 +11,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "business")
+@Table(
+        name = "business",
+        indexes = {
+                @Index(name = "idx_business_rating", columnList = "average_rating DESC"),
+                @Index(name = "idx_business_review_count", columnList = "review_count DESC")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Business extends BaseEntity {
@@ -64,6 +70,19 @@ public class Business extends BaseEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+    @Column(name = "average_rating", nullable = false)
+    private Double averageRating = 0.0;
+
+    @Column(name = "review_count", nullable = false)
+    private Integer reviewCount = 0;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
 
     // ----------------- 정적 팩토리 메서드
 
@@ -148,5 +167,48 @@ public class Business extends BaseEntity {
 
     public boolean isActive() {
         return this.isActive;
+    }
+
+    /**
+     * 평점 및 리뷰 수 업데이트
+     * 리뷰 작성/수정/삭제 시 호출
+     * @param newAverageRating 새 평균 평점
+     * @param newReviewCount 새 리뷰 개수
+     */
+    public void updateRating(Double newAverageRating, Integer newReviewCount) {
+        if (newAverageRating == null || newAverageRating < 0.0 || newAverageRating > 5.0) {
+            throw new IllegalArgumentException("평균 평점은 0.0~5.0 사이여야 합니다");
+        }
+        if (newReviewCount == null || newReviewCount < 0) {
+            throw new IllegalArgumentException("리뷰 개수는 0 이상이어야 합니다");
+        }
+
+        this.averageRating = newAverageRating;
+        this.reviewCount = newReviewCount;
+    }
+
+    /**
+     * 위치 정보 업데이트
+     * @param latitude 위도
+     * @param longitude 경도
+     */
+    public void updateLocation(Double latitude, Double longitude) {
+        if (latitude != null && (latitude < -90.0 || latitude > 90.0)) {
+            throw new IllegalArgumentException("위도는 -90.0~90.0 사이여야 합니다");
+        }
+        if (longitude != null && (longitude < -180.0 || longitude > 180.0)) {
+            throw new IllegalArgumentException("경도는 -180.0~180.0 사이여야 합니다");
+        }
+
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    /**
+     * 평점이 있는지 확인
+     * @return 리뷰가 1개 이상 있으면 true
+     */
+    public boolean hasReviews() {
+        return this.reviewCount != null && this.reviewCount > 0;
     }
 }
