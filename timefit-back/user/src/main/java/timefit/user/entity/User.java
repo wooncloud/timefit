@@ -105,5 +105,47 @@ public class User extends BaseEntity {
             this.profileImageUrl = profileImageUrl;
         }
     }
+
+    /**
+     * 이름 변경
+     *
+     * @param name 새 이름
+     */
+    public void updateName(String name) {
+        if (name != null && !name.isBlank()) {
+            this.name = name;
+        }
+    }
+
+    /**
+     * 전화번호 변경
+     *
+     * @param phoneNumber 새 전화번호
+     */
+    public void updatePhoneNumber(String phoneNumber) {
+        if (phoneNumber != null && !phoneNumber.isBlank()) {
+            this.phoneNumber = phoneNumber;
+        }
+    }
+
+    /**
+     * 프로필 이미지 URL 변경
+     *
+     * @param profileImageUrl 새 프로필 이미지 URL
+     */
+    public void updateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    /**
+     * 비밀번호 변경
+     *
+     * @param passwordHash 암호화된 새 비밀번호
+     */
+    public void updatePassword(String passwordHash) {
+        if (passwordHash != null && !passwordHash.isBlank()) {
+            this.passwordHash = passwordHash;
+        }
+    }
 }
 
