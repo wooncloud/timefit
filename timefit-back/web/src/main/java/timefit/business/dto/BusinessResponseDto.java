@@ -185,7 +185,18 @@ public class BusinessResponseDto {
                     description = "수정일시",
                     example = "2025-11-23T15:30:00"
             )
-            LocalDateTime updatedAt
+            LocalDateTime updatedAt,
+            @Schema(description = "평균 평점 (0.0~5.0)", example = "4.5")
+            Double averageRating,
+
+            @Schema(description = "리뷰 개수", example = "120")
+            Integer reviewCount,
+
+            @Schema(description = "위도 (위치 기반 검색용)", example = "37.5665")
+            Double latitude,
+
+            @Schema(description = "경도 (위치 기반 검색용)", example = "126.9780")
+            Double longitude
     ) {
         public static PublicBusinessResponse of(Business business) {
             return new PublicBusinessResponse(
@@ -198,7 +209,11 @@ public class BusinessResponseDto {
                     business.getDescription(),
                     business.getLogoUrl(),
                     business.getCreatedAt(),
-                    business.getUpdatedAt()
+                    business.getUpdatedAt(),
+                    business.getAverageRating(),
+                    business.getReviewCount(),
+                    business.getLatitude(),
+                    business.getLongitude()
             );
         }
     }
