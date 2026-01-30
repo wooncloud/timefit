@@ -11,14 +11,14 @@ import java.util.UUID;
 /**
  * Review 응답 DTO
  */
-@Schema(description = "리뷰 응답")
+@Schema(description = "리뷰 관리 응답")
 public class ReviewResponseDto {
 
     /**
      * 리뷰 상세 정보
      */
     @Schema(description = "리뷰 상세")
-    public record ReviewResponse(
+    public record ReviewDetail(
             @Schema(description = "리뷰 ID", example = "660e8400-e29b-41d4-a716-446655440000")
             UUID reviewId,
 
@@ -53,10 +53,10 @@ public class ReviewResponseDto {
             LocalDateTime updatedAt
     ) {
         /**
-         * Review 엔티티를 ReviewResponse로 변환
+         * Review 엔티티를 ReviewDetail로 변환
          */
-        public static ReviewResponse from(Review review) {
-            return new ReviewResponse(
+        public static ReviewDetail from(Review review) {
+            return new ReviewDetail(
                     review.getId(),
                     review.getBusiness().getId(),
                     review.getBusiness().getBusinessName(),
@@ -143,7 +143,7 @@ public class ReviewResponseDto {
      * 업체별 리뷰 목록 응답 (통계 + 목록)
      */
     @Schema(description = "업체별 리뷰 목록")
-    public record ReviewListResponse(
+    public record ReviewList(
             @Schema(description = "리뷰 통계")
             ReviewStatistics statistics,
 
@@ -165,14 +165,14 @@ public class ReviewResponseDto {
         /**
          * 통계와 리뷰 목록으로 응답 생성
          */
-        public static ReviewListResponse of(
+        public static ReviewList of(
                 ReviewStatistics statistics,
                 List<ReviewSummary> reviews,
                 int page,
                 int size,
                 int totalPages,
                 long totalElements) {
-            return new ReviewListResponse(
+            return new ReviewList(
                     statistics,
                     reviews,
                     page,
@@ -233,7 +233,7 @@ public class ReviewResponseDto {
      * 내 리뷰 목록 응답
      */
     @Schema(description = "내 리뷰 목록")
-    public record MyReviewListResponse(
+    public record MyReviewList(
             @Schema(description = "내 리뷰 목록")
             List<MyReviewItem> reviews,
 
@@ -252,13 +252,13 @@ public class ReviewResponseDto {
         /**
          * 내 리뷰 목록과 페이지 정보로 응답 생성
          */
-        public static MyReviewListResponse of(
+        public static MyReviewList of(
                 List<MyReviewItem> reviews,
                 long totalCount,
                 int page,
                 int size,
                 int totalPages) {
-            return new MyReviewListResponse(reviews, totalCount, page, size, totalPages);
+            return new MyReviewList(reviews, totalCount, page, size, totalPages);
         }
     }
 }
