@@ -10,7 +10,7 @@ import java.util.UUID;
 /**
  * Wishlist 응답 DTO
  */
-@Schema(description = "찜 응답")
+@Schema(description = "찜 관리 응답")
 public class WishlistResponseDto {
 
     /**
@@ -67,7 +67,7 @@ public class WishlistResponseDto {
      * 찜 목록 응답 (페이징)
      */
     @Schema(description = "찜 목록 응답")
-    public record WishlistListResponse(
+    public record WishlistList(
             @Schema(description = "찜 목록")
             List<WishlistItem> wishlists,
 
@@ -86,13 +86,13 @@ public class WishlistResponseDto {
         /**
          * 찜 목록과 페이지 정보로 응답 생성
          */
-        public static WishlistListResponse of(
+        public static WishlistList of(
                 List<WishlistItem> wishlists,
                 long totalCount,
                 int page,
                 int size,
                 int totalPages) {
-            return new WishlistListResponse(wishlists, totalCount, page, size, totalPages);
+            return new WishlistList(wishlists, totalCount, page, size, totalPages);
         }
     }
 
@@ -100,7 +100,7 @@ public class WishlistResponseDto {
      * 찜 추가/삭제 결과
      */
     @Schema(description = "찜 액션 결과")
-    public record WishlistActionResponse(
+    public record WishlistAction(
             @Schema(description = "성공 여부", example = "true")
             boolean success,
 
@@ -113,15 +113,15 @@ public class WishlistResponseDto {
         /**
          * 찜 추가 성공 응답
          */
-        public static WishlistActionResponse addSuccess(UUID menuId) {
-            return new WishlistActionResponse(true, "찜 목록에 추가되었습니다", menuId);
+        public static WishlistAction addSuccess(UUID menuId) {
+            return new WishlistAction(true, "찜 목록에 추가되었습니다", menuId);
         }
 
         /**
          * 찜 삭제 성공 응답
          */
-        public static WishlistActionResponse removeSuccess(UUID menuId) {
-            return new WishlistActionResponse(true, "찜 목록에서 제거되었습니다", menuId);
+        public static WishlistAction removeSuccess(UUID menuId) {
+            return new WishlistAction(true, "찜 목록에서 제거되었습니다", menuId);
         }
     }
 }
