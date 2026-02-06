@@ -14,17 +14,16 @@ BEGIN;
 -- ============================================================
 
 -- 추가 고객 500명 생성
-INSERT INTO "user" (
-    id, email, name, phone, role,
-    email_verified, created_at, updated_at
+INSERT INTO users (
+    id, email, name, phone_number, role,
+    created_at, updated_at
 )
 SELECT
-    ('f0000000-0000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
+    ('e0000000-0000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
     'customer' || i || '@test.com',
     'Customer ' || i,
     '010-' || LPAD((2000 + i)::text, 4, '0') || '-' || LPAD((i * 10)::text, 4, '0'),
-    'ROLE_CUSTOMER',
-    true,
+    'USER',
     NOW(),
     NOW()
 FROM generate_series(1, 500) AS i;
@@ -77,8 +76,8 @@ INSERT INTO reservation (
     status, created_at, updated_at
 )
 SELECT
-    ('g0000000-0000-' || LPAD(i::text, 12, '0'))::uuid,
-    ('f0000000-0000-0000-0000-' || LPAD(((i - 1) % 500 + 1)::text, 12, '0'))::uuid,
+    ('f0000000-0000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
+    ('e0000000-0000-0000-0000-' || LPAD(((i - 1) % 500 + 1)::text, 12, '0'))::uuid,
     '99999999-0000-0000-0000-000000000100',
     '99999999-0000-0000-0000-000000000400',
     '99999999-0000-0000-0000-000000000500',
@@ -100,10 +99,10 @@ INSERT INTO review (
     deleted_at, created_at, updated_at
 )
 SELECT
-    ('h0000000-0000-' || LPAD(i::text, 12, '0'))::uuid,
+    ('f1000000-0000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
     '99999999-0000-0000-0000-000000000100',
-    ('f0000000-0000-0000-0000-' || LPAD(((i - 1) % 500 + 1)::text, 12, '0'))::uuid,
-    ('g0000000-0000-' || LPAD(i::text, 12, '0'))::uuid,
+    ('e0000000-0000-0000-0000-' || LPAD(((i - 1) % 500 + 1)::text, 12, '0'))::uuid,
+    ('f0000000-0000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
     'Test Service',
     (i % 5) + 1,  -- rating 1-5
     'Review ' || i || ': ' ||
@@ -147,7 +146,7 @@ LIMIT 100;  -- 페이징 적용
 -- ============================================================
 -- ✅ 대용량 데이터에서 스캔 타입
 --    - 50,000건 → 45,000건 활성
---    - Seq Scan vs Bitmap Scan 선택
+--    - Seq Scan vs Bitmap Scan vs Index Scan
 --
 -- ✅ Sort 노드 비용
 --    - 45,000건 정렬 시간
@@ -155,7 +154,7 @@ LIMIT 100;  -- 페이징 적용
 --
 -- ✅ LIMIT 효과
 --    - LIMIT 100으로 early termination
---    - Index Scan이면 100건만 읽고 멈춤
+--    - Index Scan이면 ~120건만 읽고 멈춤
 --    - Seq/Bitmap이면 전체 읽고 정렬 후 100건 반환
 --
 -- ✅ Buffers

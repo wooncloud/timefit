@@ -13,17 +13,16 @@ BEGIN;
 -- ============================================================
 
 -- 추가 고객 100명 생성 (리뷰 작성자)
-INSERT INTO "user" (
-    id, email, name, phone, role,
-    email_verified, created_at, updated_at
+INSERT INTO users (
+    id, email, name, phone_number, role,
+    created_at, updated_at
 )
 SELECT
     ('c0000000-0000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
     'customer' || i || '@test.com',
     'Customer ' || i,
     '010-' || LPAD((1000 + i)::text, 4, '0') || '-' || LPAD((i * 10)::text, 4, '0'),
-    'ROLE_CUSTOMER',
-    true,
+    'USER',
     NOW(),
     NOW()
 FROM generate_series(1, 100) AS i;
@@ -76,7 +75,7 @@ INSERT INTO reservation (
     status, created_at, updated_at
 )
 SELECT
-    ('d0000000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
+    ('d0000000-0000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
     ('c0000000-0000-0000-0000-' || LPAD(((i - 1) % 100 + 1)::text, 12, '0'))::uuid,  -- 100명 순환
     '99999999-0000-0000-0000-000000000100',
     '99999999-0000-0000-0000-000000000400',
@@ -100,10 +99,10 @@ INSERT INTO review (
     deleted_at, created_at, updated_at
 )
 SELECT
-    ('e0000000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
+    ('e0000000-0000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
     '99999999-0000-0000-0000-000000000100',  -- 같은 업체
     ('c0000000-0000-0000-0000-' || LPAD(((i - 1) % 100 + 1)::text, 12, '0'))::uuid,  -- 100명 순환
-    ('d0000000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
+    ('d0000000-0000-0000-0000-' || LPAD(i::text, 12, '0'))::uuid,
     'Test Service',
     (i % 5) + 1,  -- rating 1-5 순환
     'Review comment ' || i || ' - Great service!',
@@ -143,6 +142,8 @@ ORDER BY created_at DESC;
 -- ✅ Sort 노드
 --    - ORDER BY created_at DESC
 --    - 9,000건 정렬 비용 측정
+--    - Index Scan이면 Sort 없음
+--    - Bitmap이면 Sort 있음
 --
 -- ✅ Rows Removed by Filter
 --    - deleted_at IS NULL로 1,000건 제거
