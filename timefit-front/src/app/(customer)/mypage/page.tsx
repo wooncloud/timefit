@@ -2,17 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { ChevronRight, HelpCircle, LogOut, Pencil, Settings } from 'lucide-react';
-import { toast } from 'sonner';
 
+import { useLogout } from '@/hooks/auth/mutations/use-logout';
+import { useUserProfile } from '@/hooks/user/use-user-profile';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-
-// 사용자 더미 데이터
-const userData = {
-  name: '김민지',
-  email: 'minji.kim@timefit.com',
-};
 
 const menuItems = [
   {
@@ -30,37 +24,33 @@ const menuItems = [
 ];
 
 export default function MypagePage() {
-  const router = useRouter();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { logout, loading: isLoggingOut } = useLogout();
+  const { data: userProfile, isLoading } = useUserProfile();
+
+  console.log(userProfile);
+
 
   const handleLogout = async () => {
-    try {
-      setIsLoggingOut(true);
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // 로컬 스토리지 클리어
-        localStorage.clear();
-        sessionStorage.clear();
-
-        toast.success('로그아웃되었습니다.');
-        router.push('/');
-      } else {
-        toast.error('로그아웃에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('로그아웃 오류:', error);
-      toast.error('로그아웃 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoggingOut(false);
-      setIsLogoutDialogOpen(false);
-    }
+    await logout('/');
+    setIsLogoutDialogOpen(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-gray-500">로딩 중...</div>
+      </div>
+    );
+  }
+
+  if (!userProfile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-gray-500">프로필 정보를 불러올 수 없습니다.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col bg-white">
@@ -83,7 +73,7 @@ export default function MypagePage() {
         </div>
 
         {/* 이름 및 프로필 편집 링크 */}
-        <h2 className="mt-4 text-xl font-bold text-gray-900">{userData.name}</h2>
+        <h2 className="mt-4 text-xl font-bold text-gray-900">{userProfile.name}</h2>
         <Link
           href="/mypage/edit"
           className="mt-1 text-sm font-medium text-[#3ec0c7]"

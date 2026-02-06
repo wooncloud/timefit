@@ -1,34 +1,87 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-// 사용자 더미 데이터
-const initialUserData = {
-  name: '김민지',
-  email: 'minji.kim@timefit.com',
-  phone: '010-1234-5678',
-  lastLogin: '2024년 1월 24일 09:41',
-};
+import { useUserProfile } from '@/hooks/user/use-user-profile';
+import { useUpdateProfile } from '@/hooks/user/mutations/use-update-profile';
+import { formatDateTime } from '@/lib/formatters/date-formatter';
 
 export default function ProfileEditPage() {
-  const [formData, setFormData] = useState(initialUserData);
+  const router = useRouter();
+  const { data: userProfile, isLoading, refetch } = useUserProfile();
+  const [formData, setFormData] = useState({
+    name: '',
+    phoneNumber: '',
+    profileImageUrl: '',
+  });
+  const [message, setMessage] = useState('');
+
+  const { updateProfile, isLoading: isUpdating } = useUpdateProfile({
+    onSuccess: () => {
+      setMessage('프로필이 성공적으로 수정되었습니다.');
+      refetch(); // 프로필 다시 불러오기
+      setTimeout(() => {
+        router.push('/mypage');
+      }, 1500);
+    },
+    onError: (error) => {
+      setMessage(error);
+    },
+  });
+
+  // 프로필 데이터 로드 시 폼에 설정
+  useEffect(() => {
+    if (userProfile) {
+      setFormData({
+        name: userProfile.name,
+        phoneNumber: userProfile.phoneNumber,
+        profileImageUrl: userProfile.profileImageUrl || '',
+      });
+    }
+  }, [userProfile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: 프로필 업데이트 API 호출
-    console.log('프로필 업데이트:', formData);
+    setMessage('');
+
+    try {
+      await updateProfile({
+        name: formData.name,
+        phoneNumber: formData.phoneNumber,
+        profileImageUrl: formData.profileImageUrl || undefined,
+      });
+    } catch (error) {
+      // 에러는 useUpdateProfile의 onError에서 처리됨
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-gray-500">로딩 중...</div>
+      </div>
+    );
+  }
+
+  if (!userProfile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-gray-500">프로필 정보를 불러올 수 없습니다.</div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex flex-col bg-white">
@@ -73,7 +126,7 @@ export default function ProfileEditPage() {
             />
           </div>
 
-          {/* 이메일 */}
+          {/* 이메일 (읽기 전용) */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
               이메일
@@ -81,9 +134,9 @@ export default function ProfileEditPage() {
             <Input
               name="email"
               type="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="h-12 rounded-xl border-gray-200"
+              value={userProfile.email}
+              disabled
+              className="h-12 rounded-xl border-gray-200 bg-gray-50"
             />
           </div>
 
@@ -93,9 +146,9 @@ export default function ProfileEditPage() {
               전화번호
             </Label>
             <Input
-              name="phone"
+              name="phoneNumber"
               type="tel"
-              value={formData.phone}
+              value={formData.phoneNumber}
               onChange={handleChange}
               className="h-12 rounded-xl border-gray-200"
             />
@@ -113,14 +166,25 @@ export default function ProfileEditPage() {
 
         {/* 하단 버튼 및 마지막 로그인 */}
         <div className="px-4 py-6">
+          {message && (
+            <div
+              className={`mb-4 rounded-xl p-3 text-center text-sm ${message.includes('성공')
+                ? 'bg-green-50 text-green-700'
+                : 'bg-red-50 text-red-700'
+                }`}
+            >
+              {message}
+            </div>
+          )}
           <Button
             type="submit"
+            disabled={isUpdating}
             className="h-12 w-full rounded-xl bg-[#3ec0c7] text-base font-semibold text-white hover:bg-[#35adb3]"
           >
-            변경사항 저장
+            {isUpdating ? '저장 중...' : '변경사항 저장'}
           </Button>
           <p className="mt-4 text-center text-sm text-gray-400">
-            마지막 로그인: {formData.lastLogin}
+            마지막 로그인: {formatDateTime(userProfile.lastLoginAt)}
           </p>
         </div>
       </form>
