@@ -39,6 +39,26 @@ export interface BusinessListResponse {
 }
 
 /**
+ * 업체 상세 정보 (공개용)
+ */
+export interface PublicBusinessDetail {
+    businessId: string;
+    businessName: string;
+    businessTypes: BusinessTypeCode[];
+    ownerName: string;
+    address: string;
+    contactPhone: string;
+    description: string;
+    logoUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
+    averageRating: number | null;
+    reviewCount: number;
+    latitude: number | null;
+    longitude: number | null;
+}
+
+/**
  * 업체 검색 파라미터
  */
 export interface BusinessSearchParams {

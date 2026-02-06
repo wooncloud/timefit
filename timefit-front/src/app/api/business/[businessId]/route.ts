@@ -14,47 +14,50 @@ const BACKEND_API_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
 /**
- * 업체 상세 정보 조회
- * 권한: 인증 필요
+ * 업체 상세 정보 조회 (공개 API)
+ * 권한: 인증 불필요
  *
  * @route GET /api/business/:businessId
  * @param businessId - 조회할 업체 ID (UUID)
  */
 export async function GET(
-  request: NextRequest
-): Promise<NextResponse<GetBusinessDetailHandlerResponse>> {
+  request: NextRequest,
+  { params }: { params: { businessId: string } }
+): Promise<NextResponse> {
   try {
-    // URL에서 businessId 추출
-    const url = new URL(request.url);
-    const pathSegments = url.pathname.split('/');
-    const businessId = pathSegments[pathSegments.length - 1];
+    const { businessId } = params;
 
-    console.log('업체 상세 조회:', businessId);
+    console.log('업체 상세 조회 (공개):', businessId);
 
-    // apiFetch가 자동으로 토큰 추가 + 401 처리
-    const response = await apiFetch(
+    // 백엔드 공개 API 호출 (인증 불필요)
+    const response = await fetch(
       `${BACKEND_API_URL}/api/business/${businessId}`,
-      { method: 'GET' }
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
 
-    const result: GetBusinessDetailApiResponse = await response.json();
+    const data = await response.json();
 
     if (!response.ok) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: result.message || '업체 정보 조회에 실패했습니다.',
-        },
-        { status: response.status }
-      );
+      return NextResponse.json(data, { status: response.status });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: result.data,
-    });
+    return NextResponse.json(data);
   } catch (error) {
-    return handleApiError<GetBusinessDetailHandlerResponse>(error);
+    console.error('업체 상세 조회 오류:', error);
+    return NextResponse.json(
+      {
+        errorResponse: {
+          code: 'INTERNAL_ERROR',
+          message: '업체 정보를 불러오는데 실패했습니다.',
+        },
+      },
+      { status: 500 }
+    );
   }
 }
 

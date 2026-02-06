@@ -6,6 +6,7 @@ import type {
   ApiResponse,
   BusinessListResponse,
   BusinessSearchParams,
+  PublicBusinessDetail,
 } from '@/types/business/business';
 
 class BusinessService {
@@ -64,6 +65,30 @@ class BusinessService {
     if (!response.ok) {
       throw new Error(
         result.errorResponse?.message || '업체 검색에 실패했습니다.'
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * 업체 상세 조회 (GET /api/business/:businessId)
+   */
+  async getBusinessDetail(
+    businessId: string
+  ): Promise<ApiResponse<PublicBusinessDetail>> {
+    const url = `/api/business/${businessId}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.errorResponse?.message || '업체 정보를 불러오는데 실패했습니다.'
       );
     }
 

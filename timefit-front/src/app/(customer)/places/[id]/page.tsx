@@ -15,21 +15,10 @@ import {
 import { cn } from '@/lib/utils';
 import { ServiceCard } from '@/components/customer/cards/service-card';
 import { Button } from '@/components/ui/button';
+import { useBusinessDetail } from '@/hooks/business/use-business-detail';
+import { getBusinessTypeNames } from '@/lib/formatters/business-formatter';
 
-// 업체 더미 데이터
-const placeData = {
-  id: '1',
-  name: '루미에르 웰니스 스튜디오',
-  category: '뷰티 & 건강',
-  rating: 4.9,
-  description:
-    '루미에르 웰니스 스튜디오는 도심 속 힐링을 제공하는 프리미엄 웰니스 공간입니다. 전문 테라피스트들이 고객 맞춤형 서비스를 제공합니다.',
-  notice:
-    '예약 시간 10분 전까지 도착해주세요. 노쇼 시 예약이 취소될 수 있습니다.',
-  images: ['/images/place1.jpg', '/images/place2.jpg', '/images/place3.jpg'],
-};
-
-// 서비스 더미 데이터
+// 서비스 더미 데이터 (나중에 API로 대체 예정)
 const services = [
   {
     id: '1',
@@ -65,6 +54,10 @@ type TabType = 'info' | 'services' | 'reviews';
 
 export default function PlaceDetailPage() {
   const params = useParams();
+  const businessId = params.id as string;
+
+  const { data: business, isLoading, error } = useBusinessDetail(businessId);
+
   const [activeTab, setActiveTab] = useState<TabType>('services');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -86,13 +79,40 @@ export default function PlaceDetailPage() {
     return new Intl.NumberFormat('ko-KR').format(price) + '원';
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-gray-500">로딩 중...</div>
+      </div>
+    );
+  }
+
+  if (error || !business) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4">
+        <p className="text-red-500">{error || '업체 정보를 찾을 수 없습니다.'}</p>
+        <Link href="/" className="mt-4">
+          <Button variant="outline">홈으로 돌아가기</Button>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col bg-white">
       {/* 상단 이미지 영역 */}
       <div className="relative">
         {/* 메인 이미지 */}
         <div className="flex gap-1">
-          <div className="h-56 flex-1 bg-gray-300" />
+          <div className="h-56 flex-1 bg-gray-300">
+            {business.logoUrl && (
+              <img
+                src={business.logoUrl}
+                alt={business.businessName}
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
           <div className="flex w-20 flex-col gap-1">
             <div className="h-[calc(50%-2px)] bg-gray-200" />
             <div className="h-[calc(50%-2px)] bg-gray-200" />
@@ -118,16 +138,17 @@ export default function PlaceDetailPage() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900">
-              {placeData.name}
+              {business.businessName}
             </h1>
             <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-              <span>{placeData.category}</span>
+              <span>{getBusinessTypeNames(business.businessTypes).join(', ')}</span>
               <span>•</span>
               <div className="flex items-center gap-1">
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                 <span className="font-medium text-gray-700">
-                  {placeData.rating}
+                  {business.averageRating?.toFixed(1) || '0.0'}
                 </span>
+                <span className="text-gray-400">({business.reviewCount})</span>
               </div>
             </div>
           </div>
@@ -145,15 +166,17 @@ export default function PlaceDetailPage() {
         </div>
 
         {/* 업체 설명 */}
-        <div className="mt-4 rounded-xl bg-gray-50 p-3">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            <Info className="h-4 w-4 text-[#3ec0c7]" />
-            <span>업체 소개</span>
+        {business.description && (
+          <div className="mt-4 rounded-xl bg-gray-50 p-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <Info className="h-4 w-4 text-[#3ec0c7]" />
+              <span>업체 소개</span>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-gray-600">
+              {business.description}
+            </p>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-gray-600">
-            {placeData.description}
-          </p>
-        </div>
+        )}
 
         {/* 업체 공지 */}
         <div className="mt-3 rounded-xl bg-amber-50 p-3">
@@ -162,7 +185,7 @@ export default function PlaceDetailPage() {
             <span>공지사항</span>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-amber-600">
-            {placeData.notice}
+            예약 시간 10분 전까지 도착해주세요. 노쇼 시 예약이 취소될 수 있습니다.
           </p>
         </div>
       </div>
@@ -220,8 +243,19 @@ export default function PlaceDetailPage() {
         )}
 
         {activeTab === 'info' && (
-          <div className="py-8 text-center text-gray-500">
-            <p>영업시간, 위치 등 상세 정보가 표시됩니다</p>
+          <div className="space-y-4">
+            <div>
+              <h3 className="mb-2 font-semibold text-gray-900">주소</h3>
+              <p className="text-sm text-gray-600">{business.address}</p>
+            </div>
+            <div>
+              <h3 className="mb-2 font-semibold text-gray-900">연락처</h3>
+              <p className="text-sm text-gray-600">{business.contactPhone}</p>
+            </div>
+            <div>
+              <h3 className="mb-2 font-semibold text-gray-900">대표자</h3>
+              <p className="text-sm text-gray-600">{business.ownerName}</p>
+            </div>
           </div>
         )}
 
