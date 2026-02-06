@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { Logo } from '@/components/ui/logo';
+
 import { getCurrentUserFromSession } from '@/lib/session/server';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/ui/logo';
 
 export async function Navbar() {
   const user = await getCurrentUserFromSession();

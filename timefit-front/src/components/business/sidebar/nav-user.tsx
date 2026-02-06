@@ -4,7 +4,6 @@ import { useUserInfo } from '@/store';
 import { ChevronsUpDown, LogOut } from 'lucide-react';
 
 import { useLogout } from '@/hooks/auth/mutations/use-logout';
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,

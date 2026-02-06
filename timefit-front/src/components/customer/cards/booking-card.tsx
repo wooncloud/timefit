@@ -36,7 +36,7 @@ const statusConfig = {
 };
 
 export function BookingCard({
-  id,
+  id: _id,
   placeId,
   placeName,
   serviceName,

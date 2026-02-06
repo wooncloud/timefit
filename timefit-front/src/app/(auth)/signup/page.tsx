@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Phone, User } from 'lucide-react';
-import { Logo } from '@/components/ui/logo';
 
 import { useSignup } from '@/hooks/auth/use-signup';
 import { formatPhoneNumber } from '@/lib/formatters/phone-formatter';
@@ -11,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Logo } from '@/components/ui/logo';
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);

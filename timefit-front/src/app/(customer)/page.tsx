@@ -1,18 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  Coffee,
-  Dumbbell,
-  Heart,
-  Search,
-  Sparkles,
-} from 'lucide-react';
+import { Coffee, Dumbbell, Heart, Search, Sparkles } from 'lucide-react';
 
-import { BusinessCard } from '@/components/customer/cards/business-card';
-import { Input } from '@/components/ui/input';
 import { useBusinessSearch } from '@/hooks/business/use-business-search';
 import { getBusinessTypeNames } from '@/lib/formatters/business-formatter';
+import { BusinessCard } from '@/components/customer/cards/business-card';
+import { Input } from '@/components/ui/input';
 
 // 카테고리 더미 데이터
 const categories = [
@@ -93,7 +87,9 @@ export default function HomePage() {
                 key={business.businessId}
                 id={business.businessId}
                 name={business.businessName}
-                description={getBusinessTypeNames(business.businessTypes).join(', ')}
+                description={getBusinessTypeNames(business.businessTypes).join(
+                  ', '
+                )}
                 rating={4.5}
                 badge={null}
                 image={business.logoUrl || '/images/placeholder.jpg'}

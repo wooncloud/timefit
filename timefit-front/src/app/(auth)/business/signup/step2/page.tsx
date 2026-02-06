@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Logo } from '@/components/ui/logo';
 
 import { useBusinessSignup } from '@/hooks/business/use-business-signup';
 import { cn } from '@/lib/utils';
@@ -9,6 +8,7 @@ import { BusinessTypeSelect } from '@/components/business/settings/business-type
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Logo } from '@/components/ui/logo';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function BusinessSignUpPage() {

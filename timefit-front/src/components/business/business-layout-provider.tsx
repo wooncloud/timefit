@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useBusinessActions, useUserActions } from '@/store';
 
-import { useUserActions } from '@/store';
-import { useBusinessActions } from '@/store';
 import type { SessionUser } from '@/lib/session/options';
 
 interface BusinessLayoutProviderProps {

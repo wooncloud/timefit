@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronRight, HelpCircle, LogOut, Pencil, Settings } from 'lucide-react';
+import {
+  ChevronRight,
+  HelpCircle,
+  LogOut,
+  Pencil,
+  Settings,
+} from 'lucide-react';
 
 import { useLogout } from '@/hooks/auth/mutations/use-logout';
 import { useUserProfile } from '@/hooks/user/use-user-profile';
@@ -29,7 +35,6 @@ export default function MypagePage() {
   const { data: userProfile, isLoading } = useUserProfile();
 
   console.log(userProfile);
-
 
   const handleLogout = async () => {
     await logout('/');
@@ -73,7 +78,9 @@ export default function MypagePage() {
         </div>
 
         {/* 이름 및 프로필 편집 링크 */}
-        <h2 className="mt-4 text-xl font-bold text-gray-900">{userProfile.name}</h2>
+        <h2 className="mt-4 text-xl font-bold text-gray-900">
+          {userProfile.name}
+        </h2>
         <Link
           href="/mypage/edit"
           className="mt-1 text-sm font-medium text-[#3ec0c7]"
@@ -95,7 +102,9 @@ export default function MypagePage() {
               >
                 <div className="flex items-center gap-3">
                   <Icon className="h-5 w-5 text-gray-500" />
-                  <span className="font-medium text-gray-700">{item.label}</span>
+                  <span className="font-medium text-gray-700">
+                    {item.label}
+                  </span>
                 </div>
                 <ChevronRight className="h-5 w-5 text-gray-400" />
               </Link>

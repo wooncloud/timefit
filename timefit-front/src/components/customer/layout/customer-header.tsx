@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Search } from 'lucide-react';
+
 import { Logo } from '@/components/ui/logo';
 
 export function CustomerHeader() {

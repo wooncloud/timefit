@@ -4,14 +4,14 @@
  * @returns 한국어로 포맷팅된 날짜 문자열 (예: "2026년 2월 6일 16:30")
  */
 export function formatDateTime(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleString('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+  const date = new Date(dateString);
+  return date.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 /**
@@ -20,12 +20,12 @@ export function formatDateTime(dateString: string): string {
  * @returns 한국어로 포맷팅된 날짜 문자열 (예: "2026년 2월 6일")
  */
 export function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleString('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
+  const date = new Date(dateString);
+  return date.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 }
 
 /**
@@ -34,9 +34,9 @@ export function formatDate(dateString: string): string {
  * @returns 한국어로 포맷팅된 시간 문자열 (예: "16:30")
  */
 export function formatTime(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleString('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+  const date = new Date(dateString);
+  return date.toLocaleString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }

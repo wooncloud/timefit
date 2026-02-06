@@ -4,13 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Mail } from 'lucide-react';
-import { Logo } from '@/components/ui/logo';
 
 import { useSignin } from '@/hooks/auth/use-signin';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Logo } from '@/components/ui/logo';
 
 export default function SigninPage() {
   const [showPassword, setShowPassword] = useState(false);

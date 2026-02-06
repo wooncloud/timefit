@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
 
+import { useUpdateProfile } from '@/hooks/user/mutations/use-update-profile';
+import { useUserProfile } from '@/hooks/user/use-user-profile';
+import { formatDateTime } from '@/lib/formatters/date-formatter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUserProfile } from '@/hooks/user/use-user-profile';
-import { useUpdateProfile } from '@/hooks/user/mutations/use-update-profile';
-import { formatDateTime } from '@/lib/formatters/date-formatter';
 
 export default function ProfileEditPage() {
   const router = useRouter();
@@ -30,7 +30,7 @@ export default function ProfileEditPage() {
         router.push('/mypage');
       }, 1500);
     },
-    onError: (error) => {
+    onError: error => {
       setMessage(error);
     },
   });
@@ -61,7 +61,7 @@ export default function ProfileEditPage() {
         phoneNumber: formData.phoneNumber,
         profileImageUrl: formData.profileImageUrl || undefined,
       });
-    } catch (error) {
+    } catch (_error) {
       // 에러는 useUpdateProfile의 onError에서 처리됨
     }
   };
@@ -81,7 +81,6 @@ export default function ProfileEditPage() {
       </div>
     );
   }
-
 
   return (
     <div className="flex flex-col bg-white">
@@ -168,10 +167,11 @@ export default function ProfileEditPage() {
         <div className="px-4 py-6">
           {message && (
             <div
-              className={`mb-4 rounded-xl p-3 text-center text-sm ${message.includes('성공')
-                ? 'bg-green-50 text-green-700'
-                : 'bg-red-50 text-red-700'
-                }`}
+              className={`mb-4 rounded-xl p-3 text-center text-sm ${
+                message.includes('성공')
+                  ? 'bg-green-50 text-green-700'
+                  : 'bg-red-50 text-red-700'
+              }`}
             >
               {message}
             </div>

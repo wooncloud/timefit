@@ -5,14 +5,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useChangePassword } from '@/hooks/user/mutations/use-change-password';
 import {
   validatePassword,
   validatePasswordMatch,
 } from '@/lib/validators/auth-validators';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function PasswordChangePage() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export default function PasswordChangePage() {
         router.push('/mypage');
       }, 1500);
     },
-    onError: (error) => {
+    onError: error => {
       setMessage(error);
     },
   });
@@ -74,7 +74,7 @@ export default function PasswordChangePage() {
         newPassword: formData.newPassword,
         newPasswordConfirm: formData.confirmPassword,
       });
-    } catch (error) {
+    } catch (_error) {
       // 에러는 useChangePassword의 onError에서 처리됨
     }
   };
@@ -211,10 +211,11 @@ export default function PasswordChangePage() {
         <div className="mt-8">
           {message && (
             <div
-              className={`mb-4 rounded-xl p-3 text-center text-sm ${message.includes('성공')
-                ? 'bg-green-50 text-green-700'
-                : 'bg-red-50 text-red-700'
-                }`}
+              className={`mb-4 rounded-xl p-3 text-center text-sm ${
+                message.includes('성공')
+                  ? 'bg-green-50 text-green-700'
+                  : 'bg-red-50 text-red-700'
+              }`}
             >
               {message}
             </div>

@@ -13,7 +13,8 @@ interface SigninValidationResult {
 
 const emailPattern = /\S+@\S+\.\S+/;
 const phoneNumberPattern = /^010-\d{4}-\d{4}$/;
-const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]+$/;
+const passwordPattern =
+  /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]+$/;
 
 /**
  * 비밀번호 유효성 검증 결과
