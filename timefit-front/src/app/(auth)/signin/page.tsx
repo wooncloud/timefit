@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Mail, Timer } from 'lucide-react';
+import { Eye, EyeOff, Mail } from 'lucide-react';
+import { Logo } from '@/components/ui/logo';
 
 import { useSignin } from '@/hooks/auth/use-signin';
 import { cn } from '@/lib/utils';
@@ -30,7 +31,7 @@ export default function SigninPage() {
       {/* 로고 영역 */}
       <div className="mb-8 flex flex-col items-center">
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#e8f7f8]">
-          <Timer className="h-10 w-10 text-[#3ec0c7]" />
+          <Logo size={40} className="text-[#3ec0c7]" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">TimeFit</h1>
         <p className="mt-1 text-sm text-gray-500">다시 오신 것을 환영합니다</p>

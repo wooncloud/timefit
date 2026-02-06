@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, Mail, Phone, Timer, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Phone, User } from 'lucide-react';
+import { Logo } from '@/components/ui/logo';
 
 import { useSignup } from '@/hooks/auth/use-signup';
 import { formatPhoneNumber } from '@/lib/formatters/phone-formatter';
@@ -45,7 +46,7 @@ export default function SignupPage() {
       {/* 로고 영역 */}
       <div className="mb-8 flex flex-col items-center">
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#e8f7f8]">
-          <Timer className="h-10 w-10 text-[#3ec0c7]" />
+          <Logo size={40} className="text-[#3ec0c7]" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">TimeFit</h1>
         <p className="mt-1 text-sm text-gray-500">계정을 생성하세요</p>

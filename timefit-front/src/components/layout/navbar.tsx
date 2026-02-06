@@ -1,5 +1,5 @@
 import Link from 'next/link';
-
+import { Logo } from '@/components/ui/logo';
 import { getCurrentUserFromSession } from '@/lib/session/server';
 import { Button } from '@/components/ui/button';
 
@@ -12,7 +12,11 @@ export async function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-primary">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-xl font-bold text-primary"
+            >
+              <Logo size={24} className="text-primary" />
               Timefit
             </Link>
           </div>
