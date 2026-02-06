@@ -1,0 +1,10 @@
+{
+  "name": "timefit-back",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "./scripts/dev.sh start",
+    "stop": "./scripts/dev.sh stop",
+    "logs": "./scripts/dev.sh logs"
+  }
+}

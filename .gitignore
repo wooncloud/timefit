@@ -480,6 +480,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Turbo
+.turbo/
+
 # AI
 CLAUDE.md
 .claude
