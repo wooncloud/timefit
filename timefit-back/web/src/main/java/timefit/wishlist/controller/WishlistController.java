@@ -27,7 +27,7 @@ import java.util.UUID;
  * - 찜 삭제
  * - 찜 여부 확인
  */
-@Tag(name = "10. 찜 관리 (고객)", description = "고객의 찜(위시리스트) 관리 API")
+@Tag(name = "10. 찜 관리 (고객)", description = "고객의 찜(업체 위시 리스트) 관리 API")
 @Slf4j
 @RestController
 @RequestMapping("/api/customer/wishlist")
@@ -71,49 +71,49 @@ public class WishlistController {
             @Parameter(hidden = true)
             @CurrentUserId UUID userId) {
 
-        log.info("찜 추가 요청: userId={}, menuId={}", userId, request.menuId());
+        log.info("찜 추가 요청: userId={}, businessId={}", userId, request.businessId());
 
         WishlistResponseDto.WishlistAction response =
-                wishlistService.addWishlist(userId, request.menuId());
+                wishlistService.addWishlist(userId, request.businessId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseData.of(response));
     }
 
     /**
      * 찜 삭제
-     * DELETE /api/customer/wishlist/{menuId}
+     * DELETE /api/customer/wishlist/{businessId}
      */
     @RemoveWishlistOperation
-    @DeleteMapping("/{menuId}")
+    @DeleteMapping("/{businessId}")
     public ResponseEntity<ResponseData<WishlistResponseDto.WishlistAction>> removeWishlist(
             @Parameter(description = "메뉴 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
-            @PathVariable UUID menuId,
+            @PathVariable UUID businessId,
             @Parameter(hidden = true)
             @CurrentUserId UUID userId) {
 
-        log.info("찜 삭제 요청: userId={}, menuId={}", userId, menuId);
+        log.info("찜 삭제 요청: userId={}, businessId={}", userId, businessId);
 
         WishlistResponseDto.WishlistAction response =
-                wishlistService.removeWishlist(userId, menuId);
+                wishlistService.removeWishlist(userId, businessId);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
 
     /**
      * 찜 여부 확인
-     * GET /api/customer/wishlist/check/{menuId}
+     * GET /api/customer/wishlist/check/{businessId}
      */
     @CheckWishlistOperation
-    @GetMapping("/check/{menuId}")
+    @GetMapping("/check/{businessId}")
     public ResponseEntity<ResponseData<Boolean>> isWishlisted(
             @Parameter(description = "메뉴 ID", required = true, example = "10000000-0000-0000-0000-000000000001")
-            @PathVariable UUID menuId,
+            @PathVariable UUID businessId,
             @Parameter(hidden = true)
             @CurrentUserId UUID userId) {
 
-        log.debug("찜 여부 확인 요청: userId={}, menuId={}", userId, menuId);
+        log.debug("찜 여부 확인 요청: userId={}, businessId={}", userId, businessId);
 
-        boolean isWishlisted = wishlistService.isWishlisted(userId, menuId);
+        boolean isWishlisted = wishlistService.isWishlisted(userId, businessId);
 
         return ResponseEntity.ok(ResponseData.of(isWishlisted));
     }

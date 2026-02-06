@@ -7,8 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import timefit.business.entity.Business;
 import timefit.common.entity.BaseEntity;
-import timefit.menu.entity.Menu;
 import timefit.user.entity.User;
 
 /**
@@ -17,11 +17,11 @@ import timefit.user.entity.User;
  * 핵심 기능:
  * - 고객이 관심 있는 메뉴를 찜 목록에 추가
  * - 1명의 고객은 동일 메뉴를 1번만 찜 가능 (UNIQUE 제약)
- * - Menu 삭제 시 Wishlist도 함께 삭제 (CASCADE)
+ * - Business 삭제 시 Wishlist도 함께 삭제 (CASCADE)
  *
  * 비즈니스 규칙:
  * - (user_id, menu_id) 조합은 유니크해야 함
- * - Menu가 삭제되면 Wishlist도 자동 삭제
+ * - Business가 삭제되면 Wishlist도 자동 삭제
  * - 생성 시간만 기록 (수정 불가)
  */
 @Entity
@@ -29,7 +29,7 @@ import timefit.user.entity.User;
         name = "wishlist",
         uniqueConstraints = @UniqueConstraint(
                 name = "unique_user_menu",
-                columnNames = {"user_id", "menu_id"}
+                columnNames = {"user_id", "business_id"}
         ),
         indexes = {
                 @Index(name = "idx_wishlist_user_created", columnList = "user_id, created_at DESC")
@@ -53,9 +53,9 @@ public class Wishlist extends BaseEntity {
      */
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu_id", nullable = false)
+    @JoinColumn(name = "business_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Menu menu;
+    private Business business;
 
     // ---------------------- 정적 팩토리 메서드
 
@@ -63,15 +63,15 @@ public class Wishlist extends BaseEntity {
      * Wishlist 생성
      *
      * @param user 찜한 사용자
-     * @param menu 찜한 메뉴
+     * @param business 찜한 메뉴
      * @return 생성된 Wishlist 엔티티
      */
-    public static Wishlist create(User user, Menu menu) {
-        validateCreateFields(user, menu);
+    public static Wishlist create(User user, Business business) {
+        validateCreateFields(user, business);
 
         Wishlist wishlist = new Wishlist();
         wishlist.user = user;
-        wishlist.menu = menu;
+        wishlist.business = business;
         return wishlist;
     }
 
@@ -80,12 +80,12 @@ public class Wishlist extends BaseEntity {
     /**
      * 찜 생성 시 필수 필드 검증
      */
-    private static void validateCreateFields(User user, Menu menu) {
+    private static void validateCreateFields(User user, Business business) {
         if (user == null) {
-            throw new IllegalArgumentException("사용자는 필수입니다");
+            throw new IllegalArgumentException("사용자는 필수값 입니다");
         }
-        if (menu == null) {
-            throw new IllegalArgumentException("메뉴는 필수입니다");
+        if (business == null) {
+            throw new IllegalArgumentException("업체는 필수값 입니다");
         }
     }
 }

@@ -17,12 +17,12 @@ public class WishlistRequestDto {
     @Schema(description = "찜 추가 요청")
     public record AddWishlist(
             @Schema(
-                    description = "메뉴 ID",
+                    description = "업체 ID",
                     example = "550e8400-e29b-41d4-a716-446655440000",
                     requiredMode = Schema.RequiredMode.REQUIRED
             )
-            @NotNull(message = "메뉴 ID는 필수입니다")
-            UUID menuId
+            @NotNull(message = "업체 ID는 필수입니다")
+            UUID businessId
     ) {
     }
 }

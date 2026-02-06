@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
 @Operation(
         summary = "찜 삭제",
         description = """
-                찜 목록에서 메뉴를 삭제합니다.
+                찜 목록에서 등록된 찜(업체) 를 삭제합니다.
                 
                 **검증:**
                 - 찜 존재 여부 확인
@@ -43,7 +43,7 @@ import java.lang.annotation.Target;
                                           "data": {
                                             "success": true,
                                             "message": "찜 목록에서 제거되었습니다",
-                                            "menuId": "10000000-0000-0000-0000-000000000001"
+                                            "businessId": "10000000-0000-0000-0000-000000000001"
                                           }
                                         }
                                         """
@@ -60,8 +60,8 @@ import java.lang.annotation.Target;
         )
 })
 @Parameter(
-        name = "menuId",
-        description = "메뉴 ID",
+        name = "businessId",
+        description = "업체 ID",
         required = true,
         example = "10000000-0000-0000-0000-000000000001"
 )

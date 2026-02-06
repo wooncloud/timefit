@@ -34,28 +34,28 @@ public interface WishlistRepository extends JpaRepository<Wishlist, UUID> {
      * 특정 사용자가 특정 메뉴를 찜했는지 확인
      *
      * @param userId 사용자 ID
-     * @param menuId 메뉴 ID
+     * @param businessId 메뉴 ID
      * @return 찜 존재 여부
      */
-    boolean existsByUserIdAndMenuId(UUID userId, UUID menuId);
+    boolean existsByUserIdAndBusinessId(UUID userId, UUID businessId);
 
     /**
      * 특정 사용자의 특정 메뉴 찜 조회
      *
      * @param userId 사용자 ID
-     * @param menuId 메뉴 ID
+     * @param businessId 메뉴 ID
      * @return Wishlist (Optional)
      */
-    Optional<Wishlist> findByUserIdAndMenuId(UUID userId, UUID menuId);
+    Optional<Wishlist> findByUserIdAndBusinessId(UUID userId, UUID businessId);
 
     /**
      * 특정 사용자의 특정 메뉴 찜 삭제
      *
      * @param userId 사용자 ID
-     * @param menuId 메뉴 ID
+     * @param businessId 메뉴 ID
      * @return 삭제된 행 수
      */
-    int deleteByUserIdAndMenuId(UUID userId, UUID menuId);
+    int deleteByUserIdAndBusinessId(UUID userId, UUID businessId);
 
     /**
      * 특정 사용자의 찜 개수 조회

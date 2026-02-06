@@ -85,20 +85,20 @@ public class WishlistQueryService {
      * 2. 찜 여부 확인
      *
      * @param userId 사용자 ID
-     * @param menuId 메뉴 ID
+     * @param businessId 메뉴 ID
      * @return 찜 여부
      */
-    public boolean isWishlisted(UUID userId, UUID menuId) {
-        log.debug("찜 여부 확인 시작: userId={}, menuId={}", userId, menuId);
+    public boolean isWishlisted(UUID userId, UUID businessId) {
+        log.debug("찜 여부 확인 시작: userId={}, businessId={}", userId, businessId);
 
         // 1. 사용자 검증
         authValidator.validateUserExists(userId);
 
         // 2. 찜 여부 확인
-        boolean exists = wishlistRepository.existsByUserIdAndMenuId(userId, menuId);
+        boolean exists = wishlistRepository.existsByUserIdAndBusinessId(userId, businessId);
 
-        log.debug("찜 여부 확인 완료: userId={}, menuId={}, exists={}",
-                userId, menuId, exists);
+        log.debug("찜 여부 확인 완료: userId={}, businessId={}, exists={}",
+                userId, businessId, exists);
 
         return exists;
     }

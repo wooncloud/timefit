@@ -1,10 +1,12 @@
 package timefit.wishlist.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import timefit.business.entity.BusinessTypeCode;
 import timefit.wishlist.entity.Wishlist;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -21,26 +23,38 @@ public class WishlistResponseDto {
             @Schema(description = "찜 ID", example = "550e8400-e29b-41d4-a716-446655440000")
             UUID wishlistId,
 
-            @Schema(description = "메뉴 ID", example = "10000000-0000-0000-0000-000000000001")
-            UUID menuId,
-
-            @Schema(description = "메뉴명", example = "커트")
-            String menuName,
-
-            @Schema(description = "업체명", example = "스타일 헤어샵")
+            @Schema(description = "업체명", example = "Owner Kim 미용실")
             String businessName,
 
-            @Schema(description = "업체 ID", example = "30000000-0000-0000-0000-000000000001")
-            UUID businessId,
+            @Schema(description = "업종 코드 목록", example = "[\"BD008\"]")
+            Set<BusinessTypeCode> businessTypes,
 
-            @Schema(description = "가격", example = "30000")
-            Integer price,
+            @Schema(description = "대표자명", example = "Owner Kim")
+            String ownerName,
 
-            @Schema(description = "소요시간(분)", example = "60")
-            Integer durationMinutes,
+            @Schema(description = "업체 주소", example = "서울특별시 강남구 테헤란로 123")
+            String address,
 
-            @Schema(description = "메뉴 이미지 URL", example = "https://example.com/menu.jpg")
-            String imageUrl,
+            @Schema(description = "업체 연락처", example = "02-1111-1111")
+            String contactPhone,
+
+            @Schema(description = "업체 설명", example = "20년 경력의 전문 미용실입니다.")
+            String description,
+
+            @Schema(description = "로고 이미지 URL", example = "https://example.com/logo.png")
+            String logoUrl,
+
+            @Schema(description = "평균 평점 (0.0~5.0)", example = "4.5")
+            Double averageRating,
+
+            @Schema(description = "리뷰 개수", example = "120")
+            Integer reviewCount,
+
+            @Schema(description = "위도 (위치 기반 검색용)", example = "37.5665")
+            Double latitude,
+
+            @Schema(description = "경도 (위치 기반 검색용)", example = "126.9780")
+            Double longitude,
 
             @Schema(description = "찜한 날짜", example = "2026-01-30T10:00:00")
             LocalDateTime createdAt
@@ -51,13 +65,17 @@ public class WishlistResponseDto {
         public static WishlistItem from(Wishlist wishlist) {
             return new WishlistItem(
                     wishlist.getId(),
-                    wishlist.getMenu().getId(),
-                    wishlist.getMenu().getServiceName(),
-                    wishlist.getMenu().getBusiness().getBusinessName(),
-                    wishlist.getMenu().getBusiness().getId(),
-                    wishlist.getMenu().getPrice(),
-                    wishlist.getMenu().getDurationMinutes(),
-                    wishlist.getMenu().getImageUrl(),
+                    wishlist.getBusiness().getBusinessName(),
+                    wishlist.getBusiness().getBusinessTypes(),
+                    wishlist.getBusiness().getOwnerName(),
+                    wishlist.getBusiness().getAddress(),
+                    wishlist.getBusiness().getContactPhone(),
+                    wishlist.getBusiness().getDescription(),
+                    wishlist.getBusiness().getLogoUrl(),
+                    wishlist.getBusiness().getAverageRating(),
+                    wishlist.getBusiness().getReviewCount(),
+                    wishlist.getBusiness().getLatitude(),
+                    wishlist.getBusiness().getLongitude(),
                     wishlist.getCreatedAt()
             );
         }
@@ -108,20 +126,20 @@ public class WishlistResponseDto {
             String message,
 
             @Schema(description = "메뉴 ID", example = "10000000-0000-0000-0000-000000000001")
-            UUID menuId
+            UUID businessId
     ) {
         /**
          * 찜 추가 성공 응답
          */
-        public static WishlistAction addSuccess(UUID menuId) {
-            return new WishlistAction(true, "찜 목록에 추가되었습니다", menuId);
+        public static WishlistAction addSuccess(UUID businessId) {
+            return new WishlistAction(true, "찜 목록에 추가되었습니다", businessId);
         }
 
         /**
          * 찜 삭제 성공 응답
          */
-        public static WishlistAction removeSuccess(UUID menuId) {
-            return new WishlistAction(true, "찜 목록에서 제거되었습니다", menuId);
+        public static WishlistAction removeSuccess(UUID businessId) {
+            return new WishlistAction(true, "찜 목록에서 제거되었습니다", businessId);
         }
     }
 }

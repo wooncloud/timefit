@@ -41,17 +41,17 @@ public class WishlistValidator {
 
     /**
      * Wishlist 중복 검증
-     * 이미 찜한 메뉴인 경우 예외 발생
+     * 이미 찜한 업체인 경우 예외 발생
      *
      * @param userId 사용자 ID
-     * @param menuId 메뉴 ID
-     * @throws WishlistException 이미 찜한 메뉴인 경우
+     * @param businessId 업체 ID
+     * @throws WishlistException 이미 찜한 업체인 경우
      */
-    public void validateNotDuplicate(UUID userId, UUID menuId) {
-        boolean exists = wishlistRepository.existsByUserIdAndMenuId(userId, menuId);
+    public void validateNotDuplicate(UUID userId, UUID businessId) {
+        boolean exists = wishlistRepository.existsByUserIdAndBusinessId(userId, businessId);
 
         if (exists) {
-            log.warn("중복 찜 시도: userId={}, menuId={}", userId, menuId);
+            log.warn("중복 찜 시도: userId={}, businessId={}", userId, businessId);
             throw new WishlistException(WishlistErrorCode.WISHLIST_ALREADY_EXISTS);
         }
     }
@@ -75,14 +75,14 @@ public class WishlistValidator {
      * 사용자와 메뉴로 Wishlist 조회
      *
      * @param userId 사용자 ID
-     * @param menuId 메뉴 ID
+     * @param businessId 메뉴 ID
      * @return 조회된 Wishlist 엔티티
      * @throws WishlistException 찜이 존재하지 않는 경우
      */
-    public Wishlist validateExistsByUserAndMenu(UUID userId, UUID menuId) {
-        return wishlistRepository.findByUserIdAndMenuId(userId, menuId)
+    public Wishlist validateExistsByUserAndBusiness(UUID userId, UUID businessId) {
+        return wishlistRepository.findByUserIdAndBusinessId(userId, businessId)
                 .orElseThrow(() -> {
-                    log.warn("찜을 찾을 수 없음: userId={}, menuId={}", userId, menuId);
+                    log.warn("찜을 찾을 수 없음: userId={}, businessId={}", userId, businessId);
                     return new WishlistException(WishlistErrorCode.WISHLIST_NOT_FOUND);
                 });
     }

@@ -46,38 +46,38 @@ public class WishlistService {
      * 찜 추가
      *
      * @param userId 사용자 ID
-     * @param menuId 메뉴 ID
+     * @param businessId 업체 ID
      * @return 찜 추가 결과
      */
     @Transactional
-    public WishlistResponseDto.WishlistAction addWishlist(UUID userId, UUID menuId) {
-        log.debug("Facade: 찜 추가 - userId={}, menuId={}", userId, menuId);
-        return commandService.addWishlist(userId, menuId);
+    public WishlistResponseDto.WishlistAction addWishlist(UUID userId, UUID businessId) {
+        log.debug("Facade: 찜 추가 - userId={}, businessId={}", userId, businessId);
+        return commandService.addWishlist(userId, businessId);
     }
 
     /**
      * 찜 삭제
      *
      * @param userId 사용자 ID
-     * @param menuId 메뉴 ID
+     * @param businessId 업체 ID
      * @return 찜 삭제 결과
      */
     @Transactional
-    public WishlistResponseDto.WishlistAction removeWishlist(UUID userId, UUID menuId) {
-        log.debug("Facade: 찜 삭제 - userId={}, menuId={}", userId, menuId);
-        return commandService.removeWishlist(userId, menuId);
+    public WishlistResponseDto.WishlistAction removeWishlist(UUID userId, UUID businessId) {
+        log.debug("Facade: 찜 삭제 - userId={}, businessId={}", userId, businessId);
+        return commandService.removeWishlist(userId, businessId);
     }
 
     /**
      * 찜 여부 확인
      *
      * @param userId 사용자 ID
-     * @param menuId 메뉴 ID
+     * @param businessId 업체 ID
      * @return 찜 여부
      */
-    public boolean isWishlisted(UUID userId, UUID menuId) {
-        log.debug("Facade: 찜 여부 확인 - userId={}, menuId={}", userId, menuId);
-        return queryService.isWishlisted(userId, menuId);
+    public boolean isWishlisted(UUID userId, UUID businessId) {
+        log.debug("Facade: 찜 여부 확인 - userId={}, businessId={}", userId, businessId);
+        return queryService.isWishlisted(userId, businessId);
     }
 
     /**

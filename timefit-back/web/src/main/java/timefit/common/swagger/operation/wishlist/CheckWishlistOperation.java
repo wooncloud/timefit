@@ -18,11 +18,11 @@ import java.lang.annotation.Target;
 @Operation(
         summary = "찜 여부 확인",
         description = """
-                특정 메뉴가 찜 목록에 있는지 확인합니다.
+                특정 업체가 찜 목록에 있는지 확인합니다.
                 
                 **응답:**
-                - true: 찜한 메뉴
-                - false: 찜하지 않은 메뉴
+                - true: 찜한 업체
+                - false: 찜하지 않은 업체
                 
                 **권한:**
                 - 로그인한 고객만 사용 가능
@@ -51,8 +51,8 @@ import java.lang.annotation.Target;
         )
 })
 @Parameter(
-        name = "menuId",
-        description = "메뉴 ID",
+        name = "businessId",
+        description = "업체 ID",
         required = true,
         example = "10000000-0000-0000-0000-000000000001"
 )
