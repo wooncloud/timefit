@@ -9,7 +9,6 @@ interface PlaceCardProps {
   name: string;
   description: string;
   rating: number;
-  distance?: string;
   reviewCount?: number;
   badge?: string | null;
   image?: string;
@@ -24,7 +23,6 @@ export function PlaceCard({
   name,
   description,
   rating,
-  distance,
   reviewCount,
   badge,
   variant = 'default',

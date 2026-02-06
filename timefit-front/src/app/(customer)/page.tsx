@@ -1,15 +1,18 @@
+'use client';
+
 import Link from 'next/link';
 import {
   Coffee,
   Dumbbell,
   Heart,
   Search,
-  SlidersHorizontal,
   Sparkles,
 } from 'lucide-react';
 
-import { PlaceCard } from '@/components/customer/cards/place-card';
+import { BusinessCard } from '@/components/customer/cards/business-card';
 import { Input } from '@/components/ui/input';
+import { useBusinessSearch } from '@/hooks/business/use-business-search';
+import { getBusinessTypeNames } from '@/lib/formatters/business-formatter';
 
 // 카테고리 더미 데이터
 const categories = [
@@ -19,56 +22,12 @@ const categories = [
   { id: 'health', name: '건강', icon: Heart, color: '#ec4899' },
 ];
 
-// 장소 더미 데이터
-const places = [
-  {
-    id: '1',
-    name: '젠 요가 스튜디오',
-    description: '마음챙김과 균형',
-    distance: '3.5km',
-    rating: 4.8,
-    image: '/images/placeholder.jpg',
-    badge: '신규',
-  },
-  {
-    id: '2',
-    name: '페이드 마스터스',
-    description: '클래식 컷 & 쉐이브',
-    distance: '0.8km',
-    rating: 4.6,
-    image: '/images/placeholder.jpg',
-    badge: null,
-  },
-  {
-    id: '3',
-    name: '그린볼 컴퍼니',
-    description: '유기농 & 신선한 음식',
-    distance: '1.1km',
-    rating: 4.9,
-    image: '/images/placeholder.jpg',
-    badge: '인기',
-  },
-  {
-    id: '4',
-    name: '럭스 스파 리트릿',
-    description: '마사지 & 사우나',
-    distance: '1.2km',
-    rating: 4.9,
-    image: '/images/placeholder.jpg',
-    badge: null,
-  },
-  {
-    id: '5',
-    name: '아이언 짐',
-    description: '피트니스 & 웨이트',
-    distance: '0.5km',
-    rating: 4.8,
-    image: '/images/placeholder.jpg',
-    badge: null,
-  },
-];
-
 export default function HomePage() {
+  const { data: businessData, isLoading } = useBusinessSearch({
+    page: 0,
+    size: 20,
+  });
+
   return (
     <div className="bg-white px-4 py-6">
       {/* 타이틀 */}
@@ -118,20 +77,30 @@ export default function HomePage() {
       {/* 장소 리스트 */}
       <div>
         <h2 className="mb-4 text-lg font-semibold text-gray-900">추천 장소</h2>
-        <div className="space-y-4">
-          {places.map(place => (
-            <PlaceCard
-              key={place.id}
-              id={place.id}
-              name={place.name}
-              description={place.description}
-              rating={place.rating}
-              distance={place.distance}
-              badge={place.badge}
-              image={place.image}
-            />
-          ))}
-        </div>
+
+        {isLoading ? (
+          <div className="flex min-h-[200px] items-center justify-center">
+            <div className="text-gray-500">로딩 중...</div>
+          </div>
+        ) : !businessData || businessData.businesses.length === 0 ? (
+          <div className="flex min-h-[200px] items-center justify-center">
+            <div className="text-gray-500">등록된 업체가 없습니다.</div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {businessData.businesses.map(business => (
+              <BusinessCard
+                key={business.businessId}
+                id={business.businessId}
+                name={business.businessName}
+                description={getBusinessTypeNames(business.businessTypes).join(', ')}
+                rating={4.5}
+                badge={null}
+                image={business.logoUrl || '/images/placeholder.jpg'}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

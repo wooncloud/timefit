@@ -19,28 +19,24 @@ const searchResults = [
     id: '1',
     name: '젠 요가 스튜디오',
     description: '마음챙김과 균형',
-    distance: '3.5km',
     rating: 4.8,
   },
   {
     id: '2',
     name: '페이드 마스터스',
     description: '클래식 컷 & 쉐이브',
-    distance: '0.8km',
     rating: 4.6,
   },
   {
     id: '3',
     name: '럭스 스파 리트릿',
     description: '마사지 & 사우나',
-    distance: '1.2km',
     rating: 4.9,
   },
   {
     id: '4',
     name: '그린볼 컴퍼니',
     description: '유기농 & 신선한 음식',
-    distance: '1.1km',
     rating: 4.9,
   },
 ];
@@ -155,7 +151,6 @@ export default function SearchPage() {
                   name={place.name}
                   description={place.description}
                   rating={place.rating}
-                  distance={place.distance}
                   showAction={false}
                 />
               ))}
