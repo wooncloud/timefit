@@ -25,7 +25,15 @@ import java.time.LocalTime;
  * - ONDEMAND 와 RESERVATION 모두 지원
  */
 @Entity
-@Table(name = "reservation")
+@Table(name = "reservation", indexes = {
+        // 고객(customer) 조회용
+        @Index(name = "idx_reservation_customer_date_time",
+                columnList = "customer_id, reservation_date DESC, reservation_time DESC"),
+
+        // 업체(business) 조회용
+        @Index(name = "idx_reservation_business_date_time",
+                columnList = "business_id, reservation_date DESC, reservation_time DESC")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Reservation extends BaseEntity {

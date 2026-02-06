@@ -33,10 +33,12 @@ import java.time.LocalDateTime;
 @Table(
         name = "review",
         indexes = {
-                @Index(name = "idx_review_business_created", columnList = "business_id, created_at DESC"),
-                @Index(name = "idx_review_business_rating", columnList = "business_id, rating"),
-                @Index(name = "idx_review_user_created", columnList = "user_id, created_at DESC"),
-                @Index(name = "idx_review_deleted", columnList = "deleted_at")
+                // 고객별 리뷰
+                @Index(name = "idx_review_user_created",
+                        columnList = "user_id, created_at DESC"),
+                // 업체별 리뷰 (최신순)
+                @Index(name = "idx_review_business_created",
+                        columnList = "business_id, created_at DESC"),
         },
         uniqueConstraints = @UniqueConstraint(
                 name = "unique_reservation_review",

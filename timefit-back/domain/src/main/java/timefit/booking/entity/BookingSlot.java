@@ -15,7 +15,15 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "booking_slot")
+@Table(name = "booking_slot", indexes = {
+        // 업체 (business) 기반 조회용
+        @Index(name = "idx_booking_slot_business_date_time",
+                columnList = "business_id, slot_date, start_time"),
+
+        // 메뉴 (menu) 기반 조회용
+        @Index(name = "idx_booking_slot_menu_date_time",
+                columnList = "menu_id, slot_date, start_time")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BookingSlot extends BaseEntity {
