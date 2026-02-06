@@ -490,4 +490,9 @@ CLAUDE.md
 # documents
 docs/*
 
+# other settings
+.cursor/
+.github/
+.idea/
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,visualstudiocode,java,node,svelte,jetbrains,jetbrains+all,jetbrains+iml

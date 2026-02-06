@@ -52,6 +52,18 @@ class AuthService {
 
     return result;
   }
+
+  /**
+   * 로그아웃 API 호출
+   */
+  async logout(): Promise<{ success: boolean; message?: string }> {
+    const response = await fetch(`${this.apiUrl}/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    return response.json();
+  }
 }
 
 export const authService = new AuthService();

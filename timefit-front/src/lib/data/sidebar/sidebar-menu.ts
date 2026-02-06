@@ -1,6 +1,6 @@
 import { House, Settings2, Store, User } from 'lucide-react';
 
-export const navItems = [
+export const NAV_ITEMS = [
   {
     title: '메인',
     icon: House,

@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const responseJson = NextResponse.json(
       {
         success: true,
-        message: 'Logged out successfully',
+        message: '로그아웃되었습니다.',
       },
       { status: 200 }
     );
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: 'Failed to logout',
+        message: '로그아웃에 실패했습니다.',
       },
       { status: 500 }
     );

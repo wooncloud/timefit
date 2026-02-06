@@ -8,7 +8,7 @@ import type {
   BusinessSignupFormErrors,
   CreateBusinessRequestBody,
 } from '@/types/auth/business/create-business';
-import { businessService } from '@/services/business/business-service';
+import { businessService } from '@/services/business/business-service.client';
 import {
   formatBusinessNumber,
   formatContactPhone,

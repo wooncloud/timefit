@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 
-import { navItems } from '@/lib/data/sidebar/sidebar-menu';
+import { NAV_ITEMS } from '@/lib/data/sidebar/sidebar-menu';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
 function getPageTitle(pathname: string) {
-  for (const section of navItems) {
+  for (const section of NAV_ITEMS) {
     for (const item of section.items) {
       if (item.url === pathname) {
         return { section: section.title, page: item.title };

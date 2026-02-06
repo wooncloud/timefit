@@ -8,7 +8,7 @@ import type {
   SigninFormErrors,
   SigninRequestBody,
 } from '@/types/auth/signin';
-import { authService } from '@/services/auth/auth-service';
+import { authService } from '@/services/auth/auth-service.client';
 import { validateSigninForm } from '@/lib/validators/auth-validators';
 
 interface UseSigninOptions {

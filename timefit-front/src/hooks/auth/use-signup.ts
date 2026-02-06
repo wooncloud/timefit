@@ -8,7 +8,7 @@ import type {
   SignupFormErrors,
   SignupRequestBody,
 } from '@/types/auth/signup';
-import { authService } from '@/services/auth/auth-service';
+import { authService } from '@/services/auth/auth-service.client';
 import { formatPhoneNumber } from '@/lib/formatters/phone-formatter';
 import { validateSignupForm } from '@/lib/validators/auth-validators';
 

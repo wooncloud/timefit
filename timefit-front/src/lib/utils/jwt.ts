@@ -17,7 +17,7 @@ export function decodeJwt<T = any>(token: string): T | null {
 
     return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error('[JWT Decode] Error:', error);
+    console.error('[JWT 디코드] 오류:', error);
     return null;
   }
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import type { MenuType, Product } from '@/types/product/product';
-import { menuTypes } from '@/lib/constants/product-categories';
+import { MENU_TYPES } from '@/lib/constants/product-categories';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -69,7 +69,7 @@ export function ProductReservationSection({
             onFormDataChange({ ...formData, menu_type: value })
           }
         >
-          {Object.entries(menuTypes).map(([key, label]) => (
+          {Object.entries(MENU_TYPES).map(([key, label]) => (
             <div key={key} className="flex items-center space-x-2">
               <RadioGroupItem value={key} id={key} />
               <Label htmlFor={key} className="font-normal">
