@@ -1,5 +1,5 @@
 # ========================================
-# Timefit Test Data Cleanup Script
+# Timefit Test Data Cleanup Script (Updated)
 # ========================================
 
 Write-Host ""
@@ -70,6 +70,10 @@ UNION ALL
 SELECT 'booking_slot', COUNT(*) FROM booking_slot
 UNION ALL
 SELECT 'reservation', COUNT(*) FROM reservation
+UNION ALL
+SELECT 'review', COUNT(*) FROM review
+UNION ALL
+SELECT 'wishlist', COUNT(*) FROM wishlist
 ORDER BY table_name;
 "@
 
@@ -79,9 +83,12 @@ Write-Host ""
 Write-Host "Deleting data..." -ForegroundColor Yellow
 Write-Host ""
 
-# Delete with TRUNCATE CASCADE
+# Delete with TRUNCATE CASCADE (FK 역순)
 $deleteQuery = @"
--- Delete in FK constraint order
+-- Delete in FK constraint order (역순)
+TRUNCATE TABLE review CASCADE;
+TRUNCATE TABLE wishlist CASCADE;
+TRUNCATE TABLE invitation CASCADE;
 TRUNCATE TABLE reservation CASCADE;
 TRUNCATE TABLE booking_slot CASCADE;
 TRUNCATE TABLE menu CASCADE;
@@ -120,6 +127,10 @@ UNION ALL
 SELECT 'booking_slot', COUNT(*) FROM booking_slot
 UNION ALL
 SELECT 'reservation', COUNT(*) FROM reservation
+UNION ALL
+SELECT 'review', COUNT(*) FROM review
+UNION ALL
+SELECT 'wishlist', COUNT(*) FROM wishlist
 ORDER BY table_name;
 "@
 

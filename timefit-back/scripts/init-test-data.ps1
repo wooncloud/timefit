@@ -1,14 +1,14 @@
 # ========================================
 # Timefit Test Data Initialization Script
 # ========================================
-# Always inserts BULK data (10,000 reservations)
+# Always inserts BULK data (20,000 reservations)
 # Date Range: TODAY ~ +60 DAYS (No past dates!)
 # Sufficient for Level 1, 2, and 3 testing
 # ========================================
 
 Write-Host ""
 Write-Host "Insert Timefit BULK test data..." -ForegroundColor Green
-Write-Host "(10,000 reservations - sufficient for all tests)" -ForegroundColor Cyan
+Write-Host "(20,000 reservations - sufficient for all tests)" -ForegroundColor Cyan
 Write-Host ""
 
 # Docker container name (modify as needed)
@@ -132,6 +132,10 @@ UNION ALL
 SELECT 'booking_slot', COUNT(*) FROM booking_slot
 UNION ALL
 SELECT 'reservation', COUNT(*) FROM reservation
+UNION ALL
+SELECT 'review', COUNT(*) FROM review
+UNION ALL
+SELECT 'wishlist', COUNT(*) FROM wishlist
 ORDER BY table_name;
 "@
 
@@ -171,8 +175,8 @@ Write-Host ""
 Write-Host "Complete!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Test account info:" -ForegroundColor Cyan
-Write-Host "   Owner: owner1@timefit.com / password123"
-Write-Host "   Customer: customer1@timefit.com / password123"
+Write-Host "   Owner: owner1@timefit.test / password123"
+Write-Host "   Customer: customer1@timefit.test / password123"
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Yellow
 Write-Host "   1. Run backend: .\gradlew bootRun"
