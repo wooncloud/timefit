@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import type {
-  GetBusinessDetailApiResponse,
-  GetBusinessDetailHandlerResponse,
   UpdateBusinessApiResponse,
   UpdateBusinessHandlerResponse,
   UpdateBusinessRequest,
@@ -22,12 +20,12 @@ const BACKEND_API_URL =
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { businessId: string } }
+  { params }: { params: Promise<{ businessId: string }> }
 ): Promise<NextResponse> {
   try {
-    const { businessId } = params;
+    const { businessId } = await params;
 
-    console.log('업체 상세 조회 (공개):', businessId);
+    console.error('업체 상세 조회 (공개):', businessId);
 
     // 백엔드 공개 API 호출 (인증 불필요)
     const response = await fetch(
@@ -80,7 +78,7 @@ export async function PUT(
     // 요청 본문 파싱
     const body: UpdateBusinessRequest = await request.json();
 
-    console.log('업체 정보 수정:', { businessId });
+    console.error('업체 정보 수정:', { businessId });
 
     // apiFetch가 자동으로 토큰 추가 + 401 처리
     const response = await apiFetch(

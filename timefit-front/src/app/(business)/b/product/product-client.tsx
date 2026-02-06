@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 
 import type { CategoryListResponse } from '@/types/category/category';
 import type {
+  BusinessTypeCode,
   CreateUpdateMenuRequest,
   Menu,
   MenuListResponse,
@@ -41,7 +42,7 @@ function productToMenuRequest(
   businessType?: string
 ): CreateUpdateMenuRequest {
   return {
-    businessType: (businessType || 'BD008') as any,
+    businessType: (businessType || 'BD008') as BusinessTypeCode,
     categoryName: product.category || '',
     serviceName: product.service_name || '',
     price: product.price || 0,

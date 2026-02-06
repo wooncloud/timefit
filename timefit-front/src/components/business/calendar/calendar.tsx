@@ -7,7 +7,7 @@ import FullCalendar from '@fullcalendar/react';
 import { toast } from 'sonner';
 
 export default function Calendar() {
-  const handleDateClick = (arg: any) => {
+  const handleDateClick = (arg: { dateStr: string }) => {
     toast('date click! ' + arg.dateStr);
   };
 
