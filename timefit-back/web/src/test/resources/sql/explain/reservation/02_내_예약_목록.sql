@@ -202,10 +202,7 @@ RAISE NOTICE 'Planner 예측: rows=100';
 RAISE NOTICE '100만건 속에서 100건 찾기 준비 완료';
 RAISE NOTICE '========================================';
 
--- ============================================================
 -- EXPLAIN: 내 예약 목록 조회 (100만건 중 100건)
--- ============================================================
-
 EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
 SELECT
     id,
@@ -250,10 +247,7 @@ ORDER BY reservation_date DESC, reservation_time DESC;
 --    CREATE INDEX idx_reservation_customer_date
 --    ON reservation(customer_id, reservation_date DESC);
 
--- ============================================================
 -- 추가 테스트: 상태별 집계
--- ============================================================
-
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT
     status,
@@ -262,10 +256,7 @@ FROM reservation
 WHERE customer_id = '10000000-0000-0000-0000-000000000001'
 GROUP BY status;
 
--- ============================================================
 -- 추가 테스트: 최근 예약만 조회
--- ============================================================
-
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT
     reservation_date,

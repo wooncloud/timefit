@@ -4,7 +4,7 @@
 -- API:        GET /api/business/{id}/reservations
 -- 핵심 쿼리:  SELECT * FROM reservation
 --            WHERE business_id = ? AND status = ?
--- 사전조건:   _setup.sql (User, Business)
+-- 사전조건:   _setup.sql (User)
 -- 규모:       1,000,000건 (업체 400개)
 -- ============================================================
 -- 시나리오:
@@ -43,15 +43,7 @@ RAISE NOTICE 'Customer 10,000명 생성 완료';
 -- 픽스처: Business 400개 생성
 -- ============================================================
 
--- business_type 데이터 (참조용)
-INSERT INTO business_type (business_id, type_code)
-SELECT
-    ('20000000-0000-0000-0000-' || LPAD(biz_seq::text, 12, '0'))::uuid,
-    'BD008'
-FROM generate_series(1, 400) AS biz_seq
-ON CONFLICT (business_id, type_code) DO NOTHING;
-
--- business 400개 생성
+-- business 400개 생성 (먼저!)
 INSERT INTO business (
     id, business_name, business_number, owner_name,
     address, contact_phone, description,
@@ -74,48 +66,58 @@ SELECT
 FROM generate_series(1, 400) AS biz_seq
 ON CONFLICT (id) DO NOTHING;
 
+-- business_type 생성 (business 생성 후!)
+INSERT INTO business_type (business_id, type_code)
+SELECT
+    ('20000000-0000-0000-0000-' || LPAD(biz_seq::text, 12, '0'))::uuid,
+    'BD008'
+FROM generate_series(1, 400) AS biz_seq
+ON CONFLICT (business_id, type_code) DO NOTHING;
+
 RAISE NOTICE 'Business 400개 생성 완료';
 
 -- ============================================================
--- 픽스처: Business Category, Menu, BookingSlot
+-- 픽스처: Category 400개, Menu 400개 생성
 -- ============================================================
 
--- business_category 1건 (Business 1용)
+-- business_category 400건 (모든 Business용)
 INSERT INTO business_category (
     id, business_id, business_type, category_name,
     is_active, created_at, updated_at
 )
-VALUES (
-           '99999999-0000-0000-0000-000000000300'::uuid,
-           '20000000-0000-0000-0000-000000000001'::uuid,
-           'BD008',
-           'Test Category',
-           true,
-           NOW(),
-           NOW()
-       ) ON CONFLICT (id) DO NOTHING;
+SELECT
+    ('50000000-0000-0000-' || LPAD(biz_seq::text, 4, '0') || '-000000000000')::uuid,
+    ('20000000-0000-0000-0000-' || LPAD(biz_seq::text, 12, '0'))::uuid,
+    'BD008',
+    'Category ' || biz_seq,
+    true,
+    NOW(),
+    NOW()
+FROM generate_series(1, 400) AS biz_seq
+ON CONFLICT (id) DO NOTHING;
 
--- menu 1건 (Business 1용)
+-- menu 400건 (모든 Business용, 각 1개씩)
 INSERT INTO menu (
     id, business_id, business_category_id, service_name,
     description, price, duration_minutes, order_type,
     is_active, created_at, updated_at
 )
-VALUES (
-           '99999999-0000-0000-0000-000000000400'::uuid,
-           '20000000-0000-0000-0000-000000000001'::uuid,
-           '99999999-0000-0000-0000-000000000300'::uuid,
-           'Test Service',
-           'Test Description',
-           50000,
-           60,
-           'RESERVATION_BASED',
-           true,
-           NOW(),
-           NOW()
-       ) ON CONFLICT (id) DO NOTHING;
+SELECT
+    ('60000000-0000-0000-' || LPAD(biz_seq::text, 4, '0') || '-000000000000')::uuid,
+    ('20000000-0000-0000-0000-' || LPAD(biz_seq::text, 12, '0'))::uuid,
+    ('50000000-0000-0000-' || LPAD(biz_seq::text, 4, '0') || '-000000000000')::uuid,
+    'Service ' || biz_seq,
+    'Test Description',
+    50000,
+    60,
+    'RESERVATION_BASED',
+    true,
+    NOW(),
+    NOW()
+FROM generate_series(1, 400) AS biz_seq
+ON CONFLICT (id) DO NOTHING;
 
--- booking_slot 1건 (참조용)
+-- booking_slot 1건 (Business 1용 참조)
 INSERT INTO booking_slot (
     id, business_id, menu_id, slot_date, start_time, end_time,
     is_available, created_at, updated_at
@@ -123,7 +125,7 @@ INSERT INTO booking_slot (
 VALUES (
            '99999999-0000-0000-0000-000000000500'::uuid,
            '20000000-0000-0000-0000-000000000001'::uuid,
-           '99999999-0000-0000-0000-000000000400'::uuid,
+           '60000000-0000-0000-0001-000000000000'::uuid,
            CURRENT_DATE + INTERVAL '1 day',
            '10:00:00'::time,
            '11:00:00'::time,
@@ -132,7 +134,7 @@ VALUES (
            NOW()
        ) ON CONFLICT (id) DO NOTHING;
 
-RAISE NOTICE 'Business 픽스처 생성 완료';
+RAISE NOTICE 'Category 400개, Menu 400개 생성 완료';
 
 -- ============================================================
 -- Reservation 1,000,000건 생성
@@ -166,11 +168,8 @@ SELECT
     ('20000000-0000-0000-0000-' || LPAD(((res_seq % 400) + 1)::text, 12, '0'))::uuid,
     -- customer: 10,000명 순환
     ('10000000-0000-0000-0000-' || LPAD(((res_seq % 10000) + 1)::text, 12, '0'))::uuid,
-    -- menu: Business 1만 실제 menu, 나머지는 NULL
-    CASE
-        WHEN (res_seq % 400) + 1 = 1 THEN '99999999-0000-0000-0000-000000000400'::uuid
-        ELSE NULL::uuid
-        END,
+    -- menu: 각 business에 해당하는 menu (FK 제약 만족)
+    ('60000000-0000-0000-' || LPAD(((res_seq % 400) + 1)::text, 4, '0') || '-000000000000')::uuid,
     -- booking_slot: Business 1만 실제 slot, 나머지는 NULL
     CASE
         WHEN (res_seq % 400) + 1 = 1 AND res_seq % 3 = 0
@@ -251,10 +250,7 @@ RAISE NOTICE 'Planner 예측: rows=750 (2500 × 30%%)';
 RAISE NOTICE '100만건 속에서 750건 찾기 준비 완료';
 RAISE NOTICE '========================================';
 
--- ============================================================
 -- EXPLAIN: 업체 예약 목록 조회 (100만건 중 750건)
--- ============================================================
-
 EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
 SELECT
     id,
@@ -300,10 +296,7 @@ ORDER BY reservation_date ASC, reservation_time ASC;
 --    CREATE INDEX idx_reservation_biz_status_date
 --    ON reservation(business_id, status, reservation_date ASC);
 
--- ============================================================
 -- 추가 테스트: 전체 상태 조회
--- ============================================================
-
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT
     id,
@@ -316,10 +309,7 @@ WHERE business_id = '20000000-0000-0000-0000-000000000001'
 ORDER BY reservation_date DESC
 LIMIT 100;
 
--- ============================================================
 -- 추가 테스트: 상태별 집계
--- ============================================================
-
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT
     status,

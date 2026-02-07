@@ -1,17 +1,20 @@
 -- ============================================================
--- BookingSlot 메뉴별 조회 (120,000건 - 대규모)
+-- BookingSlot 메뉴별 조회 (3,000,000건 - 극한 테스트)
 -- ============================================================
 -- API:        GET /api/business/{id}/booking-slot/menu/{mid}
 -- 핵심 쿼리:  SELECT * FROM booking_slot
 --            WHERE menu_id = ? AND slot_date >= ?
 -- 사전조건:   _setup.sql (User, Business)
--- 규모:       120,000건 (초대형 프랜차이즈 3개월 운영)
+-- 규모:       3,000,000건 (초대형 복합센터 3개월 운영)
 -- ============================================================
 -- 시나리오:
---   - 메뉴 30개 (카테고리 6개 × 메뉴 5개)
---   - 스태프 4명/메뉴
+--   - 카테고리 15개
+--   - 메뉴 375개 (15 × 25)
+--   - 스태프 6명/메뉴
 --   - 90일 운영 (과거 60일 + 미래 30일)
 --   - 하루 14슬롯 (09:00~21:00, 50분 간격)
+--
+-- 목적: 300만건 속에서 특정 메뉴 7,560건 찾기
 -- ============================================================
 
 BEGIN;
@@ -20,7 +23,7 @@ BEGIN;
 -- 픽스처
 -- ============================================================
 
--- business_category 생성 (6개 카테고리)
+-- business_category 생성 (15개 카테고리)
 INSERT INTO business_category (
     id, business_id, business_type, category_name,
     is_active, created_at, updated_at
@@ -30,20 +33,29 @@ SELECT
     '99999999-0000-0000-0000-000000000100',
     'BD008',
     CASE cat_seq
-        WHEN 1 THEN '헤어'
-        WHEN 2 THEN '네일'
-        WHEN 3 THEN '피부관리'
-        WHEN 4 THEN '메이크업'
-        WHEN 5 THEN '속눈썹/반영구'
-        ELSE '마사지/스파'
+        WHEN 1 THEN '헤어컷'
+        WHEN 2 THEN '헤어펌'
+        WHEN 3 THEN '헤어염색'
+        WHEN 4 THEN '두피케어'
+        WHEN 5 THEN '네일기본'
+        WHEN 6 THEN '네일아트'
+        WHEN 7 THEN '피부관리'
+        WHEN 8 THEN '피부클리닉'
+        WHEN 9 THEN '메이크업'
+        WHEN 10 THEN '속눈썹'
+        WHEN 11 THEN '마사지'
+        WHEN 12 THEN '스파'
+        WHEN 13 THEN '왁싱'
+        WHEN 14 THEN '태닝'
+        ELSE '발관리'
         END,
     true,
     NOW(),
     NOW()
-FROM generate_series(1, 6) AS cat_seq
+FROM generate_series(1, 15) AS cat_seq
 ON CONFLICT (id) DO NOTHING;
 
--- menu 생성 (카테고리당 5개 = 30개 메뉴)
+-- menu 생성 (카테고리당 25개 = 375개 메뉴)
 INSERT INTO menu (
     id, business_id, business_category_id, service_name,
     description, price, duration_minutes, order_type,
@@ -54,35 +66,21 @@ SELECT
      LPAD(menu_seq::text, 4, '0') || '-000000000000')::uuid,
     '99999999-0000-0000-0000-000000000100',
     ('50000000-0000-0000-' || LPAD(cat_seq::text, 4, '0') || '-000000000000')::uuid,
-    CASE cat_seq
-        WHEN 1 THEN '헤어 ' || menu_seq || '번'
-        WHEN 2 THEN '네일 ' || menu_seq || '번'
-        WHEN 3 THEN '피부 ' || menu_seq || '번'
-        WHEN 4 THEN '메이크업 ' || menu_seq || '번'
-        WHEN 5 THEN '속눈썹 ' || menu_seq || '번'
-        ELSE '마사지 ' || menu_seq || '번'
-        END,
+    'Menu ' || cat_seq || '-' || menu_seq,
     '서비스 설명',
-    CASE cat_seq
-        WHEN 1 THEN 50000 + (menu_seq * 10000)
-        WHEN 2 THEN 40000 + (menu_seq * 8000)
-        WHEN 3 THEN 80000 + (menu_seq * 15000)
-        WHEN 4 THEN 60000 + (menu_seq * 10000)
-        WHEN 5 THEN 70000 + (menu_seq * 12000)
-        ELSE 90000 + (menu_seq * 15000)
-        END,
+    30000 + (cat_seq * 5000) + (menu_seq * 1000),
     50,
     'RESERVATION_BASED',
     true,
     NOW(),
     NOW()
 FROM
-    generate_series(1, 6) AS cat_seq,
-    generate_series(1, 5) AS menu_seq
+    generate_series(1, 15) AS cat_seq,
+    generate_series(1, 25) AS menu_seq
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
--- BookingSlot 120,000건 생성
+-- BookingSlot 3,000,000건 생성
 -- ============================================================
 
 INSERT INTO booking_slot (
@@ -106,13 +104,13 @@ SELECT
     NOW() - ((90 - day_offset) || ' days')::interval,
     NOW()
 FROM
-    generate_series(1, 6) AS cat_seq,
-    generate_series(1, 5) AS menu_seq,
-    generate_series(1, 4) AS staff_seq,
+    generate_series(1, 15) AS cat_seq,
+    generate_series(1, 25) AS menu_seq,
+    generate_series(1, 6) AS staff_seq,
     generate_series(-60, 29) AS day_offset,
     generate_series(0, 13) AS slot_offset
 WHERE
-    (day_offset >= 0 OR (day_offset + cat_seq + menu_seq + staff_seq) % 5 != 0);
+    (day_offset >= 0 OR (cat_seq + menu_seq + staff_seq + day_offset) % 20 != 0);
 
 -- 생성된 데이터 확인
 DO $$
@@ -125,7 +123,7 @@ DO $$
         FROM booking_slot
         WHERE business_id = '99999999-0000-0000-0000-000000000100';
 
-        -- 특정 메뉴 (헤어 1번)
+        -- 특정 메뉴 (헤어컷 1번)
         SELECT COUNT(*) INTO menu_count
         FROM booking_slot
         WHERE menu_id = '60000000-0000-0001-0001-000000000000';
@@ -137,11 +135,11 @@ DO $$
           AND slot_date >= CURRENT_DATE;
 
         RAISE NOTICE '========================================';
-        RAISE NOTICE 'BookingSlot 생성 완료 (대규모)';
+        RAISE NOTICE 'BookingSlot 생성 완료 (극한 테스트)';
         RAISE NOTICE '========================================';
         RAISE NOTICE '전체 슬롯:     % 개', total_count;
-        RAISE NOTICE '헤어1 슬롯:    % 개', menu_count;
-        RAISE NOTICE '헤어1 미래:    % 개', future_menu_count;
+        RAISE NOTICE 'Menu1 슬롯:    % 개', menu_count;
+        RAISE NOTICE 'Menu1 미래:    % 개', future_menu_count;
         RAISE NOTICE '========================================';
     END $$;
 
@@ -153,13 +151,10 @@ ANALYZE booking_slot;
 
 RAISE NOTICE '========================================';
 RAISE NOTICE '통계 정보 갱신 완료 (ANALYZE)';
-RAISE NOTICE 'Planner 예측: rows=1680 (4스태프 × 30일 × 14슬롯)';
+RAISE NOTICE 'Planner 예측: rows=2520 (6스태프 × 30일 × 14슬롯)';
 RAISE NOTICE '========================================';
 
--- ============================================================
--- EXPLAIN: 특정 메뉴의 향후 슬롯 조회
--- ============================================================
-
+-- EXPLAIN: 특정 메뉴의 향후 슬롯 조회 (300만건 중 2,520건)
 EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
 SELECT
     id,
@@ -172,7 +167,7 @@ SELECT
     created_at,
     updated_at
 FROM booking_slot
-WHERE menu_id = '60000000-0000-0001-0001-000000000000'  -- 헤어 1번
+WHERE menu_id = '60000000-0000-0001-0001-000000000000'  -- 헤어컷 1번
   AND slot_date >= CURRENT_DATE
   AND is_available = true
 ORDER BY slot_date ASC, start_time ASC;
@@ -181,40 +176,27 @@ ORDER BY slot_date ASC, start_time ASC;
 -- 확인 포인트
 -- ============================================================
 -- ✅ Planner 예측 정확도 ⭐
---    ANALYZE 후: rows=1680 vs actual rows=1680 (정확)
---    4스태프 × 30일 × 14슬롯 = 1,680개
---    (ANALYZE 없으면 rows=1 같은 엉터리)
+--    ANALYZE 후: rows=2520 (정확)
+--    6스태프 × 30일 × 14슬롯 = 2,520개
 --
--- ✅ Scan 타입: Seq Scan vs Index Scan vs Bitmap Heap Scan
+-- ✅ Scan 타입
 --    menu_id에 인덱스 필요
 --    FK 인덱스 자동 생성 여부 확인
 --
--- ✅ Index Cond vs Filter
---    Index Cond: (menu_id = '...')
---    Filter: (slot_date >= ... AND is_available = true)
---    slot_date가 인덱스에 없으면 Filter 처리
---
--- ✅ Sort 노드
---    ORDER BY slot_date, start_time
---    인덱스에 포함되지 않으면 Sort 필요
---
--- ✅ FK 인덱스의 효과
---    menu_id는 FK이므로 기본 인덱스 존재 가능
---    하지만 정렬 순서는 (menu_id)만 → Sort 필요
---
 -- ✅ Execution Time
---    Before: Seq Scan (120,000건) → 예상 4~5초
---    After:  Index Scan → 목표 50ms 이하
+--    Before: Seq Scan (3,000,000건) → 예상 80~100초
+--    After:  Index Scan → 목표 250ms 이하
+--    개선율: 99.7%+
+--
+-- ✅ Selectivity
+--    2,520 / 3,000,000 = 0.084% (매우 낮음)
 --
 -- ✅ 필요한 인덱스
 --    CREATE INDEX idx_bookingslot_menu_date_time
 --    ON booking_slot(menu_id, slot_date, start_time)
 --    WHERE is_available = true;
 
--- ============================================================
 -- 추가 테스트: 날짜별 슬롯 개수
--- ============================================================
-
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT
     slot_date,
@@ -227,18 +209,16 @@ GROUP BY slot_date
 ORDER BY slot_date
 LIMIT 14;  -- 2주치만
 
--- ============================================================
--- 추가 테스트: 시간대별 분포
--- ============================================================
-
-EXPLAIN (ANALYZE, BUFFERS)
-SELECT
-    start_time,
-    COUNT(*) as total_slots,
-    COUNT(CASE WHEN slot_date >= CURRENT_DATE THEN 1 END) as future_slots
-FROM booking_slot
-WHERE menu_id = '60000000-0000-0001-0001-000000000000'
-GROUP BY start_time
-ORDER BY start_time;
-
 ROLLBACK;
+
+-- ============================================================
+-- 성능 예측
+-- ============================================================
+-- Before (인덱스 없음):
+--   - Seq Scan: 3,000,000건 전체 스캔
+--   - 시간: 80~100초
+--
+-- After (인덱스 적용):
+--   - Index Scan: 2,520건 조회
+--   - 시간: 250ms 이하
+--   - 개선율: 99.7%+
