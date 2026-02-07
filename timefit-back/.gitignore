@@ -46,3 +46,7 @@ docker-compose.override.yml
 
 ### QueryDSL generated sources ###
 **/build/generated/
+
+### Nginx ###
+# 로그 파일 (자동 생성)
+nginx/logs/
