@@ -84,7 +84,7 @@ export function setup() {
 
     for (let i = 1; i <= 50; i++) {
         const loginRes = http.post(`${BASE_URL}/api/auth/signin`, JSON.stringify({
-            email: `customer${i}@timefit.com`,
+            email: `customer${i}@timefit.test`,
             password: 'password123'
         }), {
             headers: { 'Content-Type': 'application/json' }

@@ -47,7 +47,7 @@ export const options = {
     },
 };
 
-// owner1@timefit.com이 소유한 업체 ID (권한 문제 방지!)
+// owner1@timefit.test이 소유한 업체 ID (권한 문제 방지!)
 const BUSINESS_ID = '30000000-0000-0000-0000-000000000001';
 
 export function setup() {
@@ -58,14 +58,14 @@ export function setup() {
     console.log('');
 
     const loginRes = http.post(`${BASE_URL}/api/auth/signin`, JSON.stringify({
-        email: 'owner1@timefit.com',
+        email: 'owner1@timefit.test',
         password: 'password123'
     }), {
         headers: { 'Content-Type': 'application/json' }
     });
 
     const body = JSON.parse(loginRes.body);
-    console.log('✅ 로그인 성공: owner1@timefit.com');
+    console.log('✅ 로그인 성공: owner1@timefit.test');
     console.log(`✅ 업체 ID: ${BUSINESS_ID}`);
     console.log('');
     console.log('목표: 복잡한 쿼리의 VU 한계 찾기');
