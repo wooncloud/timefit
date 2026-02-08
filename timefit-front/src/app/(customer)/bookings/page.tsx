@@ -1,10 +1,10 @@
-import { getReservations } from '@/services/reservation/reservation-service';
+import { getMyReservations } from '@/services/reservation/reservation-service';
 
 import { BookingsClient } from './bookings-client';
 
 export default async function BookingsPage() {
   // SSR: 서버에서 데이터 조회
-  const reservations = await getReservations(undefined, 0, 20);
+  const reservations = await getMyReservations({ page: 0, size: 20 });
 
   return (
     <div className="min-h-screen bg-gray-50">
