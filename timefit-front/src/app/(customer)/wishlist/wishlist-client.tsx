@@ -15,8 +15,8 @@ interface WishlistClientProps {
 export function WishlistClient({ initialData }: WishlistClientProps) {
   const { deleteWishlist } = useDeleteWishlist();
 
-  const handleRemove = async (menuId: string) => {
-    const success = await deleteWishlist(menuId);
+  const handleRemove = async (businessId: string) => {
+    const success = await deleteWishlist(businessId);
     if (success) {
       window.location.reload(); // SSR 데이터 재요청
     }
@@ -36,13 +36,13 @@ export function WishlistClient({ initialData }: WishlistClientProps) {
             {initialData.wishlists.map(item => (
               <WishlistCard
                 key={item.wishlistId}
-                id={item.menuId}
-                name={item.menuName}
-                description={item.businessName}
-                rating={0}
-                reviewCount={0}
-                image={item.imageUrl}
-                onRemove={() => handleRemove(item.menuId)}
+                id={item.businessId}
+                name={item.businessName}
+                description={item.description || ''}
+                rating={item.averageRating || 0}
+                reviewCount={item.reviewCount}
+                image={item.logoUrl || undefined}
+                onRemove={() => handleRemove(item.businessId)}
               />
             ))}
           </div>

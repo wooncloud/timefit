@@ -3,13 +3,18 @@
  */
 export interface WishlistItem {
   wishlistId: string;
-  menuId: string;
-  menuName: string;
-  businessName: string;
   businessId: string;
-  price: number;
-  durationMinutes: number;
-  imageUrl?: string;
+  businessName: string;
+  businessTypes: string[];
+  ownerName: string;
+  address: string;
+  contactPhone: string;
+  description: string | null;
+  logoUrl: string | null;
+  averageRating: number | null;
+  reviewCount: number;
+  latitude: number | null;
+  longitude: number | null;
   createdAt: string;
 }
 
