@@ -10,6 +10,8 @@ interface ServiceCardProps {
   price: number;
   image?: string;
   isSelected?: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
   onToggle?: (id: string) => void;
   className?: string;
 }
@@ -21,6 +23,8 @@ export function ServiceCard({
   duration,
   price,
   isSelected = false,
+  disabled = false,
+  disabledReason,
   onToggle,
   className,
 }: ServiceCardProps) {
@@ -30,10 +34,14 @@ export function ServiceCard({
 
   return (
     <div
-      onClick={() => onToggle?.(id)}
+      onClick={() => !disabled && onToggle?.(id)}
       className={cn(
-        'flex cursor-pointer gap-4 rounded-2xl border p-3 transition-all',
-        isSelected ? 'border-[#3ec0c7] bg-[#f0fafa]' : 'border-gray-100',
+        'flex gap-4 rounded-2xl border p-3 transition-all',
+        !disabled && 'cursor-pointer',
+        disabled && 'cursor-not-allowed opacity-50',
+        isSelected && !disabled
+          ? 'border-[#3ec0c7] bg-[#f0fafa]'
+          : 'border-gray-100',
         className
       )}
     >

@@ -250,7 +250,9 @@ export function PlaceDetailClient({
                 {formatPrice(totalPrice)}
               </p>
             </div>
-            <Link href={`/places/${businessId}/reserve`}>
+            <Link
+              href={`/places/${businessId}/reserve?menuIds=${selectedServices.join(',')}`}
+            >
               <Button className="h-12 rounded-xl bg-[#3ec0c7] px-6 text-base font-semibold text-white hover:bg-[#35adb3]">
                 지금 예약하기 →
               </Button>

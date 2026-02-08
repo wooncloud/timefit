@@ -10,6 +10,21 @@ export type ReservationStatus =
   | 'NO_SHOW';
 
 /**
+ * 예약 생성 요청
+ */
+export interface CreateReservationRequest {
+  businessId: string;
+  menuId: string;
+  bookingSlotId?: string | null;
+  reservationDate?: string | null; // YYYY-MM-DD
+  reservationTime?: string | null; // HH:mm:ss
+  durationMinutes: number;
+  totalPrice: number;
+  customerName: string;
+  customerPhone: string;
+}
+
+/**
  * 고객용 예약 상세
  */
 export interface CustomerReservation {
@@ -18,44 +33,101 @@ export interface CustomerReservation {
   status: ReservationStatus;
   createdAt: string;
   updatedAt: string;
-  cancelledAt?: string;
+  cancelledAt: string | null;
   businessId: string;
   businessName: string;
   businessAddress: string;
   businessContactPhone: string;
-  businessLogoUrl?: string;
+  businessLogoUrl: string | null;
+  reservationDate: string; // YYYY-MM-DD
+  reservationTime: string; // HH:mm:ss
+  reservationPrice: number;
+  reservationDuration: number;
+  menuServiceName: string;
+  notes: string | null;
+  customerNameSnapshot: string;
+  customerPhoneSnapshot: string;
+}
+
+/**
+ * 고객용 예약 목록 아이템
+ */
+export interface CustomerReservationItem {
+  reservationId: string;
+  reservationNumber: string;
+  status: ReservationStatus;
+  businessId: string;
+  businessName: string;
+  businessLogoUrl: string | null;
   reservationDate: string;
   reservationTime: string;
-  menuId: string;
-  menuName: string;
-  menuPrice: number;
-  menuDuration: number;
-  customerMemo?: string;
-  businessNotes?: string;
+  reservationDuration: number;
+  reservationPrice: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
- * 예약 목록 응답 (페이징)
+ * 페이지네이션 정보
+ */
+export interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+/**
+ * 고객용 예약 목록
  */
 export interface CustomerReservationList {
-  reservations: CustomerReservation[];
-  totalCount: number;
-  page: number;
-  size: number;
-  totalPages: number;
+  reservations: CustomerReservationItem[];
+  pagination: PaginationInfo;
 }
 
-/**
- * API 응답 타입 (백엔드 → Next.js 서버)
- */
-export interface GetReservationsApiResponse {
+// API 응답 타입 (백엔드 → Next.js 서버)
+export interface CreateReservationApiResponse {
+  data?: CustomerReservation;
+  message?: string;
+}
+
+export interface GetCustomerReservationListApiResponse {
   data?: CustomerReservationList;
   message?: string;
 }
 
+export interface GetCustomerReservationDetailApiResponse {
+  data?: CustomerReservation;
+  message?: string;
+}
+
 /**
- * 예약 취소 핸들러 응답 (Next.js API → 클라이언트)
+ * 예약 액션 결과 (취소 등)
  */
+export interface ReservationActionResult {
+  reservationId: string;
+  previousStatus: ReservationStatus;
+  currentStatus: ReservationStatus;
+  message: string;
+  actionAt: string;
+}
+
+export interface CancelReservationApiResponse {
+  data?: ReservationActionResult;
+  message?: string;
+}
+
+// 핸들러 응답 타입 (Next.js API → 클라이언트)
+export interface CreateReservationHandlerResponse {
+  success: boolean;
+  data?: CustomerReservation;
+  message?: string;
+  requiresLogout?: boolean;
+  redirectTo?: string;
+}
+
 export interface CancelReservationHandlerResponse {
   success: boolean;
   data?: { reservationId: string; message: string };

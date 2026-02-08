@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { AlertCircle } from 'lucide-react';
 
 import { getBusinessDetail } from '@/services/business/business-service';
-import { checkWishlist } from '@/services/wishlist/wishlist-service';
 import { getMenuList } from '@/services/menu/menu-service';
+import { checkWishlist } from '@/services/wishlist/wishlist-service';
 import { Button } from '@/components/ui/button';
 
 import { PlaceDetailClient } from './place-detail-client';

@@ -38,7 +38,11 @@ export function WishlistCard({
         {/* 이미지 */}
         <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-gray-200">
           {image && (
-            <img src={image} alt={name} className="h-full w-full object-cover" />
+            <img
+              src={image}
+              alt={name}
+              className="h-full w-full object-cover"
+            />
           )}
         </div>
 
