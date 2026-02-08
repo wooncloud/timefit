@@ -35,10 +35,15 @@ export interface CheckWishlistApiResponse {
   message?: string;
 }
 
+// 찜 추가 요청
+export interface AddWishlistRequest {
+  businessId: string;
+}
+
 // 핸들러 응답 타입 (Next.js API → 클라이언트)
 export interface AddWishlistHandlerResponse {
   success: boolean;
-  data?: { menuId: string; message: string };
+  data?: { businessId: string; message: string };
   message?: string;
   requiresLogout?: boolean;
   redirectTo?: string;
@@ -46,7 +51,7 @@ export interface AddWishlistHandlerResponse {
 
 export interface DeleteWishlistHandlerResponse {
   success: boolean;
-  data?: { menuId: string; message: string };
+  data?: { businessId: string; message: string };
   message?: string;
   requiresLogout?: boolean;
   redirectTo?: string;

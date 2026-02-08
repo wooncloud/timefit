@@ -7,10 +7,10 @@ import { handleAuthError } from '@/lib/api/handle-auth-error';
 export function useDeleteWishlist() {
   const [loading, setLoading] = useState(false);
 
-  const deleteWishlist = async (menuId: string): Promise<boolean> => {
+  const deleteWishlist = async (businessId: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const result = await wishlistService.deleteWishlist(menuId);
+      const result = await wishlistService.deleteWishlist(businessId);
 
       if (handleAuthError(result)) {
         return false;

@@ -490,6 +490,10 @@ CLAUDE.md
 # documents
 docs/*
 
+# backup
+*.backup
+*.bak
+
 # other settings
 .cursor/
 .github/

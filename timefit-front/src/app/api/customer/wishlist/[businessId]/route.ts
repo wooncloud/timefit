@@ -8,13 +8,13 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ menuId: string }> }
+  { params }: { params: Promise<{ businessId: string }> }
 ): Promise<NextResponse<DeleteWishlistHandlerResponse>> {
   try {
-    const { menuId } = await params;
+    const { businessId } = await params;
 
     const response = await apiFetch(
-      `${BACKEND_URL}/api/customer/wishlist/${menuId}`,
+      `${BACKEND_URL}/api/customer/wishlist/${businessId}`,
       { method: 'DELETE' }
     );
 

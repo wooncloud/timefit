@@ -1,5 +1,6 @@
 import type {
   AddWishlistHandlerResponse,
+  AddWishlistRequest,
   DeleteWishlistHandlerResponse,
 } from '@/types/customer/wishlist';
 
@@ -11,11 +12,12 @@ class WishlistService {
   /**
    * 찜 추가 (API 라우트를 통한 클라이언트 측 호출)
    */
-  async addWishlist(menuId: string): Promise<AddWishlistHandlerResponse> {
+  async addWishlist(businessId: string): Promise<AddWishlistHandlerResponse> {
+    const body: AddWishlistRequest = { businessId };
     const response = await fetch('/api/customer/wishlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ menuId }),
+      body: JSON.stringify(body),
     });
 
     return response.json();
@@ -24,8 +26,10 @@ class WishlistService {
   /**
    * 찜 삭제 (API 라우트를 통한 클라이언트 측 호출)
    */
-  async deleteWishlist(menuId: string): Promise<DeleteWishlistHandlerResponse> {
-    const response = await fetch(`/api/customer/wishlist/${menuId}`, {
+  async deleteWishlist(
+    businessId: string
+  ): Promise<DeleteWishlistHandlerResponse> {
+    const response = await fetch(`/api/customer/wishlist/${businessId}`, {
       method: 'DELETE',
     });
 

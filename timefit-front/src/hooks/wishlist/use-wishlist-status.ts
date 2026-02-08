@@ -10,7 +10,7 @@ import { useDeleteWishlist } from './mutations/use-delete-wishlist';
  * Heart 버튼에서 사용
  */
 export function useWishlistStatus(
-  menuId: string,
+  businessId: string,
   initialStatus: boolean = false
 ) {
   const [isWishlisted, setIsWishlisted] = useState(initialStatus);
@@ -19,12 +19,12 @@ export function useWishlistStatus(
 
   const toggleWishlist = async () => {
     if (isWishlisted) {
-      const success = await deleteWishlist(menuId);
+      const success = await deleteWishlist(businessId);
       if (success) {
         setIsWishlisted(false);
       }
     } else {
-      const success = await addWishlist(menuId);
+      const success = await addWishlist(businessId);
       if (success) {
         setIsWishlisted(true);
       }

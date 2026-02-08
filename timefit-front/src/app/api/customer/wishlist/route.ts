@@ -12,9 +12,9 @@ export async function POST(
   try {
     const body = await request.json();
 
-    if (!body.menuId) {
+    if (!body.businessId) {
       return NextResponse.json(
-        { success: false, message: '메뉴 ID가 필요합니다.' },
+        { success: false, message: '업체 ID가 필요합니다.' },
         { status: 400 }
       );
     }
@@ -25,6 +25,15 @@ export async function POST(
     });
 
     const responseData = await response.json();
+
+    // 409 Conflict: 이미 찜이 되어 있음 → 성공으로 처리
+    if (response.status === 409) {
+      return NextResponse.json({
+        success: true,
+        data: responseData.data,
+        message: responseData.message || '이미 찜한 업체입니다.',
+      });
+    }
 
     if (!response.ok) {
       return NextResponse.json(

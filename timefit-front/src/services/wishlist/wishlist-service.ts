@@ -39,10 +39,10 @@ export async function getWishlistList(
  * 서버 측 함수: 찜 여부 확인
  * SSR을 위한 서버 컴포넌트에서 사용됨
  */
-export async function checkWishlist(menuId: string): Promise<boolean> {
+export async function checkWishlist(businessId: string): Promise<boolean> {
   try {
     const response = await apiFetch(
-      `${BACKEND_URL}/api/customer/wishlist/check/${menuId}`,
+      `${BACKEND_URL}/api/customer/wishlist/check/${businessId}`,
       { method: 'GET' }
     );
 
