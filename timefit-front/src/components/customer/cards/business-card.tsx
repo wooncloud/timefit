@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -36,7 +37,7 @@ export function BusinessCard({
       {/* 이미지 */}
       <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-gray-200">
         {image && (
-          <img src={image} alt={name} className="h-full w-full object-cover" />
+          <Image src={image} alt={name} fill className="object-cover" sizes="96px" />
         )}
         {badge && (
           <span

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Calendar, ChevronRight, Clock } from 'lucide-react';
 
 import type { AuthUserProfile } from '@/types/auth/user';
@@ -105,11 +106,15 @@ export function ReservationsClient({
             <div className="flex items-start gap-3">
               {/* Business Logo */}
               {reservation.businessLogoUrl ? (
-                <img
-                  src={reservation.businessLogoUrl}
-                  alt={reservation.businessName}
-                  className="h-16 w-16 rounded-lg object-cover"
-                />
+                <div className="relative h-16 w-16 flex-shrink-0">
+                  <Image
+                    src={reservation.businessLogoUrl}
+                    alt={reservation.businessName}
+                    fill
+                    className="rounded-lg object-cover"
+                    sizes="64px"
+                  />
+                </div>
               ) : (
                 <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100">
                   <span className="text-2xl font-bold text-gray-400">

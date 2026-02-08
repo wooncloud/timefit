@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Heart, Star } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -38,10 +39,12 @@ export function WishlistCard({
         {/* 이미지 */}
         <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-gray-200">
           {image && (
-            <img
+            <Image
               src={image}
               alt={name}
-              className="h-full w-full object-cover"
+              fill
+              className="object-cover"
+              sizes="96px"
             />
           )}
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ChevronLeft,
   Heart,
@@ -65,12 +66,14 @@ export function PlaceDetailClient({
       <div className="relative">
         {/* 메인 이미지 */}
         <div className="flex gap-1">
-          <div className="h-56 flex-1 bg-gray-300">
+          <div className="relative h-56 flex-1 bg-gray-300">
             {business.logoUrl && (
-              <img
+              <Image
                 src={business.logoUrl}
                 alt={business.businessName}
-                className="h-full w-full object-cover"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
             )}
           </div>
