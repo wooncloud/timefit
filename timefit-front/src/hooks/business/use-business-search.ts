@@ -16,11 +16,21 @@ export function useBusinessSearch(params: BusinessSearchParams = {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // params의 개별 값을 추출
+  const { keyword, businessType, region, page } = params;
+
   const refetch = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await businessService.searchBusinesses(params);
+      // dependency에서 params를 제거하고 개별 값으로 재구성
+      const searchParams: BusinessSearchParams = {
+        keyword,
+        businessType,
+        region,
+        page,
+      };
+      const response = await businessService.searchBusinesses(searchParams);
       if (response.data) {
         setData(response.data);
       }
@@ -34,7 +44,7 @@ export function useBusinessSearch(params: BusinessSearchParams = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [params]);
+  }, [keyword, businessType, region, page]);
 
   useEffect(() => {
     refetch();
