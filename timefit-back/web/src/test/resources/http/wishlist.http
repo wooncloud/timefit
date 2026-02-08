@@ -1,0 +1,197 @@
+### ================================================================
+### Timefit 찜 관리 (Wishlist) API 테스트
+### ================================================================
+### 사용법:
+### 1. [Setup] 섹션의 로그인 요청을 먼저 실행
+### 2. 성공 시 토큰이 자동 저장됨
+### 3. 나머지 테스트를 순차적으로 실행
+### ================================================================
+
+@baseUrl = http://localhost:8080
+@customerEmail = customer1@timefit.test
+@password = password123
+@testBusinessId = 30000000-0000-0000-0000-000000000001
+
+### ----------------------------------------------------------------
+### [Setup] Customer 로그인 (Token 획득)
+### ----------------------------------------------------------------
+### 👉 이 요청을 먼저 실행하세요!
+### ----------------------------------------------------------------
+
+# @name login
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "{{customerEmail}}",
+  "password": "{{password}}"
+}
+
+> {%
+    if (response.status === 200) {
+        const token = response.body.data?.accessToken;
+        if (token) {
+            client.global.set("customerToken", token);
+            console.log("✅ 로그인 성공 - Token 저장 완료");
+            console.log("📌 Token: " + token.substring(0, 20) + "...");
+        } else {
+            console.log("❌ Token 추출 실패");
+            console.log("Response Body:", JSON.stringify(response.body));
+        }
+    } else {
+        console.log("❌ 로그인 실패:", response.status);
+        console.log("Response:", JSON.stringify(response.body));
+    }
+%}
+
+### ================================================================
+### [Test 1] 찜 추가 (Add Wishlist)
+### POST /api/customer/wishlist
+### ================================================================
+### 📋 Business를 찜 목록에 추가
+### ================================================================
+
+# @name addWishlist
+POST {{baseUrl}}/api/customer/wishlist
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "businessId": "{{testBusinessId}}"
+}
+
+> {%
+    console.log("\n[Test 1] 찜 추가 요청");
+    if (response.status === 200) {
+        console.log("✅ 찜 추가 성공");
+    } else {
+        console.log("❌ 실패:", response.status);
+        console.log("Message:", response.body?.message || "No message");
+    }
+%}
+
+### ================================================================
+### [Test 2] 찜 여부 확인 (Check Wishlist Status)
+### GET /api/customer/wishlist/check/{businessId}
+### ================================================================
+### 📋 특정 Business가 찜 목록에 있는지 확인
+### ================================================================
+
+# @name checkWishlist
+GET {{baseUrl}}/api/customer/wishlist/check/{{testBusinessId}}
+Authorization: Bearer {{customerToken}}
+
+> {%
+    console.log("\n[Test 2] 찜 여부 확인");
+    if (response.status === 200) {
+        const isWishlisted = response.body.data;
+        console.log("✅ 결과:", isWishlisted ? "찜 되어 있음 ❤️" : "찜 안 되어 있음");
+    } else {
+        console.log("❌ 조회 실패:", response.status);
+    }
+%}
+
+### ================================================================
+### [Test 3] 찜 목록 조회 (Get Wishlist List)
+### GET /api/customer/wishlist?page=0&size=20
+### ================================================================
+### 📋 내 찜 목록 전체 조회 (페이징)
+### ================================================================
+
+# @name getWishlistList
+GET {{baseUrl}}/api/customer/wishlist?page=0&size=10
+Authorization: Bearer {{customerToken}}
+
+> {%
+    console.log("\n[Test 3] 찜 목록 조회");
+    if (response.status === 200) {
+        const data = response.body.data;
+        console.log("✅ 총 개수:", data.totalCount);
+        console.log("✅ 현재 페이지:", data.currentPage);
+        console.log("✅ 페이지 크기:", data.pageSize);
+
+        if (data.wishlists && data.wishlists.length > 0) {
+            console.log("\n📋 찜 목록:");
+            data.wishlists.forEach((item, idx) => {
+                console.log(`  ${idx + 1}. ${item.businessName} (${item.businessId})`);
+            });
+        } else {
+            console.log("📭 찜 목록이 비어있습니다");
+        }
+    } else {
+        console.log("❌ 조회 실패:", response.status);
+    }
+%}
+
+### ================================================================
+### [Test 4] 찜 삭제 (Remove Wishlist)
+### DELETE /api/customer/wishlist/{businessId}
+### ================================================================
+### 📋 찜 목록에서 제거
+### ================================================================
+
+# @name removeWishlist
+DELETE {{baseUrl}}/api/customer/wishlist/{{testBusinessId}}
+Authorization: Bearer {{customerToken}}
+
+> {%
+    console.log("\n[Test 4] 찜 삭제 요청");
+    if (response.status === 200) {
+        console.log("✅ 찜 삭제 성공");
+    } else {
+        console.log("❌ 삭제 실패:", response.status);
+        console.log("Message:", response.body?.message || "No message");
+    }
+%}
+
+### ----------------------------------------------------------------
+### [Final Check] 삭제 후 찜 여부 재확인
+### ----------------------------------------------------------------
+### 📋 삭제가 제대로 되었는지 최종 확인
+### ----------------------------------------------------------------
+
+# @name finalCheck
+GET {{baseUrl}}/api/customer/wishlist/check/{{testBusinessId}}
+Authorization: Bearer {{customerToken}}
+
+> {%
+    console.log("\n[Final Check] 삭제 후 찜 여부 재확인");
+    if (response.status === 200) {
+        const isWishlisted = response.body.data;
+        if (isWishlisted === false) {
+            console.log("✅ 삭제 확인됨 - 찜 목록에서 제거됨");
+        } else {
+            console.log("❌ 여전히 존재함 - 삭제가 제대로 되지 않음");
+        }
+    } else {
+        console.log("❌ 확인 실패:", response.status);
+    }
+%}
+
+### ================================================================
+### [Additional] 다른 Business도 테스트해보기
+### ================================================================
+
+### Business ID 변경하여 테스트
+@anotherBusinessId = 30000000-0000-0000-0000-000000000002
+
+# @name addAnotherWishlist
+POST {{baseUrl}}/api/customer/wishlist
+Content-Type: application/json
+Authorization: Bearer {{customerToken}}
+
+{
+  "businessId": "{{anotherBusinessId}}"
+}
+
+###
+
+# @name checkAnotherWishlist
+GET {{baseUrl}}/api/customer/wishlist/check/{{anotherBusinessId}}
+Authorization: Bearer {{customerToken}}
+
+###
+
+# @name removeAnotherWishlist
+DELETE {{baseUrl}}/api/customer/wishlist/{{anotherBusinessId}}
+Authorization: Bearer {{customerToken}}

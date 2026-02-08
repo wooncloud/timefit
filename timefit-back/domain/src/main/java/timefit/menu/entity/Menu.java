@@ -21,7 +21,11 @@ import java.util.UUID;
  * - 정적 팩토리 메서드 파라미터 변경
  */
 @Entity
-@Table(name = "menu")
+@Table(name = "menu", indexes = {
+        @Index(name = "idx_menu_business_active_created",
+                columnList = "business_id, is_active, created_at DESC")
+})
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Menu extends BaseEntity {

@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/store';
+import { useUserInfo } from '@/store';
 import { ChevronsUpDown, LogOut } from 'lucide-react';
 
+import { useLogout } from '@/hooks/auth/mutations/use-logout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -22,35 +21,16 @@ import {
 } from '@/components/ui/sidebar';
 
 export function NavUser() {
-  const name = useUserStore(state => state.user?.name ?? '');
-  const email = useUserStore(state => state.user?.email ?? '');
-  const profileImageUrl = useUserStore(state => state.user?.profileImageUrl);
+  const user = useUserInfo();
+  const name = user?.name ?? '';
+  const email = user?.email ?? '';
+  const profileImageUrl = user?.profileImageUrl;
 
   const { isMobile } = useSidebar();
-  const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { logout, loading: isLoggingOut } = useLogout();
 
   const handleLogout = async () => {
-    if (isLoggingOut) return;
-
-    setIsLoggingOut(true);
-    try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        router.push('/business');
-        router.refresh();
-      } else {
-        console.error('로그아웃 실패');
-        setIsLoggingOut(false);
-      }
-    } catch (error) {
-      console.error('로그아웃 오류:', error);
-      setIsLoggingOut(false);
-    }
+    await logout('/business');
   };
 
   return (

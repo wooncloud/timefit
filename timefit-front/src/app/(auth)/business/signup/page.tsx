@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { CalendarClock } from 'lucide-react';
 
 import { useSignup } from '@/hooks/auth/use-signup';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Logo } from '@/components/ui/logo';
 
 export default function SignUpPage() {
   const {
@@ -29,7 +29,7 @@ export default function SignUpPage() {
               className="flex flex-col items-center gap-2 font-medium"
             >
               <div className="flex size-8 items-center justify-center rounded-md">
-                <CalendarClock className="size-6" />
+                <Logo size={24} className="text-primary" />
               </div>
               <span className="sr-only">Timefit</span>
             </Link>

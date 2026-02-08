@@ -35,6 +35,7 @@ scouter/*.tar.gz
 scouter/*.zip
 scouter-all-*.tar.gz
 scouter-client-*.zip
+*.scouter
 
 # ========================================
 # k6

@@ -241,6 +241,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 log.debug("공개 API 접근 (GET): 슬롯 관련 조회 - {}", requestURI);
                 return false;
             }
+
+            // ========== 리뷰 조회 (GET만 공개) ==========
+            // 업체별 리뷰 목록 조회
+            if (pathMatcher.match("/api/public/business/*/reviews", requestURI)) {
+                log.debug("공개 API 접근 (GET): 업체 리뷰 목록 조회 - {}", requestURI);
+                return false;
+            }
+
+            // 리뷰 통계 조회
+            if (pathMatcher.match("/api/public/business/*/reviews/statistics", requestURI)) {
+                log.debug("공개 API 접근 (GET): 리뷰 통계 조회 - {}", requestURI);
+                return false;
+            }
+
+            // 기타 공개 API
+            if (pathMatcher.match("/api/public/**", requestURI)) {
+                log.debug("공개 API 접근 (GET): 공개 API - {}", requestURI);
+                return false;
+            }
         }
 
         // ========== 모든 메서드 공개 API 확인 (PUBLIC_PATHS) ==========

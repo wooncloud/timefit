@@ -69,23 +69,27 @@ bootRun {
         }
     }
 
-    // Scouter Agent 설정 (상대 경로 + Profile 기반)
-    // Spring Boot active profile 읽기
-    def activeProfile = System.getProperty('spring.profiles.active')
-            ?: System.getenv('SPRING_PROFILES_ACTIVE')
-            ?: 'dev'
+    // Scouter Agent 설정 (파일이 있을 때만 활성화)
+    def agentDir = file('../../timefit-test/scouter/agent.java')
+    def agentJar = new File(agentDir, 'scouter.agent.jar')
+    def agentConf = new File(agentDir, 'conf/scouter.conf')
 
-    // Profile에 따른 obj_name 설정
-    def objName = "timefit-${activeProfile}"
+    if (agentJar.exists()) {
+        // Spring Boot active profile 읽기
+        def activeProfile = System.getProperty('spring.profiles.active')
+                ?: System.getenv('SPRING_PROFILES_ACTIVE')
+                ?: 'dev'
 
-    // Scouter Agent 경로
-    def agentDir = file('../../timefit-test/scouter/agent.java').absolutePath
-    def agentJar = new File(agentDir, 'scouter.agent.jar').path
-    def agentConf = new File(agentDir, 'conf/scouter.conf').path
+        // Profile에 따른 obj_name 설정
+        def objName = "timefit-${activeProfile}"
 
-    jvmArgs = [
-            "-javaagent:${agentJar}",
-            "-Dscouter.config=${agentConf}",
-            "-Dobj_name=${objName}"
-    ]
+        jvmArgs = [
+                "-javaagent:${agentJar.absolutePath}",
+                "-Dscouter.config=${agentConf.absolutePath}",
+                "-Dobj_name=${objName}"
+        ]
+        println "🚀 Scouter Agent enabled: ${agentJar.absolutePath}"
+    } else {
+        println "⚠️ Scouter Agent not found, skipping..."
+    }
 }

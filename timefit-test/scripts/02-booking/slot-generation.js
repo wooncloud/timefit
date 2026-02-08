@@ -77,7 +77,7 @@ export function setup() {
     console.log('');
 
     const loginRes = http.post(`${BASE_URL}/api/auth/signin`, JSON.stringify({
-        email: 'owner1@timefit.com',
+        email: 'owner1@timefit.test',
         password: 'password123'
     }), {
         headers: { 'Content-Type': 'application/json' }
@@ -89,7 +89,7 @@ export function setup() {
     }
 
     const body = JSON.parse(loginRes.body);
-    console.log('✅ 로그인 성공: owner1@timefit.com');
+    console.log('✅ 로그인 성공: owner1@timefit.test');
     console.log(`✅ 업체 ID: ${BUSINESS_IDS[0]}`);
     console.log('');
     console.log('테스트 시나리오:');

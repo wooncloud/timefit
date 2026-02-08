@@ -29,7 +29,7 @@ export function handleAuthError(data: {
 
     // 메시지 표시 (선택적)
     if (data.message) {
-      console.warn('[Auth Error]', data.message);
+      console.warn('[인증 에러]', data.message);
     }
 
     // 리다이렉트

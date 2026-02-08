@@ -4,7 +4,9 @@
  * @param token - JWT 토큰
  * @returns 디코딩된 페이로드 객체
  */
-export function decodeJwt<T = any>(token: string): T | null {
+export function decodeJwt<T = Record<string, unknown>>(
+  token: string
+): T | null {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -17,7 +19,7 @@ export function decodeJwt<T = any>(token: string): T | null {
 
     return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error('[JWT Decode] Error:', error);
+    console.error('[JWT 디코드] 오류:', error);
     return null;
   }
 }
@@ -30,7 +32,7 @@ export function decodeJwt<T = any>(token: string): T | null {
  * @returns 만료되었거나 임박했는지 여부
  */
 export function isTokenExpired(token: string, bufferSeconds = 60): boolean {
-  const payload = decodeJwt(token);
+  const payload = decodeJwt<{ exp?: number }>(token);
   if (!payload || !payload.exp) return true;
 
   const now = Math.floor(Date.now() / 1000);

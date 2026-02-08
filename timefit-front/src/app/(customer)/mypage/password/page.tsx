@@ -2,13 +2,20 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
+import { useChangePassword } from '@/hooks/user/mutations/use-change-password';
+import {
+  validatePassword,
+  validatePasswordMatch,
+} from '@/lib/validators/auth-validators';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function PasswordChangePage() {
+  const router = useRouter();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -17,16 +24,59 @@ export default function PasswordChangePage() {
     newPassword: '',
     confirmPassword: '',
   });
+  const [message, setMessage] = useState('');
+
+  const { changePassword, isLoading } = useChangePassword({
+    onSuccess: () => {
+      setMessage('비밀번호가 성공적으로 변경되었습니다.');
+      setTimeout(() => {
+        router.push('/mypage');
+      }, 1500);
+    },
+    onError: error => {
+      setMessage(error);
+    },
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // 입력 시 에러 메시지 제거
+    if (message) {
+      setMessage('');
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: 비밀번호 변경 API 호출
-    console.log('비밀번호 변경:', formData);
+    setMessage('');
+
+    // 비밀번호 일치 확인
+    const matchResult = validatePasswordMatch(
+      formData.newPassword,
+      formData.confirmPassword
+    );
+    if (!matchResult.isValid) {
+      setMessage(matchResult.error || '비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    // 비밀번호 유효성 검사
+    const validationResult = validatePassword(formData.newPassword);
+    if (!validationResult.isValid) {
+      setMessage(validationResult.errors[0]);
+      return;
+    }
+
+    try {
+      await changePassword({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+        newPasswordConfirm: formData.confirmPassword,
+      });
+    } catch (_error) {
+      // 에러는 useChangePassword의 onError에서 처리됨
+    }
   };
 
   const passwordRequirements = [
@@ -63,6 +113,7 @@ export default function PasswordChangePage() {
                 value={formData.currentPassword}
                 onChange={handleChange}
                 className="h-12 rounded-xl border-gray-200 pr-10"
+                required
               />
               <button
                 type="button"
@@ -91,6 +142,7 @@ export default function PasswordChangePage() {
                 value={formData.newPassword}
                 onChange={handleChange}
                 className="h-12 rounded-xl border-gray-200 pr-10"
+                required
               />
               <button
                 type="button"
@@ -119,6 +171,7 @@ export default function PasswordChangePage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className="h-12 rounded-xl border-gray-200 pr-10"
+                required
               />
               <button
                 type="button"
@@ -156,11 +209,23 @@ export default function PasswordChangePage() {
 
         {/* 하단 버튼 */}
         <div className="mt-8">
+          {message && (
+            <div
+              className={`mb-4 rounded-xl p-3 text-center text-sm ${
+                message.includes('성공')
+                  ? 'bg-green-50 text-green-700'
+                  : 'bg-red-50 text-red-700'
+              }`}
+            >
+              {message}
+            </div>
+          )}
           <Button
             type="submit"
+            disabled={isLoading}
             className="h-12 w-full rounded-xl bg-[#3ec0c7] text-base font-semibold text-white hover:bg-[#35adb3]"
           >
-            비밀번호 변경
+            {isLoading ? '변경 중...' : '비밀번호 변경'}
           </Button>
         </div>
       </form>

@@ -11,11 +11,11 @@ export interface Product {
   business_id: string;
   service_name: string;
   category: string; // 백엔드 카테고리 이름 (동적)
-  description?: string;
+  description?: string | null;
   price: number;
   duration_minutes: number;
   menu_type: MenuType;
-  image_url?: string;
+  image_url?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

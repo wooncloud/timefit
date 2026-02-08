@@ -126,6 +126,13 @@ public class SecurityConfig {
                                 "/api/business/*/booking-slot/**"
                         ).permitAll()
 
+                        // ========== 리뷰 조회 (공개) ==========
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/public/business/*/reviews",
+                                "/api/public/business/*/reviews/statistics",
+                                "/api/public/**"
+                        ).permitAll()
+
                         // ========== 업체 관련 인증 필요 API ==========
                         .requestMatchers("/api/business/**").authenticated()  // 나머지 업체 API는 인증 필요
 

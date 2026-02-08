@@ -3,10 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import type { CategoryListResponse } from '@/types/category/category';
+import type { Menu as CustomerMenu, MenuList } from '@/types/customer/menu';
 import type {
+  BusinessTypeCode,
   CreateUpdateMenuRequest,
-  Menu,
-  MenuListResponse,
 } from '@/types/menu/menu';
 import type { Product } from '@/types/product/product';
 import { useCreateMenu } from '@/hooks/menu/mutations/use-create-menu';
@@ -18,7 +18,7 @@ import { ProductEmptyState } from '@/components/business/product/product-empty-s
 import { ProductListPanel } from '@/components/business/product/product-list-panel';
 
 // Menu → Product 변환 함수
-function menuToProduct(menu: Menu): Product {
+function menuToProduct(menu: CustomerMenu): Product {
   return {
     id: menu.menuId,
     business_id: menu.businessId,
@@ -26,7 +26,7 @@ function menuToProduct(menu: Menu): Product {
     category: menu.categoryName,
     description: menu.description,
     price: menu.price,
-    duration_minutes: menu.durationMinutes || 60,
+    duration_minutes: menu.durationMinutes ?? 60,
     menu_type: menu.orderType,
     image_url: menu.imageUrl,
     is_active: menu.isActive,
@@ -41,7 +41,7 @@ function productToMenuRequest(
   businessType?: string
 ): CreateUpdateMenuRequest {
   return {
-    businessType: (businessType || 'BD008') as any,
+    businessType: (businessType || 'BD008') as BusinessTypeCode,
     categoryName: product.category || '',
     serviceName: product.service_name || '',
     price: product.price || 0,
@@ -53,7 +53,7 @@ function productToMenuRequest(
 }
 
 interface ProductClientProps {
-  initialMenus: MenuListResponse;
+  initialMenus: MenuList;
   initialCategories: CategoryListResponse;
   businessId: string;
   businessType: string;

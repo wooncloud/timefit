@@ -3,7 +3,7 @@
 import * as React from 'react';
 
 import type { AppSidebarProps } from '@/types/sidebar/app-sidebar';
-import { navItems } from '@/lib/data/sidebar/sidebar-menu';
+import { NAV_ITEMS } from '@/lib/data/sidebar/sidebar-menu';
 import { NavMain } from '@/components/business/sidebar/nav-main';
 import { NavUser } from '@/components/business/sidebar/nav-user';
 import { TeamSwitcher } from '@/components/business/sidebar/team-switcher';
@@ -30,7 +30,7 @@ export function AppSidebar({ teams, ...props }: AppSidebarProps) {
         <TeamSwitcher teams={sidebarTeams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navItems} />
+        <NavMain items={NAV_ITEMS} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

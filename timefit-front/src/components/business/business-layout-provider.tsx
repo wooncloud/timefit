@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useBusinessActions, useUserActions } from '@/store';
 
-import { useBusinessStore } from '@/store/business-store';
-import { useUserStore } from '@/store/user-store';
 import type { SessionUser } from '@/lib/session/options';
 
 interface BusinessLayoutProviderProps {
@@ -21,8 +20,8 @@ export function BusinessLayoutProvider({
   children,
   sessionUser,
 }: BusinessLayoutProviderProps) {
-  const setUser = useUserStore(state => state.setUser);
-  const setBusiness = useBusinessStore(state => state.setBusiness);
+  const { setUser } = useUserActions();
+  const { setBusiness } = useBusinessActions();
 
   // 세션 데이터를 store에 동기화
   useEffect(() => {

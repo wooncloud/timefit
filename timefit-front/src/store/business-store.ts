@@ -36,7 +36,9 @@ export const useBusinessStore = create<BusinessState & BusinessActions>()(
       {
         name: 'business-store',
         onRehydrateStorage: () => state => {
-          state && (state._hasHydrated = true);
+          if (state) {
+            state._hasHydrated = true;
+          }
         },
       }
     )

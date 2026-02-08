@@ -49,3 +49,56 @@ export function formatContactPhone(value: string): string {
 
   return `${digits.slice(0, 3)}-${digits.slice(3, digits.length - 4)}-${digits.slice(-4)}`;
 }
+
+/**
+ * 업종 코드 타입
+ */
+export type BusinessTypeCode =
+  | 'BD000'
+  | 'BD001'
+  | 'BD002'
+  | 'BD003'
+  | 'BD004'
+  | 'BD005'
+  | 'BD006'
+  | 'BD007'
+  | 'BD008'
+  | 'BD009'
+  | 'BD010'
+  | 'BD011'
+  | 'BD012'
+  | 'BD013';
+
+/**
+ * 업종 코드별 한글 설명 매핑
+ */
+export const BUSINESS_TYPE_NAMES: Record<BusinessTypeCode, string> = {
+  BD000: '음식점',
+  BD001: '카페',
+  BD002: '숙박',
+  BD003: '공연/전시',
+  BD004: '스포츠/오락',
+  BD005: '레저/체험',
+  BD006: '여행/명소',
+  BD007: '건강/의료',
+  BD008: '뷰티',
+  BD009: '생활/편의',
+  BD010: '쇼핑/유통',
+  BD011: '장소 대여',
+  BD012: '자연',
+  BD013: '기타',
+};
+
+/**
+ * 업종 코드를 한글 이름으로 변환
+ */
+export function getBusinessTypeName(code: BusinessTypeCode): string {
+  return BUSINESS_TYPE_NAMES[code] || code;
+}
+
+/**
+ * 업종 코드 배열을 한글 이름 배열로 변환
+ */
+export function getBusinessTypeNames(codes: BusinessTypeCode[]): string[] {
+  return codes.map(code => getBusinessTypeName(code));
+}

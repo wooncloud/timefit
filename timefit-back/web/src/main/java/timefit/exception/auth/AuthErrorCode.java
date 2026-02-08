@@ -12,6 +12,9 @@ public enum AuthErrorCode {
     BUSINESS_NUMBER_ALREADY_EXISTS("이미 등록된 사업자번호입니다", HttpStatus.CONFLICT),
     INVALID_CREDENTIALS("이메일 또는 비밀번호가 올바르지 않습니다", HttpStatus.UNAUTHORIZED),
     USER_NOT_FOUND("사용자를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    // 비번 변경
+    INVALID_CURRENT_PASSWORD("현재 비밀번호가 올바르지 않습니다", HttpStatus.BAD_REQUEST),
+    PASSWORD_CONFIRM_MISMATCH("새 비밀번호와 확인이 일치하지 않습니다", HttpStatus.BAD_REQUEST),
 
     // 토큰 관련 (기존)
     TOKEN_EXPIRED("토큰이 만료되었습니다", HttpStatus.UNAUTHORIZED),

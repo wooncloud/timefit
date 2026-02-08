@@ -480,11 +480,23 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Turbo
+.turbo/
+
 # AI
 CLAUDE.md
 .claude
 
 # documents
 docs/*
+
+# backup
+*.backup
+*.bak
+
+# other settings
+.cursor/
+.github/
+.idea/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,visualstudiocode,java,node,svelte,jetbrains,jetbrains+all,jetbrains+iml

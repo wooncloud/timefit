@@ -81,12 +81,12 @@ export async function apiFetch(
   }
 
   // 5. 401 감지 - 토큰 리프레시 시도
-  console.log('[API Fetch] 401 감지, 토큰 리프레시 시도');
+  console.error('[API Fetch] 401 감지, 토큰 리프레시 시도');
 
   const refreshToken = session.user?.refreshToken;
 
   if (!refreshToken) {
-    console.log('[API Fetch] refreshToken 없음');
+    console.error('[API Fetch] refreshToken 없음');
     await clearSession();
     throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
   }
@@ -94,14 +94,14 @@ export async function apiFetch(
   const newTokens = await attemptTokenRefresh(refreshToken);
 
   if (!newTokens) {
-    console.log('[API Fetch] 리프레시 실패');
+    console.error('[API Fetch] 리프레시 실패');
     await clearSession();
     throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
   }
 
   // 6. 세션 업데이트
   await updateSessionTokens(newTokens.accessToken, newTokens.refreshToken);
-  console.log('[API Fetch] 세션 토큰 업데이트 완료');
+  console.error('[API Fetch] 세션 토큰 업데이트 완료');
 
   // 7. 새 토큰으로 재시도
   headers.set('Authorization', `Bearer ${newTokens.accessToken}`);
@@ -109,11 +109,11 @@ export async function apiFetch(
 
   // 8. 재시도 후에도 401이면 에러
   if (response.status === 401) {
-    console.log('[API Fetch] 재시도 후에도 401');
+    console.error('[API Fetch] 재시도 후에도 401');
     await clearSession();
     throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
   }
 
-  console.log('[API Fetch] 재시도 성공');
+  console.error('[API Fetch] 재시도 성공');
   return response;
 }

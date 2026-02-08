@@ -27,18 +27,18 @@ export async function attemptTokenRefresh(
     });
 
     if (!response.ok) {
-      console.log('[Token Refresh] 갱신 실패:', response.status);
+      console.error('[Token Refresh] 갱신 실패:', response.status);
       return null;
     }
 
     const result: RefreshTokenResponse = await response.json();
 
     if (!result.data?.accessToken || !result.data?.refreshToken) {
-      console.log('[Token Refresh] 응답 형식 오류:', result);
+      console.error('[Token Refresh] 응답 형식 오류:', result);
       return null;
     }
 
-    console.log('[Token Refresh] 갱신 성공');
+    console.error('[Token Refresh] 갱신 성공');
     return {
       accessToken: result.data.accessToken,
       refreshToken: result.data.refreshToken,

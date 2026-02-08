@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Heart, MapPin, Star } from 'lucide-react';
+import { Heart, Star } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ interface PlaceCardProps {
   name: string;
   description: string;
   rating: number;
-  distance?: string;
   reviewCount?: number;
   badge?: string | null;
   image?: string;
@@ -24,7 +23,6 @@ export function PlaceCard({
   name,
   description,
   rating,
-  distance,
   reviewCount,
   badge,
   variant = 'default',
@@ -83,11 +81,6 @@ export function PlaceCard({
                 {rating}
               </span>
               <span className="text-sm text-gray-400">({reviewCount})</span>
-            </div>
-          ) : distance ? (
-            <div className="flex items-center gap-1 text-sm text-[#3ec0c7]">
-              <MapPin className="h-4 w-4" />
-              <span>{distance}</span>
             </div>
           ) : null}
 
