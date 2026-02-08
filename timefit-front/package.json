@@ -8,11 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "type-check": "tsc --noEmit",
     "prettier": "prettier --write . --log-level warn",
     "prettier:check": "prettier --check .",
     "format": "./scripts/format.sh",
     "format:simple": "prettier --write . --log-level warn && npm run lint:fix",
-    "lint:fix": "next lint --fix"
+    "lint:fix": "next lint --fix && npm run type-check"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",

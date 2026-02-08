@@ -44,7 +44,10 @@ export interface CustomerReservation {
   reservationPrice: number;
   reservationDuration: number;
   menuServiceName: string;
+  menuName?: string; // 메뉴 이름 (선택적)
   notes: string | null;
+  customerMemo?: string | null; // 고객 메모
+  businessNotes?: string | null; // 업체 메시지
   customerNameSnapshot: string;
   customerPhoneSnapshot: string;
 }
@@ -63,6 +66,9 @@ export interface CustomerReservationItem {
   reservationTime: string;
   reservationDuration: number;
   reservationPrice: number;
+  menuName?: string; // 메뉴 이름
+  customerMemo?: string | null; // 고객 메모
+  businessNotes?: string | null; // 업체 메시지
   createdAt: string;
   updatedAt: string;
 }

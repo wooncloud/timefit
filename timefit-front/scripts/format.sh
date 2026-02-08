@@ -53,11 +53,28 @@ ESLINT_EXIT=$?
 
 if [ $ESLINT_EXIT -eq 0 ]; then
     printf "\r${GREEN}✓${NC} ESLint 완료           \n"
-    printf "\n"
-    printf "${GREEN}✨ 모든 작업이 완료되었습니다!${NC}\n"
-    printf "\n"
 else
     printf "\r${RED}✗${NC} ESLint 실패           \n"
     cat /tmp/eslint.log
     exit 1
 fi
+
+# TypeScript 타입 체크
+printf "${BLUE}⠋${NC} TypeScript 타입 체크 중..."
+tsc --noEmit > /tmp/typecheck.log 2>&1 &
+TYPECHECK_PID=$!
+spin $TYPECHECK_PID "TypeScript 타입 체크 중"
+TYPECHECK_EXIT=$?
+
+if [ $TYPECHECK_EXIT -eq 0 ]; then
+    printf "\r${GREEN}✓${NC} TypeScript 타입 체크 완료\n"
+    printf "\n"
+    printf "${GREEN}✨ 모든 작업이 완료되었습니다!${NC}\n"
+    printf "\n"
+else
+    printf "\r${RED}✗${NC} TypeScript 타입 에러 발견\n"
+    printf "\n"
+    cat /tmp/typecheck.log
+    exit 1
+fi
+

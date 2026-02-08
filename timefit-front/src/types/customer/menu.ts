@@ -2,6 +2,8 @@
  * 메뉴 관련 타입 정의
  */
 
+import type { BusinessTypeCode } from '@/types/menu/menu';
+
 /**
  * 주문/예약 유형
  */
@@ -15,7 +17,7 @@ export interface Menu {
   businessId: string;
   serviceName: string;
   businessCategoryId: string;
-  businessType: string;
+  businessType: BusinessTypeCode;
   categoryName: string;
   price: number;
   description: string | null;

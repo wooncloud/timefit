@@ -93,8 +93,8 @@ export interface CreateUpdateMenuRequest {
   categoryName: string;
   serviceName: string;
   price: number;
-  description?: string;
-  imageUrl?: string;
+  description?: string | null;
+  imageUrl?: string | null;
   orderType: OrderType;
   durationMinutes?: number;
   autoGenerateSlots?: boolean;

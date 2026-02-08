@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Calendar, CheckCircle, Clock } from 'lucide-react';
 
 import type {
-  CustomerReservation,
+  CustomerReservationItem,
   CustomerReservationList,
   ReservationStatus,
 } from '@/types/customer/reservation';
@@ -126,7 +126,7 @@ export function BookingsClient({ initialData }: BookingsClientProps) {
 
 // 예약 카드 컴포넌트
 interface ReservationCardProps {
-  reservation: CustomerReservation;
+  reservation: CustomerReservationItem;
   onCancel: () => void;
 }
 
