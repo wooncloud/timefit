@@ -23,6 +23,9 @@ public class WishlistResponseDto {
             @Schema(description = "찜 ID", example = "550e8400-e29b-41d4-a716-446655440000")
             UUID wishlistId,
 
+            @Schema(description = "업체 ID", example = "30000000-0000-0000-0000-000000000001")
+            UUID businessId,
+
             @Schema(description = "업체명", example = "Owner Kim 미용실")
             String businessName,
 
@@ -65,6 +68,7 @@ public class WishlistResponseDto {
         public static WishlistItem from(Wishlist wishlist) {
             return new WishlistItem(
                     wishlist.getId(),
+                    wishlist.getBusiness().getId(),
                     wishlist.getBusiness().getBusinessName(),
                     wishlist.getBusiness().getBusinessTypes(),
                     wishlist.getBusiness().getOwnerName(),
