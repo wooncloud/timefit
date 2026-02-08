@@ -3,6 +3,7 @@ import { AlertCircle } from 'lucide-react';
 
 import { getBusinessDetail } from '@/services/business/business-service';
 import { checkWishlist } from '@/services/wishlist/wishlist-service';
+import { getMenuList } from '@/services/menu/menu-service';
 import { Button } from '@/components/ui/button';
 
 import { PlaceDetailClient } from './place-detail-client';
@@ -17,10 +18,11 @@ export default async function PlacePage({ params }: PlacePageProps) {
   const { id: businessId } = await params;
 
   try {
-    // SSR: 업체 정보 및 찜 여부 조회
-    const [business, isWishlisted] = await Promise.all([
+    // SSR: 업체 정보, 찜 여부, 메뉴 리스트 조회
+    const [business, isWishlisted, menuList] = await Promise.all([
       getBusinessDetail(businessId),
       checkWishlist(businessId),
+      getMenuList(businessId, { isActive: true }), // 활성화된 메뉴만 조회
     ]);
 
     return (
@@ -28,6 +30,7 @@ export default async function PlacePage({ params }: PlacePageProps) {
         business={business}
         businessId={businessId}
         initialWishlistStatus={isWishlisted}
+        menuList={menuList}
       />
     );
   } catch (error) {

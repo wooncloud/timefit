@@ -12,43 +12,12 @@ import {
 } from 'lucide-react';
 
 import type { PublicBusinessDetail } from '@/types/business/business';
+import type { MenuList } from '@/types/customer/menu';
 import { useWishlistStatus } from '@/hooks/wishlist/use-wishlist-status';
 import { getBusinessTypeNames } from '@/lib/formatters/business-formatter';
 import { cn } from '@/lib/utils';
 import { ServiceCard } from '@/components/customer/cards/service-card';
 import { Button } from '@/components/ui/button';
-
-// 서비스 더미 데이터 (나중에 API로 대체 예정)
-const services = [
-  {
-    id: '1',
-    name: '딥티슈 마사지',
-    description: '근육과 결합 조직의 심한 긴장을 완화합니다.',
-    duration: 60,
-    price: 90000,
-  },
-  {
-    id: '2',
-    name: '오가닉 페이셜 글로우',
-    description: '천연 유기농 성분으로 피부를 리쥬버네이팅합니다.',
-    duration: 45,
-    price: 75000,
-  },
-  {
-    id: '3',
-    name: '아로마테라피 세션',
-    description: '에센셜 오일을 사용하여 신체적, 정서적 웰빙을 개선합니다.',
-    duration: 30,
-    price: 50000,
-  },
-  {
-    id: '4',
-    name: '스웨디시 마사지',
-    description: '부드러운 압력으로 전신 이완과 혈액순환을 촉진합니다.',
-    duration: 50,
-    price: 70000,
-  },
-];
 
 type TabType = 'info' | 'services' | 'reviews';
 
@@ -56,12 +25,14 @@ interface PlaceDetailClientProps {
   business: PublicBusinessDetail;
   businessId: string;
   initialWishlistStatus: boolean;
+  menuList: MenuList;
 }
 
 export function PlaceDetailClient({
   business,
   businessId,
   initialWishlistStatus,
+  menuList,
 }: PlaceDetailClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('services');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -80,9 +51,9 @@ export function PlaceDetailClient({
   };
 
   const selectedCount = selectedServices.length;
-  const totalPrice = services
-    .filter(s => selectedServices.includes(s.id))
-    .reduce((sum, s) => sum + s.price, 0);
+  const totalPrice = menuList.menus
+    .filter(menu => selectedServices.includes(menu.menuId))
+    .reduce((sum, menu) => sum + menu.price, 0);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ko-KR').format(price) + '원';
@@ -215,26 +186,31 @@ export function PlaceDetailClient({
         {activeTab === 'services' && (
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-semibold text-gray-900">인기 서비스</h2>
-              <button className="text-sm font-medium text-[#3ec0c7]">
-                전체보기
-              </button>
+              <h2 className="font-semibold text-gray-900">
+                서비스 ({menuList.totalCount})
+              </h2>
             </div>
 
-            <div className="space-y-4">
-              {services.map(service => (
-                <ServiceCard
-                  key={service.id}
-                  id={service.id}
-                  name={service.name}
-                  description={service.description}
-                  duration={service.duration}
-                  price={service.price}
-                  isSelected={selectedServices.includes(service.id)}
-                  onToggle={toggleService}
-                />
-              ))}
-            </div>
+            {menuList.menus.length === 0 ? (
+              <div className="py-8 text-center text-gray-500">
+                <p>등록된 서비스가 없습니다</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {menuList.menus.map(menu => (
+                  <ServiceCard
+                    key={menu.menuId}
+                    id={menu.menuId}
+                    name={menu.serviceName}
+                    description={menu.description || ''}
+                    duration={menu.durationMinutes || 0}
+                    price={menu.price}
+                    isSelected={selectedServices.includes(menu.menuId)}
+                    onToggle={toggleService}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
