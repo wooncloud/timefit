@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { PublicBusinessDetail } from '@/types/business/business';
 import { businessService } from '@/services/business/business-service.client';
@@ -13,7 +13,7 @@ export function useBusinessDetail(businessId: string | null) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     if (!businessId) {
       setIsLoading(false);
       return;
@@ -36,11 +36,11 @@ export function useBusinessDetail(businessId: string | null) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [businessId]);
 
   useEffect(() => {
     refetch();
-  }, [businessId]);
+  }, [refetch]);
 
   return { data, isLoading, error, refetch };
 }

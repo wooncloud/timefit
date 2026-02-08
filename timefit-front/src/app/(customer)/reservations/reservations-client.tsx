@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Calendar, ChevronRight, Clock } from 'lucide-react';
 
 import type { AuthUserProfile } from '@/types/auth/user';

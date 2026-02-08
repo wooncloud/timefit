@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type {
   BusinessListResponse,
@@ -16,7 +16,7 @@ export function useBusinessSearch(params: BusinessSearchParams = {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -34,11 +34,11 @@ export function useBusinessSearch(params: BusinessSearchParams = {}) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params]);
 
   useEffect(() => {
     refetch();
-  }, [params.keyword, params.businessType, params.region, params.page]);
+  }, [refetch]);
 
   return { data, isLoading, error, refetch };
 }

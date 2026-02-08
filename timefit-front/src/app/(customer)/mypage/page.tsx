@@ -34,8 +34,6 @@ export default function MypagePage() {
   const { logout, loading: isLoggingOut } = useLogout();
   const { data: userProfile, isLoading } = useUserProfile();
 
-  console.log(userProfile);
-
   const handleLogout = async () => {
     await logout('/');
     setIsLogoutDialogOpen(false);
