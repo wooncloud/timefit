@@ -11,7 +11,7 @@ interface ServiceCardProps {
   image?: string;
   isSelected?: boolean;
   disabled?: boolean;
-  disabledReason?: string;
+  _disabledReason?: string;
   onToggle?: (id: string) => void;
   className?: string;
 }
@@ -24,7 +24,7 @@ export function ServiceCard({
   price,
   isSelected = false,
   disabled = false,
-  disabledReason,
+  _disabledReason,
   onToggle,
   className,
 }: ServiceCardProps) {
