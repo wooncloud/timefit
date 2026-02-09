@@ -31,7 +31,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:80';
 
 const errorRate = new Rate('errors');
 const menuDuration = new Trend('menu_query_duration');

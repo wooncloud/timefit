@@ -40,7 +40,7 @@ import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 
 // 환경 변수
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:80';
 
 // 커스텀 메트릭
 const errorRate = new Rate('errors');
