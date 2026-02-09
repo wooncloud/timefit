@@ -70,6 +70,18 @@ bootRun {
         }
     }
 
+    // 공통 JVM 설정값
+    def commonJvmArgs = [
+        // 초기 Heap 1GB
+        '-Xms1g',
+        // 최대 Heap 2GB (AWS m3.medium 기준)
+        '-Xmx2g',
+        // G1 GC 사용
+        '-XX:+UseG1GC',
+        // GC 최대 200ms
+        '-XX:MaxGCPauseMillis=200'
+    ]
+
     // Scouter Agent 설정 (파일이 있을 때만 활성화)
     def agentDir = file('../../timefit-test/scouter/agent.java')
     def agentJar = new File(agentDir, 'scouter.agent.jar')
@@ -87,10 +99,12 @@ bootRun {
         jvmArgs = [
                 "-javaagent:${agentJar.absolutePath}",
                 "-Dscouter.config=${agentConf.absolutePath}",
-                "-Dobj_name=${objName}"
+                "-Dobj_name=${objName}",
+                *commonJvmArgs
         ]
         println "🚀 Scouter Agent enabled: ${agentJar.absolutePath}"
     } else {
+        jvmArgs = commonJvmArgs
         println "⚠️ Scouter Agent not found, skipping..."
     }
 }
