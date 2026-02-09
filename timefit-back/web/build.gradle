@@ -21,6 +21,7 @@ dependencies {
 
     // Monitoring & Management
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
     // Utilities
     implementation 'org.springframework.boot:spring-boot-starter-aop'
