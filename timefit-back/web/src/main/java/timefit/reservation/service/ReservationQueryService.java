@@ -18,9 +18,9 @@ import timefit.reservation.service.util.ReservationConverter;
 import timefit.reservation.service.validator.ReservationValidator;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Reservation 조회 전담 서비스
@@ -56,11 +56,12 @@ public class ReservationQueryService {
         Page<Reservation> reservationPage = reservationQueryRepository.findMyReservationsWithFilters(
                 customerId, reservationStatus, startLocalDate, endLocalDate, businessId, pageable);
 
-        // Converter를 사용한 변환
-        List<ReservationResponseDto.CustomerReservationItem> items = reservationPage.getContent()
-                .stream()
-                .map(converter::toCustomerReservationItem)
-                .collect(Collectors.toList());
+        List<Reservation> reservations = reservationPage.getContent();
+        List<ReservationResponseDto.CustomerReservationItem> items = new ArrayList<>(reservations.size());
+
+        for (Reservation reservation : reservations) {
+            items.add(converter.toCustomerReservationItem(reservation));
+        }
 
         ReservationResponseDto.PaginationInfo pagination = converter.toPaginationInfo(reservationPage);
 
@@ -118,11 +119,12 @@ public class ReservationQueryService {
         Page<Reservation> reservationPage = reservationQueryRepository.findBusinessReservationsWithFilters(
                 businessId, reservationStatus, null, startDate, endDate, pageable);
 
-        // Converter를 사용한 변환
-        List<ReservationResponseDto.BusinessReservationItem> items = reservationPage.getContent()
-                .stream()
-                .map(converter::toBusinessReservationItem)
-                .collect(Collectors.toList());
+        List<Reservation> reservations = reservationPage.getContent();
+        List<ReservationResponseDto.BusinessReservationItem> items = new ArrayList<>(reservations.size());
+
+        for (Reservation reservation : reservations) {
+            items.add(converter.toBusinessReservationItem(reservation));
+        }
 
         ReservationResponseDto.PaginationInfo pagination = converter.toPaginationInfo(reservationPage);
 
