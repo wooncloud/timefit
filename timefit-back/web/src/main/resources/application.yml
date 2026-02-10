@@ -25,17 +25,6 @@ spring:
             required: true
         debug: false  # 디버깅 필요 시 true로 변경
 
-server:
-  port: 8080
-
-  tomcat:
-    threads:
-      max: 200              # (Connection Pool과 1:1)
-      min-spare: 50
-    accept-count: 100
-    max-connections: 400
-    connection-timeout: 20000  # 20초 동안 응답 없으면 끊김
-
 timefit:
   # 프론트엔드 URL 설정
   frontend:
@@ -57,10 +46,22 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: always
+  metrics:
+    tags:
+      # 메트릭에 애플리케이션 태그 추가
+      application: ${spring.application.name}
+    enable:
+      tomcat: true
+      jvm: true
+      executor: true
+    distribution:
+      # 히스토그램 활성화 (p95, p99 측정용)
+      percentiles-histogram:
+        http.server.requests: true
 
 ---
 # 개발 환경
@@ -74,12 +75,17 @@ spring:
     password: ${POSTGRES_PASSWORD}
 
     hikari:
-      maximum-pool-size: 200
-      minimum-idle: 50
+      maximum-pool-size: 150
+      minimum-idle: 30
       connection-timeout: 30000
-      idle-timeout: 600000        # 10분 (유휴 커넥션 유지 시간)
-      max-lifetime: 1800000       # 30분 (커넥션 최대 수명)
+      idle-timeout: 600000
+      max-lifetime: 1800000
       connection-test-query: SELECT 1
+      # Connection 누수 감지 (1분)
+      leak-detection-threshold: 60000
+      # ====================================
+  jmx:
+    enabled: true
   jpa:
     hibernate:
       ddl-auto: update
@@ -93,6 +99,16 @@ spring:
           order_inserts: true
           order_updates: true
 
+server:
+  tomcat:
+    threads:
+      max: 400
+      min-spare: 50
+    accept-count: 200
+    max-connections: 10000
+    connection-timeout: 20000
+    mbeanregistry:
+      enabled: true
 # P6Spy 설정 (개발 환경에만 활성화)
 decorator:
   datasource:
@@ -102,7 +118,6 @@ decorator:
       logging: slf4j             # SLF4J 로깅 사용
       tracing:
         include-parameter-values: true  # 파라미터 값 포함
-
 # 개발 환경 로깅 설정
 logging:
   file:
@@ -123,6 +138,7 @@ logging:
 
 ---
 # 운영 환경
+# Tomcat thread 설정은 인스턴스 사양(m3.medium)을 기준으로 조정됨
 spring:
   config:
     activate:
@@ -134,12 +150,14 @@ spring:
     driver-class-name: org.postgresql.Driver
 
     hikari:
-      maximum-pool-size: 100     # Supabase Free: 최대 500까지 허용
-      minimum-idle: 20
+      maximum-pool-size: 50
+      minimum-idle: 10
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
       connection-test-query: SELECT 1
+      leak-detection-threshold: 60000  # Connection 누수 감지
+      # ====================================
 
   jpa:
     hibernate:
@@ -154,12 +172,21 @@ spring:
           order_inserts: true
           order_updates: true
 
+server:
+  tomcat:
+    threads:
+      max: 100
+      min-spare: 20
+    accept-count: 100
+    max-connections: 10000
+    connection-timeout: 20000
+    mbeanregistry:
+      enabled: true
 # P6Spy 비활성화 (운영 환경)
 decorator:
   datasource:
     p6spy:
       enable-logging: false      # 운영에서는 P6Spy 비활성화
-
 # 운영 환경 로깅 설정
 logging:
   file:
