@@ -25,6 +25,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static timefit.business.entity.QBusiness.business;
+import static timefit.menu.entity.QMenu.menu;
+import static timefit.business.entity.QBusinessCategory.businessCategory;
 
 @Repository
 @RequiredArgsConstructor
@@ -33,6 +35,10 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
     private final JPAQueryFactory queryFactory;
     private final QReservation reservation = QReservation.reservation;
 
+    /**
+     * 고객 예약 조회 (필터링, 페이징)
+     * N+1 방지: Business, Menu, BusinessCategory fetch join
+     */
     @Override
     public Page<Reservation> findMyReservationsWithFilters(UUID customerId, ReservationStatus status,
                                                            LocalDate startDate, LocalDate endDate, UUID businessId,
@@ -69,6 +75,8 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
         List<Reservation> reservations = queryFactory
                 .selectFrom(reservation)
                 .join(reservation.business, business).fetchJoin()
+                .join(reservation.menu, menu).fetchJoin()
+                .join(menu.businessCategory, businessCategory).fetchJoin()
                 .where(builder)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -84,15 +92,21 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
         return new PageImpl<>(reservations, pageable, total != null ? total : 0);
     }
 
+    /**
+     * 업체 예약 조회 (필터링, 페이징)
+     * N+1 방지: Business, Menu, BusinessCategory fetch join
+     */
     @Override
     public Page<Reservation> findBusinessReservationsWithFilters(
             UUID businessId, ReservationStatus status, String customerName,
             LocalDate startDate, LocalDate endDate, Pageable pageable) {
 
-
+        // 쿼리 실행 - N+1 방지를 위한 fetch join
         List<Reservation> reservations = queryFactory
                 .selectFrom(reservation)
                 .join(reservation.business, business).fetchJoin()
+                .join(reservation.menu, menu).fetchJoin()
+                .join(menu.businessCategory, businessCategory).fetchJoin()
                 .where(
                         businessIdEq(businessId),
                         statusEq(status),
@@ -232,7 +246,7 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
 
         return queryFactory
                 .selectFrom(reservation)
-                .join(reservation.menu).fetchJoin()  // menu 페치 조인
+                .join(reservation.menu, menu).fetchJoin()  // menu 페치 조인
                 .where(
                         reservation.business.id.eq(businessId),
                         reservation.reservationDate.eq(date),
