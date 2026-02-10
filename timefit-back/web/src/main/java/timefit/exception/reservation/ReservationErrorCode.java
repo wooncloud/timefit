@@ -36,7 +36,9 @@ public enum ReservationErrorCode {
 
     // 유효성 검사
     INVALID_DATE_FORMAT("날짜 형식이 올바르지 않습니다", HttpStatus.BAD_REQUEST),
+    INVALID_DATE_RANGE("시작 날짜는 종료 날짜보다 이전이어야 합니다", HttpStatus.BAD_REQUEST),
     INVALID_RESERVATION_TYPE("유효하지 않은 예약 타입입니다. RESERVATION_BASED 또는 ONDEMAND_BASED 중 하나를 선택해야 합니다.", HttpStatus.BAD_REQUEST),
+    INVALID_RESERVATION_STATUS("유효하지 않은 예약 상태입니다", HttpStatus.BAD_REQUEST),
     INVALID_PAGE_NUMBER("페이지 번호가 올바르지 않습니다", HttpStatus.BAD_REQUEST),
     INVALID_PAGE_SIZE("페이지 크기가 올바르지 않습니다", HttpStatus.BAD_REQUEST);
 
