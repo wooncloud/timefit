@@ -14,6 +14,7 @@ import timefit.reservation.service.helper.ReservationCreationHelper;
 import timefit.reservation.service.helper.ReservationUpdateHelper;
 import timefit.reservation.service.util.ReservationConverter;
 import timefit.reservation.service.util.ReservationMessageUtil;
+import timefit.reservation.service.util.ReservationNumberUtil;
 import timefit.reservation.service.validator.ReservationValidator;
 
 import java.util.UUID;
@@ -60,6 +61,9 @@ public class ReservationCommandService {
 
         // 2. 저장
         Reservation saved = reservationRepository.save(reservation);
+
+        String reservationNumber = ReservationNumberUtil.generate();
+        saved.updateReservationNumber(reservationNumber);
 
         log.info("예약 생성 완료: reservationId={}, reservationNumber={}",
                 saved.getId(), saved.getReservationNumber());

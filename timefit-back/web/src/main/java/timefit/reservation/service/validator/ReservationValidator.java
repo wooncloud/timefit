@@ -12,6 +12,7 @@ import timefit.reservation.repository.ReservationQueryRepository;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +33,11 @@ public class ReservationValidator {
     private final ReservationQueryRepository reservationQueryRepository;
 
     private static final int MAX_SEARCH_YEARS = 5;
+    private static final int MIN_PAGE = 0;
+    private static final int MIN_SIZE = 1;
+    //    서버 부하 고려 size를 100 으로 잡았으나 피드백 발생 시 수정.
+    private static final int MAX_SIZE = 100;
+    private static final int MAX_DATE_RANGE_YEARS = 1;
 
     /**
      * 예약 존재 여부 검증 및 조회
@@ -79,7 +85,6 @@ public class ReservationValidator {
     }
 
     /**
-     *
      * 예약 취소 가능 여부 검증
      * Entity의 isCancellable() 메서드 사용
      * @param reservation 검증할 예약 엔티티
@@ -137,6 +142,8 @@ public class ReservationValidator {
 
     /**
      * 날짜 범위 검증 (5년 상한선)
+     * - INVALID_DATE_FORMAT → INVALID_DATE_RANGE (순서 오류)
+     * - INVALID_DATE_FORMAT → CALENDAR_DATE_RANGE_TOO_LARGE (범위 초과)
      *
      * @param startDate 시작 날짜
      * @param endDate 종료 날짜
@@ -144,22 +151,27 @@ public class ReservationValidator {
      */
     public void validateDateRange(LocalDate startDate, LocalDate endDate) {
         if (startDate == null || endDate == null) {
-            return; // null인 경우는 Service 에서 디폴트 처리
+            return; // null인 경우는 Service에서 디폴트 처리
         }
 
         // 시작일이 종료일보다 미래인 경우
         if (startDate.isAfter(endDate)) {
+            log.warn("날짜 순서 오류: startDate={}, endDate={}", startDate, endDate);
             throw new ReservationException(
-                    ReservationErrorCode.INVALID_DATE_FORMAT,
-                    "시작 날짜는 종료 날짜보다 이전이어야 합니다.");
+                    ReservationErrorCode.INVALID_DATE_RANGE,  // ✅ 수정됨
+                    String.format("시작 날짜(%s)는 종료 날짜(%s)보다 이전이어야 합니다.", startDate, endDate)
+            );
         }
 
         // 5년 상한선 검증
         long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
         if (daysBetween > (MAX_SEARCH_YEARS * 365)) {
+            log.warn("날짜 범위 초과: startDate={}, endDate={}, days={}", startDate, endDate, daysBetween);
             throw new ReservationException(
-                    ReservationErrorCode.INVALID_DATE_FORMAT,
-                    "검색 가능한 최대 기간은 " + MAX_SEARCH_YEARS + "년입니다.");
+                    ReservationErrorCode.CALENDAR_DATE_RANGE_TOO_LARGE,  // ✅ 수정됨
+                    String.format("검색 가능한 최대 기간은 %d년입니다. (요청 기간: %s ~ %s)",
+                            MAX_SEARCH_YEARS, startDate, endDate)
+            );
         }
 
         log.debug("날짜 범위 검증 통과: {} ~ {} ({} 일)", startDate, endDate, daysBetween);
@@ -273,7 +285,7 @@ public class ReservationValidator {
      *
      * @param menu 검증할 메뉴
      * @param businessId 업체 ID
-     * @throws MenuException Menu가 해당 Business에 속하지 않을 경우
+     * @throws timefit.exception.menu.MenuException Menu가 해당 Business에 속하지 않을 경우
      */
     public void validateMenuBelongsToBusiness(timefit.menu.entity.Menu menu, UUID businessId) {
         if (!menu.getBusiness().getId().equals(businessId)) {
@@ -300,11 +312,126 @@ public class ReservationValidator {
     }
 
     /**
-     * 시간대 겹침 판정
+     * 페이지 파라미터 검증
+     * 검증 규칙:
+     * - page >= 0
+     * - 1 <= size <= 100
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기
+     * @throws ReservationException 페이지 파라미터가 유효하지 않은 경우
+     */
+    public void validatePageParameters(int page, int size) {
+        if (page < MIN_PAGE) {
+            log.warn("잘못된 페이지 번호: page={}", page);
+            throw new ReservationException(
+                    ReservationErrorCode.INVALID_PAGE_NUMBER,
+                    String.format("페이지 번호는 0 이상이어야 합니다. (입력값: %d)", page)
+            );
+        }
+
+        if (size < MIN_SIZE || size > MAX_SIZE) {
+            log.warn("잘못된 페이지 크기: size={}", size);
+            throw new ReservationException(
+                    ReservationErrorCode.INVALID_PAGE_SIZE,
+                    String.format("페이지 크기는 %d ~ %d 사이여야 합니다. (입력값: %d)",
+                            MIN_SIZE, MAX_SIZE, size)
+            );
+        }
+
+        log.debug("페이지 파라미터 검증 완료: page={}, size={}", page, size);
+    }
+
+    /**
+     * 상태값 검증
+     * 검증 규칙:
+     * - null 허용
+     * - 유효한 ReservationStatus enum 값
+     * @param status 예약 상태 문자열
+     * @throws ReservationException 유효하지 않은 상태값인 경우
+     */
+    public void validateStatus(String status) {
+        // (controller parameter false)
+        if (status == null) {
+            return;
+        }
+
+        try {
+            ReservationStatus.valueOf(status);
+            log.debug("상태값 검증 완료: status={}", status);
+        } catch (IllegalArgumentException e) {
+            log.warn("잘못된 예약 상태: status={}", status);
+            throw new ReservationException(
+                    ReservationErrorCode.INVALID_RESERVATION_STATUS,
+                    String.format("유효하지 않은 예약 상태입니다. (입력값: %s, 가능한 값: %s)",
+                            status, java.util.Arrays.toString(ReservationStatus.values()))
+            );
+        }
+    }
+
+    /**
+     * 날짜 범위 검증 (String 파라미터)
      *
+     * 검증 규칙:
+     * - null 허용 (둘 다 null 가능)
+     * - 유효한 날짜 형식 (yyyy-MM-dd)
+     * - startDate <= endDate
+     * - 최대 1년 범위
+     *
+     * @param startDate 시작 날짜 문자열 (nullable)
+     * @param endDate 종료 날짜 문자열 (nullable)
+     * @throws ReservationException 날짜 범위가 유효하지 않은 경우
+     */
+    public void validateDateRange(String startDate, String endDate) {
+        // 둘 다 null이면 검증 스킵 (controller parameter false)
+        if (startDate == null && endDate == null) {
+            log.debug("날짜 범위 검증 스킵: 둘 다 null");
+            return;
+        }
+
+        try {
+            LocalDate start = startDate != null ? LocalDate.parse(startDate) : null;
+            LocalDate end = endDate != null ? LocalDate.parse(endDate) : null;
+
+            // 순서 검증
+            if (start != null && end != null && start.isAfter(end)) {
+                log.warn("날짜 순서 오류: startDate={}, endDate={}", start, end);
+                throw new ReservationException(
+                        ReservationErrorCode.INVALID_DATE_RANGE,
+                        String.format("시작 날짜(%s)는 종료 날짜(%s)보다 이전이어야 합니다.", start, end)
+                );
+            }
+
+            // 범위 검증 (최대 1년)
+            // BookingSlot 으로 관리 하나, 악의적 범위 GET 요청 고려한 방어.
+            if (start != null && end != null) {
+                LocalDate maxEndDate = start.plusYears(MAX_DATE_RANGE_YEARS);
+                if (end.isAfter(maxEndDate)) {
+                    log.warn("날짜 범위 초과: startDate={}, endDate={}, maxRange={}년",
+                            start, end, MAX_DATE_RANGE_YEARS);
+                    throw new ReservationException(
+                            ReservationErrorCode.CALENDAR_DATE_RANGE_TOO_LARGE,
+                            String.format("조회 기간은 최대 %d년입니다. (요청 기간: %s ~ %s)",
+                                    MAX_DATE_RANGE_YEARS, start, end)
+                    );
+                }
+            }
+
+            log.debug("날짜 범위 검증 완료: startDate={}, endDate={}", start, end);
+
+        } catch (DateTimeParseException e) {
+            log.warn("날짜 형식 오류: startDate={}, endDate={}", startDate, endDate);
+            throw new ReservationException(
+                    ReservationErrorCode.INVALID_DATE_FORMAT,
+                    String.format("날짜 형식이 올바르지 않습니다. (형식: yyyy-MM-dd, 입력값: start=%s, end=%s)",
+                            startDate, endDate)
+            );
+        }
+    }
+
+    /**
+     * 시간대 겹침 판정
      * - 정각 경계는 허용 (12:00 종료, 12:00 시작 = 겹치지 않음)
      * - 1분이라도 겹치면 충돌
-     *
      * 예시:
      * - [09:00-12:00]와 [12:00-13:00] → 겹치지 않음 (정각 경계)
      * - [09:00-12:00]와 [11:59-13:00] → 겹침 (1분 겹침)

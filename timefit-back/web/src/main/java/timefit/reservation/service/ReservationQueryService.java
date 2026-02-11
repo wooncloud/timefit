@@ -3,9 +3,7 @@ package timefit.reservation.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.business.entity.Business;
@@ -13,13 +11,13 @@ import timefit.business.service.validator.BusinessValidator;
 import timefit.reservation.dto.ReservationResponseDto;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
-import timefit.reservation.repository.ReservationQueryRepository;
+import timefit.reservation.service.helper.ReservationQueryHelper;
 import timefit.reservation.service.util.ReservationConverter;
+import timefit.reservation.service.util.ReservationPageableUtil;
+import timefit.reservation.service.util.ReservationTimeUtil;
 import timefit.reservation.service.validator.ReservationValidator;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -31,15 +29,28 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class ReservationQueryService {
 
-    private final ReservationQueryRepository reservationQueryRepository;
     private final ReservationValidator reservationValidator;
     private final BusinessValidator businessValidator;
+    private final ReservationQueryHelper queryHelper;
     private final ReservationConverter converter;
 
     // ========== 고객용 조회 ==========
 
     /**
      * 내 예약 목록 조회 (고객)
+     * 1. 파라미터 검증 (Validator)
+     * 2. 파라미터 파싱 (TimeUtil)
+     * 3. Pageable 생성 (PageableUtil)
+     * 4. 데이터 조회 (Helper)
+     * 5. Response 생성 (Converter)
+     * @param customerId 고객 ID
+     * @param status 예약 상태 (nullable)
+     * @param startDate 시작 날짜 문자열 (nullable)
+     * @param endDate 종료 날짜 문자열 (nullable)
+     * @param businessId 업체 ID 필터 (nullable)
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기
+     * @return 고객용 예약 목록 Response
      */
     public ReservationResponseDto.CustomerReservationList getMyReservations(
             UUID customerId, String status, String startDate, String endDate,
@@ -47,29 +58,40 @@ public class ReservationQueryService {
 
         log.info("내 예약 목록 조회: customerId={}, status={}, page={}", customerId, status, page);
 
-        // Pageable 생성, 파라미터 파싱
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        ReservationStatus reservationStatus = status != null ? ReservationStatus.valueOf(status) : null;
-        LocalDate startLocalDate = startDate != null ? LocalDate.parse(startDate) : null;
-        LocalDate endLocalDate = endDate != null ? LocalDate.parse(endDate) : null;
+        // 1. 파라미터 검증
+        reservationValidator.validatePageParameters(page, size);
+        reservationValidator.validateStatus(status);
+        reservationValidator.validateDateRange(startDate, endDate);
 
-        Page<Reservation> reservationPage = reservationQueryRepository.findMyReservationsWithFilters(
-                customerId, reservationStatus, startLocalDate, endLocalDate, businessId, pageable);
+        // 2. 파라미터 파싱
+        ReservationStatus reservationStatus = status != null
+                ? ReservationStatus.valueOf(status)
+                : null;
 
-        List<Reservation> reservations = reservationPage.getContent();
-        List<ReservationResponseDto.CustomerReservationItem> items = new ArrayList<>(reservations.size());
+        ReservationTimeUtil.DateRange dateRange = ReservationTimeUtil
+                .parseDateRange(startDate, endDate)
+                .setDateRangeDefaults();
 
-        for (Reservation reservation : reservations) {
-            items.add(converter.toCustomerReservationItem(reservation));
-        }
+        // 3. Pageable 생성
+        Pageable pageable = ReservationPageableUtil.createDefault(page, size);
 
-        ReservationResponseDto.PaginationInfo pagination = converter.toPaginationInfo(reservationPage);
+        // 4. 데이터 조회
+        Page<Reservation> reservationPage = queryHelper.loadMyReservations(
+                customerId, reservationStatus, dateRange.start(), dateRange.end(),
+                businessId, pageable);
 
-        return ReservationResponseDto.CustomerReservationList.of(items, pagination);
+        log.info("내 예약 목록 조회 완료: totalElements={}, page={}/{}",
+                reservationPage.getTotalElements(), page, reservationPage.getTotalPages());
+
+        // 5. Response 생성 (Converter)
+        return converter.toCustomerReservationList(reservationPage);
     }
 
     /**
      * 예약 상세 조회 (고객)
+     * @param reservationId 예약 ID
+     * @param customerId 고객 ID
+     * @return 예약 상세 Response
      */
     public ReservationResponseDto.CustomerReservation getReservationDetail(
             UUID reservationId, UUID customerId) {
@@ -80,7 +102,7 @@ public class ReservationQueryService {
         Reservation reservation = reservationValidator.validateExists(reservationId);
         reservationValidator.validateOwner(reservation, customerId);
 
-        // Converter 변환
+        // DTO 변환
         return converter.toCustomerReservation(reservation);
     }
 
@@ -88,16 +110,20 @@ public class ReservationQueryService {
 
     /**
      * 업체 예약 목록 조회 (업체)
+     * 1. 권한 검증 (BusinessValidator)
+     * 2. 파라미터 검증 (Validator)
+     * 3. Pageable 생성 (PageableUtil)
+     * 4. 데이터 조회 (Helper)
+     * 5. Response 생성 (Converter)
      *
      * @param businessId 업체 ID
      * @param currentUserId 현재 사용자 ID
-     * @param status 예약 상태 필터 (선택)
-     * @param customerName 고객명 검색 (선택) - 대소문자 무시
-     * @param startDate 시작 날짜 (선택, 기본값: 30일 전)
-     * @param endDate 종료 날짜 (선택, 기본값: 오늘)
+     * @param status 예약 상태 (nullable)
+     * @param startDate 시작 날짜 (nullable)
+     * @param endDate 종료 날짜 (nullable)
      * @param page 페이지 번호 (0부터 시작)
-     * @param size 페이지 크기 (1-100)
-     * @return 업체 예약 목록 및 페이징 정보
+     * @param size 페이지 크기
+     * @return 업체용 예약 목록 Response
      */
     public ReservationResponseDto.BusinessReservationList getBusinessReservations(
             UUID businessId, UUID currentUserId, String status,
@@ -106,40 +132,45 @@ public class ReservationQueryService {
         log.info("업체 예약 목록 조회: businessId={}, userId={}, status={}",
                 businessId, currentUserId, status);
 
-        // 권한 검증
+        // 1. 권한 검증
         businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
-
-        // 업체 정보 조회
         Business business = businessValidator.validateBusinessExists(businessId);
 
-        // Pageable 생성, 파라미터 파싱
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        ReservationStatus reservationStatus = status != null ? ReservationStatus.valueOf(status) : null;
+        // 2. 파라미터 검증
+        reservationValidator.validatePageParameters(page, size);
+        reservationValidator.validateStatus(status);
+        reservationValidator.validateDateRange(startDate, endDate);
 
-        Page<Reservation> reservationPage = reservationQueryRepository.findBusinessReservationsWithFilters(
-                businessId, reservationStatus, null, startDate, endDate, pageable);
+        // 3. 파라미터 파싱
+        ReservationStatus reservationStatus = status != null
+                ? ReservationStatus.valueOf(status)
+                : null;
 
-        List<Reservation> reservations = reservationPage.getContent();
-        List<ReservationResponseDto.BusinessReservationItem> items = new ArrayList<>(reservations.size());
+        // 날짜 기본값 적용
+        LocalDate finalStartDate = ReservationTimeUtil.determineStartDate(startDate);
+        LocalDate finalEndDate = ReservationTimeUtil.determineEndDate(endDate);
 
-        for (Reservation reservation : reservations) {
-            items.add(converter.toBusinessReservationItem(reservation));
-        }
+        // 4. Pageable 생성
+        Pageable pageable = ReservationPageableUtil.createDefault(page, size);
 
-        ReservationResponseDto.PaginationInfo pagination = converter.toPaginationInfo(reservationPage);
+        // 5. 데이터 조회 (customerName은 null)
+        Page<Reservation> reservationPage = queryHelper.loadBusinessReservations(
+                businessId, reservationStatus, null, finalStartDate, finalEndDate, pageable);
 
-        return ReservationResponseDto.BusinessReservationList.of(
-                business.getId(),
-                business.getBusinessName(),
-                business.getAddress(),
-                business.getContactPhone(),
-                items,
-                pagination
-        );
+        log.info("업체 예약 목록 조회 완료: totalElements={}, page={}/{}",
+                reservationPage.getTotalElements(), page, reservationPage.getTotalPages());
+
+        // 6. Response 생성 (Converter)
+        return converter.toBusinessReservationList(business, reservationPage);
     }
 
     /**
-     * 업체용 예약 상세 조회
+     * 업체 예약 상세 조회 (업체)
+     *
+     * @param businessId 업체 ID
+     * @param reservationId 예약 ID
+     * @param currentUserId 현재 사용자 ID
+     * @return 업체용 예약 상세 Response
      */
     public ReservationResponseDto.BusinessReservation getBusinessReservationDetail(
             UUID businessId, UUID reservationId, UUID currentUserId) {
