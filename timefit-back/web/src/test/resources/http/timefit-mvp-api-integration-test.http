@@ -1,5 +1,5 @@
 ### ================================================================
-### Timefit 전체 API 테스트 - Integration Test
+### Timefit 전체 API 테스트 - Integration Test (동적 날짜)
 ### ================================================================
 ###
 ### 테스트 범위:
@@ -14,8 +14,17 @@
 ### ❌ user-controller (제외)
 ###
 ### 🔧 수정 사항:
+### - ✅ 모든 날짜를 동적으로 생성 (실행 시점 기준)
+### - ✅ 언제든지 실행 가능 (날짜 하드코딩 제거)
 ### - 영업시간 토글/리셋을 슬롯 조회 이후로 이동
 ### - 슬롯이 생성된 후 영업시간 변경 테스트
+###
+### 📅 동적 날짜 생성 규칙:
+### - menuStartDate: 오늘
+### - menuEndDate: 오늘 + 30일
+### - slotQueryDate: 오늘 + 7일 (슬롯 조회용)
+### - rangeQueryDate: 오늘 + 3일 (범위 조회용)
+### - bulkSlotDate1~7: 오늘 + 14~20일 (일괄 생성용)
 ###
 ### ================================================================
 
@@ -31,6 +40,66 @@ GET {{baseUrl}}/api/auth/health
 > {%
     console.log("\n[01-1] Health Check");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ================================================================
+### [Setup 0] 동적 날짜 생성
+### ================================================================
+
+# @name 동적날짜생성
+GET {{baseUrl}}/api/auth/health
+
+> {%
+    console.log("\n========================================");
+    console.log("[Setup 0] 동적 날짜 생성");
+    console.log("========================================");
+
+    const today = new Date();
+
+    // 날짜 포맷팅 함수 (YYYY-MM-DD)
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // 날짜 계산 함수
+    function addDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+    }
+
+    // 기본 날짜들
+    client.global.set("today", formatDate(today));
+    client.global.set("tomorrow", formatDate(addDays(today, 1)));
+
+    // 슬롯 조회용 날짜 (7일 후)
+    client.global.set("slotQueryDate", formatDate(addDays(today, 7)));
+
+    // 슬롯 조회 범위용 (3일 후)
+    client.global.set("rangeQueryDate", formatDate(addDays(today, 3)));
+
+    // 메뉴 생성용 날짜 범위 (오늘 ~ 30일 후)
+    client.global.set("menuStartDate", formatDate(today));
+    client.global.set("menuEndDate", formatDate(addDays(today, 30)));
+
+    // 슬롯 일괄 생성용 날짜 (14일 후 ~ 20일 후, 7일간)
+    client.global.set("bulkSlotDate1", formatDate(addDays(today, 14)));
+    client.global.set("bulkSlotDate2", formatDate(addDays(today, 15)));
+    client.global.set("bulkSlotDate3", formatDate(addDays(today, 16)));
+    client.global.set("bulkSlotDate4", formatDate(addDays(today, 17)));
+    client.global.set("bulkSlotDate5", formatDate(addDays(today, 18)));
+    client.global.set("bulkSlotDate6", formatDate(addDays(today, 19)));
+    client.global.set("bulkSlotDate7", formatDate(addDays(today, 20)));
+
+    console.log("✅ 동적 날짜 생성 완료");
+    console.log("   - today:", client.global.get("today"));
+    console.log("   - slotQueryDate (7일 후):", client.global.get("slotQueryDate"));
+    console.log("   - menuStartDate ~ menuEndDate:", client.global.get("menuStartDate"), "~", client.global.get("menuEndDate"));
+    console.log("   - bulkSlotDate1 ~ 7:", client.global.get("bulkSlotDate1"), "~", client.global.get("bulkSlotDate7"));
+    console.log("========================================\n");
 %}
 
 ### ================================================================
@@ -436,8 +505,8 @@ Authorization: Bearer {{ownerToken}}
   "orderType": "RESERVATION_BASED",
   "autoGenerateSlots": true,
   "slotSettings": {
-    "startDate": "2026-01-01",
-    "endDate": "2026-01-10",
+    "startDate": "{{menuStartDate}}",
+    "endDate": "{{menuEndDate}}",
     "slotIntervalMinutes": 60,
     "specificTimeRanges": [
       {"startTime": "09:00", "endTime": "18:00"}
@@ -472,8 +541,8 @@ Authorization: Bearer {{ownerToken}}
   "orderType": "RESERVATION_BASED",
   "autoGenerateSlots": true,
   "slotSettings": {
-    "startDate": "2026-01-01",
-    "endDate": "2026-01-10",
+    "startDate": "{{menuStartDate}}",
+    "endDate": "{{menuEndDate}}",
     "slotIntervalMinutes": 60,
     "specificTimeRanges": [
       {"startTime": "09:00", "endTime": "18:00"}
@@ -549,7 +618,7 @@ Authorization: Bearer {{ownerToken}}
 ### ================================================================
 
 # @name 예약슬롯조회_특정날짜_공개
-GET {{baseUrl}}/api/business/{{businessId}}/booking-slot?date=2026-01-21
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot?date={{slotQueryDate}}
 
 > {%
     console.log("\n[06-1] 예약 슬롯 조회 - 특정 날짜 (공개)");
@@ -598,7 +667,7 @@ GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/upcoming?days=7
 ### ================================================================
 
 # @name 예약슬롯조회_기간별_공개
-GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/range?startDate=2026-01-05&endDate=2026-01-05
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/range?startDate={{rangeQueryDate}}&endDate={{rangeQueryDate}}
 
 > {%
     console.log("\n[06-3] 예약 슬롯 조회 - 기간별 (공개)");
@@ -608,7 +677,7 @@ GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/range?startDate=2026-01
 ### ================================================================
 
 # @name 예약슬롯조회_메뉴별_공개
-GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/menu/{{menuId1}}?startDate=2026-01-05&endDate=2026-01-05
+GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/menu/{{menuId1}}?startDate={{rangeQueryDate}}&endDate={{rangeQueryDate}}
 
 > {%
     console.log("\n[06-4] 예약 슬롯 조회 - 메뉴별 (공개)");
@@ -627,49 +696,49 @@ Authorization: Bearer {{ownerToken}}
   "slotIntervalMinutes": 60,
   "schedules": [
     {
-      "date": "2026-10-01",
+      "date": "{{bulkSlotDate1}}",
       "timeRanges": [
         {"startTime": "09:00", "endTime": "12:00"},
         {"startTime": "13:00", "endTime": "18:00"}
       ]
     },
     {
-      "date": "2026-10-02",
+      "date": "{{bulkSlotDate2}}",
       "timeRanges": [
         {"startTime": "09:00", "endTime": "12:00"},
         {"startTime": "13:00", "endTime": "18:00"}
       ]
     },
     {
-      "date": "2026-10-03",
+      "date": "{{bulkSlotDate3}}",
       "timeRanges": [
         {"startTime": "09:00", "endTime": "12:00"},
         {"startTime": "13:00", "endTime": "18:00"}
       ]
     },
     {
-      "date": "2026-10-04",
+      "date": "{{bulkSlotDate4}}",
       "timeRanges": [
         {"startTime": "09:00", "endTime": "12:00"},
         {"startTime": "13:00", "endTime": "18:00"}
       ]
     },
     {
-      "date": "2026-10-05",
+      "date": "{{bulkSlotDate5}}",
       "timeRanges": [
         {"startTime": "09:00", "endTime": "12:00"},
         {"startTime": "13:00", "endTime": "18:00"}
       ]
     },
     {
-      "date": "2026-10-06",
+      "date": "{{bulkSlotDate6}}",
       "timeRanges": [
         {"startTime": "09:00", "endTime": "12:00"},
         {"startTime": "13:00", "endTime": "18:00"}
       ]
     },
     {
-      "date": "2026-10-07",
+      "date": "{{bulkSlotDate7}}",
       "timeRanges": [
         {"startTime": "09:00", "endTime": "12:00"},
         {"startTime": "13:00", "endTime": "18:00"}
@@ -789,13 +858,188 @@ Authorization: Bearer {{customerToken}}
 %}
 
 ### ================================================================
+### [Test 8] 예약 관리 API - 업체용 (리팩터링 테스트)
+### ================================================================
+
+# @name 업체예약목록조회_전체
+GET {{baseUrl}}/api/business/{{businessId}}/reservations
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n========================================");
+    console.log("[Test 8] 업체용 예약 조회 (리팩터링 테스트)");
+    console.log("========================================");
+    console.log("\n[08-1] 업체 예약 목록 조회 (전체)");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - 총 예약:", response.body.data.pagination.totalElements);
+        console.log("   - 현재 페이지:", response.body.data.pagination.currentPage);
+        console.log("   - 총 페이지:", response.body.data.pagination.totalPages);
+
+        if (response.body.data.reservations && response.body.data.reservations.length > 0) {
+            console.log("   - 첫 예약 ID:", response.body.data.reservations[0].reservationId);
+            console.log("   - 첫 예약 상태:", response.body.data.reservations[0].status);
+        }
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 업체예약목록조회_상태필터
+GET {{baseUrl}}/api/business/{{businessId}}/reservations?status=PENDING
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[08-2] 업체 예약 목록 조회 (상태 필터: PENDING)");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - PENDING 예약 수:", response.body.data.pagination.totalElements);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 업체예약목록조회_날짜필터
+GET {{baseUrl}}/api/business/{{businessId}}/reservations?startDate={{today}}&endDate={{menuEndDate}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[08-3] 업체 예약 목록 조회 (날짜 필터)");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - 필터 범위:", client.global.get("today"), "~", client.global.get("menuEndDate"));
+        console.log("   - 조회된 예약:", response.body.data.pagination.totalElements);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 업체예약목록조회_복합필터
+GET {{baseUrl}}/api/business/{{businessId}}/reservations?status=PENDING&startDate={{today}}&endDate={{menuEndDate}}&page=0&size=10
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[08-4] 업체 예약 목록 조회 (복합 필터)");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - 상태: PENDING");
+        console.log("   - 날짜: today ~ menuEndDate");
+        console.log("   - 페이징: page=0, size=10");
+        console.log("   - 조회된 예약:", response.body.data.pagination.totalElements);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 업체예약목록조회_페이징테스트
+GET {{baseUrl}}/api/business/{{businessId}}/reservations?page=0&size=5
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[08-5] 업체 예약 목록 조회 (페이징 size=5)");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - 요청 size: 5");
+        console.log("   - 실제 반환:", response.body.data.reservations.length);
+        console.log("   - 다음 페이지 존재:", response.body.data.pagination.hasNext);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 업체예약상세조회
+GET {{baseUrl}}/api/business/{{businessId}}/reservation/{{reservationId}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[08-6] 업체 예약 상세 조회");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - 예약 ID:", response.body.data.reservationId);
+        console.log("   - 예약 번호:", response.body.data.reservationNumber);
+        console.log("   - 예약 상태:", response.body.data.status);
+        console.log("   - 고객명:", response.body.data.customerName);
+        console.log("   - 예약일시:", response.body.data.reservationDate, response.body.data.reservationTime);
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 업체예약목록조회_잘못된상태
+GET {{baseUrl}}/api/business/{{businessId}}/reservations?status=INVALID_STATUS
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[08-7] 업체 예약 목록 조회 (잘못된 상태값 - 검증 테스트)");
+    if (response.status === 400) {
+        console.log("✅ 정상 - 잘못된 상태값 거부됨");
+        console.log("   - 에러 코드:", response.body.errorCode);
+        console.log("   - 에러 메시지:", response.body.message);
+    } else if (response.status === 200) {
+        console.error("❌ 검증 실패 - 잘못된 상태값 허용됨");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 업체예약목록조회_잘못된날짜순서
+GET {{baseUrl}}/api/business/{{businessId}}/reservations?startDate={{menuEndDate}}&endDate={{today}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[08-8] 업체 예약 목록 조회 (잘못된 날짜 순서 - 검증 테스트)");
+    if (response.status === 400) {
+        console.log("✅ 정상 - 잘못된 날짜 순서 거부됨");
+        console.log("   - 에러 코드:", response.body.errorCode);
+        console.log("   - 에러 메시지:", response.body.message);
+    } else if (response.status === 200) {
+        console.error("❌ 검증 실패 - 잘못된 날짜 순서 허용됨");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status);
+    }
+%}
+
+### ================================================================
+
+# @name 업체예약목록조회_페이지크기초과
+GET {{baseUrl}}/api/business/{{businessId}}/reservations?page=0&size=999
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    console.log("\n[08-9] 업체 예약 목록 조회 (페이지 크기 초과 - 검증 테스트)");
+    if (response.status === 400) {
+        console.log("✅ 정상 - 잘못된 페이지 크기 거부됨");
+        console.log("   - 에러 코드:", response.body.errorCode);
+        console.log("   - 에러 메시지:", response.body.message);
+    } else if (response.status === 200) {
+        console.error("❌ 검증 실패 - size=999 허용됨");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status);
+    }
+%}
+
+### ================================================================
 
 # @name 예약승인_취소용
 POST {{baseUrl}}/api/business/{{businessId}}/reservation/{{reservationId}}/approve
 Authorization: Bearer {{ownerToken}}
 
 > {%
-    console.log("\n[08-7-1] 예약 승인 (예약4 - 취소용)");
+    console.log("\n[08-10] 예약 승인 (취소 테스트용)");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
 %}
 
@@ -811,7 +1055,7 @@ Authorization: Bearer {{customerToken}}
 }
 
 > {%
-    console.log("\n[08-7-2] 예약 취소 (예약4 - 고객) 🆕 POST /cancel");
+    console.log("\n[08-11] 예약 취소 (고객)");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
 %}
 
