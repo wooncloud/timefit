@@ -1,4 +1,4 @@
-package timefit.auth.service.util;
+package timefit.auth.service.helper;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

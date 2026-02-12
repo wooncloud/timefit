@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import timefit.auth.dto.AuthRequestDto;
 import timefit.auth.dto.AuthResponseDto;
 import timefit.auth.service.dto.OAuthUserInfo;
-import timefit.auth.service.util.AuthTokenHelper;
+import timefit.auth.service.helper.AuthTokenHelper;
 import timefit.auth.service.validator.AuthValidator;
 import timefit.business.entity.UserBusinessRole;
 import timefit.business.repository.UserBusinessRoleRepository;
