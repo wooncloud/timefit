@@ -1,14 +1,12 @@
-# Timefit 리버스 프록시 설정 (템플릿)
-# 위치: timefit-back/nginx/templates/default.conf.template
-# 환경 변수: BACKEND_HOST, BACKEND_PORT, NGINX_STATUS_ENABLED (.env 파일에서 읽음)
+# Timefit 리버스 프록시 설정
+# 환경 변수는 .env 파일에서 읽음
 
 # Rate Limiting Zones (서버 보호)
-limit_req_zone $binary_remote_addr zone=api_limit:10m rate=100r/s;
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=${NGINX_RATE_LIMIT};
 limit_conn_zone $binary_remote_addr zone=addr:10m;
 
 # Upstream: Spring Boot 백엔드 서버 정의
 upstream spring_boot {
-    # .env 파일에서 설정된 백엔드 주소 사용
     server ${BACKEND_HOST}:${BACKEND_PORT} max_fails=3 fail_timeout=30s;
 
     # Connection Pooling 설정
@@ -17,13 +15,49 @@ upstream spring_boot {
     keepalive_requests 100;         # 연결당 최대 요청 수
 }
 
-# HTTP 서버 블록
+# HTTP 서버 (포트 80) - HTTPS로 리다이렉트
 server {
     listen 80;
-    server_name localhost;          # 실제 배포 시 도메인으로 변경
+    server_name ${NGINX_DOMAIN_NAME};
 
-    # 클라이언트 요청 제한
-    client_max_body_size 100M;      # 10M → 100M (파일 업로드 고려)
+    # Let's Encrypt 인증 경로 (리다이렉트 제외)
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # 모든 요청 → HTTPS 리다이렉트
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS 서버 (포트 443)
+server {
+    listen 443 ssl http2;
+    server_name ${NGINX_DOMAIN_NAME};
+
+    # SSL 인증서
+    ssl_certificate /etc/nginx/ssl/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+
+    # SSL 보안 설정
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
+    ssl_prefer_server_ciphers off;
+
+    # HSTS (HTTP Strict Transport Security)
+    # 브라우저가 앞으로 무조건 HTTPS만 사용하도록 강제
+    # max-age: 1년 (31536000초)
+    # includeSubDomains: 서브도메인도 포함
+    # preload: HSTS Preload List 등록 가능
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
+    # 보안 헤더
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    client_max_body_size 100M;
     client_body_timeout 60s;
     client_header_timeout 60s;
 
@@ -39,7 +73,7 @@ server {
     # API 엔드포인트 (Rate Limiting 적용)
     location /api/ {
         # Rate Limiting (서버 보호!)
-        limit_req zone=api_limit burst=200 nodelay;
+        limit_req zone=api_limit burst=${NGINX_RATE_BURST} nodelay;
         limit_conn addr 50;         # IP당 최대 50개 동시 연결
 
         # 백엔드 서버로 요청 전달
@@ -53,7 +87,7 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Port $server_port;
 
@@ -82,6 +116,7 @@ server {
         proxy_set_header Connection "";
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
 
         proxy_connect_timeout 5s;
         proxy_read_timeout 30s;
@@ -94,6 +129,7 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto https;
 
         proxy_connect_timeout 5s;
         proxy_read_timeout 30s;
@@ -105,6 +141,7 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     # 헬스체크 엔드포인트
@@ -114,6 +151,7 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     # 에러 페이지
