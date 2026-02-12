@@ -50,3 +50,8 @@ docker-compose.override.yml
 ### Nginx ###
 # 로그 파일 (자동 생성)
 nginx/logs/
+
+### SSL 인증서
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
