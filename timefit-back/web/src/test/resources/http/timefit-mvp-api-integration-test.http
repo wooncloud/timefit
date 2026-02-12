@@ -685,79 +685,79 @@ GET {{baseUrl}}/api/business/{{businessId}}/booking-slot/menu/{{menuId1}}?startD
 %}
 
 ### ================================================================
-
-# @name 예약슬롯일괄생성
-POST {{baseUrl}}/api/business/{{businessId}}/booking-slot
-Content-Type: application/json
-Authorization: Bearer {{ownerToken}}
-
-{
-  "menuId": "{{menuId1}}",
-  "slotIntervalMinutes": 60,
-  "schedules": [
-    {
-      "date": "{{bulkSlotDate1}}",
-      "timeRanges": [
-        {"startTime": "09:00", "endTime": "12:00"},
-        {"startTime": "13:00", "endTime": "18:00"}
-      ]
-    },
-    {
-      "date": "{{bulkSlotDate2}}",
-      "timeRanges": [
-        {"startTime": "09:00", "endTime": "12:00"},
-        {"startTime": "13:00", "endTime": "18:00"}
-      ]
-    },
-    {
-      "date": "{{bulkSlotDate3}}",
-      "timeRanges": [
-        {"startTime": "09:00", "endTime": "12:00"},
-        {"startTime": "13:00", "endTime": "18:00"}
-      ]
-    },
-    {
-      "date": "{{bulkSlotDate4}}",
-      "timeRanges": [
-        {"startTime": "09:00", "endTime": "12:00"},
-        {"startTime": "13:00", "endTime": "18:00"}
-      ]
-    },
-    {
-      "date": "{{bulkSlotDate5}}",
-      "timeRanges": [
-        {"startTime": "09:00", "endTime": "12:00"},
-        {"startTime": "13:00", "endTime": "18:00"}
-      ]
-    },
-    {
-      "date": "{{bulkSlotDate6}}",
-      "timeRanges": [
-        {"startTime": "09:00", "endTime": "12:00"},
-        {"startTime": "13:00", "endTime": "18:00"}
-      ]
-    },
-    {
-      "date": "{{bulkSlotDate7}}",
-      "timeRanges": [
-        {"startTime": "09:00", "endTime": "12:00"},
-        {"startTime": "13:00", "endTime": "18:00"}
-      ]
-    }
-  ]
-}
-
-> {%
-    console.log("\n[06-5] 예약 슬롯 일괄 생성");
-    if (response.status === 200 || response.status === 201) {
-        console.log("✅ 성공");
-        console.log("   - 생성된 슬롯:", response.body.data.created);
-        console.log("   - 건너뛴 슬롯:", response.body.data.skipped);
-        console.log("   - 총 요청:", response.body.data.totalRequested);
-    } else {
-        console.error("❌ 실패:", response.status);
-    }
-%}
+#
+## @name 예약슬롯일괄생성
+#POST {{baseUrl}}/api/business/{{businessId}}/booking-slot
+#Content-Type: application/json
+#Authorization: Bearer {{ownerToken}}
+#
+#{
+#  "menuId": "{{menuId1}}",
+#  "slotIntervalMinutes": 60,
+#  "schedules": [
+#    {
+#      "date": "{{bulkSlotDate1}}",
+#      "timeRanges": [
+#        {"startTime": "09:00", "endTime": "12:00"},
+#        {"startTime": "13:00", "endTime": "18:00"}
+#      ]
+#    },
+#    {
+#      "date": "{{bulkSlotDate2}}",
+#      "timeRanges": [
+#        {"startTime": "09:00", "endTime": "12:00"},
+#        {"startTime": "13:00", "endTime": "18:00"}
+#      ]
+#    },
+#    {
+#      "date": "{{bulkSlotDate3}}",
+#      "timeRanges": [
+#        {"startTime": "09:00", "endTime": "12:00"},
+#        {"startTime": "13:00", "endTime": "18:00"}
+#      ]
+#    },
+#    {
+#      "date": "{{bulkSlotDate4}}",
+#      "timeRanges": [
+#        {"startTime": "09:00", "endTime": "12:00"},
+#        {"startTime": "13:00", "endTime": "18:00"}
+#      ]
+#    },
+#    {
+#      "date": "{{bulkSlotDate5}}",
+#      "timeRanges": [
+#        {"startTime": "09:00", "endTime": "12:00"},
+#        {"startTime": "13:00", "endTime": "18:00"}
+#      ]
+#    },
+#    {
+#      "date": "{{bulkSlotDate6}}",
+#      "timeRanges": [
+#        {"startTime": "09:00", "endTime": "12:00"},
+#        {"startTime": "13:00", "endTime": "18:00"}
+#      ]
+#    },
+#    {
+#      "date": "{{bulkSlotDate7}}",
+#      "timeRanges": [
+#        {"startTime": "09:00", "endTime": "12:00"},
+#        {"startTime": "13:00", "endTime": "18:00"}
+#      ]
+#    }
+#  ]
+#}
+#
+#> {%
+#    console.log("\n[06-5] 예약 슬롯 일괄 생성");
+#    if (response.status === 200 || response.status === 201) {
+#        console.log("✅ 성공");
+#        console.log("   - 생성된 슬롯:", response.body.data.created);
+#        console.log("   - 건너뛴 슬롯:", response.body.data.skipped);
+#        console.log("   - 총 요청:", response.body.data.totalRequested);
+#    } else {
+#        console.error("❌ 실패:", response.status);
+#    }
+#%}
 
 ### ================================================================
 
