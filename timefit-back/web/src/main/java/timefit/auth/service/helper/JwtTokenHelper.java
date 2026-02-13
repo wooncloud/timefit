@@ -1,4 +1,4 @@
-package timefit.auth.service.util;
+ package timefit.auth.service.helper;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -6,6 +6,8 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import timefit.auth.provider.JwtAlgorithmProvider;
+import timefit.auth.service.dto.TokenPair;
 import timefit.config.JwtConfig;
 import timefit.exception.auth.AuthErrorCode;
 import timefit.exception.auth.AuthException;
@@ -22,9 +24,23 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JwtTokenUtil {
+public class JwtTokenHelper {
 
     private final JwtConfig jwtConfig;
+    private final JwtAlgorithmProvider algorithmProvider;
+
+    /**
+     * Access Token + Refresh Token 생성
+     *
+     * @param userId 사용자 ID
+     * @return TokenPair (accessToken, refreshToken)
+     */
+    public TokenPair generateTokenPair(UUID userId) {
+        String accessToken = generateToken(userId);
+        String refreshToken = generateRefreshToken(userId);
+
+        return new TokenPair(accessToken, refreshToken);
+    }
 
     /**
      * Access Token 생성
@@ -34,7 +50,7 @@ public class JwtTokenUtil {
      */
     public String generateToken(UUID userId) {
         try {
-            Algorithm algorithm = Algorithm.HMAC512(jwtConfig.getSecretKey());
+            Algorithm algorithm = algorithmProvider.getAlgorithm();
             Date now = new Date();
             Date expiryDate = new Date(now.getTime() + jwtConfig.getAccessTokenExpiration());
 
@@ -59,7 +75,7 @@ public class JwtTokenUtil {
      */
     public String generateRefreshToken(UUID userId) {
         try {
-            Algorithm algorithm = Algorithm.HMAC512(jwtConfig.getSecretKey());
+            Algorithm algorithm = algorithmProvider.getAlgorithm();
             Date now = new Date();
             Date expiryDate = new Date(now.getTime() + jwtConfig.getRefreshTokenExpiration());
 

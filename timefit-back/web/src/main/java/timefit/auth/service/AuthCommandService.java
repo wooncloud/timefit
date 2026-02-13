@@ -8,13 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 import timefit.auth.dto.AuthRequestDto;
 import timefit.auth.dto.AuthResponseDto;
 import timefit.auth.service.dto.OAuthUserInfo;
+import timefit.auth.service.dto.TokenPair;
 import timefit.auth.service.helper.AuthResponseHelper;
-import timefit.auth.service.helper.AuthTokenHelper;
 import timefit.auth.service.helper.OAuthHelper;
 import timefit.auth.service.validator.AuthValidator;
 import timefit.auth.service.validator.OAuthValidator;
 import timefit.auth.service.validator.TokenValidator;
-import timefit.auth.service.util.JwtTokenUtil;
+import timefit.auth.service.helper.JwtTokenHelper;
 import timefit.business.entity.UserBusinessRole;
 import timefit.exception.auth.AuthErrorCode;
 import timefit.exception.auth.AuthException;
@@ -56,11 +56,9 @@ public class AuthCommandService {
     private final TokenValidator tokenValidator;
     private final OAuthValidator oauthValidator;
 
-    private final AuthTokenHelper authTokenHelper;
     private final AuthResponseHelper authResponseHelper;
     private final OAuthHelper oauthHelper;
-
-    private final JwtTokenUtil jwtTokenUtil;
+    private final JwtTokenHelper jwtTokenHelper;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -91,13 +89,13 @@ public class AuthCommandService {
                 savedUser.getId(), savedUser.getEmail());
 
         // 3. 토큰 생성
-        AuthTokenHelper.TokenPair tokenPair = authTokenHelper.generateTokenPair(savedUser.getId());
+        TokenPair tokenPair = jwtTokenHelper.generateTokenPair(savedUser.getId());
 
         // 4. DTO 반환
         return AuthResponseDto.UserSignUp.of(
                 savedUser,
-                tokenPair.getAccessToken(),
-                tokenPair.getRefreshToken()
+                tokenPair.accessToken(),
+                tokenPair.refreshToken()
         );
     }
 
@@ -125,7 +123,7 @@ public class AuthCommandService {
         List<UserBusinessRole> userBusinessRoles = authValidator.getUserBusinessRoles(user.getId());
 
         // 4. 토큰 생성
-        AuthTokenHelper.TokenPair tokenPair = authTokenHelper.generateTokenPair(user.getId());
+        TokenPair tokenPair = jwtTokenHelper.generateTokenPair(user.getId());
 
         // 5. Entity → DTO 변환
         List<AuthResponseDto.BusinessInfo> businessInfos =
@@ -137,8 +135,8 @@ public class AuthCommandService {
         return AuthResponseDto.UserSignIn.of(
                 user,
                 businessInfos,
-                tokenPair.getAccessToken(),
-                tokenPair.getRefreshToken()
+                tokenPair.accessToken(),
+                tokenPair.refreshToken()
         );
     }
 
@@ -164,7 +162,7 @@ public class AuthCommandService {
         List<UserBusinessRole> userBusinessRoles = authValidator.getUserBusinessRoles(user.getId());
 
         // 4. 토큰 생성
-        AuthTokenHelper.TokenPair tokenPair = authTokenHelper.generateTokenPair(user.getId());
+        TokenPair tokenPair = jwtTokenHelper.generateTokenPair(user.getId());
 
         // 5. Entity → DTO 변환
         List<AuthResponseDto.BusinessInfo> businessInfos =
@@ -176,8 +174,8 @@ public class AuthCommandService {
         return AuthResponseDto.CustomerOAuth.of(
                 user,
                 businessInfos,
-                tokenPair.getAccessToken(),
-                tokenPair.getRefreshToken(),
+                tokenPair.accessToken(),
+                tokenPair.refreshToken(),
                 isFirstLogin
         );
     }
@@ -201,19 +199,18 @@ public class AuthCommandService {
         UUID userId = tokenValidator.getUserIdFromToken(request.refreshToken());
 
         // 3. 새 토큰 생성
-        String newAccessToken = jwtTokenUtil.generateToken(userId);
-        String newRefreshToken = jwtTokenUtil.generateRefreshToken(userId);
+        TokenPair tokenPair = jwtTokenHelper.generateTokenPair(userId);
 
         // 4. 만료 시간 계산
-        Date expirationDate = tokenValidator.getExpirationDate(newAccessToken);
+        Date expirationDate = tokenValidator.getExpirationDate(tokenPair.accessToken());
         long expiresIn = (expirationDate.getTime() - System.currentTimeMillis()) / 1000;
 
         log.info("토큰 갱신 완료: userId={}", userId);
 
         // 5. DTO 반환
         return AuthResponseDto.TokenRefresh.of(
-                newAccessToken,
-                newRefreshToken,
+                tokenPair.accessToken(),
+                tokenPair.refreshToken(),
                 "Bearer",
                 expiresIn
         );
