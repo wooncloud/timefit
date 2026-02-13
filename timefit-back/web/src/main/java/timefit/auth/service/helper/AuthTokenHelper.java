@@ -3,7 +3,7 @@ package timefit.auth.service.helper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import timefit.auth.service.AuthTokenService;
+import timefit.auth.service.util.JwtTokenUtil;
 
 import java.util.UUID;
 
@@ -18,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthTokenHelper {
 
-    private final AuthTokenService authTokenService;
+    private final JwtTokenUtil jwtTokenUtil;
 
     /**
      * Access Token + Refresh Token 생성
@@ -27,8 +27,8 @@ public class AuthTokenHelper {
      * @return TokenPair (accessToken, refreshToken)
      */
     public TokenPair generateTokenPair(UUID userId) {
-        String accessToken = authTokenService.generateToken(userId);
-        String refreshToken = authTokenService.generateRefreshToken(userId);
+        String accessToken = jwtTokenUtil.generateToken(userId);
+        String refreshToken = jwtTokenUtil.generateRefreshToken(userId);
 
         return new TokenPair(accessToken, refreshToken);
     }

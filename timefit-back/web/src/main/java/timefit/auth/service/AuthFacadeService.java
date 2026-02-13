@@ -13,29 +13,27 @@ import timefit.auth.dto.AuthResponseDto;
 @Transactional(readOnly = true)
 public class AuthFacadeService {
 
-    private final UserRegistrationService userRegistrationService;
-    private final UserLoginService userLoginService;
-    private final AuthTokenService authTokenService;
+    private final AuthCommandService authCommandService;
 
     // 회원가입
     @Transactional
     public AuthResponseDto.UserSignUp signup(AuthRequestDto.UserSignUp request) {
         log.info("회원가입 처리 위임: email={}", request.email());
-        return userRegistrationService.registerUser(request);
+        return authCommandService.registerUser(request);
     }
 
     // 일반 로그인
     @Transactional
     public AuthResponseDto.UserSignIn signin(AuthRequestDto.UserSignIn request) {
         log.info("로그인 처리 위임: email={}", request.email());
-        return userLoginService.loginUser(request);
+        return authCommandService.loginUser(request);
     }
 
     // OAuth 로그인
     @Transactional
     public AuthResponseDto.CustomerOAuth customerOAuthLogin(AuthRequestDto.CustomerOAuth request) {
         log.info("OAuth 로그인 처리 위임: provider={}", request.provider());
-        return userLoginService.loginOAuthUser(request);
+        return authCommandService.loginOAuthUser(request);
     }
 
     // 로그아웃
@@ -44,7 +42,7 @@ public class AuthFacadeService {
         log.info("로그아웃 처리");
 
         if (request.currentToken() != null) {
-            authTokenService.invalidateToken(request.currentToken());
+            authCommandService.invalidateToken(request.currentToken());
         }
     }
 
@@ -52,6 +50,6 @@ public class AuthFacadeService {
     @Transactional
     public AuthResponseDto.TokenRefresh refreshToken(AuthRequestDto.TokenRefresh request) {
         log.info("토큰 갱신 처리 위임");
-        return authTokenService.refreshToken(request);
+        return authCommandService.refreshToken(request);
     }
 }
