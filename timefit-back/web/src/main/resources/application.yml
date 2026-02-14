@@ -36,10 +36,21 @@ timefit:
 jwt:
   secret: ${JWT_SECRET}
   issuer: timefit
+
+  # RSA 키 경로
+  access:
+    private-key-path: ${JWT_ACCESS_PRIVATE_KEY_PATH:keys/jwt/access_private_key.pem}
+    public-key-path: ${JWT_ACCESS_PUBLIC_KEY_PATH:keys/jwt/access_public_key.pem}
+
+  refresh:
+    private-key-path: ${JWT_REFRESH_PRIVATE_KEY_PATH:keys/jwt/refresh_private_key.pem}
+    public-key-path: ${JWT_REFRESH_PUBLIC_KEY_PATH:keys/jwt/refresh_public_key.pem}
+
   access-token:
-    expiration: 900000
+    expiration: 900000      # 15분
+
   refresh-token:
-    expiration: 604800000
+    expiration: 604800000   # 7일
 
 #actuator 설정
 management:
