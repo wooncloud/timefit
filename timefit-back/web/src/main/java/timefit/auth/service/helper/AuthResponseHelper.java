@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import timefit.auth.dto.AuthResponseDto;
 import timefit.business.entity.UserBusinessRole;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,11 +29,20 @@ public class AuthResponseHelper {
     public List<AuthResponseDto.BusinessInfo> convertToBusinessInfoList(
             List<UserBusinessRole> userBusinessRoles) {
 
-        return userBusinessRoles.stream()
-                .map(role -> AuthResponseDto.BusinessInfo.of(
-                        role.getBusiness(),
-                        role
-                ))
-                .toList();
+        if(userBusinessRoles == null || userBusinessRoles.isEmpty()) {
+            log.debug("비즈니스 권한 목록 비어있음.");
+            return List.of();
+        }
+
+        List<AuthResponseDto.BusinessInfo> businessInfoList =
+                new ArrayList<>(userBusinessRoles.size());
+
+        for(UserBusinessRole userBusinessRole : userBusinessRoles) {
+            businessInfoList.add(
+                    AuthResponseDto.BusinessInfo.of(userBusinessRole.getBusiness(), userBusinessRole)
+            );
+        }
+
+        return businessInfoList;
     }
 }
