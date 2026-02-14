@@ -55,3 +55,7 @@ nginx/logs/
 nginx/ssl/*.pem
 nginx/ssl/*.key
 nginx/ssl/*.crt
+
+## # JWT RSA Keys
+keys/
+*.pem
