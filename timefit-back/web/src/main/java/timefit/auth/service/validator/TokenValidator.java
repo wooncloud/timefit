@@ -9,6 +9,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import timefit.auth.provider.JwtAlgorithmProvider;
 import timefit.config.JwtConfig;
 import timefit.exception.auth.AuthErrorCode;
 import timefit.exception.auth.AuthException;
@@ -22,9 +23,6 @@ import java.util.UUID;
  * - 토큰 유효성 검증
  * - 토큰 파싱 및 정보 추출
  * - 토큰 만료 시간 조회
- * 책임 분리:
- * - AuthTokenService: 토큰 생성, 갱신, 무효화
- * - TokenValidator: 토큰 검증 및 정보 추출
  */
 @Slf4j
 @Component
@@ -32,37 +30,72 @@ import java.util.UUID;
 public class TokenValidator {
 
     private final JwtConfig jwtConfig;
+    private final JwtAlgorithmProvider jwtAlgorithmProvider;
 
     /**
-     * 토큰 유효성 검증
+     * Access Token 유효성 검증
      *
-     * @param token JWT 토큰
+     * @param token JWT Access Token
      * @return 유효하면 true, 그렇지 않으면 false
      */
     public boolean isValidToken(String token) {
         try {
-            verifyToken(token);
+            verifyAccessToken(token);
             return true;
         } catch (JWTVerificationException | IllegalArgumentException e) {
-            log.debug("유효하지 않은 token: {}", e.getMessage());
+            log.debug("유효하지 않은 Access Token: {}", e.getMessage());
             return false;
         }
     }
 
     /**
-     * 토큰에서 사용자 ID 추출
+     * Refresh Token 유효성 검증
      *
-     * @param token JWT 토큰
+     * @param token JWT Refresh Token
+     * @return 유효하면 true, 그렇지 않으면 false
+     */
+    public boolean isValidRefreshToken(String token) {
+        try {
+            verifyRefreshToken(token);
+            return true;
+        } catch (JWTVerificationException | IllegalArgumentException e) {
+            log.debug("유효하지 않은 Refresh Token: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Access Token에서 사용자 ID 추출
+     *
+     * @param token JWT Access Token
      * @return 사용자 ID (UUID)
      * @throws AuthException 토큰이 유효하지 않거나 UUID 파싱 실패 시
      */
     public UUID getUserIdFromToken(String token) {
         try {
-            DecodedJWT decodedJWT = verifyToken(token);
+            DecodedJWT decodedJWT = verifyAccessToken(token);
             String userId = decodedJWT.getSubject();
             return UUID.fromString(userId);
         } catch (IllegalArgumentException e) {
-            log.error("유효하지 않은 UUID의 token 입니다: {}", e.getMessage());
+            log.error("유효하지 않은 UUID의 token: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+        }
+    }
+
+    /**
+     * Refresh Token에서 사용자 ID 추출
+     *
+     * @param token JWT Refresh Token
+     * @return 사용자 ID (UUID)
+     * @throws AuthException 토큰이 유효하지 않거나 UUID 파싱 실패 시
+     */
+    public UUID getUserIdFromRefreshToken(String token) {
+        try {
+            DecodedJWT decodedJWT = verifyRefreshToken(token);
+            String userId = decodedJWT.getSubject();
+            return UUID.fromString(userId);
+        } catch (IllegalArgumentException e) {
+            log.error("유효하지 않은 UUID의 Refresh Token: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
@@ -72,39 +105,63 @@ public class TokenValidator {
      *
      * @param token JWT 토큰
      * @return 만료 시간
-     * @throws AuthException 토큰이 유효하지 않을 시
      */
     public Date getExpirationDate(String token) {
+        // 검증 없이 디코딩만 수행 (만료 시간 조회용)
+        DecodedJWT decodedJWT = JWT.decode(token);
+        return decodedJWT.getExpiresAt();
+    }
+
+    /**
+     * Access Token 검증 및 디코딩
+     *
+     * @param token JWT Access Token
+     * @return 디코딩된 JWT
+     * @throws AuthException 토큰이 만료되었거나 유효하지 않을 시
+     */
+    private DecodedJWT verifyAccessToken(String token) {
         try {
-            DecodedJWT decodedJWT = verifyToken(token);
-            return decodedJWT.getExpiresAt();
+            Algorithm algorithm = jwtAlgorithmProvider.getAccessTokenAlgorithm();  // RS256
+            JWTVerifier verifier = JWT.require(algorithm)
+                    .withIssuer(jwtConfig.getIssuer())
+                    .build();
+
+            DecodedJWT decodedJWT = verifier.verify(token);
+            log.debug("Access Token 검증 성공 (RS256)");
+            return decodedJWT;
+
+        } catch (TokenExpiredException e) {
+            log.warn("만료된 Access Token: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
         } catch (JWTVerificationException e) {
-            log.error("토큰 만료 시간 조회 실패: {}", e.getMessage());
+            log.warn("Access Token 검증 실패: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
 
     /**
-     * 토큰 검증 및 디코딩
+     * Refresh Token 검증 및 디코딩
      *
-     * @param token JWT 토큰
+     * @param token JWT Refresh Token
      * @return 디코딩된 JWT
      * @throws AuthException 토큰이 만료되었거나 유효하지 않을 시
      */
-    public DecodedJWT verifyToken(String token) {
+    private DecodedJWT verifyRefreshToken(String token) {
         try {
-            Algorithm algorithm = Algorithm.HMAC512(jwtConfig.getSecretKey());
+            Algorithm algorithm = jwtAlgorithmProvider.getRefreshTokenAlgorithm();  // RS512
             JWTVerifier verifier = JWT.require(algorithm)
                     .withIssuer(jwtConfig.getIssuer())
                     .build();
 
-            return verifier.verify(token);
+            DecodedJWT decodedJWT = verifier.verify(token);
+            log.debug("Refresh Token 검증 성공 (RS512)");
+            return decodedJWT;
 
         } catch (TokenExpiredException e) {
-            log.warn("만료된 토큰: {}", e.getMessage());
+            log.warn("만료된 Refresh Token: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
         } catch (JWTVerificationException e) {
-            log.warn("토큰 검증 실패: {}", e.getMessage());
+            log.warn("Refresh Token 검증 실패: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }

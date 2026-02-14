@@ -190,13 +190,13 @@ public class AuthCommandService {
     public AuthResponseDto.TokenRefresh refreshToken(AuthRequestDto.TokenRefresh request) {
         log.info("토큰 갱신 처리 시작");
 
-        // 1. Refresh Token 유효성 검증
-        if (!tokenValidator.isValidToken(request.refreshToken())) {
+        // 유효 토큰 인지 검증
+        if (!tokenValidator.isValidRefreshToken(request.refreshToken())) {
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
 
-        // 2. 사용자 ID 추출
-        UUID userId = tokenValidator.getUserIdFromToken(request.refreshToken());
+        // Refresh 토큰 으로 부터 사용자 검증
+        UUID userId = tokenValidator.getUserIdFromRefreshToken(request.refreshToken());
 
         // 3. 새 토큰 생성
         TokenPair tokenPair = jwtTokenHelper.generateTokenPair(userId);

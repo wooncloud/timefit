@@ -1,4 +1,4 @@
- package timefit.auth.service.helper;
+package timefit.auth.service.helper;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -16,10 +16,11 @@ import java.util.Date;
 import java.util.UUID;
 
 /**
- * JWT 토큰 생성 유틸리티
- * 역할:
- * - 순수 토큰 생성 로직 (계산기 역할)
- * - Access Token / Refresh Token 생성
+ * JWT 토큰 생성 Helper
+ *
+ * Phase 1: RSA 비대칭키
+ * - Access Token: RS256 (빠른 검증)
+ * - Refresh Token: RS512 (강한 보안)
  */
 @Slf4j
 @Component
@@ -30,7 +31,7 @@ public class JwtTokenHelper {
     private final JwtAlgorithmProvider algorithmProvider;
 
     /**
-     * Access Token + Refresh Token 생성
+     * Access Token + Refresh Token 쌍 생성
      *
      * @param userId 사용자 ID
      * @return TokenPair (accessToken, refreshToken)
@@ -39,47 +40,50 @@ public class JwtTokenHelper {
         String accessToken = generateToken(userId);
         String refreshToken = generateRefreshToken(userId);
 
-        return new TokenPair(accessToken, refreshToken);
+        return TokenPair.of(accessToken, refreshToken);
     }
 
     /**
-     * Access Token 생성
+     * Access Token 생성 (RS256)
      *
      * @param userId 사용자 ID
      * @return JWT Access Token
      */
     public String generateToken(UUID userId) {
         try {
-            Algorithm algorithm = algorithmProvider.getAlgorithm();
+            Algorithm algorithm = algorithmProvider.getAccessTokenAlgorithm();  // RS256
             Date now = new Date();
-            Date expiryDate = new Date(now.getTime() + jwtConfig.getAccessTokenExpiration());
+            Date expiryDate = new Date(now.getTime() + jwtConfig.getAccessToken().getExpiration());
 
-            return JWT.create()
+            String token = JWT.create()
                     .withIssuer(jwtConfig.getIssuer())
                     .withSubject(userId.toString())
                     .withIssuedAt(now)
                     .withExpiresAt(expiryDate)
                     .sign(algorithm);
 
+            log.debug("Access Token 생성 성공 (RS256): userId={}", userId);
+            return token;
+
         } catch (JWTCreationException e) {
-            log.error("JWT 토큰 생성 실패: {}", e.getMessage());
+            log.error("Access Token 생성 실패: userId={}, error={}", userId, e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
 
     /**
-     * Refresh Token 생성
+     * Refresh Token 생성 (RS512)
      *
      * @param userId 사용자 ID
      * @return JWT Refresh Token
      */
     public String generateRefreshToken(UUID userId) {
         try {
-            Algorithm algorithm = algorithmProvider.getAlgorithm();
+            Algorithm algorithm = algorithmProvider.getRefreshTokenAlgorithm();  // RS512
             Date now = new Date();
-            Date expiryDate = new Date(now.getTime() + jwtConfig.getRefreshTokenExpiration());
+            Date expiryDate = new Date(now.getTime() + jwtConfig.getRefreshToken().getExpiration());
 
-            return JWT.create()
+            String token = JWT.create()
                     .withIssuer(jwtConfig.getIssuer())
                     .withSubject(userId.toString())
                     .withIssuedAt(now)
@@ -87,8 +91,11 @@ public class JwtTokenHelper {
                     .withClaim("tokenType", "refresh")
                     .sign(algorithm);
 
+            log.debug("Refresh Token 생성 성공 (RS512): userId={}", userId);
+            return token;
+
         } catch (JWTCreationException e) {
-            log.error("Refresh 토큰 생성 실패: {}", e.getMessage());
+            log.error("Refresh Token 생성 실패: userId={}, error={}", userId, e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
