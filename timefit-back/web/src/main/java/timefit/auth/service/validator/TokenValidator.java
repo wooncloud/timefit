@@ -165,4 +165,28 @@ public class TokenValidator {
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
+
+    /**
+     * Refresh Token에서 JWT ID (jti) 추출
+     *
+     * @param token JWT Refresh Token
+     * @return JWT ID (jti)
+     */
+    public String getJtiFromRefreshToken(String token) {
+        try {
+            DecodedJWT decodedJWT = verifyRefreshToken(token);
+            String jti = decodedJWT.getId();
+
+            if (jti == null || jti.isBlank()) {
+                log.error("Refresh Token에 jti가 없습니다");
+                throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+            }
+
+            return jti;
+
+        } catch (JWTVerificationException e) {
+            log.error("jti 추출 실패: {}", e.getMessage());
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+        }
+    }
 }
