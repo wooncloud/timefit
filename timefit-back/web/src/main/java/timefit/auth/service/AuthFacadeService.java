@@ -42,7 +42,7 @@ public class AuthFacadeService {
         log.info("로그아웃 처리");
 
         if (request.currentToken() != null) {
-            authCommandService.invalidateToken(request.currentToken());
+            authCommandService.logout(request.currentToken());
         }
     }
 

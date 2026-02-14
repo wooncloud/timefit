@@ -36,9 +36,9 @@ public class JwtTokenHelper {
      * @param userId 사용자 ID
      * @return TokenPair (accessToken, refreshToken)
      */
-    public TokenPair generateTokenPair(UUID userId) {
+    public TokenPair generateTokenPair(UUID userId, String jti) {
         String accessToken = generateToken(userId);
-        String refreshToken = generateRefreshToken(userId);
+        String refreshToken = generateRefreshToken(userId, jti);
 
         return TokenPair.of(accessToken, refreshToken);
     }
@@ -77,7 +77,7 @@ public class JwtTokenHelper {
      * @param userId 사용자 ID
      * @return JWT Refresh Token
      */
-    public String generateRefreshToken(UUID userId) {
+    public String generateRefreshToken(UUID userId, String jti) {
         try {
             Algorithm algorithm = algorithmProvider.getRefreshTokenAlgorithm();  // RS512
             Date now = new Date();
@@ -86,6 +86,7 @@ public class JwtTokenHelper {
             String token = JWT.create()
                     .withIssuer(jwtConfig.getIssuer())
                     .withSubject(userId.toString())
+                    .withJWTId(jti)
                     .withIssuedAt(now)
                     .withExpiresAt(expiryDate)
                     .withClaim("tokenType", "refresh")
