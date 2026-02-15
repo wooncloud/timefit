@@ -13,8 +13,11 @@ import timefit.auth.dto.AuthRequestDto;
 import timefit.auth.dto.AuthResponseDto;
 import timefit.auth.service.AuthFacadeService;
 import timefit.common.ResponseData;
+import timefit.common.auth.CurrentUserId;
 import timefit.common.swagger.operation.auth.*;
 import timefit.common.swagger.requestbody.auth.*;
+
+import java.util.UUID;
 
 @Tag(name = "01. 인증/인가", description = "사용자 회원가입, 로그인, 토큰 관리 API")
 @Slf4j
@@ -105,13 +108,10 @@ public class AuthController {
     @LogoutOperation
     @PostMapping("/logout")
     public ResponseEntity<ResponseData<Void>> logout(
-            @LogoutRequestBody @Valid @RequestBody AuthRequestDto.Logout request) {
+            @LogoutRequestBody @Valid @RequestBody AuthRequestDto.Logout request,
+            @Parameter(hidden = true) @CurrentUserId UUID userId) {
 
-        log.info("로그아웃 요청");
-
-        authFacadeService.logout(request);
-
-        log.info("로그아웃 완료");
+        authFacadeService.logout(request.currentToken(), userId);
 
         return ResponseEntity.ok(ResponseData.of(null));
     }

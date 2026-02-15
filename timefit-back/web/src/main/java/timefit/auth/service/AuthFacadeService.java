@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import timefit.auth.dto.AuthRequestDto;
 import timefit.auth.dto.AuthResponseDto;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -38,12 +40,8 @@ public class AuthFacadeService {
 
     // 로그아웃
     @Transactional
-    public void logout(AuthRequestDto.Logout request) {
-        log.info("로그아웃 처리");
-
-        if (request.currentToken() != null) {
-            authCommandService.logout(request.currentToken());
-        }
+    public void logout(String refreshToken, UUID userId) {
+        authCommandService.logout(refreshToken, userId);
     }
 
     // 토큰 갱신

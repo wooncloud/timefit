@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import timefit.auth.provider.JwtAlgorithmProvider;
+import timefit.auth.service.dto.RefreshTokenClaims;
 import timefit.config.JwtConfig;
 import timefit.exception.auth.AuthErrorCode;
 import timefit.exception.auth.AuthException;
@@ -49,22 +50,6 @@ public class TokenValidator {
     }
 
     /**
-     * Refresh Token 유효성 검증
-     *
-     * @param token JWT Refresh Token
-     * @return 유효하면 true, 그렇지 않으면 false
-     */
-    public boolean isValidRefreshToken(String token) {
-        try {
-            verifyRefreshToken(token);
-            return true;
-        } catch (JWTVerificationException | IllegalArgumentException e) {
-            log.debug("유효하지 않은 Refresh Token: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    /**
      * Access Token에서 사용자 ID 추출
      *
      * @param token JWT Access Token
@@ -72,32 +57,37 @@ public class TokenValidator {
      * @throws AuthException 토큰이 유효하지 않거나 UUID 파싱 실패 시
      */
     public UUID getUserIdFromToken(String token) {
-        try {
-            DecodedJWT decodedJWT = verifyAccessToken(token);
-            String userId = decodedJWT.getSubject();
-            return UUID.fromString(userId);
-        } catch (IllegalArgumentException e) {
-            log.error("유효하지 않은 UUID의 token: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
-        }
+        DecodedJWT decodedJWT = verifyAccessToken(token);
+        return UUID.fromString(decodedJWT.getSubject());
     }
 
     /**
-     * Refresh Token에서 사용자 ID 추출
+     * Refresh Token에서 jti와 userId 한 번에 추출
      *
-     * @param token JWT Refresh Token
-     * @return 사용자 ID (UUID)
-     * @throws AuthException 토큰이 유효하지 않거나 UUID 파싱 실패 시
+     * 성능 최적화:
+     * - 토큰을 1번만 파싱 (기존: 2-3번)
+     * - jti + userId를 동시에 추출
+     *
+     * @param token Refresh Token
+     * @return RefreshTokenClaims (jti, userId)
+     * @throws AuthException 토큰이 유효하지 않을 경우
      */
-    public UUID getUserIdFromRefreshToken(String token) {
-        try {
-            DecodedJWT decodedJWT = verifyRefreshToken(token);
-            String userId = decodedJWT.getSubject();
-            return UUID.fromString(userId);
-        } catch (IllegalArgumentException e) {
-            log.error("유효하지 않은 UUID의 Refresh Token: {}", e.getMessage());
+    public RefreshTokenClaims extractRefreshTokenClaims(String token) {
+        // 토큰 유효성 검사
+        DecodedJWT decodedJWT = verifyRefreshToken(token);
+
+        // jti 추출 및 검증
+        String jti = decodedJWT.getId();
+        if (jti == null || jti.isBlank()) {
+            log.error("Refresh Token에 jti가 없습니다");
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
+
+        // userId 추출
+        UUID userId = UUID.fromString(decodedJWT.getSubject());
+        log.debug("Refresh Token Claims 추출 완료: jti={}, userId={}", jti, userId);
+
+        return RefreshTokenClaims.of(jti, userId);
     }
 
     /**
@@ -111,82 +101,59 @@ public class TokenValidator {
         DecodedJWT decodedJWT = JWT.decode(token);
         return decodedJWT.getExpiresAt();
     }
+    // ========== Private 검증 로직 ==========
 
     /**
-     * Access Token 검증 및 디코딩
+     * Access Token 검증 및 디코딩 (RS256)
      *
      * @param token JWT Access Token
      * @return 디코딩된 JWT
      * @throws AuthException 토큰이 만료되었거나 유효하지 않을 시
      */
     private DecodedJWT verifyAccessToken(String token) {
-        try {
-            Algorithm algorithm = jwtAlgorithmProvider.getAccessTokenAlgorithm();  // RS256
-            JWTVerifier verifier = JWT.require(algorithm)
-                    .withIssuer(jwtConfig.getIssuer())
-                    .build();
-
-            DecodedJWT decodedJWT = verifier.verify(token);
-            log.debug("Access Token 검증 성공 (RS256)");
-            return decodedJWT;
-
-        } catch (TokenExpiredException e) {
-            log.warn("만료된 Access Token: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
-        } catch (JWTVerificationException e) {
-            log.warn("Access Token 검증 실패: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
-        }
+        Algorithm algorithm = jwtAlgorithmProvider.getAccessTokenAlgorithm();
+        DecodedJWT decodedJWT = verifyToken(token, algorithm);
+        log.debug("Access Token 검증 성공 (RS256)");
+        return decodedJWT;
     }
 
     /**
-     * Refresh Token 검증 및 디코딩
+     * Refresh Token 검증 및 디코딩 (RS512)
      *
      * @param token JWT Refresh Token
      * @return 디코딩된 JWT
      * @throws AuthException 토큰이 만료되었거나 유효하지 않을 시
      */
     private DecodedJWT verifyRefreshToken(String token) {
+        Algorithm algorithm = jwtAlgorithmProvider.getRefreshTokenAlgorithm();
+        DecodedJWT decodedJWT = verifyToken(token, algorithm);
+        log.debug("Refresh Token 검증 성공 (RS512)");
+        return decodedJWT;
+    }
+
+    /**
+     * JWT 검증 및 디코딩 (통합 메서드)
+     *
+     * @param token JWT 토큰
+     * @param algorithm 검증 알고리즘 (RS256 또는 RS512)
+     * @return 디코딩된 JWT
+     * @throws AuthException 토큰이 만료되었거나 유효하지 않을 시
+     */
+    private DecodedJWT verifyToken(String token, Algorithm algorithm) {
         try {
-            Algorithm algorithm = jwtAlgorithmProvider.getRefreshTokenAlgorithm();  // RS512
             JWTVerifier verifier = JWT.require(algorithm)
                     .withIssuer(jwtConfig.getIssuer())
                     .build();
 
-            DecodedJWT decodedJWT = verifier.verify(token);
-            log.debug("Refresh Token 검증 성공 (RS512)");
-            return decodedJWT;
+            return verifier.verify(token);
 
         } catch (TokenExpiredException e) {
-            log.warn("만료된 Refresh Token: {}", e.getMessage());
+            log.warn("만료된 Token: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
         } catch (JWTVerificationException e) {
-            log.warn("Refresh Token 검증 실패: {}", e.getMessage());
+            log.warn("Token 검증 실패: {}", e.getMessage());
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
 
-    /**
-     * Refresh Token에서 JWT ID (jti) 추출
-     *
-     * @param token JWT Refresh Token
-     * @return JWT ID (jti)
-     */
-    public String getJtiFromRefreshToken(String token) {
-        try {
-            DecodedJWT decodedJWT = verifyRefreshToken(token);
-            String jti = decodedJWT.getId();
-
-            if (jti == null || jti.isBlank()) {
-                log.error("Refresh Token에 jti가 없습니다");
-                throw new AuthException(AuthErrorCode.TOKEN_INVALID);
-            }
-
-            return jti;
-
-        } catch (JWTVerificationException e) {
-            log.error("jti 추출 실패: {}", e.getMessage());
-            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
-        }
-    }
 }
