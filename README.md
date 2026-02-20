@@ -4,7 +4,7 @@
 
 ## 개요
 
-Timefit은 Next.js 15와 Spring Boot 3.4.5로 구축된 현대적인 웹 애플리케이션으로, 비즈니스가 예약, 일정 및 고객 관계를 효율적으로 관리할 수 있도록 설계되었습니다. 데스크톱과 모바일 기기 모두에 최적화된 반응형 디자인을 제공합니다.
+Timefit은 Next.js 15와 Spring Boot 3.3.5로 구축된 현대적인 웹 애플리케이션으로, 비즈니스가 예약, 일정 및 고객 관계를 효율적으로 관리할 수 있도록 설계되었습니다. 데스크톱과 모바일 기기 모두에 최적화된 반응형 디자인을 제공합니다.
 
 ### 주요 기능
 
@@ -36,19 +36,30 @@ Timefit은 Next.js 15와 Spring Boot 3.4.5로 구축된 현대적인 웹 애플�
   - 포괄적인 에러 핸들링
 
 ### 백엔드 ([timefit-back/](timefit-back/))
-- **프레임워크**: Spring Boot 3.4.5, Java 21
+- **프레임워크**: Spring Boot 3.3.5, Java 21
 - **아키텍처**: 멀티 모듈 Gradle 프로젝트
   - `web`: 컨트롤러, DTO, 서비스, 보안
   - `domain`: 비즈니스 엔티티, 리포지토리
   - `user`: 사용자 관리
   - `jpa-common`: 공유 JPA 설정
 - **데이터베이스**: PostgreSQL (JPA/Hibernate, QueryDSL)
-- **보안**: Spring Security를 통한 JWT 토큰
+- **보안**: Spring Security, JWT
+- **배포**: Docker
+- **웹서버**: Nginx (Reverse Proxy, Rate Limiting, HTTPS)
+- **모니터링**: Prometheus, Grafana, Spring Actuator
 - **주요 기능**:
-  - RESTful API 디자인
-  - 포괄적인 예외 처리
-  - 복잡한 쿼리를 위한 QueryDSL
-  - 모니터링을 위한 Spring Actuator
+  - 예약 생성 및 상태 관리
+  - BookingSlot 기반 예약 가능 시간 관리
+  - 영업시간·운영 일정 설정
+  - 이메일 초대 기반 팀원 관리 (비동기 발송)
+  - 역할 기반 접근 제어
+  - 리뷰 작성 및 업체별 통계
+  - 찜 목록 관리
+
+### 부하 테스트 ([timefit-test/](https://github.com/wooncloud/timefit/tree/main/timefit-test))
+- **부하 테스트**: k6 (API 복잡도별 3계층 시나리오, 동시성 테스트)
+- **APM**: Scouter
+- **모니터링 설정**: Grafana 대시보드, Prometheus 데이터소스
 
 ## 기술 스택
 
@@ -67,14 +78,22 @@ Timefit은 Next.js 15와 Spring Boot 3.4.5로 구축된 현대적인 웹 애플�
 ### 백엔드
 | 카테고리 | 기술 |
 |----------|-----------|
-| 프레임워크 | Spring Boot 3.4.5, Java 21 |
+| 프레임워크 | Spring Boot 3.3.5, Java 21 |
+| 아키텍처 | 멀티 모듈 Gradle (web / domain / user / jpa-common) |
 | 데이터베이스 | PostgreSQL |
 | ORM | JPA/Hibernate, QueryDSL |
 | 보안 | Spring Security, JWT |
-| 빌드 도구 | Gradle (멀티 모듈) |
-| 모니터링 | Spring Actuator |
+| API 문서 | Swagger / OpenAPI |
+| 빌드 도구 | Gradle |
+| 배포 | Docker |
+| 웹서버 | Nginx |
+| 모니터링 | Prometheus, Grafana, Spring Actuator |
+| APM | Scouter |
+| 부하 테스트 | k6 |
 
 ## 프로젝트 구조
+
+### timefit-front (프론트엔드)
 
 ```
 timefit/
@@ -99,6 +118,60 @@ timefit/
     ├── user/                   # 사용자 관리
     └── jpa-common/             # 기본 엔티티, JPA 설정
 ```
+
+### timefit-back (백엔드)
+
+```
+timefit-back/
+├── docker-compose.yml
+├── docker-compose.prod.yml
+├── Dockerfile / Dockerfile.dev
+├── init-jwt-keys.sh            # RSA 키쌍 생성 스크립트
+├── init-certs.sh               # SSL 인증서 초기화
+│
+├── web/                        # 실행 모듈 (Spring MVC, Security)
+│   └── src/
+│       ├── main/java/
+│       │   ├── auth/           # 로그인·회원가입·토큰 갱신
+│       │   ├── booking/        # BookingSlot 생성·조회·삭제
+│       │   ├── business/       # 업체 관리·검색·멤버 초대
+│       │   ├── businesscategory/
+│       │   ├── invitation/     # 이메일 초대 처리
+│       │   ├── menu/           # 서비스 상품 관리
+│       │   ├── operatinghours/ # 영업시간·운영 일정
+│       │   ├── reservation/    # 예약 생성·상태 전이
+│       │   ├── review/         # 리뷰 작성·통계
+│       │   ├── wishlist/       # 찜 목록
+│       │   ├── user/           # 프로필·비밀번호
+│       │   ├── config/         # Security·JWT·Async·OpenAPI 설정
+│       │   └── exception/      # GlobalExceptionHandler, 도메인별 ErrorCode
+│       └── test/
+│           ├── http/           # IntelliJ HTTP Client 통합 테스트
+│           └── sql/            # EXPLAIN ANALYZE 성능 측정 SQL
+│
+├── domain/                     # 비즈니스 엔티티·JPA Repository·QueryDSL
+├── user/                       # User 엔티티·Repository
+└── jpa-common/                 # BaseEntity, Auditing 설정
+```
+
+각 도메인은 `controller / dto(request·response) / service(Facade·Command·Query) / validator` 계층으로 구성됩니다.
+
+### timefit-test (부하 테스트·모니터링, 별도 레포)
+
+```
+timefit-test/
+├── scripts/
+│   ├── 01-patterns/            # API 복잡도별 성능 측정
+│   │   ├── level-1-no-join/    # 단순 조회
+│   │   ├── level-2-single-join/# 단일 조인
+│   │   └── level-3-multiple-join/ # 다중 조인
+│   └── 02-booking/             # 동시성 시나리오
+├── scouter/                    # Scouter APM (agent·collector·webapp)
+├── grafana-dashboards/         # Grafana 대시보드 JSON
+├── grafana-datasources/        # Prometheus 데이터소스 설정
+└── config/                     # 환경별 설정
+```
+
 
 ## 주요 기능 및 패턴
 
