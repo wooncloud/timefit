@@ -29,8 +29,8 @@
 
 
     "// ========== 전체 실행 (하나 실패 시 중단) ==========": "",
-    "test:all:phase1": "npm run test:pattern:l1:smoke && npm run test:pattern:l1:load && npm run test:pattern:l1:stress && npm run test:pattern:l1:soak && npm run test:pattern:l2:load && npm run test:pattern:l2:stress && npm run test:pattern:l2:spike && npm run test:pattern:l3:load && npm run test:pattern:l3:stress",
-    "test:all:phase2": "npm run test:booking:slot-generation && npm run test:booking:concurrent && npm run test:booking:query",
+    "test:all:phase1": "npx npm-run-all -c -s test:pattern:l1:all test:pattern:l2:all test:pattern:l3:all",
+    "test:all:phase2": "npx npm-run-all -c -s test:booking:all",
     "test:all": "npm run test:all:phase1 && npm run test:all:phase2",
     "// ========== 전체 실행 (실패해도 계속) ==========": "",
     "test:all:phase1:continue": "npm run test:pattern:l1:smoke; npm run test:pattern:l1:load; npm run test:pattern:l1:stress; npm run test:pattern:l1:soak; npm run test:pattern:l2:load; npm run test:pattern:l2:stress; npm run test:pattern:l2:spike; npm run test:pattern:l3:load; npm run test:pattern:l3:stress",

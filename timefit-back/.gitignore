@@ -38,11 +38,8 @@ out/
 
 ### Environment Variables & Local Config ###
 web/.env
+.env.*
 /uploads/
-
-### Docker ###
-docker-compose.yml
-docker-compose.override.yml
 
 ### QueryDSL generated sources ###
 **/build/generated/
@@ -50,3 +47,12 @@ docker-compose.override.yml
 ### Nginx ###
 # 로그 파일 (자동 생성)
 nginx/logs/
+
+### SSL 인증서
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+## # JWT RSA Keys
+keys/
+*.pem

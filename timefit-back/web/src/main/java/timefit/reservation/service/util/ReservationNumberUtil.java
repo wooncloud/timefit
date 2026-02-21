@@ -14,7 +14,7 @@ import java.util.UUID;
  * - 20251020143052: 생성 시각 (yyyyMMddHHmmss)
  * - A1B2C3: 랜덤 6자리 (충돌 방지)
  */
-@Component
+//@Component
 public class ReservationNumberUtil {
 
     private static final String PREFIX = "RES";
@@ -26,7 +26,7 @@ public class ReservationNumberUtil {
      *
      * @return 생성된 예약 번호 (예: RES-20251020143052-A1B2C3)
      */
-    public String generate() {
+    public static String generate() {
         String datePart = LocalDateTime.now().format(DATE_FORMATTER);
         String randomPart = UUID.randomUUID()
                 .toString()

@@ -4,11 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import timefit.business.entity.UserBusinessRole;
+import timefit.business.repository.UserBusinessRoleRepository;
 import timefit.exception.auth.AuthErrorCode;
 import timefit.exception.auth.AuthException;
 import timefit.user.entity.User;
 import timefit.user.repository.UserRepository;
 
+import java.util.List;
+import java.util.UUID;
 /**
  * Auth 도메인 검증 클래스
  * 목적:
@@ -22,6 +26,7 @@ import timefit.user.repository.UserRepository;
 public class AuthValidator {
 
     private final UserRepository userRepository;
+    private final UserBusinessRoleRepository userBusinessRoleRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -81,11 +86,21 @@ public class AuthValidator {
      * @return User 엔티티
      * @throws AuthException 사용자가 존재하지 않을 경우
      */
-    public User validateUserExists(java.util.UUID userId) {
+    public User validateUserExists(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 사용자 ID: {}", userId);
                     return new AuthException(AuthErrorCode.USER_NOT_FOUND);
                 });
+    }
+
+    /**
+     * 사용자의 활성화된 비즈니스 권한 조회
+     * @param userId 사용자 ID
+     * @return 활성화된 비즈니스 권한 목록
+     */
+    public List<UserBusinessRole> getUserBusinessRoles(UUID userId) {
+        log.debug("사용자 비즈니스 권한 조회: userId={}", userId);
+        return userBusinessRoleRepository.findByUserIdAndIsActive(userId, true);
     }
 }

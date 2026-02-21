@@ -1,30 +1,81 @@
-# Timefit 리버스 프록시 설정 (템플릿)
-# 위치: timefit-back/nginx/templates/default.conf.template
-# 환경 변수: BACKEND_HOST, BACKEND_PORT (.env 파일에서 읽음)
+# Timefit 리버스 프록시 설정
+# 환경 변수는 .env 파일에서 읽음
+
+# Rate Limiting Zones (서버 보호)
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=${NGINX_RATE_LIMIT};
+limit_conn_zone $binary_remote_addr zone=addr:10m;
 
 # Upstream: Spring Boot 백엔드 서버 정의
 upstream spring_boot {
-    # .env 파일에서 설정된 백엔드 주소 사용
     server ${BACKEND_HOST}:${BACKEND_PORT} max_fails=3 fail_timeout=30s;
-    
+
     # Connection Pooling 설정
     keepalive 32;                   # 재사용할 연결 수 (동시 처리 예상치의 10-20%)
     keepalive_timeout 60s;          # 연결 유지 시간
     keepalive_requests 100;         # 연결당 최대 요청 수
 }
 
-# HTTP 서버 블록
+# HTTP 서버 (포트 80) - HTTPS로 리다이렉트
 server {
     listen 80;
-    server_name localhost;          # 실제 배포 시 도메인으로 변경
+    server_name ${NGINX_DOMAIN_NAME};
 
-    # 클라이언트 요청 제한
-    client_max_body_size 10M;
+    # Let's Encrypt 인증 경로 (리다이렉트 제외)
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # 모든 요청 → HTTPS 리다이렉트
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS 서버 (포트 443)
+server {
+    listen 443 ssl http2;
+    server_name ${NGINX_DOMAIN_NAME};
+
+    # SSL 인증서
+    ssl_certificate /etc/nginx/ssl/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+
+    # SSL 보안 설정
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
+    ssl_prefer_server_ciphers off;
+
+    # HSTS (HTTP Strict Transport Security)
+    # 브라우저가 앞으로 무조건 HTTPS만 사용하도록 강제
+    # max-age: 1년 (31536000초)
+    # includeSubDomains: 서브도메인도 포함
+    # preload: HSTS Preload List 등록 가능
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
+    # 보안 헤더
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    client_max_body_size 100M;
     client_body_timeout 60s;
     client_header_timeout 60s;
 
-    # 모든 요청을 Spring Boot로 프록시
-    location / {
+    # Nginx 상태 확인 (stub_status - 모니터링용)
+    location /nginx_status {
+        stub_status on;
+        access_log off;
+        allow 127.0.0.1;
+        allow 172.16.0.0/12;        # Docker network
+        deny all;
+    }
+
+    # API 엔드포인트 (Rate Limiting 적용)
+    location /api/ {
+        # Rate Limiting (서버 보호!)
+        limit_req zone=api_limit burst=${NGINX_RATE_BURST} nodelay;
+        limit_conn addr 50;         # IP당 최대 50개 동시 연결
+
         # 백엔드 서버로 요청 전달
         proxy_pass http://spring_boot;
 
@@ -36,14 +87,14 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Port $server_port;
 
-        # 타임아웃 설정
-        proxy_connect_timeout 60s;      # 백엔드 연결 타임아웃
-        proxy_send_timeout 60s;         # 요청 전송 타임아웃
-        proxy_read_timeout 60s;         # 응답 대기 타임아웃
+        # 타임아웃 설정 (부하 테스트 고려)
+        proxy_connect_timeout 10s;   # 백엔드 연결 타임아웃
+        proxy_send_timeout 120s;     # 요청 전송 타임아웃
+        proxy_read_timeout 120s;     # 응답 대기 타임아웃 (60s → 120s)
 
         # 버퍼 설정 (성능 최적화)
         proxy_buffering on;
@@ -52,31 +103,68 @@ server {
         proxy_busy_buffers_size 8k;
 
         # 에러 처리
-        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503;
+        proxy_next_upstream error timeout http_502 http_503 http_504;
         proxy_next_upstream_tries 2;
     }
 
-    # 헬스체크 엔드포인트 (선택사항)
+    # Actuator (모니터링 - Rate Limit 제외)
+    location /actuator/ {
+        # Rate Limiting 제외 (모니터링용)
+        proxy_pass http://spring_boot;
+
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 30s;
+    }
+
+    # Swagger (개발 환경 - Rate Limit 제외)
+    location /swagger-ui/ {
+        proxy_pass http://spring_boot;
+
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto https;
+
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 30s;
+    }
+
+    location /v1/api-docs {
+        proxy_pass http://spring_boot;
+
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+
+    # 헬스체크 엔드포인트
     location /health {
         access_log off;                 # 헬스체크는 로그 기록 안 함
         proxy_pass http://spring_boot/actuator/health;
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
-    # Nginx 상태 확인 (개발 환경용)
-    # NGINX_STATUS_ENABLED=on 일 때만 활성화
-    location /nginx_status {
-        stub_status ${NGINX_STATUS_ENABLED};
-        access_log off;
-        allow 127.0.0.1;               # localhost만 접근 허용
-        deny all;
-    }
-
-    # 에러 페이지 (선택사항)
+    # 에러 페이지
     error_page 502 503 504 /50x.html;
     location = /50x.html {
         root /usr/share/nginx/html;
+    }
+
+    # Rate Limit 초과 시 응답
+    error_page 429 /429.json;
+    location = /429.json {
+        internal;
+        default_type application/json;
+        return 429 '{"error":"Too many requests","message":"Rate limit exceeded. Please slow down."}';
     }
 }

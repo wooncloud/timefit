@@ -1,36 +1,72 @@
 package timefit.config;
 
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * JWT 설정
+ *
+ * Phase 1: RSA (비대칭키)
+ * - Access Token: RS256 (2048 bits)
+ * - Refresh Token: RS512 (4096 bits)
+ */
 @Configuration
+@ConfigurationProperties(prefix = "jwt")
 @Getter
+@Setter
 public class JwtConfig {
 
-    // application.properties
-    @Value("${jwt.secret:timefit-secret-key-for-development-only-change-in-production}")
-    private String secretKey;
+    private String secret;      // HMAC용 (하위 호환, 향후 제거 예정)
+    private String issuer;      // 토큰 발행자
 
-    //  Access Token 만료 시간 900000 = 15m
-    @Value("${jwt.access-token.expiration:900000}")
-    private Long accessTokenExpiration;
+    private Access access;      // Access Token 설정
+    private Refresh refresh;    // Refresh Token 설정
+    private AccessToken accessToken;    // Access Token 만료 시간
+    private RefreshToken refreshToken;  // Refresh Token 만료 시간
 
-    // Refresh Token 만료 시간 (밀리초) 604800000 = 7days
-    @Value("${jwt.refresh-token.expiration:604800000}")
-    private Long refreshTokenExpiration;
+    /**
+     * Access Token 설정 (RS256)
+     */
+    @Getter
+    @Setter
+    public static class Access {
+        private String privateKeyPath;  // Private Key 경로
+        private String publicKeyPath;   // Public Key 경로
+    }
 
-    // JWT 토큰 발행자 정보
-    @Value("${jwt.issuer:timefit}")
-    private String issuer;
+    /**
+     * Refresh Token 설정 (RS512)
+     */
+    @Getter
+    @Setter
+    public static class Refresh {
+        private String privateKeyPath;  // Private Key 경로
+        private String publicKeyPath;   // Public Key 경로
+    }
 
+    /**
+     * Access Token 만료 시간
+     */
+    @Getter
+    @Setter
+    public static class AccessToken {
+        private Long expiration;  // 밀리초
+    }
 
-    // JWT Authorization 헤더 이름
+    /**
+     * Refresh Token 만료 시간
+     */
+    @Getter
+    @Setter
+    public static class RefreshToken {
+        private Long expiration;  // 밀리초
+    }
+
+    // ========== 상수 ==========
+
     public static final String AUTHORIZATION_HEADER = "Authorization";
-
-    // JWT 토큰 접두사
     public static final String TOKEN_PREFIX = "Bearer ";
-
-    // JWT 토큰 접두사 길이
     public static final int TOKEN_PREFIX_LENGTH = TOKEN_PREFIX.length();
 }

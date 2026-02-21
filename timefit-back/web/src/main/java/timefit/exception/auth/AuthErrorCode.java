@@ -20,8 +20,9 @@ public enum AuthErrorCode {
     TOKEN_EXPIRED("토큰이 만료되었습니다", HttpStatus.UNAUTHORIZED),
     TOKEN_INVALID("유효하지 않은 토큰입니다", HttpStatus.UNAUTHORIZED),
 
-    // 토큰 관련 (새로 추가)
+    // 토큰 관련
     TOKEN_NOT_PROVIDED("토큰이 제공되지 않았습니다", HttpStatus.UNAUTHORIZED),
+    TOKEN_REUSED("토큰이 재사용되었습니다. 보안을 위해 모든 세션이 종료되었습니다.", HttpStatus.UNAUTHORIZED),
 
     // 권한 관련
     ACCESS_DENIED("접근 권한이 없습니다", HttpStatus.FORBIDDEN),

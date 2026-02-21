@@ -1,0 +1,108 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:latest
+    container_name: timefit-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - timefit-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: timefit-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/logs:/var/log/nginx
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./init-certs.sh:/docker-entrypoint.d/00-init-certs.sh:ro
+    environment:
+      - BACKEND_HOST=${NGINX_BACKEND_HOST}
+      - BACKEND_PORT=${NGINX_BACKEND_PORT}
+      - NGINX_STATUS_ENABLED=${NGINX_STATUS_ENABLED}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - NGINX_HTTPS_ENABLED=${NGINX_HTTPS_ENABLED}
+      - NGINX_DOMAIN_NAME=${NGINX_DOMAIN_NAME}
+      - NGINX_HTTP_REDIRECT=${NGINX_HTTP_REDIRECT}
+      - NGINX_RATE_LIMIT=${NGINX_RATE_LIMIT}
+      - NGINX_RATE_BURST=${NGINX_RATE_BURST}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - timefit-network
+
+  # Prometheus - 메트릭 수집
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: timefit-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - timefit-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Grafana - 메트릭 시각화
+  grafana:
+    image: grafana/grafana:latest
+    container_name: timefit-grafana
+    ports:
+      - "3200:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - timefit-network
+
+  # Nginx Exporter
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.1.0
+    container_name: nginx-exporter
+    command:
+      - '-nginx.scrape-uri=http://nginx:80/nginx_status'
+    ports:
+      - "9113:9113"
+    depends_on:
+      - nginx
+    networks:
+      - timefit-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  timefit-network:
+    driver: bridge
