@@ -2,28 +2,30 @@
 
 # 개발 환경 관리 스크립트
 
+COMPOSE_CMD="docker-compose -f docker-compose.prod.yml --env-file .env.prod"
+
 case "$1" in
   start)
     echo "🚀 Starting development environment..."
-    docker-compose --profile dev up -d --build
+    $COMPOSE_CMD up -d --build
     echo "✅ Containers started!"
     echo "📊 Check logs: ./scripts/dev.sh logs"
     ;;
 
   restart)
     echo "🔄 Restarting backend container..."
-    docker-compose restart timefit-back
+    $COMPOSE_CMD restart timefit-backend
     echo "✅ Backend restarted!"
     ;;
 
   stop)
     echo "🛑 Stopping all containers..."
-    docker-compose down
+    $COMPOSE_CMD down
     echo "✅ Containers stopped!"
     ;;
 
   logs)
-    docker logs timefit-back -f --tail 100
+    docker logs timefit-backend -f --tail 100
     ;;
 
   db)
@@ -31,20 +33,20 @@ case "$1" in
     ;;
 
   status)
-    docker-compose ps
+    $COMPOSE_CMD ps
     ;;
 
   clean)
     echo "🧹 Cleaning up containers and volumes..."
-    docker-compose down -v
+    $COMPOSE_CMD down -v
     docker volume rm timefit-back_gradle_cache 2>/dev/null || true
     echo "✅ Cleanup complete!"
     ;;
 
   rebuild)
     echo "🔨 Rebuilding without cache..."
-    docker-compose --profile dev build --no-cache
-    docker-compose --profile dev up -d
+    $COMPOSE_CMD build --no-cache
+    $COMPOSE_CMD up -d
     echo "✅ Rebuild complete!"
     ;;
 

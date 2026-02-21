@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 next dev --turbopack",
     "dev:pm2": "pm2 start ecosystem.config.js",
     "build": "next build",
     "start": "next start",
