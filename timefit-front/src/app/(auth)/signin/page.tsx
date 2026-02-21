@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Mail } from 'lucide-react';
@@ -13,6 +13,14 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/ui/logo';
 
 export default function SigninPage() {
+  return (
+    <Suspense>
+      <SigninContent />
+    </Suspense>
+  );
+}
+
+function SigninContent() {
   const [showPassword, setShowPassword] = useState(false);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
