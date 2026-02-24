@@ -171,11 +171,9 @@ public class AuthCommandService {
         // 2. 기존 토큰 유효성 검증 후 무효화
         String jti = claims.jti();
         UUID userId = claims.userId();
-        RefreshToken refreshToken = refreshTokenValidator.validateJtiExists(jti);
 
-        refreshTokenValidator.validateForRotation(refreshToken, userId);
-        refreshToken.revoke();
-        log.debug("기존 Refresh Token 무효화: jti={}", jti);
+        refreshTokenValidator.validateRefreshTokenActive(jti);
+        refreshTokenHelper.rotateRefreshToken(jti, userId);
 
         // 3. 신규 TokenPair 생성
         TokenPair tokenPair = refreshTokenIssuer.generateAndSaveTokenPair(userId);
@@ -219,7 +217,7 @@ public class AuthCommandService {
         RefreshTokenClaims claims = tokenValidator.extractRefreshTokenClaims(refreshToken);
 
         // 2. RefreshToken 무효화
-        refreshTokenHelper.revokeByJti(claims.jti());
+        refreshTokenHelper.revokeByJti(claims.jti() , userId);
 
         log.info("로그아웃 완료: userId={}", userId);
     }

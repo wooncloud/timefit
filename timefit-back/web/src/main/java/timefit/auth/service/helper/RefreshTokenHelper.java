@@ -3,6 +3,8 @@ package timefit.auth.service.helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import timefit.exception.auth.AuthErrorCode;
+import timefit.exception.auth.AuthException;
 import timefit.user.entity.RefreshToken;
 import timefit.user.repository.RefreshTokenRepository;
 
@@ -23,7 +25,7 @@ import java.util.UUID;
 public class RefreshTokenHelper {
 
     private final RefreshTokenRepository refreshTokenRepository;
-
+    private static final int REVOKE_SUCCESS = 1;
     /**
      * jti로 RefreshToken 무효화 (단일 디바이스 로그아웃)
      *
@@ -34,27 +36,27 @@ public class RefreshTokenHelper {
      *
      * @param jti JWT ID
      */
-    public void revokeByJti(String jti) {
-        try {
-            Optional<RefreshToken> tokenOpt = refreshTokenRepository.findByJti(jti);
+    public void revokeByJti(String jti, UUID userId) {
+        int revoked = refreshTokenRepository.revokeByJtiIfActive(jti);
 
-            if (tokenOpt.isEmpty()) {
-                log.warn("DB에 존재하지 않는 Refresh Token: jti={}", jti);
-                return;
-            }
-            RefreshToken token = tokenOpt.get();
-
-            if (token.getIsRevoked()) {
-                log.debug("이미 무효화된 Refresh Token: jti={}", jti);
-                return;
-            }
-
-            token.revoke();
-            log.info("로그아웃 완료: jti={}, userId={}", jti, token.getUserId());
-
-        } catch (Exception e) {
-            log.error("로그아웃 처리 중 오류: jti={}, error={}", jti, e.getMessage());
+        if (revoked == REVOKE_SUCCESS) {
+            log.info("로그아웃 완료: jti={}, userId={}", jti, userId);
         }
+        else {
+            log.warn("이미 무효화된 Refresh Token: jti={}", jti);
+        }
+    }
+
+    public void rotateRefreshToken(String jti, UUID userId) {
+        int revoked = refreshTokenRepository.revokeByJtiIfActive(jti);
+
+        if (revoked != REVOKE_SUCCESS) {
+            log.error("🚨 Refresh Token 재사용 감지: jti={}, userId={}", jti, userId);
+            revokeAllByUserId(userId);
+            throw new AuthException(AuthErrorCode.TOKEN_REUSED);
+        }
+
+        log.debug("Refresh Token 무효화 완료: jti={}", jti);
     }
 
     /**
