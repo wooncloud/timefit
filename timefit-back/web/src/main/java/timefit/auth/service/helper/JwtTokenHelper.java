@@ -15,13 +15,6 @@ import timefit.exception.auth.AuthException;
 import java.util.Date;
 import java.util.UUID;
 
-/**
- * JWT 토큰 생성 Helper
- *
- * Phase 1: RSA 비대칭키
- * - Access Token: RS256 (빠른 검증)
- * - Refresh Token: RS512 (강한 보안)
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -33,12 +26,20 @@ public class JwtTokenHelper {
     /**
      * Access Token + Refresh Token 쌍 생성
      *
+     * AT와 RT는 각각 독립적인 jti를 가집니다.
+     * - AT jti: InMemory 블랙리스트 등록용 (로그아웃 시 즉시 차단)
+     * - RT jti: DB 저장 후 Rotation 추적용
+     *
      * @param userId 사용자 ID
+     * @param rtJti  Refresh Token 전용 jti (DB 저장용)
      * @return TokenPair (accessToken, refreshToken)
      */
-    public TokenPair generateTokenPair(UUID userId, String jti) {
-        String accessToken = generateToken(userId);
-        String refreshToken = generateRefreshToken(userId, jti);
+    public TokenPair generateTokenPair(UUID userId, String rtJti) {
+        // 굳이 추적 해야할 필요가 없어 액세스 토큰의 jti 는 여기서 생성 됩니다.
+        String atJti = UUID.randomUUID().toString();
+
+        String accessToken = generateToken(userId, atJti);
+        String refreshToken = generateRefreshToken(userId, rtJti);
 
         return TokenPair.of(accessToken, refreshToken);
     }
@@ -47,9 +48,10 @@ public class JwtTokenHelper {
      * Access Token 생성 (RS256)
      *
      * @param userId 사용자 ID
+     * @param jti    Access Token 고유 식별자 (블랙리스트 등록용)
      * @return JWT Access Token
      */
-    public String generateToken(UUID userId) {
+    public String generateToken(UUID userId, String jti) {
         try {
             Algorithm algorithm = algorithmProvider.getAccessTokenAlgorithm();  // RS256
             Date now = new Date();
@@ -58,11 +60,12 @@ public class JwtTokenHelper {
             String token = JWT.create()
                     .withIssuer(jwtConfig.getIssuer())
                     .withSubject(userId.toString())
+                    .withJWTId(jti)
                     .withIssuedAt(now)
                     .withExpiresAt(expiryDate)
                     .sign(algorithm);
 
-            log.debug("Access Token 생성 성공 (RS256): userId={}", userId);
+            log.debug("Access Token 생성 성공 (RS256): userId={}, jti={}", userId, jti);
             return token;
 
         } catch (JWTCreationException e) {
