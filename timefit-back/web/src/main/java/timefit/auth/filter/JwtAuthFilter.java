@@ -80,14 +80,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
      * 모든 HTTP Method에서 공개 API 경로 목록 (인증 불필요)
      * SecurityConfig의 permitAll() 설정과 동일하게 유지해야 함
      * AntPathMatcher를 사용하여 와일드카드 패턴 지원
-     *
-     * 공개 API 목록:
-     * 1. /api/auth/signup, /api/auth/signin, /api/auth/refresh, /api/auth/health
-     * 2. /api/business/search/** - 업체 검색 (쿼리 파라미터 포함)
-     * 3. /api/business/{businessId}/booking-slot/** - 예약 슬롯 조회 (GET 전용)
-     * 4. /api/validation/** - 검증 API
-     * 5. 개발/모니터링 도구
-     *
      * 참고: GET 메서드만 공개인 경로는 requiresAuthentication()에서 별도 처리
      *      예: GET /api/business/{businessId} (공개)
      *         POST /api/business/{businessId} (인증 필요)
@@ -171,13 +163,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
      * 2. 모든 메서드 공개 API 확인 (PUBLIC_PATHS)
      * 3. /api/로 시작하는 경로 → 인증 필요
      * 4. 그 외 경로 → 인증 불필요
-     *
-     * 예시:
-     * - GET  /api/business/{businessId} → 공개 (고객이 업체 정보 조회)
-     * - POST /api/business/{businessId} → 인증 필요 (업체 정보 수정)
-     * - GET  /api/business/{businessId}/menu → 공개 (고객이 메뉴 조회)
-     * - POST /api/business/{businessId}/menu → 인증 필요 (메뉴 생성)
-     *
      * @param request HTTP 요청 객체
      * @return 인증 필요 여부 (true: 인증 필요, false: 인증 불필요)
      */
@@ -281,14 +266,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     /**
      * JWT 토큰 검증 및 사용자 정보 설정
      * Authorization 헤더에서 JWT 토큰을 추출하고 검증한 후, userId를 요청에 저장합니다.
-     * 처리 흐름:
-     * 1. Authorization 헤더에서 Bearer 토큰 추출 (extractToken)
-     * 2. 토큰 존재 여부 확인
-     * 3. TokenValidator로 토큰 유효성 검증
-     * 4. 토큰에서 userId 추출
-     * 5. request.setAttribute("userId", userId) 저장 (Controller에서 @CurrentUserId로 사용)
-     * 6. request.setAttribute("token", token) 저장 (필요 시 재사용)
-     * 7. SecurityContext에 Authentication 설정 (Spring Security 인증 통과)
      *
      * @param request HTTP 요청
      * @throws AuthException 토큰이 없거나 유효하지 않을 경우 (TOKEN_INVALID)
@@ -349,15 +326,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     /**
      * 인증 에러 응답 처리
      * 인증 실패 시 FilterChain을 중단하고 401 Unauthorized 응답을 직접 작성합니다.
-     * 응답 형식 예시:
-     * {
-     *   "success": false,
-     *   "message": "인증에 실패했습니다",
-     *   "error": {
-     *     "code": "TOKEN_INVALID",
-     *     "message": "유효하지 않은 토큰입니다"
-     *   }
-     * }
      *
      * @param response HTTP 응답
      * @param authException 발생한 인증 예외
