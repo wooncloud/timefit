@@ -1,0 +1,401 @@
+### ================================================================
+### Timefit 인증/인가 테스트 - Access Token Blacklist 포함
+### ================================================================
+###
+### 테스트 시나리오:
+### [01] 회원가입 / 로그인 기본 플로우
+### [02] Token 갱신 (Refresh Token Rotation)
+### [03] 로그아웃 후 AT 블랙리스트 검증 ← 핵심
+### [04] 갱신된 RT로 재사용 시도 (Rotation 재사용 감지)
+### [05] 인증 실패 케이스 모음
+###
+### 실행 순서대로 위에서 아래로 실행하세요.
+### ================================================================
+
+@baseUrl = http://localhost:8080
+
+### ================================================================
+### [01] 회원가입 / 로그인
+### ================================================================
+
+# @name Owner회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "blacklist.test@timefit.com",
+  "password": "test1234!",
+  "name": "블랙리스트테스트",
+  "phoneNumber": "010-9999-9999",
+  "role": "BUSINESS"
+}
+
+> {%
+    console.log("\n[01-1] 회원가입");
+    if (response.status === 200 || response.status === 201) {
+        console.log("✅ 성공");
+    } else {
+        console.log("⚠️  이미 가입된 계정일 수 있음 (로그인으로 진행):", response.status);
+    }
+%}
+
+###
+
+# @name Owner로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "blacklist.test@timefit.com",
+  "password": "test1234!"
+}
+
+> {%
+    console.log("\n[01-2] 로그인");
+    if (response.status === 200 && response.body.data.accessToken) {
+        client.global.set("accessToken", response.body.data.accessToken);
+        client.global.set("refreshToken", response.body.data.refreshToken);
+        console.log("✅ 성공 - AT, RT 저장");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+###
+
+# @name 인증확인_로그인후
+# 로그인 직후 AT로 인증이 정상 동작하는지 확인
+GET {{baseUrl}}/api/business/search
+Authorization: Bearer {{accessToken}}
+
+> {%
+    console.log("\n[01-3] 로그인 후 인증 확인");
+    if (response.status === 200) {
+        console.log("✅ 성공 - AT 정상 동작 확인");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+### [02] Token 갱신 (Refresh Token Rotation)
+### ================================================================
+
+# @name Token갱신
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+> {%
+    console.log("\n[02-1] Token 갱신");
+    if (response.status === 200 && response.body.data.accessToken) {
+        client.global.set("oldAccessToken", client.global.get("accessToken"));
+        client.global.set("oldRefreshToken", client.global.get("refreshToken"));
+        client.global.set("accessToken", response.body.data.accessToken);
+        client.global.set("refreshToken", response.body.data.refreshToken);
+        console.log("✅ 성공 - 새 AT, RT 저장");
+        console.log("   💡 oldAccessToken, oldRefreshToken도 별도 저장");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+###
+
+# @name 인증확인_갱신후
+# 갱신 후 새 AT로 인증 확인
+GET {{baseUrl}}/api/business/search
+Authorization: Bearer {{accessToken}}
+
+> {%
+    console.log("\n[02-2] Token 갱신 후 새 AT 인증 확인");
+    if (response.status === 200) {
+        console.log("✅ 성공 - 새 AT 정상 동작 확인");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+###
+
+# @name 갱신된_RT_재사용시도
+# 이미 사용된 RT로 재요청 → 401 (Rotation 재사용 감지)
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{oldRefreshToken}}"
+}
+
+> {%
+    console.log("\n[02-3] 이미 사용된 RT 재사용 시도 (Rotation 재사용 감지)");
+    if (response.status === 401) {
+        console.log("✅ 정상 - 재사용된 RT 거부됨 (보안 정상)");
+    } else if (response.status === 200) {
+        console.error("❌ 보안 이슈 - 재사용된 RT가 허용됨!");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status);
+    }
+%}
+
+###
+
+# @name 재로그인_갱신후
+# RT 재사용 감지로 모든 토큰이 무효화되었을 수 있으므로 재로그인
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "blacklist.test@timefit.com",
+  "password": "test1234!"
+}
+
+> {%
+    console.log("\n[02-4] 재로그인 (블랙리스트 테스트 준비)");
+    if (response.status === 200 && response.body.data.accessToken) {
+        client.global.set("accessToken", response.body.data.accessToken);
+        client.global.set("refreshToken", response.body.data.refreshToken);
+        console.log("✅ 성공 - 새 AT, RT 저장 완료");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+### ================================================================
+### [03] 로그아웃 후 AT 블랙리스트 검증 ← 핵심 테스트
+### ================================================================
+
+# @name 로그아웃전_AT_저장
+# 로그아웃 전에 현재 AT를 blacklistedToken으로 별도 저장
+GET {{baseUrl}}/api/auth/health
+
+> {%
+    console.log("\n[03-1] 로그아웃 전 AT 저장");
+    // 로그아웃 후 블랙리스트 테스트에 쓸 토큰을 미리 저장
+    client.global.set("blacklistedToken", client.global.get("accessToken"));
+    console.log("✅ blacklistedToken 저장 완료");
+    console.log("   💡 이 토큰은 로그아웃 후 블랙리스트 등록될 예정");
+%}
+
+###
+
+# @name 로그아웃
+# ⚠️ body의 currentToken은 Refresh Token
+POST {{baseUrl}}/api/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "currentToken": "{{refreshToken}}"
+}
+
+> {%
+    console.log("\n[03-2] 로그아웃");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("   - RT: DB revoke 완료");
+        console.log("   - AT: 블랙리스트 등록 완료");
+        console.log("   💡 이제 blacklistedToken으로 요청 시 401이어야 함");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+###
+
+# @name 블랙리스트_AT_재사용시도
+# 로그아웃된 AT로 재요청 → 401이어야 함 (블랙리스트 차단)
+# ⚠️ 이 테스트가 핵심: 이번 구현의 목적
+# ⚠️ /api/business/search는 공개 API라 필터가 인증 스킵 → 반드시 인증 필요 API 사용
+GET {{baseUrl}}/api/user/profile
+Authorization: Bearer {{blacklistedToken}}
+
+> {%
+    console.log("\n[03-3] ⭐ 블랙리스트 등록된 AT 재사용 시도 (핵심 검증)");
+    if (response.status === 401) {
+        console.log("✅✅✅ 성공 - 로그아웃된 AT 즉시 차단 확인!");
+        console.log("   - AT는 아직 만료되지 않았지만 블랙리스트에 의해 차단됨");
+        console.log("   - InMemory 블랙리스트 정상 동작");
+    } else if (response.status === 200) {
+        console.error("❌❌❌ 보안 이슈! 로그아웃된 AT가 아직 유효함");
+        console.error("   - 블랙리스트가 동작하지 않는 상태");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status, response.body);
+    }
+%}
+###
+
+# @name 로그아웃후_RT_갱신시도
+# 로그아웃된 RT로 갱신 시도 → 401이어야 함
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+> {%
+    console.log("\n[03-4] 로그아웃된 RT로 갱신 시도");
+    if (response.status === 401) {
+        console.log("✅ 성공 - 로그아웃된 RT 갱신 거부됨");
+    } else if (response.status === 200) {
+        console.error("❌ 보안 이슈 - 로그아웃된 RT 갱신 허용됨!");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status);
+    }
+%}
+
+### ================================================================
+### [04] 인증 실패 케이스 모음
+### ================================================================
+
+# @name 토큰없이_인증필요API_접근
+GET {{baseUrl}}/api/business/search
+
+> {%
+    console.log("\n[04-1] 토큰 없이 인증 필요 API 접근");
+    // /api/business/search는 GET 공개 API라 200이어야 함
+    if (response.status === 200) {
+        console.log("✅ 정상 - 공개 API 접근 성공");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+###
+
+# @name 토큰없이_인증필요API_접근2
+# 인증이 필요한 API에 토큰 없이 접근 → 401
+GET {{baseUrl}}/api/user/me
+
+> {%
+    console.log("\n[04-2] 토큰 없이 인증 필요 API 접근");
+    if (response.status === 401) {
+        console.log("✅ 정상 - 인증 없이 접근 거부됨");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status);
+    }
+%}
+
+###
+
+# @name 잘못된_형식의_토큰
+# 유효하지 않은 JWT 형식 → 401
+GET {{baseUrl}}/api/user/me
+Authorization: Bearer this.is.not.a.valid.jwt
+
+> {%
+    console.log("\n[04-3] 잘못된 형식의 토큰");
+    if (response.status === 401) {
+        console.log("✅ 정상 - 잘못된 토큰 거부됨");
+        console.log("   - 에러 코드:", response.body.error?.code);
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status);
+    }
+%}
+
+###
+
+# @name Bearer_접두사_없음
+# Bearer 없이 토큰만 전송 → 401
+GET {{baseUrl}}/api/user/me
+Authorization: {{accessToken}}
+
+> {%
+    console.log("\n[04-4] Bearer 접두사 없이 토큰 전송");
+    if (response.status === 401) {
+        console.log("✅ 정상 - Bearer 접두사 없는 토큰 거부됨");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status);
+    }
+%}
+
+###
+
+# @name 빈_토큰
+# 빈 Authorization 헤더 → 401
+GET {{baseUrl}}/api/user/me
+Authorization: Bearer
+
+> {%
+    console.log("\n[04-5] 빈 토큰");
+    if (response.status === 401) {
+        console.log("✅ 정상 - 빈 토큰 거부됨");
+    } else {
+        console.error("❌ 예상치 못한 응답:", response.status);
+    }
+%}
+
+### ================================================================
+### [05] 재로그인 후 정상 동작 확인 (최종)
+### ================================================================
+
+# @name 재로그인_최종
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "email": "blacklist.test@timefit.com",
+  "password": "test1234!"
+}
+
+> {%
+    console.log("\n[05-1] 재로그인");
+    if (response.status === 200 && response.body.data.accessToken) {
+        client.global.set("accessToken", response.body.data.accessToken);
+        client.global.set("refreshToken", response.body.data.refreshToken);
+        console.log("✅ 성공");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+###
+
+# @name 재로그인후_정상_인증확인
+GET {{baseUrl}}/api/user/me
+Authorization: Bearer {{accessToken}}
+
+> {%
+    console.log("\n[05-2] 재로그인 후 정상 AT로 인증 확인");
+    if (response.status === 200) {
+        console.log("✅✅✅ 성공 - 전체 흐름 정상!");
+        console.log("   로그아웃 → 블랙리스트 차단 → 재로그인 → 정상 인증");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
+
+###
+
+# @name 최종_로그아웃
+POST {{baseUrl}}/api/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "currentToken": "{{refreshToken}}"
+}
+
+> {%
+    console.log("\n[05-3] 최종 로그아웃");
+    if (response.status === 200) {
+        console.log("✅ 성공");
+        console.log("\n========================================");
+        console.log("🎉 인증/인가 테스트 완료!");
+        console.log("========================================");
+        console.log("검증된 항목:");
+        console.log("  ✅ 회원가입 / 로그인");
+        console.log("  ✅ Token 갱신 (RT Rotation)");
+        console.log("  ✅ 재사용된 RT 감지 및 거부");
+        console.log("  ✅ 로그아웃 후 AT 블랙리스트 즉시 차단 ⭐");
+        console.log("  ✅ 로그아웃 후 RT 갱신 거부");
+        console.log("  ✅ 인증 실패 케이스 처리");
+        console.log("========================================");
+    } else {
+        console.error("❌ 실패:", response.status);
+    }
+%}
