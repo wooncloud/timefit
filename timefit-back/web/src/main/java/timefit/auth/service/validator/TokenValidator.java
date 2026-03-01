@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import timefit.auth.provider.JwtAlgorithmProvider;
+import timefit.auth.service.dto.AccessTokenClaims;
 import timefit.auth.service.dto.RefreshTokenClaims;
 import timefit.config.JwtConfig;
 import timefit.exception.auth.AuthErrorCode;
@@ -18,13 +19,6 @@ import timefit.exception.auth.AuthException;
 import java.util.Date;
 import java.util.UUID;
 
-/**
- * JWT 토큰 검증 전담 Validator
- * 역할:
- * - 토큰 유효성 검증
- * - 토큰 파싱 및 정보 추출
- * - 토큰 만료 시간 조회
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -88,6 +82,35 @@ public class TokenValidator {
         log.debug("Refresh Token Claims 추출 완료: jti={}, userId={}", jti, userId);
 
         return RefreshTokenClaims.of(jti, userId);
+    }
+
+    /**
+     * Access Token에서 userId, jti, expiresAt 한 번에 추출
+     * - AT를 1번만 파싱해서 Filter에서 필요한 값을 동시에 추출
+     * - jti: 블랙리스트 조회/등록 식별자
+     * - expiresAt: 로그아웃 시 블랙리스트 만료 기준
+     *
+     * @param token JWT Access Token
+     * @return AccessTokenClaims (userId, jti, expiresAt)
+     * @throws AuthException 토큰이 유효하지 않을 경우
+     */
+    public AccessTokenClaims extractAccessTokenClaims(String token) {
+        DecodedJWT decodedJWT = verifyAccessToken(token);
+
+        // jti 추출 및 검증
+        String jti = decodedJWT.getId();
+
+        if (jti == null || jti.isBlank()) {
+            log.error("Access Token에 jti가 없습니다");
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+        }
+
+        UUID userId = UUID.fromString(decodedJWT.getSubject());
+        Date expiresAt = decodedJWT.getExpiresAt();
+
+        log.debug("Access Token Claims 추출 완료: jti={}, userId={}", jti, userId);
+
+        return AccessTokenClaims.of(userId, jti, expiresAt);
     }
 
     /**
