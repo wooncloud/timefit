@@ -109,9 +109,13 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ResponseData<Void>> logout(
             @LogoutRequestBody @Valid @RequestBody AuthRequestDto.Logout request,
-            @Parameter(hidden = true) @CurrentUserId UUID userId) {
+            @Parameter(hidden = true) @CurrentUserId UUID userId,
+            @Parameter(hidden = true) HttpServletRequest httpRequest) {
 
-        authFacadeService.logout(request.currentToken(), userId);
+        String accessTokenJti = (String) httpRequest.getAttribute("accessTokenJti");
+        java.util.Date accessTokenExpiresAt = (java.util.Date) httpRequest.getAttribute("accessTokenExpiresAt");
+
+        authFacadeService.logout(request.currentToken(), userId, accessTokenJti, accessTokenExpiresAt);
 
         return ResponseEntity.ok(ResponseData.of(null));
     }

@@ -50,6 +50,7 @@ public class AuthCommandService {
     private final RefreshTokenIssuer refreshTokenIssuer;
     private final RefreshTokenHelper refreshTokenHelper;
     private final UserRegistrationHelper userRegistrationHelper;
+    private final AccessTokenBlacklist accessTokenBlacklist;
 
 
     /**
@@ -191,33 +192,34 @@ public class AuthCommandService {
     }
 
     /**
-     * 로그아웃 (단일 디바이스 Refresh Token 무효화)
+     * 로그아웃 (단일 디바이스 Refresh Token 무효화 + Access Token 즉시 차단)
      *
-     * 현재 구현:
-     * - Refresh Token만 DB에서 무효화 (즉시 차단)
-     * - Access Token은 만료 시간(15분)까지 유효 (JWT Stateless 특성)
+     * 처리 순서:
+     * 1. RT Claims 추출 및 DB revoke
+     * 2. AT jti를 InMemory 블랙리스트에 등록 → 잔여 유효 기간 동안 즉시 차단
      *
      * 설계 결정:
-     * - JWT Stateless 원칙 < 보안 우선
-     * - Access Token: Stateless 유지 (빠른 검증)
-     * - Refresh Token: DB 저장 (로그아웃/재사용 감지 가능)
+     * - RT: DB 저장으로 즉시 무효화
+     * - AT: InMemory 블랙리스트로 만료 시까지 차단 (Redis 도입 전 MVP 방식)
      *
-     * 주의사항:
-     * - 완전한 즉시 차단 불가능 (Access Token 만료 대기)
-     * - 민감한 작업은 재인증 필요
-     *
-     * @param refreshToken Refresh Token (JWT)
-     * @param userId 로그아웃 요청 사용자 ID
+     * @param refreshToken       Refresh Token (JWT)
+     * @param userId             로그아웃 요청 사용자 ID
+     * @param accessTokenJti     Access Token jti (블랙리스트 등록용)
+     * @param accessTokenExpiresAt Access Token 만료 시간 (블랙리스트 만료 기준)
      */
     @Transactional
-    public void logout(String refreshToken, UUID userId) {
+    public void logout(String refreshToken, UUID userId, String accessTokenJti, Date accessTokenExpiresAt) {
         log.info("로그아웃 처리 시작: userId={}", userId);
 
         // 1. Refresh Token 검증 및 Claims 추출
         RefreshTokenClaims claims = tokenValidator.extractRefreshTokenClaims(refreshToken);
 
-        // 2. RefreshToken 무효화
-        refreshTokenHelper.revokeByJti(claims.jti() , userId);
+        // 2. RT DB revoke
+        refreshTokenHelper.revokeByJti(claims.jti(), userId);
+
+        // 3. AT 블랙리스트 등록 (잔여 유효 기간 동안 즉시 차단)
+        accessTokenBlacklist.add(accessTokenJti, accessTokenExpiresAt);
+        log.info("AT 블랙리스트 등록 완료: jti={}", accessTokenJti);
 
         log.info("로그아웃 완료: userId={}", userId);
     }
