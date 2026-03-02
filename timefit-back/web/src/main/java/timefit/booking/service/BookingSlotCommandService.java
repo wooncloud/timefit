@@ -18,6 +18,7 @@ import timefit.exception.booking.BookingErrorCode;
 import timefit.exception.booking.BookingException;
 import timefit.menu.entity.Menu;
 import timefit.menu.service.validator.MenuValidator;
+import timefit.reservation.service.helper.ReservationDetachHelper;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class BookingSlotCommandService {
     private final BookingSlotRepository bookingSlotRepository;
     private final BookingSlotQueryRepository bookingSlotQueryRepository;
     private final BookingSlotCreationHelper bookingSlotCreationHelper;
+    private final ReservationDetachHelper reservationDetachHelper;
 
     /**
      * BookingSlot 생성
@@ -171,7 +173,21 @@ public class BookingSlotCommandService {
         List<BookingSlot> pastSlots = bookingSlotRepository
                 .findByBusinessIdAndSlotDateBefore(businessId, today);
 
-        // 3. 일괄 삭제
+        if (pastSlots.isEmpty()) {
+            log.info("삭제할 과거 슬롯 없음: businessId={}", businessId);
+            return 0;
+        }
+
+        // 3. 슬롯 ID 목록 추출
+        List<UUID> pastSlotIds = pastSlots.stream()
+                .map(BookingSlot::getId)
+                .collect(Collectors.toList());
+
+        // 4. 해당 슬롯을 참조하는 Reservation의 bookingSlot FK null 처리
+        //    (DB 제약 위반 방지, Reservation 행 보존)
+        reservationDetachHelper.detachFromBookingSlots(pastSlotIds);
+
+        // 5. 슬롯 일괄 삭제
         int count = pastSlots.size();
         bookingSlotRepository.deleteAll(pastSlots);
 
