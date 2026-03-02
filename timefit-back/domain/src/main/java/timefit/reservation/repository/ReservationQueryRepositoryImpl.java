@@ -37,7 +37,7 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
 
     /**
      * 고객 예약 조회 (필터링, 페이징)
-     * N+1 방지: Business, Menu, BusinessCategory fetch join
+     * N+1 방지: Business, Menu, BusinessCategory leftJoin
      */
     @Override
     public Page<Reservation> findMyReservationsWithFilters(UUID customerId, ReservationStatus status,
@@ -71,12 +71,12 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
             builder.and(reservation.business.id.eq(businessId));
         }
 
-        // 쿼리 실행
+        // leftJoin: business/menu가 null 이어도 Reservation 행 포함
         List<Reservation> reservations = queryFactory
                 .selectFrom(reservation)
-                .join(reservation.business, business).fetchJoin()
-                .join(reservation.menu, menu).fetchJoin()
-                .join(menu.businessCategory, businessCategory).fetchJoin()
+                .leftJoin(reservation.business, business).fetchJoin()
+                .leftJoin(reservation.menu, menu).fetchJoin()
+                .leftJoin(menu.businessCategory, businessCategory).fetchJoin()
                 .where(builder)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
