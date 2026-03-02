@@ -94,6 +94,9 @@ GET {{baseUrl}}/api/auth/health
     client.global.set("bulkSlotDate6", formatDate(addDays(today, 19)));
     client.global.set("bulkSlotDate7", formatDate(addDays(today, 20)));
 
+    // 예약
+    client.global.set("reservationEndDate", formatDate(addDays(today, 30)));
+
     console.log("✅ 동적 날짜 생성 완료");
     console.log("   - today:", client.global.get("today"));
     console.log("   - slotQueryDate (7일 후):", client.global.get("slotQueryDate"));
@@ -1134,6 +1137,35 @@ Authorization: Bearer {{ownerToken}}
     console.log("\n[Level 1] Business 삭제");
     console.log("[09-5] 업체 삭제");
     console.log(response.status === 200 ? "✅ 성공" : "❌ 실패");
+%}
+
+### ------------------------------------------
+
+# @name 업체삭제후_예약이력_조회
+GET {{baseUrl}}/api/reservations?endDate={{reservationEndDate}}
+Authorization: Bearer {{customerToken}}
+
+> {%
+    console.log("\n[09-5-1] 업체 삭제 후 예약 이력 조회 (Customer)");
+    console.log("   💡 설계 의도: Business 삭제 후에도 예약 이력이 스냅샷으로 보존되어야 함");
+    if (response.status === 200) {
+        const reservations = response.body.data.reservations;
+        console.log("✅ 조회 성공");
+        console.log("   - 예약 건수:", reservations ? reservations.length : 0);
+        if (reservations && reservations.length > 0) {
+            const r = reservations[0];
+            console.log("   ✅ 스냅샷 보존 확인");
+            console.log("     - reservationId:", r.reservationId);
+            console.log("     - status:", r.status);
+            console.log("     - menuName(snapshot):", r.menuName);
+            console.log("     - price(snapshot):", r.price);
+            console.log("     - businessName(snapshot):", r.businessName);
+        } else {
+            console.error("   ❌ 예약 이력 없음 → CASCADE 삭제 발생 (SET_NULL 미구현)");
+        }
+    } else {
+        console.error("❌ 조회 실패:", response.status);
+    }
 %}
 
 ### ================================================================
