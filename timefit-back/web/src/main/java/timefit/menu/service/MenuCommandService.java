@@ -12,9 +12,10 @@ import timefit.menu.entity.Menu;
 import timefit.menu.repository.MenuRepository;
 import timefit.menu.service.helper.MenuBookingSlotHelper;
 import timefit.menu.service.factory.MenuEntityFactory;
+import timefit.menu.service.helper.MenuDeleteHelper;
 import timefit.menu.service.helper.MenuUpdateHelper;
-import timefit.menu.service.validator.MenuReservationValidator;
 import timefit.menu.service.validator.MenuValidator;
+import timefit.reservation.service.helper.ReservationDetachHelper;
 
 import java.util.UUID;
 
@@ -35,9 +36,10 @@ public class MenuCommandService {
     private final MenuRepository menuRepository;
     private final BusinessValidator businessValidator;
     private final MenuValidator menuValidator;
-    private final MenuReservationValidator menuReservationValidator;
+
     private final MenuEntityFactory menuEntityFactory;
     private final MenuUpdateHelper menuUpdateHelper;
+    private final MenuDeleteHelper menuDeleteHelper;
     private final MenuBookingSlotHelper menuBookingSlotHelper;
 
     /**
@@ -167,20 +169,16 @@ public class MenuCommandService {
         // 2. Menu 조회
         Menu menu = menuValidator.validateMenuOfBusiness(menuId, businessId);
 
-        // 3. 활성 예약 확인
+        // 3. 활성 예약 확인 (PENDING/CONFIRMED 있으면 삭제 거부)
         menuValidator.validateNoActiveReservations(menuId);
 
-        // 4. 삭제 전 정보 저장
-        String menuName = menu.getServiceName();
+        // 4. Menu 삭제
+        menuDeleteHelper.delete(menu);
 
-        // 5. CASCADE 삭제
-        menuRepository.delete(menu);
+        log.info("메뉴 삭제 완료: menuId={}, menuName={}", menuId, menu.getServiceName());
 
-        log.info("메뉴 삭제 완료: menuId={}, menuName={}", menuId, menuName);
-
-        // 6. 결과 반환
         return MenuResponseDto.DeleteResult.of(
-                menuId, menuName, "메뉴가 성공적으로 삭제되었습니다"
+                menuId, menu.getServiceName(), "메뉴가 성공적으로 삭제되었습니다"
         );
     }
 }

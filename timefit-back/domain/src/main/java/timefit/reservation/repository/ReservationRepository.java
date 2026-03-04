@@ -17,10 +17,20 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
     // Business의 활성 예약 존재 여부
     boolean existsByBusinessIdAndStatusIn(UUID businessId, List<ReservationStatus> statuses);
 
-    /**
-     * 고객의 전체 예약 수 조회 (삭제되지 않은 예약만)
-     * @param customerId 고객 ID
-     * @return 예약 수
-     */
+    // 고객의 전체 예약 수 조회
     long countByCustomerId(UUID customerId);
+
+    /**
+     * Menu 삭제 전 detach 대상 조회
+     * - 활성 예약(PENDING/CONFIRMED)은 삭제 시도 자체가 서비스 레이어에서 거부됨
+     * - 여기서 조회되는 건 COMPLETED/CANCELLED/NO_SHOW 상태의 이력 예약만
+     */
+    List<Reservation> findByMenuId(UUID menuId);
+
+    /**
+     * 슬롯 일괄 삭제 전 detach 대상 조회
+     * - 슬롯 ID 목록에 해당하는 모든 Reservation 조회
+     * - 과거 슬롯의 경우 COMPLETED/CANCELLED 상태가 대부분
+     */
+    List<Reservation> findByBookingSlotIdIn(List<UUID> slotIds);
 }

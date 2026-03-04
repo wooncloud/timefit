@@ -26,11 +26,8 @@ import java.time.LocalTime;
  */
 @Entity
 @Table(name = "reservation", indexes = {
-        // 고객(customer) 조회용
         @Index(name = "idx_reservation_customer_date_time",
                 columnList = "customer_id, reservation_date DESC, reservation_time DESC"),
-
-        // 업체(business) 조회용
         @Index(name = "idx_reservation_business_date_time",
                 columnList = "business_id, reservation_date DESC, reservation_time DESC")
 })
@@ -43,26 +40,29 @@ public class Reservation extends BaseEntity {
     @JoinColumn(name = "customer_id", nullable = false)
     private User customer;
 
-    @NotNull
+    /**
+     * 업체 삭제 시 null 허용 (CASCADE 제거)
+     * null이 된 경우 snapshotBusinessName으로 업체명 표시
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "business_id", nullable = true)
     private Business business;
 
-    @NotNull
+    /**
+     * 메뉴 삭제 시 null 허용 (CASCADE 제거)
+     * null이 된 경우 snapshotMenuName으로 서비스명 표시
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "menu_id", nullable = true)
     private Menu menu;
 
     /**
-     * 변경: slot → bookingSlot
-     * ONDEMAND_BASED일 때는 null, RESERVATION_BASED일 때는 필수
+     * ONDEMAND_BASED: null
+     * RESERVATION_BASED: 슬롯 삭제 시 null 허용 (CASCADE 제거)
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_slot_id")  // slot_id → booking_slot_id
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private BookingSlot bookingSlot;  // slot → bookingSlot
+    @JoinColumn(name = "booking_slot_id", nullable = true)
+    private BookingSlot bookingSlot;
 
     @NotNull(message = "예약 날짜는 필수입니다")
     @Column(name = "reservation_date", nullable = false)
@@ -91,6 +91,24 @@ public class Reservation extends BaseEntity {
     @Min(value = 1, message = "소요 시간은 1분 이상이어야 합니다")
     @Column(name = "reservation_duration", nullable = false)
     private Integer reservationDuration;
+
+    /**
+     * 예약 시점 업체명 스냅샷
+     * business가 null이 된 이후에도 고객 화면에 업체명 표시 가능
+     */
+    @NotNull(message = "업체명 스냅샷은 필수입니다")
+    @Size(max = 100)
+    @Column(name = "snapshot_business_name", nullable = false, length = 100)
+    private String snapshotBusinessName;
+
+    /**
+     * 예약 시점 서비스명 스냅샷
+     * menu가 null이 된 이후에도 고객 화면에 서비스명 표시 가능
+     */
+    @NotNull(message = "서비스명 스냅샷은 필수입니다")
+    @Size(max = 100)
+    @Column(name = "snapshot_menu_name", nullable = false, length = 100)
+    private String snapshotMenuName;
 
     @NotNull(message = "고객명은 필수입니다")
     @Size(max = 50, message = "고객명은 50자 이하로 입력해주세요")
@@ -128,6 +146,8 @@ public class Reservation extends BaseEntity {
         reservation.reservationTime = bookingSlot.getStartTime();
         reservation.reservationPrice = menu.getPrice();
         reservation.reservationDuration = menu.getDurationMinutes();
+        reservation.snapshotBusinessName = business.getBusinessName();
+        reservation.snapshotMenuName = menu.getServiceName();
         reservation.status = ReservationStatus.PENDING;
         reservation.customerName = customerName;
         reservation.customerPhone = customerPhone;
@@ -145,17 +165,22 @@ public class Reservation extends BaseEntity {
         reservation.customer = customer;
         reservation.business = business;
         reservation.menu = menu;
-        reservation.bookingSlot = null;  // ONDEMAND 는 슬롯 없음
+        reservation.bookingSlot = null;
         reservation.reservationDate = reservationDate;
         reservation.reservationTime = reservationTime;
         reservation.reservationPrice = menu.getPrice();
         reservation.reservationDuration = menu.getDurationMinutes();
+        reservation.snapshotBusinessName = business.getBusinessName();
+        reservation.snapshotMenuName = menu.getServiceName();
         reservation.status = ReservationStatus.PENDING;
         reservation.customerName = customerName;
         reservation.customerPhone = customerPhone;
         reservation.notes = notes;
         return reservation;
     }
+
+
+    // ======================== 검증 ========================
 
     // RESERVATION_BASED 검증
     private static void validateReservationBasedFields(Menu menu, BookingSlot bookingSlot) {
@@ -172,6 +197,23 @@ public class Reservation extends BaseEntity {
         if (!menu.isOnDemandBased()) {
             throw new IllegalArgumentException("주문형 메뉴만 즉시 예약이 가능합니다");
         }
+    }
+
+    // ======================== FK detach (삭제 전 서비스 레이어에서 호출) ========================
+
+    /** 업체 삭제 전 호출 — business FK null 처리, 예약 이력 보존 */
+    public void detachBusiness() {
+        this.business = null;
+    }
+
+    /** 메뉴 삭제 전 호출 — menu FK null 처리, 예약 이력 보존 */
+    public void detachMenu() {
+        this.menu = null;
+    }
+
+    /** 슬롯 삭제 전 호출 — bookingSlot FK null 처리, 예약 이력 보존 */
+    public void detachBookingSlot() {
+        this.bookingSlot = null;
     }
 
     // 예약 번호 설정
@@ -243,6 +285,8 @@ public class Reservation extends BaseEntity {
         this.status = ReservationStatus.NO_SHOW;
     }
 
+    // ======================== 상태 조회 ========================
+
     // 예약형(슬롯 기반) 예약인지 확인
     public boolean isReservationBased() {
         return bookingSlot != null;
@@ -280,13 +324,8 @@ public class Reservation extends BaseEntity {
      * @return 취소 가능한 시간인지 여부
      */
     public boolean isCancellableByTime() {
-        // 1. 예약 시작 시간
-        LocalDateTime reservationDateTime = reservationDate.atTime(reservationTime);
-
-        // 2. 취소 마감 시간 = 예약 시간 - 서비스 소요 시간
-        LocalDateTime cancelDeadline = reservationDateTime.minusMinutes(reservationDuration);
-
-        // 3. 현재 시간이 취소 마감 시간 이전이어야 취소 가능
+        LocalDateTime cancelDeadline = reservationDate.atTime(reservationTime)
+                .minusMinutes(reservationDuration);
         return LocalDateTime.now().isBefore(cancelDeadline);
     }
 
@@ -297,8 +336,7 @@ public class Reservation extends BaseEntity {
      * @return 취소 마감 시간
      */
     public LocalDateTime getCancelDeadline() {
-        LocalDateTime reservationDateTime = reservationDate.atTime(reservationTime);
-        return reservationDateTime.minusMinutes(reservationDuration);
+        return reservationDate.atTime(reservationTime).minusMinutes(reservationDuration);
     }
 
     // 과거 예약인지 확인
