@@ -66,10 +66,10 @@ services:
     container_name: timefit-nginx
     ports:
       - "80:80"
-      - "443:443"
+      # "443:443" 제거 — Cloudflare 터널이 SSL 담당
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/templates-prod:/etc/nginx/templates:ro
       - ./nginx/logs:/var/log/nginx
       - ./nginx/ssl:/etc/nginx/ssl
       - ./init-certs.sh:/docker-entrypoint.d/00-init-certs.sh:ro
@@ -151,6 +151,19 @@ services:
     restart: unless-stopped
     networks:
       - timefit-network
+
+  # ============================================================
+  # Cloudflare Tunnel
+  # ============================================================
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: timefit-cloudflared
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    restart: unless-stopped
+    networks:
+      - timefit-network
+    depends_on:
+      - nginx
 
 # ============================================================
 # Volumes
