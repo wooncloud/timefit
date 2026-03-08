@@ -14,6 +14,33 @@ services:
     restart: unless-stopped
     networks:
       - timefit-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # Spring Boot Application (dev)
+  timefit-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: timefit-backend
+    env_file:
+      - .env.dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/workspace                        # 소스 코드 마운트 (hot reload)
+      - ./keys/jwt:/workspace/keys/jwt      # JWT 키 유지
+      - gradle_cache:/root/.gradle          # Gradle 캐시
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - timefit-network
 
   # Nginx Reverse Proxy
   nginx:
@@ -40,7 +67,7 @@ services:
       - NGINX_RATE_BURST=${NGINX_RATE_BURST}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
     depends_on:
-      - db
+      - timefit-backend
     restart: unless-stopped
     networks:
       - timefit-network
@@ -102,6 +129,7 @@ volumes:
   postgres_data:
   prometheus_data:
   grafana_data:
+  gradle_cache:
 
 networks:
   timefit-network:
