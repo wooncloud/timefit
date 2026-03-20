@@ -85,22 +85,22 @@
 
 ### 사업자 계정
 ```
-Email: owner1@timefit.com
+Email: owner1@timefit.test
 Password: password123
 Business: Timefit Hair Salon
 
-Email: owner2@timefit.com
+Email: owner2@timefit.test
 Password: password123
 Business: Timefit Nail Shop
 
-Email: owner3@timefit.com
+Email: owner3@timefit.test
 Password: password123
 Business: Timefit Cafe
 ```
 
 ### 고객 계정
 ```
-Email: customer1@timefit.com ~ customer97@timefit.com
+Email: customer1@timefit.test ~ customer97@timefit.test
 Password: password123
 ```
 
