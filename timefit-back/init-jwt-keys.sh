@@ -83,11 +83,11 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "1. Access Token용 RSA 키 생성 (2048 bits)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# Access Token Private Key (2048 bits for RS256)
-openssl genrsa -out "$ACCESS_PRIVATE" 2048 2>/dev/null
+# Access Token Private Key (2048 bits for RS256, PKCS#8 형식)
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out "$ACCESS_PRIVATE" 2>/dev/null
 
 # Access Token Public Key
-openssl rsa -in "$ACCESS_PRIVATE" -pubout -out "$ACCESS_PUBLIC" 2>/dev/null
+openssl pkey -in "$ACCESS_PRIVATE" -pubout -out "$ACCESS_PUBLIC" 2>/dev/null
 
 echo "✅ Access Token 키 생성 완료"
 echo "  Private: $ACCESS_PRIVATE"
@@ -98,11 +98,11 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "2. Refresh Token용 RSA 키 생성 (4096 bits)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# Refresh Token Private Key (4096 bits for RS512)
-openssl genrsa -out "$REFRESH_PRIVATE" 4096 2>/dev/null
+# Refresh Token Private Key (4096 bits for RS512, PKCS#8 형식)
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out "$REFRESH_PRIVATE" 2>/dev/null
 
 # Refresh Token Public Key
-openssl rsa -in "$REFRESH_PRIVATE" -pubout -out "$REFRESH_PUBLIC" 2>/dev/null
+openssl pkey -in "$REFRESH_PRIVATE" -pubout -out "$REFRESH_PUBLIC" 2>/dev/null
 
 echo "✅ Refresh Token 키 생성 완료"
 echo "  Private: $REFRESH_PRIVATE"

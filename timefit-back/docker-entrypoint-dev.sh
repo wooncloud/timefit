@@ -21,13 +21,13 @@ if [ -f "$ACCESS_PRIVATE" ] && [ -f "$REFRESH_PRIVATE" ]; then
 else
     echo "⚠️  JWT 키가 없습니다. 자동 생성 중..."
 
-    # Access Token 키 생성
-    openssl genrsa -out "$ACCESS_PRIVATE" 2048
-    openssl rsa -in "$ACCESS_PRIVATE" -pubout -out "$KEYS_DIR/access_public_key.pem"
+    # Access Token 키 생성 (PKCS#8 형식)
+    openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out "$ACCESS_PRIVATE"
+    openssl pkey -in "$ACCESS_PRIVATE" -pubout -out "$KEYS_DIR/access_public_key.pem"
 
-    # Refresh Token 키 생성
-    openssl genrsa -out "$REFRESH_PRIVATE" 4096
-    openssl rsa -in "$REFRESH_PRIVATE" -pubout -out "$KEYS_DIR/refresh_public_key.pem"
+    # Refresh Token 키 생성 (PKCS#8 형식)
+    openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out "$REFRESH_PRIVATE"
+    openssl pkey -in "$REFRESH_PRIVATE" -pubout -out "$KEYS_DIR/refresh_public_key.pem"
 
     echo "✅ JWT 키 생성 완료"
     echo "생성된 파일 목록:"

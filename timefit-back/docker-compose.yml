@@ -32,8 +32,9 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - .:/workspace                        # 소스 코드 마운트 (hot reload)
-      - ./keys/jwt:/workspace/keys/jwt      # JWT 키 유지
+      - .:/workspace                            # 소스 코드 마운트 (hot reload)
+      - ./keys/jwt:/workspace/keys/jwt          # JWT 키 유지 (루트 기준)
+      - ./keys/jwt:/workspace/web/keys/jwt      # JWT 키 유지 (web 서브모듈 기준)
       - gradle_cache:/root/.gradle          # Gradle 캐시
     depends_on:
       db:
