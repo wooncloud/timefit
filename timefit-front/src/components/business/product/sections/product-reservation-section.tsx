@@ -80,8 +80,8 @@ export function ProductReservationSection({
       ...(checked
         ? {
             slot_interval_minutes:
-              formData.slot_interval_minutes ||
-              formData.duration_minutes ||
+              formData.slot_interval_minutes ??
+              formData.duration_minutes ??
               60,
           }
         : {
@@ -92,8 +92,7 @@ export function ProductReservationSection({
     });
   };
 
-  // 오늘 날짜 (YYYY-MM-DD)
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('sv-SE');
 
   return (
     <div className="space-y-4 border-t pt-6">
