@@ -18,7 +18,7 @@ interface ScheduleClientProps {
   businessId: string;
   initialBusinessHours: BusinessHours[];
   initialBookingSlotsMap: Record<string, BookingTimeRange[]>;
-  initialOperatingHours: OperatingHours;
+  operatingHours: OperatingHours;
   reservationMenus: Menu[];
 }
 
@@ -26,7 +26,7 @@ export function ScheduleClient({
   businessId,
   initialBusinessHours,
   initialBookingSlotsMap,
-  initialOperatingHours,
+  operatingHours,
   reservationMenus,
 }: ScheduleClientProps) {
   const [businessHours, setBusinessHours] =
@@ -123,7 +123,7 @@ export function ScheduleClient({
         <SlotGenerationPanel
           businessId={businessId}
           menus={reservationMenus}
-          operatingHours={initialOperatingHours}
+          operatingHours={operatingHours}
         />
       </TabsContent>
 

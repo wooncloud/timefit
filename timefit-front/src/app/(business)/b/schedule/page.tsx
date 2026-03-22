@@ -13,13 +13,13 @@ export default async function SchedulePage() {
 
   const [operatingHours, menuList] = await Promise.all([
     getOperatingHours(businessId),
-    getMenuList(businessId),
+    getMenuList(businessId, { isActive: true }),
   ]);
 
   const businessHours = mapOperatingHoursToBusinessHours(operatingHours);
   const bookingSlotsMap = mapOperatingHoursToBookingSlotsMap(operatingHours);
   const reservationMenus = menuList.menus.filter(
-    m => m.orderType === 'RESERVATION_BASED' && m.isActive
+    m => m.orderType === 'RESERVATION_BASED'
   );
 
   return (
@@ -27,7 +27,7 @@ export default async function SchedulePage() {
       businessId={businessId}
       initialBusinessHours={businessHours}
       initialBookingSlotsMap={bookingSlotsMap}
-      initialOperatingHours={operatingHours}
+      operatingHours={operatingHours}
       reservationMenus={reservationMenus}
     />
   );
