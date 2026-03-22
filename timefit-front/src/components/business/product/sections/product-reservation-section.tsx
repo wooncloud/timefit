@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 
 import type { MenuType, Product } from '@/types/product/product';
 import { MENU_TYPES } from '@/lib/constants/product-categories';
+import { SLOT_INTERVAL_OPTIONS } from '@/lib/constants/slot-options';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -14,14 +15,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-
-const SLOT_INTERVAL_OPTIONS = [
-  { value: '15', label: '15분' },
-  { value: '30', label: '30분' },
-  { value: '60', label: '60분' },
-  { value: '90', label: '90분' },
-  { value: '120', label: '120분' },
-];
 
 interface ProductReservationSectionProps {
   formData: Partial<Product>;

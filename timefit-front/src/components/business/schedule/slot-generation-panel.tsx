@@ -6,6 +6,7 @@ import { CalendarPlus, Loader2 } from 'lucide-react';
 import type { Menu } from '@/types/customer/menu';
 import type { OperatingHours } from '@/types/schedule/operating-hours';
 import { useCreateBookingSlots } from '@/hooks/booking-slot/mutations/use-create-booking-slots';
+import { SLOT_INTERVAL_OPTIONS } from '@/lib/constants/slot-options';
 import {
   countSlotsForSchedules,
   generateSlotSchedules,
@@ -28,14 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-const SLOT_INTERVAL_OPTIONS = [
-  { value: '15', label: '15분' },
-  { value: '30', label: '30분' },
-  { value: '60', label: '60분' },
-  { value: '90', label: '90분' },
-  { value: '120', label: '120분' },
-];
 
 interface SlotGenerationPanelProps {
   businessId: string;
