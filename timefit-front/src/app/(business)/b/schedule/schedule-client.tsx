@@ -2,24 +2,32 @@
 
 import { useState } from 'react';
 
+import type { Menu } from '@/types/customer/menu';
+import type { BookingTimeRange, OperatingHours } from '@/types/schedule/operating-hours';
 import { weekdayIdToDayOfWeek } from '@/types/business/operating-hours';
-import type { BookingTimeRange } from '@/types/schedule/operating-hours';
 import { useToggleOperatingHours } from '@/hooks/operating-hours/mutations/use-toggle-operating-hours';
 import { WEEKDAYS } from '@/lib/data/schedule/weekdays';
 import type { BusinessHours } from '@/lib/data/schedule/weekdays';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScheduleEditorPanel } from '@/components/business/schedule/schedule-editor-panel';
+import { SlotGenerationPanel } from '@/components/business/schedule/slot-generation-panel';
+import { SlotManagementPanel } from '@/components/business/schedule/slot-management-panel';
 import { WeekdayHoursPanel } from '@/components/business/schedule/weekday-hours-panel';
 
 interface ScheduleClientProps {
   businessId: string;
   initialBusinessHours: BusinessHours[];
   initialBookingSlotsMap: Record<string, BookingTimeRange[]>;
+  initialOperatingHours: OperatingHours;
+  reservationMenus: Menu[];
 }
 
 export function ScheduleClient({
   businessId,
   initialBusinessHours,
   initialBookingSlotsMap,
+  initialOperatingHours,
+  reservationMenus,
 }: ScheduleClientProps) {
   const [businessHours, setBusinessHours] =
     useState<BusinessHours[]>(initialBusinessHours);
@@ -35,19 +43,16 @@ export function ScheduleClient({
   const selectedSlots = bookingSlotsMap[selectedDayId] || [];
 
   const handleToggle = async (id: string, enabled: boolean) => {
-    // 낙관적 UI 업데이트
     setBusinessHours(prev =>
       prev.map(day => (day.id === id ? { ...day, isEnabled: enabled } : day))
     );
 
-    // API 호출
     const weekday = WEEKDAYS.find(w => w.id === id);
     if (!weekday) return;
 
     const dayOfWeek = weekdayIdToDayOfWeek(weekday.id);
     const success = await toggleOperatingHours(dayOfWeek);
 
-    // 실패 시 롤백
     if (!success) {
       setBusinessHours(prev =>
         prev.map(day => (day.id === id ? { ...day, isEnabled: !enabled } : day))
@@ -84,26 +89,47 @@ export function ScheduleClient({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[500px_1fr]">
-      <WeekdayHoursPanel
-        businessHours={businessHours}
-        selectedDayId={selectedDayId}
-        onToggle={handleToggle}
-        onTimeChange={handleTimeChange}
-        onSelect={handleSelect}
-      />
+    <Tabs defaultValue="operating-hours" className="space-y-6">
+      <TabsList>
+        <TabsTrigger value="operating-hours">영업시간 설정</TabsTrigger>
+        <TabsTrigger value="slot-generation">슬롯 생성</TabsTrigger>
+        <TabsTrigger value="slot-management">슬롯 관리</TabsTrigger>
+      </TabsList>
 
-      <ScheduleEditorPanel
-        businessId={businessId}
-        selectedDay={selectedWeekday?.fullLabel}
-        selectedDayId={selectedDayId}
-        startTime={selectedDay?.startTime || '09:00'}
-        endTime={selectedDay?.endTime || '18:00'}
-        bookingSlots={selectedSlots}
-        allBusinessHours={businessHours}
-        allBookingSlotsMap={bookingSlotsMap}
-        onSlotsChange={handleSlotsChange}
-      />
-    </div>
+      <TabsContent value="operating-hours">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[500px_1fr]">
+          <WeekdayHoursPanel
+            businessHours={businessHours}
+            selectedDayId={selectedDayId}
+            onToggle={handleToggle}
+            onTimeChange={handleTimeChange}
+            onSelect={handleSelect}
+          />
+          <ScheduleEditorPanel
+            businessId={businessId}
+            selectedDay={selectedWeekday?.fullLabel}
+            selectedDayId={selectedDayId}
+            startTime={selectedDay?.startTime || '09:00'}
+            endTime={selectedDay?.endTime || '18:00'}
+            bookingSlots={selectedSlots}
+            allBusinessHours={businessHours}
+            allBookingSlotsMap={bookingSlotsMap}
+            onSlotsChange={handleSlotsChange}
+          />
+        </div>
+      </TabsContent>
+
+      <TabsContent value="slot-generation">
+        <SlotGenerationPanel
+          businessId={businessId}
+          menus={reservationMenus}
+          operatingHours={initialOperatingHours}
+        />
+      </TabsContent>
+
+      <TabsContent value="slot-management">
+        <SlotManagementPanel businessId={businessId} />
+      </TabsContent>
+    </Tabs>
   );
 }
