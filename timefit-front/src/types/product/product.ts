@@ -19,4 +19,10 @@ export interface Product {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+
+  // 슬롯 자동 생성 (생성 시에만 사용, 서버에 저장되지 않음)
+  auto_generate_slots?: boolean;
+  slot_start_date?: string; // YYYY-MM-DD
+  slot_end_date?: string; // YYYY-MM-DD
+  slot_interval_minutes?: number;
 }

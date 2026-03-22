@@ -82,6 +82,26 @@ export function ProductDetailForm({
       return;
     }
 
+    // 슬롯 자동 생성 검증
+    if (formData.auto_generate_slots) {
+      if (!formData.slot_start_date || !formData.slot_end_date) {
+        toast.error('슬롯 자동 생성을 위해 시작/종료 날짜를 입력해주세요.');
+        return;
+      }
+      if (formData.slot_end_date < formData.slot_start_date) {
+        toast.error('종료 날짜는 시작 날짜 이후여야 합니다.');
+        return;
+      }
+      if (!formData.slot_interval_minutes) {
+        toast.error('슬롯 간격을 선택해주세요.');
+        return;
+      }
+      if (formData.slot_interval_minutes > formData.duration_minutes) {
+        toast.error('슬롯 간격은 서비스 시간 이하여야 합니다.');
+        return;
+      }
+    }
+
     onSave(formData);
   };
 
