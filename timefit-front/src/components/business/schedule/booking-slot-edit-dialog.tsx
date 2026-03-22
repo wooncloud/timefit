@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import type { BookingTimeRange } from '@/types/schedule/operating-hours';
 import { Button } from '@/components/ui/button';
@@ -17,13 +18,27 @@ import { Label } from '@/components/ui/label';
 
 interface BookingSlotEditDialogProps {
   slot: BookingTimeRange | null;
+  existingSlots?: BookingTimeRange[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (startTime: string, endTime: string) => void;
 }
 
+function hasOverlap(
+  startTime: string,
+  endTime: string,
+  existingSlots: BookingTimeRange[],
+  editingSlotId?: string
+): boolean {
+  return existingSlots.some(slot => {
+    if (slot.id === editingSlotId) return false;
+    return startTime < slot.endTime && endTime > slot.startTime;
+  });
+}
+
 export function BookingSlotEditDialog({
   slot,
+  existingSlots = [],
   open,
   onOpenChange,
   onSubmit,
@@ -46,6 +61,17 @@ export function BookingSlotEditDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!startTime || !endTime) return;
+
+    if (startTime >= endTime) {
+      toast.error('종료 시간은 시작 시간 이후여야 합니다.');
+      return;
+    }
+
+    if (hasOverlap(startTime, endTime, existingSlots, slot?.id)) {
+      toast.error('다른 시간대와 겹칩니다. 시간을 조정해주세요.');
+      return;
+    }
+
     onSubmit(startTime, endTime);
   };
 
@@ -54,7 +80,7 @@ export function BookingSlotEditDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? '예약 슬롯 수정' : '예약 슬롯 추가'}
+            {isEdit ? '예약 가능 시간대 수정' : '예약 가능 시간대 추가'}
           </DialogTitle>
           <DialogDescription>
             {isEdit
