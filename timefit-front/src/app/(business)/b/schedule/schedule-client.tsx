@@ -109,8 +109,6 @@ export function ScheduleClient({
             businessId={businessId}
             selectedDay={selectedWeekday?.fullLabel}
             selectedDayId={selectedDayId}
-            startTime={selectedDay?.startTime || '09:00'}
-            endTime={selectedDay?.endTime || '18:00'}
             bookingSlots={selectedSlots}
             allBusinessHours={businessHours}
             allBookingSlotsMap={bookingSlotsMap}

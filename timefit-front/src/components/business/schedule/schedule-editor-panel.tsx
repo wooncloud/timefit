@@ -17,8 +17,6 @@ interface ScheduleEditorPanelProps {
   businessId: string;
   selectedDay?: string;
   selectedDayId: string;
-  startTime: string;
-  endTime: string;
   bookingSlots?: BookingTimeRange[];
   allBusinessHours: BusinessHours[];
   allBookingSlotsMap: Record<string, BookingTimeRange[]>;
@@ -171,6 +169,7 @@ export function ScheduleEditorPanel({
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="시간대 수정"
                         onClick={() => handleEditClick(slot)}
                         className="h-9 w-9 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                       >
@@ -179,6 +178,7 @@ export function ScheduleEditorPanel({
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="시간대 삭제"
                         onClick={() => handleDeleteClick(slot.id!)}
                         className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-700"
                       >

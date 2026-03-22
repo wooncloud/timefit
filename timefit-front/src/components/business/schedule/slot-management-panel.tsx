@@ -136,10 +136,12 @@ export function SlotManagementPanel({ businessId }: SlotManagementPanelProps) {
                       checked={slot.isAvailable}
                       onCheckedChange={() => handleToggle(slot)}
                       disabled={toggleLoading || isPast}
+                      aria-label={`${slot.startTime} 슬롯 활성화 토글`}
                     />
                     <Button
                       variant="ghost"
                       size="icon"
+                      aria-label="슬롯 삭제"
                       className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
                       onClick={() => setDeleteTarget(slot)}
                       disabled={deleteLoading}

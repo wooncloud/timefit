@@ -135,8 +135,9 @@ export function SlotGenerationPanel({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>시작 날짜</Label>
+                <Label htmlFor="slot-gen-start-date">시작 날짜</Label>
                 <Input
+                  id="slot-gen-start-date"
                   type="date"
                   min={today}
                   value={startDate}
@@ -144,8 +145,9 @@ export function SlotGenerationPanel({
                 />
               </div>
               <div className="space-y-2">
-                <Label>종료 날짜</Label>
+                <Label htmlFor="slot-gen-end-date">종료 날짜</Label>
                 <Input
+                  id="slot-gen-end-date"
                   type="date"
                   min={startDate || today}
                   value={endDate}
