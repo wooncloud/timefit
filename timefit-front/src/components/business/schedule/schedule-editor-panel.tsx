@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Coffee, Pencil, Plus, Trash2 } from 'lucide-react';
 
 import type { BookingTimeRange } from '@/types/schedule/operating-hours';
@@ -46,9 +46,8 @@ export function ScheduleEditorPanel({
     setSlots(bookingSlots);
   }, [bookingSlots]);
 
-  const sortedSlots = useMemo(
-    () => [...slots].sort((a, b) => a.startTime.localeCompare(b.startTime)),
-    [slots]
+  const sortedSlots = [...slots].sort((a, b) =>
+    a.startTime.localeCompare(b.startTime)
   );
 
   const saveChanges = async (newSlots: BookingTimeRange[]) => {
