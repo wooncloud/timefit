@@ -65,9 +65,9 @@ public class ReservationService {
     // ========== 예약 관리 (업체) ==========
 
     public ReservationResponseDto.BusinessReservationList getBusinessReservations(
-            UUID businessId, UUID currentUserId, String status,
+            UUID businessId, UUID currentUserId, String status, String customerName,
             LocalDate startDate, LocalDate endDate, int page, int size) {
-        return queryService.getBusinessReservations(businessId, currentUserId, status, startDate, endDate, page, size);
+        return queryService.getBusinessReservations(businessId, currentUserId, status, customerName, startDate, endDate, page, size);
     }
 
     public ReservationResponseDto.BusinessReservation getBusinessReservationDetail(

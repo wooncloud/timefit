@@ -126,7 +126,7 @@ public class ReservationQueryService {
      * @return 업체용 예약 목록 Response
      */
     public ReservationResponseDto.BusinessReservationList getBusinessReservations(
-            UUID businessId, UUID currentUserId, String status,
+            UUID businessId, UUID currentUserId, String status, String customerName,
             LocalDate startDate, LocalDate endDate, int page, int size) {
 
         log.info("업체 예약 목록 조회: businessId={}, userId={}, status={}",
@@ -153,9 +153,9 @@ public class ReservationQueryService {
         // 4. Pageable 생성
         Pageable pageable = ReservationPageableUtil.createDefault(page, size);
 
-        // 5. 데이터 조회 (customerName은 null)
+        // 5. 데이터 조회
         Page<Reservation> reservationPage = queryHelper.loadBusinessReservations(
-                businessId, reservationStatus, null, finalStartDate, finalEndDate, pageable);
+                businessId, reservationStatus, customerName, finalStartDate, finalEndDate, pageable);
 
         log.info("업체 예약 목록 조회 완료: totalElements={}, page={}/{}",
                 reservationPage.getTotalElements(), page, reservationPage.getTotalPages());
