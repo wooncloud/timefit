@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import dayjs from 'dayjs';
+import type { Matcher } from 'react-day-picker';
 
 import 'dayjs/locale/ko';
 
@@ -22,13 +23,15 @@ interface DatePickerProps {
   date?: Date;
   onDateChange?: (date: Date | undefined) => void;
   placeholder?: string;
+  disabled?: Matcher | Matcher[];
 }
 
 export function DatePicker({
-  date,
-  onDateChange,
-  placeholder = '날짜 선택',
-}: DatePickerProps) {
+                             date,
+                             onDateChange,
+                             placeholder = '날짜 선택',
+                             disabled,
+                           }: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
@@ -55,6 +58,7 @@ export function DatePicker({
           mode="single"
           selected={date}
           onSelect={handleDateSelect}
+          disabled={disabled}
           initialFocus
         />
       </PopoverContent>

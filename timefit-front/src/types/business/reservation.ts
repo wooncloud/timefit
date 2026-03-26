@@ -66,6 +66,27 @@ export interface BusinessReservationList {
     pagination: PaginationInfo;
 }
 
+export interface ReservationStats {
+  pending: number;
+  confirmed: number;
+  completed: number;
+  cancelled: number;
+  noShow: number;
+}
+
+export interface GetReservationStatsApiResponse {
+  data?: ReservationStats;
+  message?: string;
+}
+
+export interface GetReservationStatsHandlerResponse {
+  success: boolean;
+  data?: ReservationStats;
+  message?: string;
+  requiresLogout?: boolean;
+  redirectTo?: string;
+}
+
 // ─────────────────────────────────────────
 // API 응답 타입 (백엔드 → Next.js 서버)
 // ─────────────────────────────────────────

@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import dayjs from 'dayjs';
 
 import type {
   BusinessReservationItem,
   PaginationInfo,
+  ReservationStats,
 } from '@/types/business/reservation';
 import { businessReservationService } from '@/services/reservation/reservation-business-service.client';
 import {
@@ -22,20 +24,29 @@ import { Table } from '@/components/ui/table';
 interface ReservationsClientProps {
   initialReservations: BusinessReservationItem[];
   initialPagination: PaginationInfo;
+  initialStats: ReservationStats;
   businessId: string;
 }
 
 export function ReservationsClient({
                                      initialReservations,
                                      initialPagination,
+                                     initialStats,
                                      businessId,
                                    }: ReservationsClientProps) {
   const [reservations, setReservations] = useState<BusinessReservationItem[]>(initialReservations);
   const [pagination, setPagination] = useState<PaginationInfo>(initialPagination);
+  const [stats, setStats] = useState<ReservationStats>(initialStats);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentFilters, setCurrentFilters] = useState<FilterValues>({});
 
-  // 공통 fetch 함수
+  // page.tsx SSR과 동일한 기본값 ±15일
+  const today = dayjs();
+  const [currentFilters, setCurrentFilters] = useState<FilterValues>({
+    startDate: today.subtract(15, 'day').format('YYYY-MM-DD'),
+    endDate: today.add(15, 'day').format('YYYY-MM-DD'),
+  });
+
+  // 예약 목록 fetch
   const fetchReservations = async (filters: FilterValues, page: number) => {
     const params = new URLSearchParams();
     if (filters.status) params.append('status', filters.status);
@@ -51,11 +62,28 @@ export function ReservationsClient({
     return response.json();
   };
 
-  // 필터 검색
+  // 통계 fetch — 목록과 동일한 날짜 기준
+  const fetchStats = async (filters: FilterValues) => {
+    const params = new URLSearchParams();
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+
+    const queryString = params.toString();
+    const response = await fetch(
+        `/api/business/${businessId}/reservations/stats${queryString ? `?${queryString}` : ''}`
+    );
+    const result = await response.json();
+    if (result.success && result.data) setStats(result.data);
+  };
+
+  // 필터 검색 — 목록 + 통계 동시 갱신
   const handleSearch = async (filters: FilterValues) => {
     try {
       setIsLoading(true);
-      const result = await fetchReservations(filters, 0);
+      const [result] = await Promise.all([
+        fetchReservations(filters, 0),
+        fetchStats(filters),
+      ]);
       if (!result.success) { toast.error('조회에 실패했습니다.'); return; }
       setCurrentFilters(filters);
       setReservations(result.data.reservations);
@@ -67,7 +95,7 @@ export function ReservationsClient({
     }
   };
 
-  // 페이지 이동 (현재 필터 유지)
+  // 페이지 이동 — 현재 필터 유지 (통계는 재조회 불필요)
   const handlePageChange = async (page: number) => {
     try {
       setIsLoading(true);
@@ -83,7 +111,7 @@ export function ReservationsClient({
     }
   };
 
-  // 액션 핸들러
+  // 액션 핸들러 — 성공 시 현재 필터 기준으로 통계 재조회
   const handleApprove = async (reservationId: string) => {
     const result = await businessReservationService.approveReservation(businessId, reservationId);
     if (!result.success) { toast.error(result.message || '승인에 실패했습니다.'); return; }
@@ -91,6 +119,7 @@ export function ReservationsClient({
         r.reservationId === reservationId ? { ...r, status: 'CONFIRMED' as const, requiresAction: false } : r
     ));
     toast.success('예약을 승인했습니다.');
+    await fetchStats(currentFilters);
   };
 
   const handleReject = async (reservationId: string) => {
@@ -100,6 +129,7 @@ export function ReservationsClient({
         r.reservationId === reservationId ? { ...r, status: 'REJECTED' as const, requiresAction: false } : r
     ));
     toast.success('예약을 거절했습니다.');
+    await fetchStats(currentFilters);
   };
 
   const handleComplete = async (reservationId: string) => {
@@ -109,6 +139,7 @@ export function ReservationsClient({
         r.reservationId === reservationId ? { ...r, status: 'COMPLETED' as const, requiresAction: false } : r
     ));
     toast.success('예약을 완료 처리했습니다.');
+    await fetchStats(currentFilters);
   };
 
   const handleNoShow = async (reservationId: string) => {
@@ -118,13 +149,14 @@ export function ReservationsClient({
         r.reservationId === reservationId ? { ...r, status: 'NO_SHOW' as const, requiresAction: false } : r
     ));
     toast.success('노쇼 처리했습니다.');
+    await fetchStats(currentFilters);
   };
 
   return (
       <div className="space-y-6">
         <ReservationFilterToolbar onSearch={handleSearch} />
 
-        <ReservationStatsCards reservations={reservations} />
+        <ReservationStatsCards stats={stats} />
 
         <Card>
           <CardContent className="pt-4">
