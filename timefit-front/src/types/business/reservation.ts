@@ -88,6 +88,57 @@ export interface GetReservationStatsHandlerResponse {
 }
 
 // ─────────────────────────────────────────
+// 사업자용 예약 상세 타입
+// ─────────────────────────────────────────
+
+export interface BusinessReservationDetail {
+  reservationId: string;
+  reservationNumber: string;
+  status: ReservationStatus;
+  createdAt: string;
+  updatedAt: string;
+  cancelledAt: string | null;
+  businessId: string;
+  businessName: string;
+  businessAddress: string;
+  businessContactPhone: string;
+  customerId: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string | null;
+  menuId: string | null;
+  menuServiceName: string;
+  menuCategoryCode: string | null;
+  menuPrice: number;
+  menuDescription: string | null;
+  menuOrderType: 'RESERVATION_BASED' | 'ONDEMAND_BASED' | null;
+  menuDurationMinutes: number | null;
+  menuImageUrl: string | null;
+  menuIsActive: boolean | null;
+  reservationDate: string;
+  reservationTime: string;
+  bookingSlotId: string | null;
+  reservationPrice: number;
+  reservationDuration: number;
+  customerNameSnapshot: string;
+  customerPhoneSnapshot: string;
+  notes: string | null;
+}
+
+export interface GetBusinessReservationDetailApiResponse {
+  data?: BusinessReservationDetail;
+  message?: string;
+}
+
+export interface GetBusinessReservationDetailHandlerResponse {
+  success: boolean;
+  data?: BusinessReservationDetail;
+  message?: string;
+  requiresLogout?: boolean;
+  redirectTo?: string;
+}
+
+// ─────────────────────────────────────────
 // API 응답 타입 (백엔드 → Next.js 서버)
 // ─────────────────────────────────────────
 

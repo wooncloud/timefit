@@ -1,10 +1,27 @@
-import type { BusinessReservationActionHandlerResponse } from '@/types/business/reservation';
+import type {
+  BusinessReservationActionHandlerResponse,
+  GetBusinessReservationDetailHandlerResponse,
+} from '@/types/business/reservation';
 
 /**
- * 클라이언트 측 클래스: 사업자용 예약 액션 (Mutations)
+ * 클라이언트 측 클래스: 사업자용 예약 액션 (Mutations + 상세 조회)
  * API 라우트를 통해 클라이언트 컴포넌트에서 사용됨
  */
 class BusinessReservationService {
+  /**
+   * 예약 상세 조회
+   */
+  async getReservationDetail(
+    businessId: string,
+    reservationId: string
+  ): Promise<GetBusinessReservationDetailHandlerResponse> {
+    const response = await fetch(
+      `/api/business/${businessId}/reservation/${reservationId}`,
+      { method: 'GET' }
+    );
+    return response.json();
+  }
+
   /**
    * 예약 승인 (PENDING → CONFIRMED)
    */
@@ -21,7 +38,6 @@ class BusinessReservationService {
         body: JSON.stringify({ notes }),
       }
     );
-
     return response.json();
   }
 
@@ -41,7 +57,6 @@ class BusinessReservationService {
         body: JSON.stringify({ notes }),
       }
     );
-
     return response.json();
   }
 
@@ -61,7 +76,6 @@ class BusinessReservationService {
         body: JSON.stringify({ notes }),
       }
     );
-
     return response.json();
   }
 
@@ -81,7 +95,6 @@ class BusinessReservationService {
         body: JSON.stringify({ notes }),
       }
     );
-
     return response.json();
   }
 }

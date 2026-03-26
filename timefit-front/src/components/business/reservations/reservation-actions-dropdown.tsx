@@ -15,6 +15,7 @@ import {
 interface ReservationActionsDropdownProps {
   reservationId: string;
   status: ReservationStatus;
+  onDetail: (id: string) => void;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   onComplete: (id: string) => void;
@@ -24,6 +25,7 @@ interface ReservationActionsDropdownProps {
 export function ReservationActionsDropdown({
                                              reservationId,
                                              status,
+                                             onDetail,
                                              onApprove,
                                              onReject,
                                              onComplete,
@@ -71,7 +73,9 @@ export function ReservationActionsDropdown({
         )}
 
         {/* 공통: 상세 보기 */}
-        <DropdownMenuItem>상세 보기</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onDetail(reservationId)}>
+          상세 보기
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

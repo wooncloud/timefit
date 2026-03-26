@@ -1,10 +1,11 @@
-import type { BusinessReservationItem } from '@/types/business/reservation';
 import { TableBody } from '@/components/ui/table';
 
+import type { BusinessReservationItem } from '@/types/business/reservation';
 import { ReservationTableRow } from './reservation-table-row';
 
 interface ReservationTableBodyProps {
   reservations: BusinessReservationItem[];
+  onDetail: (id: string) => void;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   onComplete: (id: string) => void;
@@ -13,6 +14,7 @@ interface ReservationTableBodyProps {
 
 export function ReservationTableBody({
                                        reservations,
+                                       onDetail,
                                        onApprove,
                                        onReject,
                                        onComplete,
@@ -24,6 +26,7 @@ export function ReservationTableBody({
         <ReservationTableRow
           key={reservation.reservationId}
           reservation={reservation}
+          onDetail={onDetail}
           onApprove={onApprove}
           onReject={onReject}
           onComplete={onComplete}
