@@ -10,6 +10,7 @@ import timefit.reservation.entity.ReservationStatus;
 import timefit.reservation.repository.ReservationQueryRepository;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -80,5 +81,11 @@ public class ReservationQueryHelper {
 
         return reservationQueryRepository.findBusinessReservationsWithFilters(
                 businessId, status, customerName, startDate, endDate, pageable);
+    }
+
+    public Map<ReservationStatus, Long> loadBusinessReservationStats(
+            UUID businessId, LocalDate startDate, LocalDate endDate) {
+        log.debug("업체 예약 통계 조회: businessId={}, dateRange={}~{}", businessId, startDate, endDate);
+        return reservationQueryRepository.countByBusinessIdGroupByStatus(businessId, startDate, endDate);
     }
 }

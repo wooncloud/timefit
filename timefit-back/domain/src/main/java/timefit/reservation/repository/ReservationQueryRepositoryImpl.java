@@ -1,6 +1,7 @@
 package timefit.reservation.repository;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -18,10 +19,7 @@ import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static timefit.business.entity.QBusiness.business;
@@ -135,6 +133,27 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
                 .fetchOne();
 
         return new PageImpl<>(reservations, pageable, total != null ? total : 0);
+    }
+
+    @Override
+    public Map<ReservationStatus, Long> countByBusinessIdGroupByStatus(
+            UUID businessId, LocalDate startDate, LocalDate endDate) {
+        List<Tuple> results = queryFactory
+                .select(reservation.status, reservation.count())
+                .from(reservation)
+                .where(
+                        businessIdEq(businessId),
+                        reservationDateGoe(startDate),
+                        reservationDateLoe(endDate)
+                )
+                .groupBy(reservation.status)
+                .fetch();
+
+        return results.stream()
+                .collect(Collectors.toMap(
+                        tuple -> tuple.get(reservation.status),
+                        tuple -> tuple.get(reservation.count())
+                ));
     }
 
     // -----------  private (BooleanExpression)

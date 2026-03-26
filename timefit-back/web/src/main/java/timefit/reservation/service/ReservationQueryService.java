@@ -18,6 +18,7 @@ import timefit.reservation.service.util.ReservationTimeUtil;
 import timefit.reservation.service.validator.ReservationValidator;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -186,5 +187,18 @@ public class ReservationQueryService {
 
         // Converter 변환
         return converter.toBusinessReservation(reservation);
+    }
+
+    public ReservationResponseDto.ReservationStats getBusinessReservationStats(
+            UUID businessId, UUID currentUserId, LocalDate startDate, LocalDate endDate) {
+
+        log.info("업체 예약 통계 조회: businessId={}, userId={}, dateRange={}~{}",
+                businessId, currentUserId, startDate, endDate);
+
+        businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+        businessValidator.validateBusinessExists(businessId);
+
+        Map<ReservationStatus, Long> counts = queryHelper.loadBusinessReservationStats(businessId, startDate, endDate);
+        return ReservationResponseDto.ReservationStats.of(counts);
     }
 }

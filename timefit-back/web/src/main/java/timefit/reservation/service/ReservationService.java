@@ -98,4 +98,9 @@ public class ReservationService {
             UUID businessId, UUID reservationId, UUID currentUserId, String notes) {
         return commandService.markAsNoShow(businessId, reservationId, currentUserId, notes);
     }
+
+    public ReservationResponseDto.ReservationStats getBusinessReservationStats(
+            UUID businessId, UUID currentUserId, LocalDate startDate, LocalDate endDate) {
+        return queryService.getBusinessReservationStats(businessId, currentUserId, startDate, endDate);
+    }
 }

@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Schema(description = "예약 응답")
@@ -732,6 +733,24 @@ public class ReservationResponseDto {
                     reservation.getStatus(),
                     message,
                     reservation.getCancelledAt()
+            );
+        }
+    }
+
+    public record ReservationStats(
+            long pending,
+            long confirmed,
+            long completed,
+            long cancelled,
+            long noShow
+    ) {
+        public static ReservationStats of(Map<ReservationStatus, Long> counts) {
+            return new ReservationStats(
+                    counts.getOrDefault(ReservationStatus.PENDING, 0L),
+                    counts.getOrDefault(ReservationStatus.CONFIRMED, 0L),
+                    counts.getOrDefault(ReservationStatus.COMPLETED, 0L),
+                    counts.getOrDefault(ReservationStatus.CANCELLED, 0L),
+                    counts.getOrDefault(ReservationStatus.NO_SHOW, 0L)
             );
         }
     }

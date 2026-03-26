@@ -10,6 +10,7 @@ import timefit.reservation.entity.ReservationStatus;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -62,6 +63,19 @@ public interface ReservationQueryRepository {
             UUID businessId,
             LocalDate date
     );
+
+    /**
+     * 업체 예약 상태별 건수 집계
+     * - 날짜 파라미터 없으면 전체 기간 집계
+     * - GROUP BY status 단일 쿼리로 처리
+     *
+     * @param businessId 업체 ID
+     * @param startDate 시작 날짜 (nullable)
+     * @param endDate 종료 날짜 (nullable)
+     * @return 상태별 예약 건수 Map (존재하지 않는 상태는 Map에 포함되지 않음)
+     */
+    Map<ReservationStatus, Long> countByBusinessIdGroupByStatus(
+            UUID businessId, LocalDate startDate, LocalDate endDate);
 
     /**
      * 예약 생성을 위한 BookingSlot 조회 (fetch join)

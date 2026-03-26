@@ -178,6 +178,26 @@ public class ReservationController {
         return ResponseEntity.ok(ResponseData.of(response));
     }
 
+    @GetMapping("/api/business/{businessId}/reservations/stats")
+    public ResponseEntity<ResponseData<ReservationResponseDto.ReservationStats>> getBusinessReservationStats(
+            @Parameter(description = "업체 ID", required = true)
+            @PathVariable UUID businessId,
+            @Parameter(description = "시작 날짜", example = "2025-11-01")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "종료 날짜", example = "2025-11-30")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @Parameter(hidden = true)
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("업체 예약 통계 조회 요청: businessId={}, userId={}, dateRange={}~{}",
+                businessId, currentUserId, startDate, endDate);
+
+        ReservationResponseDto.ReservationStats response =
+                reservationService.getBusinessReservationStats(businessId, currentUserId, startDate, endDate);
+
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
     @ApproveReservationOperation
     @PostMapping("/api/business/{businessId}/reservation/{reservationId}/approve")
     public ResponseEntity<ResponseData<ReservationResponseDto.ReservationActionResult>> approveReservation(
