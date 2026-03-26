@@ -1,63 +1,63 @@
+'use client';
+
+import type { BusinessReservationItem, ReservationStatus } from '@/types/business/reservation';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 
 import { ReservationActionsDropdown } from './reservation-actions-dropdown';
 
-export interface Reservation {
-  id: string;
-  reservationNumber: string;
-  dateTime: string;
-  customerName: string;
-  customerPhone: string;
-  service: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'noshow';
-}
-
 interface ReservationTableRowProps {
-  reservation: Reservation;
+  reservation: BusinessReservationItem;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+  onComplete: (id: string) => void;
+  onNoShow: (id: string) => void;
 }
 
-const getStatusBadgeVariant = (status: Reservation['status']) => {
+const getStatusBadgeVariant = (status: ReservationStatus) => {
   switch (status) {
-    case 'confirmed':
+    case 'CONFIRMED':
       return 'default' as const;
-    case 'pending':
+    case 'PENDING':
       return 'secondary' as const;
-    case 'completed':
+    case 'COMPLETED':
       return 'outline' as const;
-    case 'cancelled':
-    case 'noshow':
+    case 'CANCELLED':
+    case 'REJECTED':
+    case 'NO_SHOW':
       return 'destructive' as const;
     default:
       return 'outline' as const;
   }
 };
 
-const getStatusLabel = (status: Reservation['status']) => {
+const getStatusLabel = (status: ReservationStatus) => {
   switch (status) {
-    case 'pending':
+    case 'PENDING':
       return '승인대기';
-    case 'confirmed':
+    case 'CONFIRMED':
       return '예약확정';
-    case 'completed':
+    case 'COMPLETED':
       return '완료';
-    case 'cancelled':
+    case 'CANCELLED':
       return '취소';
-    case 'noshow':
+    case 'REJECTED':
+      return '거절';
+    case 'NO_SHOW':
       return '노쇼';
     default:
       return status;
   }
 };
 
-const formatDateTime = (dateTime: string) => {
-  const date = new Date(dateTime);
-  const dateStr = date.toLocaleDateString('ko-KR', {
+const formatDateTime = (date: string, time: string) => {
+  const dateObj = new Date(`${date}T${time}`);
+  const dateStr = dateObj.toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
   });
-  const timeStr = date.toLocaleTimeString('ko-KR', {
+  const timeStr = dateObj.toLocaleTimeString('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
@@ -65,13 +65,21 @@ const formatDateTime = (dateTime: string) => {
   return `${dateStr} ${timeStr}`;
 };
 
-export function ReservationTableRow({ reservation }: ReservationTableRowProps) {
+export function ReservationTableRow({
+                                      reservation,
+                                      onApprove,
+                                      onReject,
+                                      onComplete,
+                                      onNoShow,
+                                    }: ReservationTableRowProps) {
   return (
     <TableRow>
       <TableCell className="font-medium">
         {reservation.reservationNumber}
       </TableCell>
-      <TableCell>{formatDateTime(reservation.dateTime)}</TableCell>
+      <TableCell>
+        {formatDateTime(reservation.reservationDate, reservation.reservationTime)}
+      </TableCell>
       <TableCell>
         <div className="flex flex-col">
           <span className="font-medium">{reservation.customerName}</span>
@@ -80,14 +88,21 @@ export function ReservationTableRow({ reservation }: ReservationTableRowProps) {
           </span>
         </div>
       </TableCell>
-      <TableCell>{reservation.service}</TableCell>
+      <TableCell>{reservation.reservationDuration}분</TableCell>
       <TableCell>
         <Badge variant={getStatusBadgeVariant(reservation.status)}>
           {getStatusLabel(reservation.status)}
         </Badge>
       </TableCell>
       <TableCell className="text-right">
-        <ReservationActionsDropdown reservationId={reservation.id} />
+        <ReservationActionsDropdown
+          reservationId={reservation.reservationId}
+          status={reservation.status}
+          onApprove={onApprove}
+          onReject={onReject}
+          onComplete={onComplete}
+          onNoShow={onNoShow}
+        />
       </TableCell>
     </TableRow>
   );

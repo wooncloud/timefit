@@ -1,28 +1,18 @@
-'use client';
+import { getBusinessReservations } from '@/services/reservation/reservation-business-service';
+import { getBusinessId } from '@/lib/business/get-business-context';
 
-import { mockReservations } from '@/lib/mock';
-import { ReservationFilterToolbar } from '@/components/business/reservations/reservation-filter-toolbar';
-import { ReservationStatsCards } from '@/components/business/reservations/reservation-stats-cards';
-import { ReservationTableBody } from '@/components/business/reservations/reservation-table-body';
-import { ReservationTableHeader } from '@/components/business/reservations/reservation-table-header';
-import { Card, CardContent } from '@/components/ui/card';
-import { Table } from '@/components/ui/table';
+import { ReservationsClient } from './reservations-client';
 
-export default function Page() {
+export default async function Page() {
+  const businessId = await getBusinessId();
+
+  const { reservations, pagination } = await getBusinessReservations(businessId);
+
   return (
-    <div className="space-y-6">
-      <ReservationFilterToolbar />
-
-      <ReservationStatsCards reservations={mockReservations} />
-
-      <Card>
-        <CardContent className="pt-4">
-          <Table>
-            <ReservationTableHeader />
-            <ReservationTableBody reservations={mockReservations} />
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+    <ReservationsClient
+      initialReservations={reservations}
+      initialPagination={pagination}
+      businessId={businessId}
+    />
   );
 }
