@@ -222,6 +222,33 @@ FROM
 ON CONFLICT (id) DO NOTHING;
 
 -- ========================================
+-- 6.5 BusinessHours (영업시간 바운더리: 140개)
+-- ========================================
+-- 역할: OperatingHours의 상위 바운더리
+--   - OperatingHours(09:00-12:00, 14:00-18:00) ⊆ BusinessHours(09:00-18:00)
+--   - Business 생성 시 자동 생성되는 기본값을 seed에서 재현
+-- 규칙: (business_id, day_of_week) UNIQUE
+-- ID: 65000000-{biz:4}-{day:2}00-0000-000000000000
+-- ========================================
+
+INSERT INTO business_hours (
+    id, business_id, day_of_week, open_time, close_time, is_closed, created_at, updated_at
+)
+SELECT
+    ('65000000-' || LPAD(biz_seq::text, 4, '0') || '-' || LPAD(day::text, 2, '0') || '00-0000-000000000000')::uuid,
+    ('30000000-0000-0000-0000-' || LPAD(biz_seq::text, 12, '0'))::uuid,
+    day,
+    '09:00:00'::time,
+    '18:00:00'::time,
+    false,
+    NOW() - (biz_seq || ' days')::INTERVAL,
+    NOW() - (biz_seq || ' days')::INTERVAL
+FROM
+    generate_series(1, 20) AS biz_seq,
+    generate_series(0, 6)  AS day
+ON CONFLICT (business_id, day_of_week) DO NOTHING;
+
+-- ========================================
 -- 7. OperatingHours (영업시간: 280개)
 -- ========================================
 
