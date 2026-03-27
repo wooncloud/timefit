@@ -56,7 +56,7 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO business (
     id, business_name, business_number, owner_name,
-    address, contact_phone, description, logo_url, business_notice,
+    address, contact_phone, contact_email, description, logo_url, business_notice,
     is_active, average_rating, review_count, latitude, longitude,
     created_at, updated_at
 )
@@ -69,10 +69,16 @@ SELECT
         WHEN seq % 5 = 4 THEN 'Timefit Restaurant ' || seq
         ELSE 'Timefit Clinic ' || seq
         END,
-    LPAD((100000000 + seq * 11111)::text, 10, '0'),
+    -- business_number: XXX-XX-XXXXX 형식
+    SUBSTRING(LPAD((100000000 + seq * 11111)::text, 10, '0'), 1, 3) || '-' ||
+    SUBSTRING(LPAD((100000000 + seq * 11111)::text, 10, '0'), 4, 2) || '-' ||
+    SUBSTRING(LPAD((100000000 + seq * 11111)::text, 10, '0'), 6, 5),
     'Owner ' || seq,
     'Seoul Gangnam ' || (seq * 100) || ' Street',
-    '02' || LPAD((11110000 + seq)::text, 8, '0'),
+    -- contact_phone: 02-XXXX-XXXX 형식 (10자리)
+    '02-' || SUBSTRING(LPAD((11110000 + seq)::text, 8, '0'), 1, 4) || '-' ||
+    SUBSTRING(LPAD((11110000 + seq)::text, 8, '0'), 5, 4),
+    'owner' || seq || '@timefit.test',
     'Performance Test Business ' || seq,
     NULL,
     'Please follow facility guidelines.',
