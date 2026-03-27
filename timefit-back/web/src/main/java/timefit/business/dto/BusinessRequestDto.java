@@ -244,4 +244,15 @@ public class BusinessRequestDto {
             @Size(max = 500, message = "삭제 사유는 500자 이하여야 합니다")
             String deleteReason
     ) {}
+
+        /**
+         * 고객 메모 저장/수정 요청
+         */
+        @Schema(description = "고객 메모 저장 요청")
+        public record UpsertCustomerMemo(
+                @Schema(description = "메모 내용 (null이면 메모 삭제와 동일)", example = "단골 고객 - VIP", nullable = true)
+                @Size(max = 500, message = "메모는 500자 이하로 입력해주세요")
+                String memo
+        ) {
+        }
 }

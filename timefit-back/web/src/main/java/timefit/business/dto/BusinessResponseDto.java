@@ -463,4 +463,20 @@ public class BusinessResponseDto {
             );
         }
     }
+
+    /**
+     * 고객 메모 저장 응답
+     */
+    @Schema(description = "고객 메모 저장 응답")
+    public record CustomerMemoResponse(
+            @Schema(description = "고객 ID")
+            UUID customerId,
+
+            @Schema(description = "저장된 메모", nullable = true)
+            String memo
+    ) {
+        public static CustomerMemoResponse of(UUID customerId, String memo) {
+            return new CustomerMemoResponse(customerId, memo);
+        }
+    }
 }
