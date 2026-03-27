@@ -642,3 +642,62 @@ WHERE id IN (
              '80000000-0001-0101-1000-000000000000',  -- CONFIRMED-001
              '80000000-0001-0101-1001-000000000000'   -- CONFIRMED-002
     );
+
+-- ========================================
+-- 13. BusinessCustomerMemo (업체-고객 메모)
+-- ========================================
+-- 대상: Business 1~5번
+-- 고객: 1~100번 중 홀수 (50건/업체, 전체 250건)
+-- 비즈니스 규칙:
+--   - (business_id, customer_id) UNIQUE → 멱등성 ON CONFLICT (business_id, customer_id) DO NOTHING
+--   - 고객 목록은 reservation 기반이므로 메모 없는 고객도 목록에 노출됨
+--   - 일부 고객(짝수번)은 의도적으로 메모 미보유
+-- ID: a0000000-{biz:4}-{cust:4}-0000-000000000000
+-- ========================================
+
+INSERT INTO business_customer_memo (
+    id, business_id, customer_id, memo, created_at, updated_at
+)
+SELECT
+    ('a0000000-' || LPAD(biz_seq::text, 4, '0') || '-' || LPAD(cust_seq::text, 4, '0') || '-0000-000000000000')::uuid,
+    ('30000000-0000-0000-0000-' || LPAD(biz_seq::text, 12, '0'))::uuid,
+    ('10000000-0000-0000-0000-' || LPAD(cust_seq::text, 12, '0'))::uuid,
+    CASE biz_seq
+        WHEN 1 THEN  -- Hair Salon
+            CASE (cust_seq % 5)
+                WHEN 1 THEN 'Regular customer. Prefers feather-light trim on bangs.'
+                WHEN 3 THEN 'Sensitive scalp — avoid strong chemical treatments.'
+                ELSE        'VIP. Visits every 4 weeks, always books morning slot.'
+                END
+        WHEN 2 THEN  -- Nail Shop
+            CASE (cust_seq % 5)
+                WHEN 1 THEN 'Prefers short natural nails, no extensions.'
+                WHEN 3 THEN 'Allergic to acrylic powder — gel only.'
+                ELSE        'Loyal customer. Often requests seasonal nail art.'
+                END
+        WHEN 3 THEN  -- Cafe
+            CASE (cust_seq % 5)
+                WHEN 1 THEN 'Nut allergy. Always double-check menu ingredients.'
+                WHEN 3 THEN 'Oat milk substitute, no syrup.'
+                ELSE        'Frequent visitor, prefers window seat.'
+                END
+        WHEN 4 THEN  -- Restaurant
+            CASE (cust_seq % 5)
+                WHEN 1 THEN 'Vegan. No meat or dairy in any dish.'
+                WHEN 3 THEN 'Gluten intolerance — confirm with kitchen.'
+                ELSE        'Corporate client, usually group reservation of 4+.'
+                END
+        ELSE          -- Clinic (seq=5, biz%5=0)
+            CASE (cust_seq % 5)
+                WHEN 1 THEN 'Keloid history — avoid aggressive laser settings.'
+                WHEN 3 THEN 'First-time botox. Needs consultation before treatment.'
+                ELSE        'Long-term patient. Quarterly skin care program.'
+                END
+        END,
+    NOW() - ((biz_seq + cust_seq) % 30 || ' days')::INTERVAL,
+    NOW() - ((biz_seq + cust_seq) % 30 || ' days')::INTERVAL
+FROM
+    generate_series(1, 5)   AS biz_seq,
+    generate_series(1, 100) AS cust_seq
+WHERE cust_seq % 2 = 1   -- 홀수 고객만 (50%) → 메모 없는 고객도 목록에 나오도록
+ON CONFLICT (business_id, customer_id) DO NOTHING;
