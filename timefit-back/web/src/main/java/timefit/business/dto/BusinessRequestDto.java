@@ -71,6 +71,15 @@ public class BusinessRequestDto {
             @Size(max = 20, message = "연락처는 20자 이하여야 합니다")
             String contactPhone,
 
+            @Schema(description = "업체 연락 이메일",
+                    nullable = true,
+                    maxLength = 100,
+                    example = "contact@example.com"
+            )
+            @Size(max = 100)
+            @Email(message = "올바른 이메일 형식이어야 합니다")
+            String contactEmail,
+
             @Schema(
                     description = "업체 설명",
                     example = "20년 경력의 전문 미용실입니다.",
@@ -151,6 +160,16 @@ public class BusinessRequestDto {
             )
             @Size(max = 20, message = "연락처는 20자 이하여야 합니다")
             String contactPhone,
+
+            @Schema(
+                    description = "업체 연락 이메일",
+                    nullable = true,
+                    maxLength = 100,
+                    example = "contact@example.com"
+            )
+            @Size(max = 100)
+            @Email(message = "올바른 이메일 형식이어야 합니다")
+            String contactEmail,
 
             @Schema(
                     description = "업체 설명",

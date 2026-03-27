@@ -62,6 +62,12 @@ public class BusinessResponseDto {
             String contactPhone,
 
             @Schema(
+                    description = "업체 연락 이메일",
+                    example = "contact@example.com"
+            )
+            String contactEmail,
+
+            @Schema(
                     description = "업체 설명",
                     example = "20년 경력의 전문 미용실입니다."
             )
@@ -113,6 +119,7 @@ public class BusinessResponseDto {
                     business.getOwnerName(),
                     business.getAddress(),
                     business.getContactPhone(),
+                    business.getContactEmail(),
                     business.getDescription(),
                     business.getLogoUrl(),
                     business.getBusinessNotice(),

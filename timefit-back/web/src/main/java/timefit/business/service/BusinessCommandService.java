@@ -122,6 +122,7 @@ public class BusinessCommandService {
                 request.ownerName(),
                 request.address(),
                 request.contactPhone(),
+                request.contactEmail(),
                 request.description(),
                 request.logoUrl(),
                 request.businessNotice()
