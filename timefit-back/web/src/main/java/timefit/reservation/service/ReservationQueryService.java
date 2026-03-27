@@ -190,15 +190,22 @@ public class ReservationQueryService {
     }
 
     public ReservationResponseDto.ReservationStats getBusinessReservationStats(
-            UUID businessId, UUID currentUserId, LocalDate startDate, LocalDate endDate) {
+            UUID businessId, UUID currentUserId, String status, String customerName,
+            LocalDate startDate, LocalDate endDate) {
 
-        log.info("업체 예약 통계 조회: businessId={}, userId={}, dateRange={}~{}",
-                businessId, currentUserId, startDate, endDate);
+        log.info("업체 예약 통계 조회: businessId={}, userId={}, status={}, customerName={}, dateRange={}~{}",
+                businessId, currentUserId, status, customerName, startDate, endDate);
 
         businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
         businessValidator.validateBusinessExists(businessId);
+        reservationValidator.validateStatus(status);
 
-        Map<ReservationStatus, Long> counts = queryHelper.loadBusinessReservationStats(businessId, startDate, endDate);
+        ReservationStatus reservationStatus = status != null
+                ? ReservationStatus.valueOf(status)
+                : null;
+
+        Map<ReservationStatus, Long> counts = queryHelper.loadBusinessReservationStats(
+                businessId, reservationStatus, customerName, startDate, endDate);
         return ReservationResponseDto.ReservationStats.of(counts);
     }
 }

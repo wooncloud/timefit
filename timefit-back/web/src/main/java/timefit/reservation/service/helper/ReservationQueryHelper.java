@@ -84,8 +84,11 @@ public class ReservationQueryHelper {
     }
 
     public Map<ReservationStatus, Long> loadBusinessReservationStats(
-            UUID businessId, LocalDate startDate, LocalDate endDate) {
-        log.debug("업체 예약 통계 조회: businessId={}, dateRange={}~{}", businessId, startDate, endDate);
-        return reservationQueryRepository.countByBusinessIdGroupByStatus(businessId, startDate, endDate);
+            UUID businessId, ReservationStatus status, String customerName,
+            LocalDate startDate, LocalDate endDate) {
+        log.debug("업체 예약 통계 조회: businessId={}, status={}, customerName={}, dateRange={}~{}",
+                businessId, status, customerName, startDate, endDate);
+        return reservationQueryRepository.countByBusinessIdGroupByStatus(
+                businessId, status, customerName, startDate, endDate);
     }
 }

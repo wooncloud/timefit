@@ -100,7 +100,9 @@ public class ReservationService {
     }
 
     public ReservationResponseDto.ReservationStats getBusinessReservationStats(
-            UUID businessId, UUID currentUserId, LocalDate startDate, LocalDate endDate) {
-        return queryService.getBusinessReservationStats(businessId, currentUserId, startDate, endDate);
+            UUID businessId, UUID currentUserId, String status, String customerName,
+            LocalDate startDate, LocalDate endDate) {
+        return queryService.getBusinessReservationStats(
+                businessId, currentUserId, status, customerName, startDate, endDate);
     }
 }

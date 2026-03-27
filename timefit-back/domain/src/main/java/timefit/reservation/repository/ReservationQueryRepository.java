@@ -75,7 +75,8 @@ public interface ReservationQueryRepository {
      * @return 상태별 예약 건수 Map (존재하지 않는 상태는 Map에 포함되지 않음)
      */
     Map<ReservationStatus, Long> countByBusinessIdGroupByStatus(
-            UUID businessId, LocalDate startDate, LocalDate endDate);
+            UUID businessId, ReservationStatus status, String customerName,
+            LocalDate startDate, LocalDate endDate);
 
     /**
      * 예약 생성을 위한 BookingSlot 조회 (fetch join)

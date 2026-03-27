@@ -137,12 +137,15 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
 
     @Override
     public Map<ReservationStatus, Long> countByBusinessIdGroupByStatus(
-            UUID businessId, LocalDate startDate, LocalDate endDate) {
+            UUID businessId, ReservationStatus status, String customerName,
+            LocalDate startDate, LocalDate endDate) {
         List<Tuple> results = queryFactory
                 .select(reservation.status, reservation.count())
                 .from(reservation)
                 .where(
                         businessIdEq(businessId),
+                        statusEq(status),
+                        customerNameContains(customerName),
                         reservationDateGoe(startDate),
                         reservationDateLoe(endDate)
                 )

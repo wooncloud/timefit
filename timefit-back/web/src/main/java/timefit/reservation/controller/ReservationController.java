@@ -182,6 +182,10 @@ public class ReservationController {
     public ResponseEntity<ResponseData<ReservationResponseDto.ReservationStats>> getBusinessReservationStats(
             @Parameter(description = "업체 ID", required = true)
             @PathVariable UUID businessId,
+            @Parameter(description = "예약 상태", example = "PENDING")
+            @RequestParam(required = false) String status,
+            @Parameter(description = "고객명 검색", example = "홍길동")
+            @RequestParam(required = false) String customerName,
             @Parameter(description = "시작 날짜", example = "2025-11-01")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @Parameter(description = "종료 날짜", example = "2025-11-30")
@@ -189,11 +193,12 @@ public class ReservationController {
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
 
-        log.info("업체 예약 통계 조회 요청: businessId={}, userId={}, dateRange={}~{}",
-                businessId, currentUserId, startDate, endDate);
+        log.info("업체 예약 통계 조회 요청: businessId={}, userId={}, status={}, customerName={}, dateRange={}~{}",
+                businessId, currentUserId, status, customerName, startDate, endDate);
 
         ReservationResponseDto.ReservationStats response =
-                reservationService.getBusinessReservationStats(businessId, currentUserId, startDate, endDate);
+                reservationService.getBusinessReservationStats(
+                        businessId, currentUserId, status, customerName, startDate, endDate);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
