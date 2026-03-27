@@ -245,4 +245,24 @@ public class BusinessController {
         businessService.deactivateMember(businessId, userId, currentUserId);
         return ResponseEntity.ok(ResponseData.of(null));
     }
+
+    @PatchMapping("/{businessId}/customers/{customerId}/memo")
+    public ResponseEntity<ResponseData<BusinessResponseDto.CustomerMemoResponse>> upsertCustomerMemo(
+            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
+            @PathVariable UUID businessId,
+            @Parameter(description = "고객 ID", required = true, example = "20000000-0000-0000-0000-000000000001")
+            @PathVariable UUID customerId,
+            @Valid @RequestBody BusinessRequestDto.UpsertCustomerMemo request,
+            @Parameter(hidden = true)
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("고객 메모 저장 요청: businessId={}, customerId={}, userId={}",
+                businessId, customerId, currentUserId);
+
+        businessService.upsertCustomerMemo(businessId, customerId, request.memo(), currentUserId);
+
+        return ResponseEntity.ok(ResponseData.of(
+                BusinessResponseDto.CustomerMemoResponse.of(customerId, request.memo())
+        ));
+    }
 }

@@ -13,6 +13,7 @@ import timefit.business.entity.UserBusinessRole;
 import timefit.business.repository.BusinessHoursRepository;
 import timefit.business.repository.BusinessRepository;
 import timefit.business.repository.UserBusinessRoleRepository;
+import timefit.business.service.helper.CustomerMemoHelper;
 import timefit.business.service.validator.BusinessValidator;
 import timefit.common.entity.BusinessRole;
 import timefit.exception.business.BusinessErrorCode;
@@ -34,6 +35,7 @@ public class BusinessCommandService {
     private final BusinessRepository businessRepository;
     private final UserBusinessRoleRepository userBusinessRoleRepository;
     private final BusinessHoursRepository businessHoursRepository;
+    private final CustomerMemoHelper customerMemoHelper;
     private final InvitationService invitationService;
     private final BusinessValidator businessValidator;
     private final AuthValidator authValidator;
@@ -343,5 +345,29 @@ public class BusinessCommandService {
         targetRole.deactivate();
 
         log.info("구성원 비활성화 완료: targetUserId={}, businessId={}", targetUserId, businessId);
+    }
+
+    /**
+     * 고객 메모 저장/수정
+     * 1. 권한 검증        (BusinessValidator)
+     * 2. 엔티티 조회      (BusinessValidator + AuthValidator)
+     * 3. upsert 처리     (CustomerMemoHelper)
+     */
+    @Transactional
+    public void upsertCustomerMemo(UUID businessId, UUID customerId, String memo, UUID currentUserId) {
+
+        log.info("고객 메모 저장: businessId={}, customerId={}", businessId, customerId);
+
+        // 1. 권한 검증
+        businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+
+        // 2. 엔티티 조회
+        Business business = businessValidator.validateBusinessExists(businessId);
+        User customer = authValidator.validateUserExists(customerId); // 기존 AuthValidator 재사용
+
+        // 3. upsert (Helper에 위임)
+        customerMemoHelper.upsert(businessId, business, customer, memo);
+
+        log.info("고객 메모 저장 완료: businessId={}, customerId={}", businessId, customerId);
     }
 }

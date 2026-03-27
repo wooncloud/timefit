@@ -177,4 +177,9 @@ public class BusinessService {
             UUID currentUserId) {
         businessCommandService.deactivateMember(businessId, targetUserId, currentUserId);
     }
+
+    @Transactional
+    public void upsertCustomerMemo(UUID businessId, UUID customerId, String memo, UUID currentUserId) {
+        businessCommandService.upsertCustomerMemo(businessId, customerId, memo, currentUserId);
+    }
 }
