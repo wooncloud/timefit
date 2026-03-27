@@ -70,9 +70,11 @@ export function ReservationsClient({
     return response.json();
   };
 
-  // 통계 fetch
+  // 통계 fetch — 필터 조건 전체 동기화 (status, customerName 포함)
   const fetchStats = async (filters: FilterValues) => {
     const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.customerName) params.append('customerName', filters.customerName);
     if (filters.startDate) params.append('startDate', filters.startDate);
     if (filters.endDate) params.append('endDate', filters.endDate);
 
@@ -94,7 +96,7 @@ export function ReservationsClient({
     setDetailModal({ isOpen: true, detail: result.data });
   };
 
-  // 필터 검색
+  // 필터 검색 — 목록 + 통계 동시 갱신 (전체 필터 동기화)
   const handleSearch = async (filters: FilterValues) => {
     try {
       setIsLoading(true);
@@ -113,7 +115,7 @@ export function ReservationsClient({
     }
   };
 
-  // 페이지 이동
+  // 페이지 이동 (통계 재조회 불필요)
   const handlePageChange = async (page: number) => {
     try {
       setIsLoading(true);
@@ -129,7 +131,7 @@ export function ReservationsClient({
     }
   };
 
-  // 액션 핸들러
+  // 액션 핸들러 — 현재 필터 기준으로 통계 재조회
   const handleApprove = async (reservationId: string) => {
     const result = await businessReservationService.approveReservation(businessId, reservationId);
     if (!result.success) { toast.error(result.message || '승인에 실패했습니다.'); return; }
