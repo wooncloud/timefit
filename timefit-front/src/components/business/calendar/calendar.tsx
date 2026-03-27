@@ -1,22 +1,9 @@
 'use client';
 
-import koLocale from '@fullcalendar/core/locales/ko';
-import dayGridPlugin from '@fullcalendar/daygrid'; // a plugin!
-import interactionPlugin from '@fullcalendar/interaction'; // needed for dayClick
-import FullCalendar from '@fullcalendar/react';
-import { toast } from 'sonner';
+// 이 파일은 레거시 진입점입니다.
+// 실제 구현은 calendar-client.tsx에 있습니다.
+// page.tsx에서 직접 CalendarClient를 import 합니다.
 
 export default function Calendar() {
-  const handleDateClick = (arg: { dateStr: string }) => {
-    toast('date click! ' + arg.dateStr);
-  };
-
-  return (
-    <FullCalendar
-      plugins={[dayGridPlugin, interactionPlugin]}
-      initialView="dayGridMonth"
-      dateClick={handleDateClick}
-      locale={koLocale}
-    />
-  );
+  return null;
 }
