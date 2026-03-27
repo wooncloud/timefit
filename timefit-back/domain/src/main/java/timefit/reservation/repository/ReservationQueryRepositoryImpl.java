@@ -5,15 +5,18 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 import timefit.booking.entity.BookingSlot;
 import timefit.common.entity.DayOfWeek;
+import timefit.reservation.entity.CustomerSortType;
 import timefit.reservation.entity.QReservation;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
@@ -24,7 +27,9 @@ import java.util.stream.Collectors;
 
 import static timefit.business.entity.QBusiness.business;
 import static timefit.menu.entity.QMenu.menu;
+import static timefit.user.entity.QUser.user;
 import static timefit.business.entity.QBusinessCategory.businessCategory;
+import static timefit.business.entity.QBusinessCustomerMemo.businessCustomerMemo;
 
 @Repository
 @RequiredArgsConstructor
@@ -246,8 +251,7 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
         return allFutureReservations.stream()
                 .filter(r -> {
                     java.time.DayOfWeek javaDayOfWeek = r.getReservationDate().getDayOfWeek();
-                    // Java DayOfWeek를 0-6 범위로 변환 (일요일=0)
-                    int dayValue = (javaDayOfWeek.getValue() % 7); // SUNDAY=7 -> 0, MONDAY=1 -> 1, ...
+                    int dayValue = (javaDayOfWeek.getValue() % 7);
                     return dayValue == dayOfWeek.getValue();
                 })
                 .collect(Collectors.toList());
@@ -268,7 +272,7 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
 
         return queryFactory
                 .selectFrom(reservation)
-                .join(reservation.menu, menu).fetchJoin()  // menu 페치 조인
+                .join(reservation.menu, menu).fetchJoin()
                 .where(
                         reservation.business.id.eq(businessId),
                         reservation.reservationDate.eq(date),
@@ -314,5 +318,171 @@ public class ReservationQueryRepositoryImpl implements ReservationQueryRepositor
                 .fetchOne();
 
         return Optional.ofNullable(result);
+    }
+
+    // ================================================================
+    // 고객 관리 (업체용)
+    // Tuple 반환 → web 모듈 CustomerQueryHelper에서 DTO 변환
+
+    /**
+     * 업체 고객 목록 조회 (집계, 검색, 정렬, 페이지네이션)
+     * Tuple 컬럼 순서:
+     *   [0] UUID        - customer.id
+     *   [1] String      - user.name
+     *   [2] String      - user.phoneNumber
+     *   [3] Long        - count() (COMPLETED 예약 건수)
+     *   [4] LocalDate   - reservationDate.max() (최근 방문일)
+     *   [5] LocalDate   - reservationDate.min() (첫 방문일)
+     *   [6] String      - memo (nullable)
+     */
+    @Override
+    public Page<Tuple> findCustomerListByBusinessId(
+            UUID businessId, String keyword, CustomerSortType sortBy, Pageable pageable) {
+
+        List<Tuple> content = queryFactory
+                .select(
+                        reservation.customer.id,
+                        user.name,
+                        user.phoneNumber,
+                        reservation.count(),
+                        reservation.reservationDate.max(),
+                        reservation.reservationDate.min(),
+                        businessCustomerMemo.memo
+                )
+                .from(reservation)
+                .join(reservation.customer, user)
+                .leftJoin(businessCustomerMemo)
+                .on(businessCustomerMemo.business.id.eq(businessId),
+                        businessCustomerMemo.customer.id.eq(reservation.customer.id))
+                .where(
+                        reservation.business.id.eq(businessId),
+                        reservation.status.eq(ReservationStatus.COMPLETED),
+                        customerKeywordContains(keyword)
+                )
+                .groupBy(
+                        reservation.customer.id,
+                        user.name,
+                        user.phoneNumber,
+                        businessCustomerMemo.memo
+                )
+                .orderBy(getCustomerOrderSpecifier(sortBy))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        JPAQuery<Long> countQuery = queryFactory
+                .select(reservation.customer.id.countDistinct())
+                .from(reservation)
+                .join(reservation.customer, user)
+                .where(
+                        reservation.business.id.eq(businessId),
+                        reservation.status.eq(ReservationStatus.COMPLETED),
+                        customerKeywordContains(keyword)
+                );
+
+        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+    }
+
+    /**
+     * 고객 상세 요약 조회 (단일 고객, 이메일 포함)
+     * Tuple 컬럼 순서:
+     *   [0] UUID        - customer.id
+     *   [1] String      - user.name
+     *   [2] String      - user.phoneNumber
+     *   [3] String      - user.email
+     *   [4] Long        - count() (COMPLETED 예약 건수)
+     *   [5] LocalDate   - reservationDate.max() (최근 방문일)
+     *   [6] LocalDate   - reservationDate.min() (첫 방문일)
+     *   [7] String      - memo (nullable)
+     */
+    @Override
+    public Optional<Tuple> findCustomerSummary(UUID businessId, UUID customerId) {
+
+        Tuple result = queryFactory
+                .select(
+                        reservation.customer.id,
+                        user.name,
+                        user.phoneNumber,
+                        user.email,
+                        reservation.count(),
+                        reservation.reservationDate.max(),
+                        reservation.reservationDate.min(),
+                        businessCustomerMemo.memo
+                )
+                .from(reservation)
+                .join(reservation.customer, user)
+                .leftJoin(businessCustomerMemo)
+                .on(businessCustomerMemo.business.id.eq(businessId),
+                        businessCustomerMemo.customer.id.eq(customerId))
+                .where(
+                        reservation.business.id.eq(businessId),
+                        reservation.customer.id.eq(customerId),
+                        reservation.status.eq(ReservationStatus.COMPLETED)
+                )
+                .groupBy(
+                        reservation.customer.id,
+                        user.name,
+                        user.phoneNumber,
+                        user.email,
+                        businessCustomerMemo.memo
+                )
+                .fetchOne();
+
+        return Optional.ofNullable(result);
+    }
+
+    /**
+     * 고객 최근 예약 이력 조회 (COMPLETED, 최신 10건)
+     * Tuple 컬럼 순서:
+     *   [0] UUID              - reservation.id
+     *   [1] LocalDate         - reservationDate
+     *   [2] LocalTime         - reservationTime
+     *   [3] String            - menu.serviceName
+     *   [4] ReservationStatus - status
+     *   [5] Integer           - reservationPrice
+     */
+    @Override
+    public List<Tuple> findRecentReservationsByCustomer(UUID businessId, UUID customerId) {
+
+        return queryFactory
+                .select(
+                        reservation.id,
+                        reservation.reservationDate,
+                        reservation.reservationTime,
+                        menu.serviceName,
+                        reservation.status,
+                        reservation.reservationPrice
+                )
+                .from(reservation)
+                .join(reservation.menu, menu)
+                .where(
+                        reservation.business.id.eq(businessId),
+                        reservation.customer.id.eq(customerId),
+                        reservation.status.eq(ReservationStatus.COMPLETED)
+                )
+                .orderBy(
+                        reservation.reservationDate.desc(),
+                        reservation.reservationTime.desc()
+                )
+                .limit(10)
+                .fetch();
+    }
+
+    // -----------  고객 관련 private 조건 / 정렬
+
+    private BooleanExpression customerKeywordContains(String keyword) {
+        if (keyword == null || keyword.isBlank()) return null;
+        return user.name.containsIgnoreCase(keyword)
+                .or(user.phoneNumber.contains(keyword));
+    }
+
+    private OrderSpecifier<?> getCustomerOrderSpecifier(CustomerSortType sortBy) {
+        if (sortBy == null) return reservation.reservationDate.max().desc();
+        return switch (sortBy) {
+            case LAST_VISIT   -> reservation.reservationDate.max().desc();
+            case FIRST_VISIT  -> reservation.reservationDate.min().asc();
+            case TOTAL_VISITS -> reservation.count().desc();
+            case NAME         -> user.name.asc();
+        };
     }
 }
