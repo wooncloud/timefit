@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.reservation.dto.ReservationRequestDto;
 import timefit.reservation.dto.ReservationResponseDto;
+import timefit.reservation.entity.CustomerSortType;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -104,5 +105,18 @@ public class ReservationService {
             LocalDate startDate, LocalDate endDate) {
         return queryService.getBusinessReservationStats(
                 businessId, currentUserId, status, customerName, startDate, endDate);
+    }
+
+    // ========== 고객 관리 (업체) ==========
+
+    public ReservationResponseDto.CustomerList getCustomerList(
+            UUID businessId, String keyword, CustomerSortType sortBy,
+            int page, int size, UUID currentUserId) {
+        return queryService.getCustomerList(businessId, keyword, sortBy, page, size, currentUserId);
+    }
+
+    public ReservationResponseDto.CustomerDetail getCustomerDetail(
+            UUID businessId, UUID customerId, UUID currentUserId) {
+        return queryService.getCustomerDetail(businessId, customerId, currentUserId);
     }
 }

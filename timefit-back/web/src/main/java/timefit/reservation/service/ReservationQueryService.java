@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import timefit.business.entity.Business;
 import timefit.business.service.validator.BusinessValidator;
 import timefit.reservation.dto.ReservationResponseDto;
+import timefit.reservation.entity.CustomerSortType;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
 import timefit.reservation.service.helper.ReservationQueryHelper;
@@ -18,6 +19,7 @@ import timefit.reservation.service.util.ReservationTimeUtil;
 import timefit.reservation.service.validator.ReservationValidator;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -208,4 +210,75 @@ public class ReservationQueryService {
                 businessId, reservationStatus, customerName, startDate, endDate);
         return ReservationResponseDto.ReservationStats.of(counts);
     }
+
+    /**
+     * 업체 고객 목록 조회
+     * [처리 흐름]
+     * 1. 권한 검증    (BusinessValidator)
+     * 2. 데이터 조회  (CustomerQueryHelper)
+     * 3. Response 조립
+     */
+    public ReservationResponseDto.CustomerList getCustomerList(
+            UUID businessId, String keyword, CustomerSortType sortBy,
+            int page, int size, UUID currentUserId) {
+
+        log.info("업체 고객 목록 조회: businessId={}, keyword={}, sortBy={}, userId={}",
+                businessId, keyword, sortBy, currentUserId);
+
+        // 1. 권한 검증
+        businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+
+        // 2. 데이터 조회 (Helper에 위임)
+        CustomerSortType resolvedSort = sortBy != null ? sortBy : CustomerSortType.LAST_VISIT;
+        Page<ReservationResponseDto.CustomerListItem> result =
+                queryHelper.loadCustomerList(businessId, keyword, resolvedSort, page, size);
+
+        log.info("업체 고객 목록 조회 완료: businessId={}, total={}", businessId, result.getTotalElements());
+
+        // 3. Response 조립
+        return ReservationResponseDto.CustomerList.of(
+                result.getContent(),
+                ReservationResponseDto.PaginationInfo.of(
+                        result.getNumber(),
+                        result.getTotalPages(),
+                        result.getTotalElements(),
+                        result.getSize(),
+                        result.hasNext(),
+                        result.hasPrevious()
+                )
+        );
+    }
+
+    /**
+     * 고객 상세 조회
+     * [처리 흐름]
+     * 1. 권한 검증         (BusinessValidator)
+     * 2. 기본 요약 조회    (CustomerQueryHelper)
+     * 3. 예약 이력 조회    (CustomerQueryHelper)
+     * 4. Response 조립
+     */
+    public ReservationResponseDto.CustomerDetail getCustomerDetail(
+            UUID businessId, UUID customerId, UUID currentUserId) {
+
+        log.info("고객 상세 조회: businessId={}, customerId={}, userId={}",
+                businessId, customerId, currentUserId);
+
+        // 1. 권한 검증
+        businessValidator.validateManagerOrOwnerRole(currentUserId, businessId);
+
+        // 2. 기본 요약 조회 (Helper에 위임)
+        ReservationResponseDto.CustomerDetailSummary summary =
+                queryHelper.loadCustomerSummary(businessId, customerId);
+
+        // 3. 최근 예약 이력 조회 (Helper에 위임)
+        List<ReservationResponseDto.ReservationHistoryItem> recentReservations =
+                queryHelper.loadRecentReservations(businessId, customerId);
+
+        log.info("고객 상세 조회 완료: customerId={}, recentReservations={}",
+                customerId, recentReservations.size());
+
+        // 4. Response 조립
+        return ReservationResponseDto.CustomerDetail.of(summary, recentReservations);
+    }
+
 }
