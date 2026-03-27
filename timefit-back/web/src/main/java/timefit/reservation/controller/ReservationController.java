@@ -284,49 +284,4 @@ public class ReservationController {
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
-
-    // 고객 목록 조회
-    @GetMapping("/api/business/{businessId}/customers")
-    public ResponseEntity<ResponseData<ReservationResponseDto.CustomerList>> getCustomerList(
-            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
-            @PathVariable UUID businessId,
-            @Parameter(description = "이름 또는 전화번호 검색", example = "홍길동")
-            @RequestParam(required = false) String keyword,
-            @Parameter(description = "정렬 기준 (LAST_VISIT | FIRST_VISIT | TOTAL_VISITS | NAME)", example = "LAST_VISIT")
-            @RequestParam(required = false) CustomerSortType sortBy,
-            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기", example = "20")
-            @RequestParam(defaultValue = "20") int size,
-            @Parameter(hidden = true)
-            @CurrentUserId UUID currentUserId) {
-
-        log.info("업체 고객 목록 조회 요청: businessId={}, keyword={}, sortBy={}, userId={}",
-                businessId, keyword, sortBy, currentUserId);
-
-        ReservationResponseDto.CustomerList response =
-                reservationService.getCustomerList(businessId, keyword, sortBy, page, size, currentUserId);
-
-        return ResponseEntity.ok(ResponseData.of(response));
-    }
-
-    // 고객 상세 조회
-    @GetMapping("/api/business/{businessId}/customers/{customerId}")
-    public ResponseEntity<ResponseData<ReservationResponseDto.CustomerDetail>> getCustomerDetail(
-            @Parameter(description = "업체 ID", required = true, example = "30000000-0000-0000-0000-000000000001")
-            @PathVariable UUID businessId,
-            @Parameter(description = "고객 ID", required = true, example = "20000000-0000-0000-0000-000000000001")
-            @PathVariable UUID customerId,
-            @Parameter(hidden = true)
-            @CurrentUserId UUID currentUserId) {
-
-        log.info("고객 상세 조회 요청: businessId={}, customerId={}, userId={}",
-                businessId, customerId, currentUserId);
-
-        ReservationResponseDto.CustomerDetail response =
-                reservationService.getCustomerDetail(businessId, customerId, currentUserId);
-
-        return ResponseEntity.ok(ResponseData.of(response));
-    }
-
 }
