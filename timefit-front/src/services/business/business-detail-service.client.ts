@@ -16,7 +16,7 @@ class BusinessDetailService {
     data: UpdateBusinessRequest
   ): Promise<UpdateBusinessHandlerResponse> {
     const response = await fetch(`/api/business/${businessId}`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
