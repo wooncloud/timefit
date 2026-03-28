@@ -10,17 +10,17 @@ interface WeekdayHoursPanelProps {
   businessHours: BusinessHours[];
   selectedDayId?: string;
   onToggle?: (id: string, enabled: boolean) => void;
-  onTimeChange?: (id: string, type: 'start' | 'end', value: string) => void;
+  onTimeEdit?: (id: string) => void;
   onSelect?: (id: string) => void;
 }
 
 export function WeekdayHoursPanel({
-  businessHours,
-  selectedDayId,
-  onToggle,
-  onTimeChange,
-  onSelect,
-}: WeekdayHoursPanelProps) {
+                                    businessHours,
+                                    selectedDayId,
+                                    onToggle,
+                                    onTimeEdit,
+                                    onSelect,
+                                  }: WeekdayHoursPanelProps) {
   return (
     <Card>
       <CardHeader>
@@ -36,7 +36,7 @@ export function WeekdayHoursPanel({
               dayLabel={weekday?.label || ''}
               isSelected={day.id === selectedDayId}
               onToggle={onToggle}
-              onTimeChange={onTimeChange}
+              onTimeEdit={onTimeEdit}
               onSelect={onSelect}
             />
           );

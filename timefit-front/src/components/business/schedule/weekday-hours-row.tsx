@@ -10,18 +10,18 @@ interface WeekdayHoursRowProps {
   dayLabel: string;
   isSelected?: boolean;
   onToggle?: (id: string, enabled: boolean) => void;
-  onTimeChange?: (id: string, type: 'start' | 'end', value: string) => void;
+  onTimeEdit?: (id: string) => void; // 시간 클릭 → 다이얼로그 오픈
   onSelect?: (id: string) => void;
 }
 
 export function WeekdayHoursRow({
-  day,
-  dayLabel,
-  isSelected,
-  onToggle,
-  onTimeChange,
-  onSelect,
-}: WeekdayHoursRowProps) {
+                                  day,
+                                  dayLabel,
+                                  isSelected,
+                                  onToggle,
+                                  onTimeEdit,
+                                  onSelect,
+                                }: WeekdayHoursRowProps) {
   return (
     <div
       className={cn(
@@ -33,28 +33,43 @@ export function WeekdayHoursRow({
       onClick={() => onSelect?.(day.id)}
     >
       <div className="w-8 text-center font-medium">{dayLabel}</div>
+
+      {/* 시작 시간 — 읽기 전용, 클릭 시 편집 다이얼로그 오픈 */}
       <Input
         type="time"
         value={day.startTime}
-        onChange={e => {
+        readOnly
+        onClick={e => {
           e.stopPropagation();
-          onTimeChange?.(day.id, 'start', e.target.value);
+          if (day.isEnabled) onTimeEdit?.(day.id);
         }}
-        onClick={e => e.stopPropagation()}
         disabled={!day.isEnabled}
-        className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+        className={cn(
+          'w-32 appearance-none bg-background',
+          '[&::-webkit-calendar-picker-indicator]:hidden',
+          '[&::-webkit-calendar-picker-indicator]:appearance-none',
+          day.isEnabled && 'cursor-pointer hover:border-primary'
+        )}
       />
+
+      {/* 종료 시간 — 읽기 전용, 클릭 시 편집 다이얼로그 오픈 */}
       <Input
         type="time"
         value={day.endTime}
-        onChange={e => {
+        readOnly
+        onClick={e => {
           e.stopPropagation();
-          onTimeChange?.(day.id, 'end', e.target.value);
+          if (day.isEnabled) onTimeEdit?.(day.id);
         }}
-        onClick={e => e.stopPropagation()}
         disabled={!day.isEnabled}
-        className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+        className={cn(
+          'w-32 appearance-none bg-background',
+          '[&::-webkit-calendar-picker-indicator]:hidden',
+          '[&::-webkit-calendar-picker-indicator]:appearance-none',
+          day.isEnabled && 'cursor-pointer hover:border-primary'
+        )}
       />
+
       <Switch
         checked={day.isEnabled}
         onCheckedChange={checked => {

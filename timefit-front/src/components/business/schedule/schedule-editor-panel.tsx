@@ -26,14 +26,14 @@ interface ScheduleEditorPanelProps {
 }
 
 export function ScheduleEditorPanel({
-  businessId,
-  selectedDay,
-  selectedDayId,
-  bookingSlots = [],
-  allBusinessHours,
-  allBookingSlotsMap,
-  onSlotsChange,
-}: ScheduleEditorPanelProps) {
+                                      businessId,
+                                      selectedDay,
+                                      selectedDayId,
+                                      bookingSlots = [],
+                                      allBusinessHours,
+                                      allBookingSlotsMap,
+                                      onSlotsChange,
+                                    }: ScheduleEditorPanelProps) {
   const [slots, setSlots] = useState<BookingTimeRange[]>(bookingSlots);
   const { updateOperatingHours } = useUpdateOperatingHours(businessId);
   const [editingSlot, setEditingSlot] = useState<BookingTimeRange | null>(null);
@@ -41,13 +41,16 @@ export function ScheduleEditorPanel({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [slotToDelete, setSlotToDelete] = useState<string | null>(null);
 
-  // Sync state when props change (day change)
+  // 요일 전환 시 슬롯 동기화
   useEffect(() => {
     setSlots(bookingSlots);
   }, [bookingSlots]);
 
   const saveChanges = async (newSlots: BookingTimeRange[]) => {
-    // 1. Update local state and parent state
+    // 롤백용 이전 값 저장
+    const prevSlots = slots;
+
+    // 낙관적 업데이트
     setSlots(newSlots);
     onSlotsChange?.(newSlots);
 
@@ -62,15 +65,13 @@ export function ScheduleEditorPanel({
       newBookingSlotsMap
     );
 
-    try {
-      await updateOperatingHours(request);
-    } catch {
-      // Error handled in hook
-    }
-  };
+    const success = await updateOperatingHours(request);
 
-  const updateSlots = (newSlots: BookingTimeRange[]) => {
-    saveChanges(newSlots);
+    // API 실패 시 이전 값으로 롤백
+    if (!success) {
+      setSlots(prevSlots);
+      onSlotsChange?.(prevSlots);
+    }
   };
 
   const handleAddClick = () => {
@@ -89,7 +90,7 @@ export function ScheduleEditorPanel({
       const updatedSlots = slots.map(slot =>
         slot.id === editingSlot.id ? { ...slot, startTime, endTime } : slot
       );
-      updateSlots(updatedSlots);
+      saveChanges(updatedSlots);
     } else {
       // Add new slot
       const newSlot: BookingTimeRange = {
@@ -97,7 +98,7 @@ export function ScheduleEditorPanel({
         startTime,
         endTime,
       };
-      updateSlots([...slots, newSlot]);
+      saveChanges([...slots, newSlot]);
     }
     setEditDialogOpen(false);
     setEditingSlot(null);
@@ -111,7 +112,7 @@ export function ScheduleEditorPanel({
   const handleDeleteConfirm = () => {
     if (!slotToDelete) return;
     const updatedSlots = slots.filter(slot => slot.id !== slotToDelete);
-    updateSlots(updatedSlots);
+    saveChanges(updatedSlots);
     setDeleteDialogOpen(false);
     setSlotToDelete(null);
   };
