@@ -336,7 +336,16 @@ SELECT
         ELSE                          -- COMPLETED, CANCELLED, NO_SHOW → 과거 날짜
                     CURRENT_DATE - ((1 + res_seq % 30) || ' days')::INTERVAL
         END,
-    '09:00:00'::time + ((res_seq % 10) || ' hours')::INTERVAL,
+    -- OH 유효 범위(09:00-12:00, 14:00-18:00)만 사용 (브레이크타임 12:00, 13:00 제외)
+    CASE res_seq % 7
+        WHEN 0 THEN '09:00:00'::time
+        WHEN 1 THEN '10:00:00'::time
+        WHEN 2 THEN '11:00:00'::time
+        WHEN 3 THEN '14:00:00'::time
+        WHEN 4 THEN '15:00:00'::time
+        WHEN 5 THEN '16:00:00'::time
+        ELSE        '17:00:00'::time
+        END,
     'RES-' || TO_CHAR(NOW(), 'YYYYMMDD') || '-' || LPAD((biz_seq * 1000 + res_seq)::text, 6, '0'),
     CASE
         WHEN (1 + (res_seq % 4)) = 1 THEN 20000
