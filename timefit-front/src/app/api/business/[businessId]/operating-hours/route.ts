@@ -28,7 +28,8 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
       let errorMessage = '영업시간 수정에 실패했습니다.';
       try {
         const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
+        console.log('[operating-hours PUT error]', JSON.stringify(errorData));
+        errorMessage = errorData.errorResponse?.message || errorData.message || errorMessage;
       } catch (_e) {
         // 응답이 JSON이 아닐 경우 기본 메시지 사용
       }
