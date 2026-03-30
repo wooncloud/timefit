@@ -37,10 +37,10 @@ interface SlotGenerationPanelProps {
 }
 
 export function SlotGenerationPanel({
-                                      businessId,
-                                      menus,
-                                      operatingHours,
-                                    }: SlotGenerationPanelProps) {
+  businessId,
+  menus,
+  operatingHours,
+}: SlotGenerationPanelProps) {
   const [selectedMenuId, setSelectedMenuId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');

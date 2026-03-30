@@ -3,6 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["IRON_SESSION_PASSWORD"],
       "outputs": [".next/**", "!.next/cache/**", "build/**"]
     },
     "lint": {

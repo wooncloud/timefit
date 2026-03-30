@@ -49,6 +49,14 @@ function productToMenuRequest(
     imageUrl: product.image_url,
     orderType: product.menu_type || 'RESERVATION_BASED',
     durationMinutes: product.duration_minutes,
+    autoGenerateSlots: product.auto_generate_slots || false,
+    slotSettings: product.auto_generate_slots
+      ? {
+          startDate: product.slot_start_date!,
+          endDate: product.slot_end_date!,
+          slotIntervalMinutes: product.slot_interval_minutes!,
+        }
+      : undefined,
   };
 }
 

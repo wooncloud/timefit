@@ -37,12 +37,12 @@ function hasOverlap(
 }
 
 export function BookingSlotEditDialog({
-                                        slot,
-                                        existingSlots = [],
-                                        open,
-                                        onOpenChange,
-                                        onSubmit,
-                                      }: BookingSlotEditDialogProps) {
+  slot,
+  existingSlots = [],
+  open,
+  onOpenChange,
+  onSubmit,
+}: BookingSlotEditDialogProps) {
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('18:00');
 

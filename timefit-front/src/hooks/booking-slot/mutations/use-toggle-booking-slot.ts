@@ -24,7 +24,7 @@ export function useToggleBookingSlot(businessId: string) {
       if (!result.success || !result.data) {
         toast.error(
           result.message ||
-          `슬롯 ${activate ? '활성화' : '비활성화'}에 실패했습니다.`
+            `슬롯 ${activate ? '활성화' : '비활성화'}에 실패했습니다.`
         );
         return null;
       }

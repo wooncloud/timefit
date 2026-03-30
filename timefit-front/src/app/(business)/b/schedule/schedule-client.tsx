@@ -26,12 +26,12 @@ interface ScheduleClientProps {
 }
 
 export function ScheduleClient({
-                                 businessId,
-                                 initialBusinessHours,
-                                 initialBookingSlotsMap,
-                                 operatingHours,
-                                 reservationMenus,
-                               }: ScheduleClientProps) {
+  businessId,
+  initialBusinessHours,
+  initialBookingSlotsMap,
+  operatingHours,
+  reservationMenus,
+}: ScheduleClientProps) {
   const [businessHours, setBusinessHours] =
     useState<BusinessHours[]>(initialBusinessHours);
   const [selectedDayId, setSelectedDayId] = useState<string>('mon');

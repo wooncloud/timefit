@@ -143,7 +143,8 @@ export function ScheduleEditorPanel({
           ) : (
             sortedSlots.map((slot, index) => {
               const prevSlot = index > 0 ? sortedSlots[index - 1] : null;
-              const hasBreak = prevSlot && prevSlot.endTime < slot.startTime;
+              const hasBreak =
+                prevSlot && prevSlot.endTime < slot.startTime;
 
               return (
                 <div key={slot.id}>
