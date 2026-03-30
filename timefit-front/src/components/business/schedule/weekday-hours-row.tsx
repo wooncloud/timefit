@@ -10,7 +10,7 @@ interface WeekdayHoursRowProps {
   dayLabel: string;
   isSelected?: boolean;
   onToggle?: (id: string, enabled: boolean) => void;
-  onTimeEdit?: (id: string) => void; // 시간 클릭 → 다이얼로그 오픈
+  onTimeEdit?: (id: string) => void;
   onSelect?: (id: string) => void;
 }
 
@@ -33,48 +33,31 @@ export function WeekdayHoursRow({
       onClick={() => onSelect?.(day.id)}
     >
       <div className="w-8 text-center font-medium">{dayLabel}</div>
-
-      {/* 시작 시간 — 읽기 전용, 클릭 시 편집 다이얼로그 오픈 */}
       <Input
         type="time"
         value={day.startTime}
         readOnly
         onClick={e => {
           e.stopPropagation();
-          if (day.isEnabled) onTimeEdit?.(day.id);
+          onTimeEdit?.(day.id);
         }}
         disabled={!day.isEnabled}
-        className={cn(
-          'w-32 appearance-none bg-background',
-          '[&::-webkit-calendar-picker-indicator]:hidden',
-          '[&::-webkit-calendar-picker-indicator]:appearance-none',
-          day.isEnabled && 'cursor-pointer hover:border-primary'
-        )}
+        className="w-32 cursor-pointer appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
       />
-
-      {/* 종료 시간 — 읽기 전용, 클릭 시 편집 다이얼로그 오픈 */}
       <Input
         type="time"
         value={day.endTime}
         readOnly
         onClick={e => {
           e.stopPropagation();
-          if (day.isEnabled) onTimeEdit?.(day.id);
+          onTimeEdit?.(day.id);
         }}
         disabled={!day.isEnabled}
-        className={cn(
-          'w-32 appearance-none bg-background',
-          '[&::-webkit-calendar-picker-indicator]:hidden',
-          '[&::-webkit-calendar-picker-indicator]:appearance-none',
-          day.isEnabled && 'cursor-pointer hover:border-primary'
-        )}
+        className="w-32 cursor-pointer appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
       />
-
       <Switch
         checked={day.isEnabled}
-        onCheckedChange={checked => {
-          onToggle?.(day.id, checked);
-        }}
+        onCheckedChange={checked => onToggle?.(day.id, checked)}
         onClick={e => e.stopPropagation()}
       />
     </div>
