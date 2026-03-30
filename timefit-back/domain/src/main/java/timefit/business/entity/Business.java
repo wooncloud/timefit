@@ -58,6 +58,9 @@ public class Business extends BaseEntity {
     @Column(name = "contact_phone")
     private String contactPhone;
 
+    @Column(name = "contact_email", length = 100)
+    private String contactEmail;
+
     @Size(max = 1000, message = "설명은 1000자 이하로 입력해주세요")
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -121,6 +124,7 @@ public class Business extends BaseEntity {
             String ownerName,
             String address,
             String contactPhone,
+            String contactEmail,
             String description,
             String logoUrl,
             String businessNotice) {
@@ -139,6 +143,9 @@ public class Business extends BaseEntity {
         }
         if (contactPhone != null) {
             this.contactPhone = contactPhone;
+        }
+        if (contactEmail != null) {
+            this.contactEmail = contactEmail;
         }
         if (description != null) {
             this.description = description;

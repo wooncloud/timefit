@@ -3,6 +3,9 @@ FROM amazoncorretto:21
 
 WORKDIR /workspace
 
+# openssl 설치 (JWT 키 생성용)
+RUN yum install -y openssl && yum clean all
+
 # Gradle Wrapper 복사 및 권한 설정
 COPY gradlew .
 COPY gradle gradle/
@@ -24,5 +27,9 @@ RUN ./gradlew dependencies --no-daemon || true
 # 포트 노출
 EXPOSE 8080
 
-# 개발 서버 실행 (volume mount된 코드 사용)
-CMD ["./gradlew", ":web:bootRun", "--no-daemon"]
+# entrypoint 스크립트 복사 및 권한 설정 (/workspace 밖에 위치 — 볼륨 마운트에 덮어쓰이지 않도록)
+COPY docker-entrypoint-dev.sh /docker-entrypoint-dev.sh
+RUN sed -i 's/\r//' /docker-entrypoint-dev.sh && chmod +x /docker-entrypoint-dev.sh
+
+# 개발 서버 실행
+ENTRYPOINT ["/docker-entrypoint-dev.sh"]

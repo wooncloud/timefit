@@ -62,12 +62,13 @@ public class OperatingHoursHelper {
                 log.debug("미래 예약 검증 실행: dayOfWeek={}", dayOfWeek);
                 reservationValidator.validateNoFutureReservations(
                         business.getId(),
-                        dayOfWeek
+                        dayOfWeek,
+                        schedule.bookingTimeRanges()
                 );
             }
         }
 
-        log.debug("미래 예약 검증 통과: 모든 요일 예약 없음");
+        log.debug("미래 예약 검증 통과: 범위 밖 예약 없음");
 
         // 1. 기존 데이터 삭제
         operatingHoursRepository.deleteByBusinessId(business.getId());

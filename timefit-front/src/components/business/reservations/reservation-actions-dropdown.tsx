@@ -1,20 +1,36 @@
+'use client';
+
 import { MoreHorizontal } from 'lucide-react';
 
+import type { ReservationStatus } from '@/types/business/reservation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
 interface ReservationActionsDropdownProps {
   reservationId: string;
+  status: ReservationStatus;
+  onDetail: (id: string) => void;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+  onComplete: (id: string) => void;
+  onNoShow: (id: string) => void;
 }
 
 export function ReservationActionsDropdown({
-  reservationId: _reservationId,
-}: ReservationActionsDropdownProps) {
+                                             reservationId,
+                                             status,
+                                             onDetail,
+                                             onApprove,
+                                             onReject,
+                                             onComplete,
+                                             onNoShow,
+                                           }: ReservationActionsDropdownProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -23,9 +39,43 @@ export function ReservationActionsDropdown({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem>상세 보기</DropdownMenuItem>
-        <DropdownMenuItem>수정</DropdownMenuItem>
-        <DropdownMenuItem>취소</DropdownMenuItem>
+
+        {/* PENDING: 승인 · 거절 */}
+        {status === 'PENDING' && (
+          <>
+            <DropdownMenuItem onClick={() => onApprove(reservationId)}>
+              승인
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => onReject(reservationId)}
+            >
+              거절
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* CONFIRMED: 완료 처리 · 노쇼 */}
+        {status === 'CONFIRMED' && (
+          <>
+            <DropdownMenuItem onClick={() => onComplete(reservationId)}>
+              완료 처리
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => onNoShow(reservationId)}
+            >
+              노쇼
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* 공통: 상세 보기 */}
+        <DropdownMenuItem onClick={() => onDetail(reservationId)}>
+          상세 보기
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -17,6 +17,8 @@ interface ScheduleEditorPanelProps {
   businessId: string;
   selectedDay?: string;
   selectedDayId: string;
+  startTime?: string;
+  endTime?: string;
   bookingSlots?: BookingTimeRange[];
   allBusinessHours: BusinessHours[];
   allBookingSlotsMap: Record<string, BookingTimeRange[]>;
@@ -24,14 +26,14 @@ interface ScheduleEditorPanelProps {
 }
 
 export function ScheduleEditorPanel({
-  businessId,
-  selectedDay,
-  selectedDayId,
-  bookingSlots = [],
-  allBusinessHours,
-  allBookingSlotsMap,
-  onSlotsChange,
-}: ScheduleEditorPanelProps) {
+                                      businessId,
+                                      selectedDay,
+                                      selectedDayId,
+                                      bookingSlots = [],
+                                      allBusinessHours,
+                                      allBookingSlotsMap,
+                                      onSlotsChange,
+                                    }: ScheduleEditorPanelProps) {
   const [slots, setSlots] = useState<BookingTimeRange[]>(bookingSlots);
   const { updateOperatingHours } = useUpdateOperatingHours(businessId);
   const [editingSlot, setEditingSlot] = useState<BookingTimeRange | null>(null);
@@ -39,7 +41,7 @@ export function ScheduleEditorPanel({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [slotToDelete, setSlotToDelete] = useState<string | null>(null);
 
-  // Sync state when props change (day change)
+  // 요일 전환 시 슬롯 동기화
   useEffect(() => {
     setSlots(bookingSlots);
   }, [bookingSlots]);
@@ -49,6 +51,10 @@ export function ScheduleEditorPanel({
   );
 
   const saveChanges = async (newSlots: BookingTimeRange[]) => {
+    // 롤백용 이전 값 저장
+    const prevSlots = slots;
+
+    // 낙관적 업데이트
     setSlots(newSlots);
     onSlotsChange?.(newSlots);
 
@@ -62,10 +68,12 @@ export function ScheduleEditorPanel({
       newBookingSlotsMap
     );
 
-    try {
-      await updateOperatingHours(request);
-    } catch {
-      // Error handled in hook
+    const success = await updateOperatingHours(request);
+
+    // API 실패 시 이전 값으로 롤백
+    if (!success) {
+      setSlots(prevSlots);
+      onSlotsChange?.(prevSlots);
     }
   };
 

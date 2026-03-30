@@ -1,93 +1,76 @@
+'use client';
+
+import dayjs from 'dayjs';
+
+import type { BusinessReservationItem, ReservationStatus } from '@/types/business/reservation';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 
 import { ReservationActionsDropdown } from './reservation-actions-dropdown';
 
-export interface Reservation {
-  id: string;
-  reservationNumber: string;
-  dateTime: string;
-  customerName: string;
-  customerPhone: string;
-  service: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'noshow';
-}
-
 interface ReservationTableRowProps {
-  reservation: Reservation;
+  reservation: BusinessReservationItem;
+  onDetail: (id: string) => void;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+  onComplete: (id: string) => void;
+  onNoShow: (id: string) => void;
 }
 
-const getStatusBadgeVariant = (status: Reservation['status']) => {
-  switch (status) {
-    case 'confirmed':
-      return 'default' as const;
-    case 'pending':
-      return 'secondary' as const;
-    case 'completed':
-      return 'outline' as const;
-    case 'cancelled':
-    case 'noshow':
-      return 'destructive' as const;
-    default:
-      return 'outline' as const;
-  }
+const STATUS_VARIANT: Record<ReservationStatus, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+  CONFIRMED: 'default',
+  PENDING: 'secondary',
+  COMPLETED: 'outline',
+  CANCELLED: 'destructive',
+  REJECTED: 'destructive',
+  NO_SHOW: 'destructive',
 };
 
-const getStatusLabel = (status: Reservation['status']) => {
-  switch (status) {
-    case 'pending':
-      return '승인대기';
-    case 'confirmed':
-      return '예약확정';
-    case 'completed':
-      return '완료';
-    case 'cancelled':
-      return '취소';
-    case 'noshow':
-      return '노쇼';
-    default:
-      return status;
-  }
+const STATUS_LABEL: Record<ReservationStatus, string> = {
+  PENDING: '승인대기',
+  CONFIRMED: '예약확정',
+  COMPLETED: '완료',
+  CANCELLED: '취소',
+  REJECTED: '거절',
+  NO_SHOW: '노쇼',
 };
 
-const formatDateTime = (dateTime: string) => {
-  const date = new Date(dateTime);
-  const dateStr = date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const timeStr = date.toLocaleTimeString('ko-KR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  return `${dateStr} ${timeStr}`;
-};
+export function ReservationTableRow({
+                                      reservation,
+                                      onDetail,
+                                      onApprove,
+                                      onReject,
+                                      onComplete,
+                                      onNoShow,
+                                    }: ReservationTableRowProps) {
+  const dateTime = `${dayjs(reservation.reservationDate).format('YYYY.MM.DD')} ${reservation.reservationTime.slice(0, 5)}`;
 
-export function ReservationTableRow({ reservation }: ReservationTableRowProps) {
   return (
     <TableRow>
-      <TableCell className="font-medium">
-        {reservation.reservationNumber}
-      </TableCell>
-      <TableCell>{formatDateTime(reservation.dateTime)}</TableCell>
+      <TableCell className="font-medium">{reservation.reservationNumber}</TableCell>
+      <TableCell>{dateTime}</TableCell>
       <TableCell>
         <div className="flex flex-col">
           <span className="font-medium">{reservation.customerName}</span>
-          <span className="text-sm text-muted-foreground">
-            {reservation.customerPhone}
-          </span>
+          <span className="text-sm text-muted-foreground">{reservation.customerPhone}</span>
         </div>
       </TableCell>
-      <TableCell>{reservation.service}</TableCell>
+      <TableCell>{reservation.reservationDuration}분</TableCell>
       <TableCell>
-        <Badge variant={getStatusBadgeVariant(reservation.status)}>
-          {getStatusLabel(reservation.status)}
+        <Badge variant={STATUS_VARIANT[reservation.status]}>
+          {STATUS_LABEL[reservation.status]}
         </Badge>
       </TableCell>
       <TableCell className="text-right">
-        <ReservationActionsDropdown reservationId={reservation.id} />
+        <ReservationActionsDropdown
+          reservationId={reservation.reservationId}
+          status={reservation.status}
+          onDetail={onDetail}
+          onApprove={onApprove}
+          onReject={onReject}
+          onComplete={onComplete}
+          onNoShow={onNoShow}
+        />
       </TableCell>
     </TableRow>
   );

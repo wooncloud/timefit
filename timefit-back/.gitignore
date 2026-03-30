@@ -56,3 +56,6 @@ nginx/ssl/*.crt
 ## # JWT RSA Keys
 keys/
 *.pem
+
+### cloudflared
+cloudflared/

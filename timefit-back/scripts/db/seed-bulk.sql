@@ -56,26 +56,32 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO business (
     id, business_name, business_number, owner_name,
-    address, contact_phone, description, logo_url, business_notice,
+    address, contact_phone, contact_email, description, logo_url, business_notice,
     is_active, average_rating, review_count, latitude, longitude,
     created_at, updated_at
 )
 SELECT
     ('30000000-0000-0000-0000-' || LPAD(seq::text, 12, '0'))::uuid,
     CASE
-        WHEN seq % 5 = 1 THEN '타임핏 헤어샵 ' || seq
-        WHEN seq % 5 = 2 THEN '타임핏 네일샵 ' || seq
-        WHEN seq % 5 = 3 THEN '타임핏 카페 ' || seq
-        WHEN seq % 5 = 4 THEN '타임핏 레스토랑 ' || seq
-        ELSE '타임핏 피부과 ' || seq
+        WHEN seq % 5 = 1 THEN 'Timefit Hair Salon ' || seq
+        WHEN seq % 5 = 2 THEN 'Timefit Nail Shop ' || seq
+        WHEN seq % 5 = 3 THEN 'Timefit Cafe ' || seq
+        WHEN seq % 5 = 4 THEN 'Timefit Restaurant ' || seq
+        ELSE 'Timefit Clinic ' || seq
         END,
-    LPAD((100000000 + seq * 11111)::text, 10, '0'),
+    -- business_number: XXX-XX-XXXXX 형식
+    SUBSTRING(LPAD((100000000 + seq * 11111)::text, 10, '0'), 1, 3) || '-' ||
+    SUBSTRING(LPAD((100000000 + seq * 11111)::text, 10, '0'), 4, 2) || '-' ||
+    SUBSTRING(LPAD((100000000 + seq * 11111)::text, 10, '0'), 6, 5),
     'Owner ' || seq,
     'Seoul Gangnam ' || (seq * 100) || ' Street',
-    '02' || LPAD((11110000 + seq)::text, 8, '0'),
+    -- contact_phone: 02-XXXX-XXXX 형식 (10자리)
+    '02-' || SUBSTRING(LPAD((11110000 + seq)::text, 8, '0'), 1, 4) || '-' ||
+    SUBSTRING(LPAD((11110000 + seq)::text, 8, '0'), 5, 4),
+    'owner' || seq || '@timefit.test',
     'Performance Test Business ' || seq,
     NULL,
-    '시설 이용 안내사항',
+    'Please follow facility guidelines.',
     true,
     0.0,
     0,
@@ -140,31 +146,31 @@ SELECT
     CASE
         WHEN biz_seq % 5 = 1 THEN
             CASE cat_seq
-                WHEN 1 THEN '컷' WHEN 2 THEN '펌' WHEN 3 THEN '염색'
-                WHEN 4 THEN '클리닉' ELSE '스타일링'
+                WHEN 1 THEN 'Cut' WHEN 2 THEN 'Perm' WHEN 3 THEN 'Coloring'
+                WHEN 4 THEN 'Clinic' ELSE 'Styling'
                 END
         WHEN biz_seq % 5 = 2 THEN
             CASE cat_seq
-                WHEN 1 THEN '젤네일' WHEN 2 THEN '아트' WHEN 3 THEN '케어'
-                WHEN 4 THEN '페디큐어' ELSE '네일팁'
+                WHEN 1 THEN 'Gel Nail' WHEN 2 THEN 'Nail Art' WHEN 3 THEN 'Care'
+                WHEN 4 THEN 'Pedicure' ELSE 'Nail Tip'
                 END
         WHEN biz_seq % 5 = 3 THEN
             CASE cat_seq
-                WHEN 1 THEN '커피' WHEN 2 THEN '디저트' WHEN 3 THEN '브런치'
-                WHEN 4 THEN '티' ELSE '스무디'
+                WHEN 1 THEN 'Coffee' WHEN 2 THEN 'Dessert' WHEN 3 THEN 'Brunch'
+                WHEN 4 THEN 'Tea' ELSE 'Smoothie'
                 END
         WHEN biz_seq % 5 = 4 THEN
             CASE cat_seq
-                WHEN 1 THEN '파스타' WHEN 2 THEN '피자' WHEN 3 THEN '스테이크'
-                WHEN 4 THEN '샐러드' ELSE '디저트'
+                WHEN 1 THEN 'Pasta' WHEN 2 THEN 'Pizza' WHEN 3 THEN 'Steak'
+                WHEN 4 THEN 'Salad' ELSE 'Dessert'
                 END
         ELSE
             CASE cat_seq
-                WHEN 1 THEN '레이저' WHEN 2 THEN '필러' WHEN 3 THEN '보톡스'
-                WHEN 4 THEN '리프팅' ELSE '스킨케어'
+                WHEN 1 THEN 'Laser' WHEN 2 THEN 'Filler' WHEN 3 THEN 'Botox'
+                WHEN 4 THEN 'Lifting' ELSE 'Skincare'
                 END
         END,
-    '카테고리별 상세 안내사항',
+    'Please check category details.',
     true,
     NOW() - (biz_seq || ' days')::INTERVAL,
     NOW() - (biz_seq || ' days')::INTERVAL
@@ -189,14 +195,14 @@ SELECT
     ('60000000-' || LPAD(biz_seq::text, 4, '0') || '-' || LPAD(cat_seq::text, 4, '0') || '-' || LPAD(menu_seq::text, 4, '0') || '-000000000000')::uuid,
     ('30000000-0000-0000-0000-' || LPAD(biz_seq::text, 12, '0'))::uuid,
     ('50000000-' || LPAD(biz_seq::text, 4, '0') || '-' || LPAD(cat_seq::text, 4, '0') || '-0000-000000000000')::uuid,
-    '서비스 ' || menu_seq || '번',
+    'Service ' || menu_seq,
     CASE
         WHEN menu_seq = 1 THEN 20000
         WHEN menu_seq = 2 THEN 35000
         WHEN menu_seq = 3 THEN 50000
         ELSE 80000
         END,
-    '메뉴 상세 설명 ' || menu_seq || '번',
+    'Menu description ' || menu_seq,
     CASE
         WHEN menu_seq <= 3 THEN 'RESERVATION_BASED'
         ELSE 'ONDEMAND_BASED'
@@ -214,6 +220,33 @@ FROM
     generate_series(1, 5) AS cat_seq,
     generate_series(1, 4) AS menu_seq
 ON CONFLICT (id) DO NOTHING;
+
+-- ========================================
+-- 6.5 BusinessHours (영업시간 바운더리: 140개)
+-- ========================================
+-- 역할: OperatingHours의 상위 바운더리
+--   - OperatingHours(09:00-12:00, 14:00-18:00) ⊆ BusinessHours(09:00-18:00)
+--   - Business 생성 시 자동 생성되는 기본값을 seed에서 재현
+-- 규칙: (business_id, day_of_week) UNIQUE
+-- ID: 65000000-{biz:4}-{day:2}00-0000-000000000000
+-- ========================================
+
+INSERT INTO business_hours (
+    id, business_id, day_of_week, open_time, close_time, is_closed, created_at, updated_at
+)
+SELECT
+    ('65000000-' || LPAD(biz_seq::text, 4, '0') || '-' || LPAD(day::text, 2, '0') || '00-0000-000000000000')::uuid,
+    ('30000000-0000-0000-0000-' || LPAD(biz_seq::text, 12, '0'))::uuid,
+    day,
+    '09:00:00'::time,
+    '18:00:00'::time,
+    false,
+    NOW() - (biz_seq || ' days')::INTERVAL,
+    NOW() - (biz_seq || ' days')::INTERVAL
+FROM
+    generate_series(1, 20) AS biz_seq,
+    generate_series(0, 6)  AS day
+ON CONFLICT (business_id, day_of_week) DO NOTHING;
 
 -- ========================================
 -- 7. OperatingHours (영업시간: 280개)
@@ -280,6 +313,7 @@ INSERT INTO reservation (
     reservation_date, reservation_time, reservation_number,
     reservation_price, reservation_duration,
     customer_name, customer_phone, status, notes, cancelled_at,
+    snapshot_business_name, snapshot_menu_name,
     created_at, updated_at
 )
 SELECT
@@ -296,8 +330,22 @@ SELECT
              '000000000000')::uuid
         ELSE NULL
         END,
-    CURRENT_DATE - ((res_seq % 60) || ' days')::INTERVAL,
-    '09:00:00'::time + ((res_seq % 10) || ' hours')::INTERVAL,
+    CASE
+        WHEN res_seq % 20 < 14 THEN  -- PENDING, CONFIRMED → 미래 날짜 (booking_slot 날짜와 일치)
+                    CURRENT_DATE + ((res_seq % 14) || ' days')::INTERVAL
+        ELSE                          -- COMPLETED, CANCELLED, NO_SHOW → 과거 날짜
+                    CURRENT_DATE - ((1 + res_seq % 30) || ' days')::INTERVAL
+        END,
+    -- OH 유효 범위(09:00-12:00, 14:00-18:00)만 사용 (브레이크타임 12:00, 13:00 제외)
+    CASE res_seq % 7
+        WHEN 0 THEN '09:00:00'::time
+        WHEN 1 THEN '10:00:00'::time
+        WHEN 2 THEN '11:00:00'::time
+        WHEN 3 THEN '14:00:00'::time
+        WHEN 4 THEN '15:00:00'::time
+        WHEN 5 THEN '16:00:00'::time
+        ELSE        '17:00:00'::time
+        END,
     'RES-' || TO_CHAR(NOW(), 'YYYYMMDD') || '-' || LPAD((biz_seq * 1000 + res_seq)::text, 6, '0'),
     CASE
         WHEN (1 + (res_seq % 4)) = 1 THEN 20000
@@ -318,11 +366,19 @@ SELECT
         WHEN res_seq % 20 < 19 THEN 'CANCELLED'
         ELSE 'NO_SHOW'
         END,
-    '고객 요청사항',
+    'Customer request notes',
     CASE
         WHEN res_seq % 20 >= 18 THEN NOW() - ((res_seq % 10) || ' days')::INTERVAL
         ELSE NULL
         END,
+    CASE
+        WHEN biz_seq % 5 = 1 THEN 'Timefit Hair Salon ' || biz_seq
+        WHEN biz_seq % 5 = 2 THEN 'Timefit Nail Shop ' || biz_seq
+        WHEN biz_seq % 5 = 3 THEN 'Timefit Cafe ' || biz_seq
+        WHEN biz_seq % 5 = 4 THEN 'Timefit Restaurant ' || biz_seq
+        ELSE 'Timefit Clinic ' || biz_seq
+        END,
+    'Service ' || (1 + (res_seq % 4)),
     NOW() - ((res_seq % 60) || ' days')::INTERVAL,
     NOW() - ((res_seq % 60) || ' days')::INTERVAL
 FROM
@@ -342,13 +398,13 @@ SELECT
     ('30000000-0000-0000-0000-' || LPAD(biz_seq::text, 12, '0'))::uuid,
     ('10000000-0000-0000-0000-' || LPAD((1 + (res_seq % 200))::text, 12, '0'))::uuid,
     ('90000000-' || LPAD(biz_seq::text, 4, '0') || '-' || LPAD(res_seq::text, 4, '0') || '-0000-000000000000')::uuid,
-    '서비스 ' || (1 + (res_seq % 4)) || '번',
+    'Service ' || (1 + (res_seq % 4)),
     CASE
         WHEN res_seq % 10 < 2 THEN 3
         WHEN res_seq % 10 < 5 THEN 4
         ELSE 5
         END,
-    '만족스러운 서비스였습니다.',
+    'Great service, very satisfied.',
     NULL,
     NOW() - ((res_seq % 60) || ' days')::INTERVAL,
     NOW() - ((res_seq % 60) || ' days')::INTERVAL
@@ -403,16 +459,281 @@ DO $$
         SELECT COUNT(*) INTO wishlist_count FROM wishlist;
 
         RAISE NOTICE '===========================================';
-        RAISE NOTICE 'Seed Data 생성 완료!';
+        RAISE NOTICE 'Seed Data generation complete!';
         RAISE NOTICE '===========================================';
-        RAISE NOTICE 'Users:        % 명', user_count;
-        RAISE NOTICE 'Businesses:   % 개', business_count;
-        RAISE NOTICE 'Menus:        % 개', menu_count;
-        RAISE NOTICE 'BookingSlots: % 개', slot_count;
-        RAISE NOTICE 'Reservations: % 건', reservation_count;
-        RAISE NOTICE 'Reviews:      % 건', review_count;
-        RAISE NOTICE 'Wishlists:    % 건', wishlist_count;
+        RAISE NOTICE 'Users:        %', user_count;
+        RAISE NOTICE 'Businesses:   %', business_count;
+        RAISE NOTICE 'Menus:        %', menu_count;
+        RAISE NOTICE 'BookingSlots: %', slot_count;
+        RAISE NOTICE 'Reservations: %', reservation_count;
+        RAISE NOTICE 'Reviews:      %', review_count;
+        RAISE NOTICE 'Wishlists:    %', wishlist_count;
         RAISE NOTICE '===========================================';
-        RAISE NOTICE '성능 테스트 준비 완료!';
+        RAISE NOTICE 'Performance test data ready!';
         RAISE NOTICE '===========================================';
     END $$;
+
+-- ========================================
+-- 12. Test Reservations for Business 1
+--     상태별 2건씩 (UI 연동 검증용)
+--     business_id: 30000000-0000-0000-0000-000000000001
+-- ========================================
+-- 설계 원칙:
+--   - PENDING / CONFIRMED  → 미래 슬롯 (기존 bulk 슬롯 재사용)
+--   - COMPLETED / CANCELLED / NO_SHOW → 과거 슬롯 (별도 생성)
+--   - 예약이 붙은 슬롯은 is_available = false 로 UPDATE
+--   - day_offset 91~96: 기존 범위(1~30) 외 → ID 충돌 없음
+-- ========================================
+
+-- ----------------------------------------
+-- Step 1. 과거 BookingSlot 추가 (COMPLETED / CANCELLED / NO_SHOW용)
+-- ----------------------------------------
+INSERT INTO booking_slot (
+    id, business_id, menu_id,
+    slot_date, start_time, end_time,
+    is_available, created_at, updated_at
+)
+VALUES
+    -- COMPLETED용 (7일 전)
+    ('80000000-0001-0101-9100-000000000000',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     CURRENT_DATE - INTERVAL '7 days', '09:00', '10:00', false, NOW(), NOW()),
+
+    ('80000000-0001-0101-9200-000000000000',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     CURRENT_DATE - INTERVAL '7 days', '14:00', '15:00', false, NOW(), NOW()),
+
+    -- CANCELLED용 (5일 전)
+    ('80000000-0001-0101-9300-000000000000',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     CURRENT_DATE - INTERVAL '5 days', '09:00', '10:00', false, NOW(), NOW()),
+
+    ('80000000-0001-0101-9400-000000000000',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     CURRENT_DATE - INTERVAL '5 days', '14:00', '15:00', false, NOW(), NOW()),
+
+    -- NO_SHOW용 (3일 전)
+    ('80000000-0001-0101-9500-000000000000',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     CURRENT_DATE - INTERVAL '3 days', '09:00', '10:00', false, NOW(), NOW()),
+
+    ('80000000-0001-0101-9600-000000000000',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     CURRENT_DATE - INTERVAL '3 days', '14:00', '15:00', false, NOW(), NOW())
+
+ON CONFLICT (id) DO NOTHING;
+
+-- ----------------------------------------
+-- Step 2. 테스트 예약 10건 삽입 (상태별 2건)
+--
+-- 미래 슬롯 참조 (기존 bulk 생성 슬롯):
+--   PENDING  → day=5 : 80000000-0001-0101-0500/0501-000000000000
+--   CONFIRMED→ day=10: 80000000-0001-0101-1000/1001-000000000000
+-- ----------------------------------------
+INSERT INTO reservation (
+    id, customer_id, business_id, menu_id, booking_slot_id,
+    reservation_date, reservation_time, reservation_number,
+    reservation_price, reservation_duration,
+    customer_name, customer_phone, status, notes, cancelled_at,
+    snapshot_business_name, snapshot_menu_name,
+    created_at, updated_at
+)
+VALUES
+
+    -- ======== PENDING (확정 대기) ========
+    ('99000000-0001-0001-0000-000000000000',
+     '10000000-0000-0000-0000-000000000001',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     '80000000-0001-0101-0500-000000000000',
+     CURRENT_DATE + INTERVAL '5 days', '09:00',
+     'TEST-PENDING-001', 20000, 60,
+     'Customer 1', '01010010001', 'PENDING', 'Test note', NULL,
+     'Timefit Hair Salon 1', 'Service 1',
+     NOW(), NOW()),
+
+    ('99000000-0001-0002-0000-000000000000',
+     '10000000-0000-0000-0000-000000000002',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     '80000000-0001-0101-0501-000000000000',
+     CURRENT_DATE + INTERVAL '5 days', '14:00',
+     'TEST-PENDING-002', 20000, 60,
+     'Customer 2', '01010010002', 'PENDING', NULL, NULL,
+     'Timefit Hair Salon 1', 'Service 1',
+     NOW(), NOW()),
+
+    -- ======== CONFIRMED (예약 확정) ========
+    ('99000000-0002-0001-0000-000000000000',
+     '10000000-0000-0000-0000-000000000003',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     '80000000-0001-0101-1000-000000000000',
+     CURRENT_DATE + INTERVAL '10 days', '09:00',
+     'TEST-CONFIRMED-001', 20000, 60,
+     'Customer 3', '01010010003', 'CONFIRMED', NULL, NULL,
+     'Timefit Hair Salon 1', 'Service 1',
+     NOW() - INTERVAL '1 day', NOW()),
+
+    ('99000000-0002-0002-0000-000000000000',
+     '10000000-0000-0000-0000-000000000004',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     '80000000-0001-0101-1001-000000000000',
+     CURRENT_DATE + INTERVAL '10 days', '14:00',
+     'TEST-CONFIRMED-002', 20000, 60,
+     'Customer 4', '01010010004', 'CONFIRMED', NULL, NULL,
+     'Timefit Hair Salon 1', 'Service 1',
+     NOW() - INTERVAL '1 day', NOW()),
+
+    -- ======== COMPLETED (방문 완료) ========
+    ('99000000-0003-0001-0000-000000000000',
+     '10000000-0000-0000-0000-000000000005',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     '80000000-0001-0101-9100-000000000000',
+     CURRENT_DATE, '09:00',
+     'TEST-COMPLETED-001', 20000, 60,
+     'Customer 5', '01010010005', 'COMPLETED', NULL, NULL,
+     'Timefit Hair Salon 1', 'Service 1',
+     NOW() - INTERVAL '7 days', NOW() - INTERVAL '7 days'),
+
+    ('99000000-0003-0002-0000-000000000000',
+     '10000000-0000-0000-0000-000000000006',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     '80000000-0001-0101-9200-000000000000',
+     CURRENT_DATE, '14:00',
+     'TEST-COMPLETED-002', 20000, 60,
+     'Customer 6', '01010010006', 'COMPLETED', NULL, NULL,
+     'Timefit Hair Salon 1', 'Service 1',
+     NOW() - INTERVAL '7 days', NOW() - INTERVAL '7 days'),
+
+    -- ======== CANCELLED (예약 취소) ========
+    ('99000000-0004-0001-0000-000000000000',
+     '10000000-0000-0000-0000-000000000007',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     '80000000-0001-0101-9300-000000000000',
+     CURRENT_DATE, '09:00',
+     'TEST-CANCELLED-001', 20000, 60,
+     'Customer 7', '01010010007', 'CANCELLED', 'Personal reason',
+     NOW() - INTERVAL '5 days' - INTERVAL '6 hours',
+     'Timefit Hair Salon 1', 'Service 1',
+     NOW() - INTERVAL '6 days', NOW() - INTERVAL '5 days'),
+
+    ('99000000-0004-0002-0000-000000000000',
+     '10000000-0000-0000-0000-000000000008',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     '80000000-0001-0101-9400-000000000000',
+     CURRENT_DATE, '14:00',
+     'TEST-CANCELLED-002', 20000, 60,
+     'Customer 8', '01010010008', 'CANCELLED', NULL,
+     NOW() - INTERVAL '5 days' - INTERVAL '3 hours',
+     'Timefit Hair Salon 1', 'Service 1',
+     NOW() - INTERVAL '6 days', NOW() - INTERVAL '5 days'),
+
+    -- ======== NO_SHOW (노쇼) ========
+    ('99000000-0005-0001-0000-000000000000',
+     '10000000-0000-0000-0000-000000000009',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     '80000000-0001-0101-9500-000000000000',
+     CURRENT_DATE, '09:00',
+     'TEST-NOSHOW-001', 20000, 60,
+     'Customer 9', '01010010009', 'NO_SHOW', NULL, NULL,
+     'Timefit Hair Salon 1', 'Service 1',
+     NOW() - INTERVAL '4 days', NOW() - INTERVAL '3 days'),
+
+    ('99000000-0005-0002-0000-000000000000',
+     '10000000-0000-0000-0000-000000000010',
+     '30000000-0000-0000-0000-000000000001',
+     '60000000-0001-0001-0001-000000000000',
+     '80000000-0001-0101-9600-000000000000',
+     CURRENT_DATE, '14:00',
+     'TEST-NOSHOW-002', 20000, 60,
+     'Customer 10', '01010010010', 'NO_SHOW', NULL, NULL,
+     'Timefit Hair Salon 1', 'Service 1',
+     NOW() - INTERVAL '4 days', NOW() - INTERVAL '3 days')
+
+ON CONFLICT (id) DO NOTHING;
+
+-- ----------------------------------------
+-- Step 3. 예약이 붙은 미래 슬롯 → is_available = false
+--   (PENDING / CONFIRMED 슬롯만 해당;
+--    과거 슬롯은 Step 1에서 이미 false로 삽입)
+-- ----------------------------------------
+UPDATE booking_slot
+SET is_available = false, updated_at = NOW()
+WHERE id IN (
+             '80000000-0001-0101-0500-000000000000',  -- PENDING-001
+             '80000000-0001-0101-0501-000000000000',  -- PENDING-002
+             '80000000-0001-0101-1000-000000000000',  -- CONFIRMED-001
+             '80000000-0001-0101-1001-000000000000'   -- CONFIRMED-002
+    );
+
+-- ========================================
+-- 13. BusinessCustomerMemo (업체-고객 메모)
+-- ========================================
+-- 대상: Business 1~5번
+-- 고객: 1~100번 중 홀수 (50건/업체, 전체 250건)
+-- 비즈니스 규칙:
+--   - (business_id, customer_id) UNIQUE → 멱등성 ON CONFLICT (business_id, customer_id) DO NOTHING
+--   - 고객 목록은 reservation 기반이므로 메모 없는 고객도 목록에 노출됨
+--   - 일부 고객(짝수번)은 의도적으로 메모 미보유
+-- ID: a0000000-{biz:4}-{cust:4}-0000-000000000000
+-- ========================================
+
+INSERT INTO business_customer_memo (
+    id, business_id, customer_id, memo, created_at, updated_at
+)
+SELECT
+    ('a0000000-' || LPAD(biz_seq::text, 4, '0') || '-' || LPAD(cust_seq::text, 4, '0') || '-0000-000000000000')::uuid,
+    ('30000000-0000-0000-0000-' || LPAD(biz_seq::text, 12, '0'))::uuid,
+    ('10000000-0000-0000-0000-' || LPAD(cust_seq::text, 12, '0'))::uuid,
+    CASE biz_seq
+        WHEN 1 THEN  -- Hair Salon
+            CASE (cust_seq % 5)
+                WHEN 1 THEN 'Regular customer. Prefers feather-light trim on bangs.'
+                WHEN 3 THEN 'Sensitive scalp — avoid strong chemical treatments.'
+                ELSE        'VIP. Visits every 4 weeks, always books morning slot.'
+                END
+        WHEN 2 THEN  -- Nail Shop
+            CASE (cust_seq % 5)
+                WHEN 1 THEN 'Prefers short natural nails, no extensions.'
+                WHEN 3 THEN 'Allergic to acrylic powder — gel only.'
+                ELSE        'Loyal customer. Often requests seasonal nail art.'
+                END
+        WHEN 3 THEN  -- Cafe
+            CASE (cust_seq % 5)
+                WHEN 1 THEN 'Nut allergy. Always double-check menu ingredients.'
+                WHEN 3 THEN 'Oat milk substitute, no syrup.'
+                ELSE        'Frequent visitor, prefers window seat.'
+                END
+        WHEN 4 THEN  -- Restaurant
+            CASE (cust_seq % 5)
+                WHEN 1 THEN 'Vegan. No meat or dairy in any dish.'
+                WHEN 3 THEN 'Gluten intolerance — confirm with kitchen.'
+                ELSE        'Corporate client, usually group reservation of 4+.'
+                END
+        ELSE          -- Clinic (seq=5, biz%5=0)
+            CASE (cust_seq % 5)
+                WHEN 1 THEN 'Keloid history — avoid aggressive laser settings.'
+                WHEN 3 THEN 'First-time botox. Needs consultation before treatment.'
+                ELSE        'Long-term patient. Quarterly skin care program.'
+                END
+        END,
+    NOW() - ((biz_seq + cust_seq) % 30 || ' days')::INTERVAL,
+    NOW() - ((biz_seq + cust_seq) % 30 || ' days')::INTERVAL
+FROM
+    generate_series(1, 5)   AS biz_seq,
+    generate_series(1, 100) AS cust_seq
+WHERE cust_seq % 2 = 1   -- 홀수 고객만 (50%) → 메모 없는 고객도 목록에 나오도록
+ON CONFLICT (business_id, customer_id) DO NOTHING;

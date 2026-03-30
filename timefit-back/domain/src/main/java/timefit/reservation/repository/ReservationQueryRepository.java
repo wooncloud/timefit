@@ -1,15 +1,18 @@
 package timefit.reservation.repository;
 
+import com.querydsl.core.Tuple;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import timefit.booking.entity.BookingSlot;
 import timefit.common.entity.DayOfWeek;
 import timefit.menu.entity.Menu;
+import timefit.reservation.entity.CustomerSortType;
 import timefit.reservation.entity.Reservation;
 import timefit.reservation.entity.ReservationStatus;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -64,6 +67,20 @@ public interface ReservationQueryRepository {
     );
 
     /**
+     * 업체 예약 상태별 건수 집계
+     * - 날짜 파라미터 없으면 전체 기간 집계
+     * - GROUP BY status 단일 쿼리로 처리
+     *
+     * @param businessId 업체 ID
+     * @param startDate 시작 날짜 (nullable)
+     * @param endDate 종료 날짜 (nullable)
+     * @return 상태별 예약 건수 Map (존재하지 않는 상태는 Map에 포함되지 않음)
+     */
+    Map<ReservationStatus, Long> countByBusinessIdGroupByStatus(
+            UUID businessId, ReservationStatus status, String customerName,
+            LocalDate startDate, LocalDate endDate);
+
+    /**
      * 예약 생성을 위한 BookingSlot 조회 (fetch join)
      * N+1 방지: BookingSlot + Business + Menu를 한 번에 조회
      *
@@ -80,4 +97,20 @@ public interface ReservationQueryRepository {
      * @return Menu (Business fetch join)
      */
     Optional<Menu> findMenuWithBusiness(UUID menuId);
+
+    /**
+     * 업체 고객 목록 조회 (COMPLETED 예약 기반 집계, 검색, 정렬, 페이지네이션)
+     */
+    Page<Tuple> findCustomerListByBusinessId(
+            UUID businessId, String keyword, CustomerSortType sortBy, Pageable pageable);
+
+    /**
+     * 고객 상세 요약 조회 (COMPLETED 예약 기반 집계, 단일 고객, 이메일 포함)
+     */
+    Optional<Tuple> findCustomerSummary(UUID businessId, UUID customerId);
+
+    /**
+     * 고객 최근 예약 이력 조회 (COMPLETED, 최신 10건)
+     */
+    List<Tuple> findRecentReservationsByCustomer(UUID businessId, UUID customerId);
 }

@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Schema(description = "예약 응답")
@@ -735,6 +736,195 @@ public class ReservationResponseDto {
             );
         }
     }
+
+    public record ReservationStats(
+            long pending,
+            long confirmed,
+            long completed,
+            long cancelled,
+            long noShow
+    ) {
+        public static ReservationStats of(Map<ReservationStatus, Long> counts) {
+            return new ReservationStats(
+                    counts.getOrDefault(ReservationStatus.PENDING, 0L),
+                    counts.getOrDefault(ReservationStatus.CONFIRMED, 0L),
+                    counts.getOrDefault(ReservationStatus.COMPLETED, 0L),
+                    counts.getOrDefault(ReservationStatus.CANCELLED, 0L),
+                    counts.getOrDefault(ReservationStatus.NO_SHOW, 0L)
+            );
+        }
+    }
+
+    // -----------------------------------
+
+
+
+    /**
+     * 업체 고객 목록 아이템 (예약 데이터 기반 집계)
+     *
+     * 집계 기준: status = COMPLETED 예약만
+     */
+    @Schema(description = "업체 고객 목록 아이템")
+    public record CustomerListItem(
+            @Schema(description = "고객 ID", example = "20000000-0000-0000-0000-000000000001")
+            UUID customerId,
+
+            @Schema(description = "고객 이름", example = "홍길동")
+            String customerName,
+
+            @Schema(description = "고객 연락처", example = "010-1234-5678")
+            String customerPhone,
+
+            @Schema(description = "총 방문 횟수 (COMPLETED 예약 기준)", example = "12")
+            Long totalVisits,
+
+            @Schema(description = "최근 방문일 (COMPLETED 예약 기준)", example = "2024-03-20")
+            LocalDate lastVisitDate,
+
+            @Schema(description = "첫 방문일 (COMPLETED 예약 기준)", example = "2024-01-15")
+            LocalDate firstVisitDate,
+
+            @Schema(description = "사업자 메모 (없으면 null)", example = "라떼 extra shot 선호", nullable = true)
+            String memo
+    ) {
+        public static CustomerListItem of(
+                UUID customerId, String customerName, String customerPhone,
+                Long totalVisits, LocalDate lastVisitDate, LocalDate firstVisitDate,
+                String memo) {
+            return new CustomerListItem(
+                    customerId, customerName, customerPhone,
+                    totalVisits, lastVisitDate, firstVisitDate, memo
+            );
+        }
+    }
+
+    /**
+     * 업체 고객 목록 (페이지네이션 포함)
+     *
+     * 사용처: GET /api/business/{businessId}/customers
+     */
+    @Schema(description = "업체 고객 목록")
+    public record CustomerList(
+            @Schema(description = "고객 배열")
+            List<CustomerListItem> customers,
+
+            @Schema(description = "페이지네이션 정보")
+            PaginationInfo pagination
+    ) {
+        public static CustomerList of(List<CustomerListItem> customers, PaginationInfo pagination) {
+            return new CustomerList(customers, pagination);
+        }
+    }
+
+    /**
+     * 고객 상세 - 기본 요약 (Repository → Service 전달용 내부 DTO)
+     * - 고객 목록과 달리 이메일 포함
+     * - Projections.constructor() 매핑 대상
+     */
+    @Schema(description = "고객 상세 요약 (내부용)")
+    public record CustomerDetailSummary(
+            UUID customerId,
+            String customerName,
+            String customerPhone,
+            String customerEmail,
+            Long totalVisits,
+            LocalDate lastVisitDate,
+            LocalDate firstVisitDate,
+            String memo
+    ) {
+        public static CustomerDetailSummary of(
+                UUID customerId, String customerName, String customerPhone,
+                String customerEmail, Long totalVisits,
+                LocalDate lastVisitDate, LocalDate firstVisitDate, String memo) {
+            return new CustomerDetailSummary(
+                    customerId, customerName, customerPhone, customerEmail,
+                    totalVisits, lastVisitDate, firstVisitDate, memo
+            );
+        }
+    }
+
+    /**
+     * 고객 상세 - 예약 이력 아이템
+     * - COMPLETED 예약만 포함
+     * - Projections.constructor() 매핑 대상
+     */
+    @Schema(description = "고객 예약 이력 아이템")
+    public record ReservationHistoryItem(
+            @Schema(description = "예약 ID")
+            UUID reservationId,
+
+            @Schema(description = "예약 날짜", example = "2024-03-20")
+            LocalDate reservationDate,
+
+            @Schema(description = "예약 시간", example = "10:00:00")
+            LocalTime reservationTime,
+
+            @Schema(description = "서비스명 (스냅샷)", example = "디자인 컷")
+            String menuServiceName,
+
+            @Schema(description = "예약 상태", example = "COMPLETED")
+            ReservationStatus status,
+
+            @Schema(description = "예약 금액", example = "30000")
+            Integer reservationPrice
+    ) {
+        public static ReservationHistoryItem of(
+                UUID reservationId, LocalDate reservationDate, LocalTime reservationTime,
+                String menuServiceName, ReservationStatus status, Integer reservationPrice) {
+            return new ReservationHistoryItem(
+                    reservationId, reservationDate, reservationTime,
+                    menuServiceName, status, reservationPrice
+            );
+        }
+    }
+
+    /**
+     * 고객 상세 응답 (Service에서 조립 후 반환)
+     *
+     * 사용처: GET /api/business/{businessId}/customers/{customerId}
+     */
+    @Schema(description = "고객 상세")
+    public record CustomerDetail(
+            @Schema(description = "고객 ID")
+            UUID customerId,
+
+            @Schema(description = "고객 이름", example = "홍길동")
+            String customerName,
+
+            @Schema(description = "고객 연락처", example = "010-1234-5678")
+            String customerPhone,
+
+            @Schema(description = "고객 이메일", example = "hong@example.com", nullable = true)
+            String customerEmail,
+
+            @Schema(description = "총 방문 횟수", example = "12")
+            Long totalVisits,
+
+            @Schema(description = "최근 방문일", example = "2024-03-20")
+            LocalDate lastVisitDate,
+
+            @Schema(description = "첫 방문일", example = "2024-01-15")
+            LocalDate firstVisitDate,
+
+            @Schema(description = "사업자 메모", nullable = true)
+            String memo,
+
+            @Schema(description = "최근 예약 이력 (COMPLETED, 최신 10건)")
+            List<ReservationHistoryItem> recentReservations
+    ) {
+        // CustomerDetailSummary + recentReservations 조합으로 생성
+        public static CustomerDetail of(
+                CustomerDetailSummary summary,
+                List<ReservationHistoryItem> recentReservations) {
+            return new CustomerDetail(
+                    summary.customerId(), summary.customerName(), summary.customerPhone(),
+                    summary.customerEmail(), summary.totalVisits(),
+                    summary.lastVisitDate(), summary.firstVisitDate(), summary.memo(),
+                    recentReservations
+            );
+        }
+    }
+
 
     // ========================================
     // 4. 공통 DTO

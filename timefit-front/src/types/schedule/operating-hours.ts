@@ -66,4 +66,5 @@ export interface UpdateOperatingHoursRequest {
 export interface UpdateOperatingHoursResponse {
   success: boolean;
   data: OperatingHours;
+  message?: string; // 실패 시 서버 에러 메시지
 }

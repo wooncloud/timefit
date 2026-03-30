@@ -1,6 +1,6 @@
 import { Check, Clock, LucideIcon, Star, X } from 'lucide-react';
 
-import type { Reservation } from '@/components/business/reservations/reservation-table-row';
+import type { BusinessReservationItem } from '@/types/business/reservation';
 
 interface ReservationStatConfig {
   id: string;
@@ -10,7 +10,7 @@ interface ReservationStatConfig {
     bg: string;
     icon: string;
   };
-  getCount: (reservations: Reservation[]) => number;
+  getCount: (reservations: BusinessReservationItem[]) => number;
 }
 
 export const reservationStatConfigs: ReservationStatConfig[] = [
@@ -23,7 +23,7 @@ export const reservationStatConfigs: ReservationStatConfig[] = [
       icon: 'text-yellow-600 dark:text-yellow-400',
     },
     getCount: reservations =>
-      reservations.filter(r => r.status === 'pending').length,
+      reservations.filter(r => r.status === 'PENDING').length,
   },
   {
     id: 'confirmed',
@@ -34,7 +34,7 @@ export const reservationStatConfigs: ReservationStatConfig[] = [
       icon: 'text-green-600 dark:text-green-400',
     },
     getCount: reservations =>
-      reservations.filter(r => r.status === 'confirmed').length,
+      reservations.filter(r => r.status === 'CONFIRMED').length,
   },
   {
     id: 'completed',
@@ -45,7 +45,7 @@ export const reservationStatConfigs: ReservationStatConfig[] = [
       icon: 'text-blue-600 dark:text-blue-400',
     },
     getCount: reservations =>
-      reservations.filter(r => r.status === 'completed').length,
+      reservations.filter(r => r.status === 'COMPLETED').length,
   },
   {
     id: 'cancelled',
@@ -56,7 +56,7 @@ export const reservationStatConfigs: ReservationStatConfig[] = [
       icon: 'text-red-600 dark:text-red-400',
     },
     getCount: reservations =>
-      reservations.filter(r => r.status === 'cancelled').length +
-      reservations.filter(r => r.status === 'noshow').length,
+      reservations.filter(r => r.status === 'CANCELLED').length +
+      reservations.filter(r => r.status === 'NO_SHOW').length,
   },
 ];

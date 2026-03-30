@@ -15,6 +15,7 @@ import timefit.common.swagger.operation.reservation.*;
 import timefit.common.swagger.requestbody.reservation.*;
 import timefit.reservation.dto.ReservationRequestDto;
 import timefit.reservation.dto.ReservationResponseDto;
+import timefit.reservation.entity.CustomerSortType;
 import timefit.reservation.service.ReservationService;
 
 import java.time.LocalDate;
@@ -141,6 +142,8 @@ public class ReservationController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @Parameter(description = "종료 날짜", example = "2025-11-30")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @Parameter(description = "고객명 검색", example = "홍길동")
+            @RequestParam(required = false) String customerName,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20")
@@ -148,11 +151,11 @@ public class ReservationController {
             @Parameter(hidden = true)
             @CurrentUserId UUID currentUserId) {
 
-        log.info("업체 예약 목록 조회 요청: businessId={}, userId={}, status={}",
-                businessId, currentUserId, status);
+        log.info("업체 예약 목록 조회 요청: businessId={}, userId={}, status={}, customerName={}",
+                businessId, currentUserId, status, customerName);
 
         ReservationResponseDto.BusinessReservationList response = reservationService.getBusinessReservations(
-                businessId, currentUserId, status, startDate, endDate, page, size);
+                businessId, currentUserId, status, customerName, startDate, endDate, page, size);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }
@@ -172,6 +175,31 @@ public class ReservationController {
 
         ReservationResponseDto.BusinessReservation response = reservationService
                 .getBusinessReservationDetail(businessId, reservationId, currentUserId);
+
+        return ResponseEntity.ok(ResponseData.of(response));
+    }
+
+    @GetMapping("/api/business/{businessId}/reservations/stats")
+    public ResponseEntity<ResponseData<ReservationResponseDto.ReservationStats>> getBusinessReservationStats(
+            @Parameter(description = "업체 ID", required = true)
+            @PathVariable UUID businessId,
+            @Parameter(description = "예약 상태", example = "PENDING")
+            @RequestParam(required = false) String status,
+            @Parameter(description = "고객명 검색", example = "홍길동")
+            @RequestParam(required = false) String customerName,
+            @Parameter(description = "시작 날짜", example = "2025-11-01")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "종료 날짜", example = "2025-11-30")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @Parameter(hidden = true)
+            @CurrentUserId UUID currentUserId) {
+
+        log.info("업체 예약 통계 조회 요청: businessId={}, userId={}, status={}, customerName={}, dateRange={}~{}",
+                businessId, currentUserId, status, customerName, startDate, endDate);
+
+        ReservationResponseDto.ReservationStats response =
+                reservationService.getBusinessReservationStats(
+                        businessId, currentUserId, status, customerName, startDate, endDate);
 
         return ResponseEntity.ok(ResponseData.of(response));
     }

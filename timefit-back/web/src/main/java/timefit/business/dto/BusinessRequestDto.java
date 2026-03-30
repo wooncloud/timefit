@@ -71,6 +71,15 @@ public class BusinessRequestDto {
             @Size(max = 20, message = "연락처는 20자 이하여야 합니다")
             String contactPhone,
 
+            @Schema(description = "업체 연락 이메일",
+                    nullable = true,
+                    maxLength = 100,
+                    example = "contact@example.com"
+            )
+            @Size(max = 100)
+            @Email(message = "올바른 이메일 형식이어야 합니다")
+            String contactEmail,
+
             @Schema(
                     description = "업체 설명",
                     example = "20년 경력의 전문 미용실입니다.",
@@ -153,6 +162,16 @@ public class BusinessRequestDto {
             String contactPhone,
 
             @Schema(
+                    description = "업체 연락 이메일",
+                    nullable = true,
+                    maxLength = 100,
+                    example = "contact@example.com"
+            )
+            @Size(max = 100)
+            @Email(message = "올바른 이메일 형식이어야 합니다")
+            String contactEmail,
+
+            @Schema(
                     description = "업체 설명",
                     example = "30년 경력의 프리미엄 헤어샵입니다.",
                     nullable = true,
@@ -225,4 +244,15 @@ public class BusinessRequestDto {
             @Size(max = 500, message = "삭제 사유는 500자 이하여야 합니다")
             String deleteReason
     ) {}
+
+        /**
+         * 고객 메모 저장/수정 요청
+         */
+        @Schema(description = "고객 메모 저장 요청")
+        public record UpsertCustomerMemo(
+                @Schema(description = "메모 내용 (null이면 메모 삭제와 동일)", example = "단골 고객 - VIP", nullable = true)
+                @Size(max = 500, message = "메모는 500자 이하로 입력해주세요")
+                String memo
+        ) {
+        }
 }

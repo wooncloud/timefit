@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import timefit.reservation.dto.ReservationRequestDto;
 import timefit.reservation.dto.ReservationResponseDto;
+import timefit.reservation.entity.CustomerSortType;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -65,9 +66,9 @@ public class ReservationService {
     // ========== 예약 관리 (업체) ==========
 
     public ReservationResponseDto.BusinessReservationList getBusinessReservations(
-            UUID businessId, UUID currentUserId, String status,
+            UUID businessId, UUID currentUserId, String status, String customerName,
             LocalDate startDate, LocalDate endDate, int page, int size) {
-        return queryService.getBusinessReservations(businessId, currentUserId, status, startDate, endDate, page, size);
+        return queryService.getBusinessReservations(businessId, currentUserId, status, customerName, startDate, endDate, page, size);
     }
 
     public ReservationResponseDto.BusinessReservation getBusinessReservationDetail(
@@ -97,5 +98,25 @@ public class ReservationService {
     public ReservationResponseDto.ReservationActionResult markAsNoShow(
             UUID businessId, UUID reservationId, UUID currentUserId, String notes) {
         return commandService.markAsNoShow(businessId, reservationId, currentUserId, notes);
+    }
+
+    public ReservationResponseDto.ReservationStats getBusinessReservationStats(
+            UUID businessId, UUID currentUserId, String status, String customerName,
+            LocalDate startDate, LocalDate endDate) {
+        return queryService.getBusinessReservationStats(
+                businessId, currentUserId, status, customerName, startDate, endDate);
+    }
+
+    // ========== 고객 관리 (업체) ==========
+
+    public ReservationResponseDto.CustomerList getCustomerList(
+            UUID businessId, String keyword, CustomerSortType sortBy,
+            int page, int size, UUID currentUserId) {
+        return queryService.getCustomerList(businessId, keyword, sortBy, page, size, currentUserId);
+    }
+
+    public ReservationResponseDto.CustomerDetail getCustomerDetail(
+            UUID businessId, UUID customerId, UUID currentUserId) {
+        return queryService.getCustomerDetail(businessId, customerId, currentUserId);
     }
 }

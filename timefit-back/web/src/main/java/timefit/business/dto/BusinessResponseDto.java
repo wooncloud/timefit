@@ -62,6 +62,12 @@ public class BusinessResponseDto {
             String contactPhone,
 
             @Schema(
+                    description = "업체 연락 이메일",
+                    example = "contact@example.com"
+            )
+            String contactEmail,
+
+            @Schema(
                     description = "업체 설명",
                     example = "20년 경력의 전문 미용실입니다."
             )
@@ -113,6 +119,7 @@ public class BusinessResponseDto {
                     business.getOwnerName(),
                     business.getAddress(),
                     business.getContactPhone(),
+                    business.getContactEmail(),
                     business.getDescription(),
                     business.getLogoUrl(),
                     business.getBusinessNotice(),
@@ -454,6 +461,22 @@ public class BusinessResponseDto {
                     LocalDateTime.now(),
                     deleteReason
             );
+        }
+    }
+
+    /**
+     * 고객 메모 저장 응답
+     */
+    @Schema(description = "고객 메모 저장 응답")
+    public record CustomerMemoResponse(
+            @Schema(description = "고객 ID")
+            UUID customerId,
+
+            @Schema(description = "저장된 메모", nullable = true)
+            String memo
+    ) {
+        public static CustomerMemoResponse of(UUID customerId, String memo) {
+            return new CustomerMemoResponse(customerId, memo);
         }
     }
 }

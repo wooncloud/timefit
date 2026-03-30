@@ -8,6 +8,8 @@ import timefit.exception.business.BusinessException;
 import timefit.operatinghours.dto.OperatingHoursRequestDto;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * OperatingHours 도메인 공통 검증 로직
@@ -119,6 +121,9 @@ public class OperatingHoursValidator {
                 if (schedule.bookingTimeRanges() != null &&
                         !schedule.bookingTimeRanges().isEmpty()) {
 
+                    // 겹침 검사를 위해 파싱된 범위를 누적
+                    List<LocalTime[]> parsedRanges = new ArrayList<>();
+
                     for (OperatingHoursRequestDto.TimeRange range : schedule.bookingTimeRanges()) {
 
                         LocalTime rangeStart = LocalTime.parse(range.startTime());
@@ -127,10 +132,30 @@ public class OperatingHoursValidator {
                         // 시간 순서 검증
                         validateTimeOrder(rangeStart, rangeEnd);
 
-                        // 영업 시간 범위 내 검증
+                        // 영업 시간 범위 내 검증 (OH-01)
                         validateOperatingHoursWithinBusinessHours(
                                 rangeStart, rangeEnd, openTime, closeTime
                         );
+
+                        // 동일 요일 내 겹침 검증 (OH-02)
+                        // 경계 정각은 허용: A.end == B.start → 겹침 아님
+                        for (LocalTime[] prev : parsedRanges) {
+                            LocalTime prevStart = prev[0];
+                            LocalTime prevEnd = prev[1];
+                            if (rangeStart.isBefore(prevEnd) && rangeEnd.isAfter(prevStart)) {
+                                log.warn("예약 가능 시간대 겹침: dayOfWeek={}, [{}~{}] vs [{}~{}]",
+                                        schedule.dayOfWeek(), prevStart, prevEnd, rangeStart, rangeEnd);
+                                throw new BusinessException(
+                                        BusinessErrorCode.INVALID_OPERATING_HOURS,
+                                        String.format(
+                                                "예약 가능 시간대(%s~%s)가 기존 시간대(%s~%s)와 겹칩니다.",
+                                                rangeStart, rangeEnd, prevStart, prevEnd
+                                        )
+                                );
+                            }
+                        }
+
+                        parsedRanges.add(new LocalTime[]{rangeStart, rangeEnd});
                     }
                 }
             } else {

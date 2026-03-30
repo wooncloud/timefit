@@ -10,9 +10,12 @@ import timefit.reservation.entity.Reservation;
 import timefit.reservation.repository.ReservationQueryRepository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import timefit.operatinghours.dto.OperatingHoursRequestDto;
 
 @Slf4j
 @Component
@@ -34,7 +37,8 @@ public class OperatingHoursReservationValidator {
      */
     public void validateNoFutureReservations(
             UUID businessId,
-            DayOfWeek dayOfWeek) {
+            DayOfWeek dayOfWeek,
+            List<OperatingHoursRequestDto.TimeRange> newRanges) {
 
         log.debug("미래 예약 검증 시작: businessId={}, dayOfWeek={}", businessId, dayOfWeek);
 
@@ -46,54 +50,47 @@ public class OperatingHoursReservationValidator {
                         LocalDate.now()
                 );
 
-        // 2. 예약 존재 시 Exception
-        if (!futureReservations.isEmpty()) {
-
-            // 가장 빠른 예약 찾기 (날짜 -> 시간 순)
-            Reservation earliest = futureReservations.stream()
-                    .min(Comparator.comparing(Reservation::getReservationDate)
-                            .thenComparing(Reservation::getReservationTime))
-                    .orElseThrow();
-
-            log.warn("미래 예약 존재로 영업시간 변경 불가: businessId={}, dayOfWeek={}, " +
-                            "reservationCount={}, earliestDate={}, earliestTime={}",
-                    businessId, dayOfWeek, futureReservations.size(),
-                    earliest.getReservationDate(), earliest.getReservationTime());
-
-            throw new BusinessException(
-                    BusinessErrorCode.OPERATING_HOURS_HAS_FUTURE_RESERVATIONS,
-                    String.format(
-                            "해당 시간대에 %d건의 예약이 예정되어 있습니다. " +
-                                    "(가장 빠른 예약: %s %s) " +
-                                    "먼저 고객과 협의 후 예약을 취소하거나 변경해주세요.",
-                            futureReservations.size(),
-                            earliest.getReservationDate(),
-                            earliest.getReservationTime()
-                    )
-            );
+        if (futureReservations.isEmpty()) {
+            log.debug("미래 예약 검증 완료: 예약 없음");
+            return;
         }
 
-        log.debug("미래 예약 검증 완료: 진행 중인 예약 없음");
-    }
+        // 2. 새 OH 범위 밖으로 밀려나는 예약만 필터링
+        List<Reservation> conflicting = futureReservations.stream()
+                .filter(r -> newRanges.stream().noneMatch(range -> {
+                    LocalTime start = LocalTime.parse(range.startTime());
+                    LocalTime end = LocalTime.parse(range.endTime());
+                    return !r.getReservationTime().isBefore(start)
+                            && !r.getReservationTime().isAfter(end);
+                }))
+                .collect(Collectors.toList());
 
-    /**
-     * 여러 요일에 대한 미래 예약 일괄 검증
-     *
-     * @param businessId 업체 ID
-     * @param daysOfWeek 검증할 요일 목록
-     * @throws BusinessException 하나라도 예약이 있는 경우
-     */
-    public void validateNoFutureReservationsForDays(
-            UUID businessId,
-            List<DayOfWeek> daysOfWeek) {
-
-        log.debug("여러 요일 미래 예약 검증 시작: businessId={}, days={}",
-                businessId, daysOfWeek.size());
-
-        for (DayOfWeek dayOfWeek : daysOfWeek) {
-            validateNoFutureReservations(businessId, dayOfWeek);
+        if (conflicting.isEmpty()) {
+            log.debug("미래 예약 검증 완료: 범위 밖 예약 없음");
+            return;
         }
 
-        log.debug("여러 요일 미래 예약 검증 완료");
+        // 3. 밀려나는 예약 존재 시 Exception
+        Reservation earliest = conflicting.stream()
+                .min(Comparator.comparing(Reservation::getReservationDate)
+                        .thenComparing(Reservation::getReservationTime))
+                .orElseThrow();
+
+        log.warn("범위 축소로 예약 충돌: businessId={}, dayOfWeek={}, " +
+                        "conflictCount={}, earliestDate={}, earliestTime={}",
+                businessId, dayOfWeek, conflicting.size(),
+                earliest.getReservationDate(), earliest.getReservationTime());
+
+        throw new BusinessException(
+                BusinessErrorCode.OPERATING_HOURS_HAS_FUTURE_RESERVATIONS,
+                String.format(
+                        "변경된 시간대 밖에 %d건의 예약이 있습니다. " +
+                                "(가장 빠른 예약: %s %s) " +
+                                "먼저 고객과 협의 후 예약을 취소하거나 변경해주세요.",
+                        conflicting.size(),
+                        earliest.getReservationDate(),
+                        earliest.getReservationTime()
+                )
+        );
     }
 }
