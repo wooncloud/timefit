@@ -1,11 +1,15 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { X } from 'lucide-react';
 
 import type { BusinessReservationDetail, ReservationStatus } from '@/types/business/reservation';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface ReservationDetailModalProps {
   detail: BusinessReservationDetail | null;
@@ -45,32 +49,18 @@ export function ReservationDetailModal({
                                          isOpen,
                                          onClose,
                                        }: ReservationDetailModalProps) {
-  if (!isOpen || !detail) return null;
-
   return (
-    // 배경 오버레이
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onClose}
-    >
-      {/* 모달 본체 — 클릭 이벤트 버블링 차단 */}
-      <div
-        className="relative bg-background rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <div>
-            <h2 className="font-semibold text-lg">예약 상세</h2>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>예약 상세</DialogTitle>
+          {detail && (
             <p className="text-sm text-muted-foreground">{detail.reservationNumber}</p>
-          </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+          )}
+        </DialogHeader>
 
-        {/* 내용 */}
-        <div className="p-4 space-y-6">
+        {detail && (
+          <div className="space-y-6">
 
           {/* 예약 정보 */}
           <section>
@@ -122,7 +112,8 @@ export function ReservationDetailModal({
             />
           </section>
         </div>
-      </div>
-    </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
