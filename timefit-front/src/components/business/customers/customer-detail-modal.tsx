@@ -6,6 +6,7 @@ import { Pencil, X } from 'lucide-react';
 import type { BusinessCustomerDetail } from '@/types/business/customer-business';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { RESERVATION_STATUS_LABEL } from '@/lib/constants/reservation-status';
 
 interface CustomerDetailModalProps {
   detail: BusinessCustomerDetail | null;
@@ -14,14 +15,6 @@ interface CustomerDetailModalProps {
   onMemo: (customerId: string, currentMemo: string | null) => void;
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: '승인대기',
-  CONFIRMED: '예약확정',
-  COMPLETED: '완료',
-  CANCELLED: '취소',
-  REJECTED: '거절',
-  NO_SHOW: '노쇼',
-};
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -100,7 +93,7 @@ export function CustomerDetailModal({
                       </p>
                     </div>
                     <div className="text-right">
-                      <Badge variant="outline">{STATUS_LABEL[r.status] ?? r.status}</Badge>
+                      <Badge variant="outline">{RESERVATION_STATUS_LABEL[r.status] ?? r.status}</Badge>
                       <p className="text-muted-foreground mt-1">{r.reservationPrice.toLocaleString()}원</p>
                     </div>
                   </div>

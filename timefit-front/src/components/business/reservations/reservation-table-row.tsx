@@ -2,11 +2,15 @@
 
 import dayjs from 'dayjs';
 
-import type { BusinessReservationItem, ReservationStatus } from '@/types/business/reservation';
+import type { BusinessReservationItem } from '@/types/business/reservation';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 
 import { ReservationActionsDropdown } from './reservation-actions-dropdown';
+import {
+  RESERVATION_STATUS_LABEL,
+  RESERVATION_STATUS_VARIANT,
+} from '@/lib/constants/reservation-status';
 
 interface ReservationTableRowProps {
   reservation: BusinessReservationItem;
@@ -16,24 +20,6 @@ interface ReservationTableRowProps {
   onComplete: (id: string) => void;
   onNoShow: (id: string) => void;
 }
-
-const STATUS_VARIANT: Record<ReservationStatus, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-  CONFIRMED: 'default',
-  PENDING: 'secondary',
-  COMPLETED: 'outline',
-  CANCELLED: 'destructive',
-  REJECTED: 'destructive',
-  NO_SHOW: 'destructive',
-};
-
-const STATUS_LABEL: Record<ReservationStatus, string> = {
-  PENDING: '승인대기',
-  CONFIRMED: '예약확정',
-  COMPLETED: '완료',
-  CANCELLED: '취소',
-  REJECTED: '거절',
-  NO_SHOW: '노쇼',
-};
 
 export function ReservationTableRow({
                                       reservation,
@@ -57,8 +43,8 @@ export function ReservationTableRow({
       </TableCell>
       <TableCell>{reservation.reservationDuration}분</TableCell>
       <TableCell>
-        <Badge variant={STATUS_VARIANT[reservation.status]}>
-          {STATUS_LABEL[reservation.status]}
+        <Badge variant={RESERVATION_STATUS_VARIANT[reservation.status]}>
+          {RESERVATION_STATUS_LABEL[reservation.status]}
         </Badge>
       </TableCell>
       <TableCell className="text-right">

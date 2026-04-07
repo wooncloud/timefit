@@ -2,7 +2,7 @@
 
 import dayjs from 'dayjs';
 
-import type { BusinessReservationDetail, ReservationStatus } from '@/types/business/reservation';
+import type { BusinessReservationDetail } from '@/types/business/reservation';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -11,29 +11,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+import {
+  RESERVATION_STATUS_LABEL,
+  RESERVATION_STATUS_VARIANT,
+} from '@/lib/constants/reservation-status';
+
 interface ReservationDetailModalProps {
   detail: BusinessReservationDetail | null;
   isOpen: boolean;
   onClose: () => void;
 }
-
-const STATUS_LABEL: Record<ReservationStatus, string> = {
-  PENDING: '승인대기',
-  CONFIRMED: '예약확정',
-  COMPLETED: '완료',
-  CANCELLED: '취소',
-  REJECTED: '거절',
-  NO_SHOW: '노쇼',
-};
-
-const STATUS_VARIANT: Record<ReservationStatus, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-  CONFIRMED: 'default',
-  PENDING: 'secondary',
-  COMPLETED: 'outline',
-  CANCELLED: 'destructive',
-  REJECTED: 'destructive',
-  NO_SHOW: 'destructive',
-};
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -66,8 +53,8 @@ export function ReservationDetailModal({
           <section>
             <h3 className="text-sm font-semibold mb-2">예약 정보</h3>
             <Row label="상태" value={
-              <Badge variant={STATUS_VARIANT[detail.status]}>
-                {STATUS_LABEL[detail.status]}
+              <Badge variant={RESERVATION_STATUS_VARIANT[detail.status]}>
+                {RESERVATION_STATUS_LABEL[detail.status]}
               </Badge>
             } />
             <Row
