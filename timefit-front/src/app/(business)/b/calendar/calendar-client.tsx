@@ -10,29 +10,15 @@ import dayjs from 'dayjs';
 import { toast } from 'sonner';
 
 import type { BusinessReservationItem, BusinessReservationDetail } from '@/types/business/reservation';
+import type { ViewType } from '@/types/business/calendar';
 import { businessReservationService } from '@/services/reservation/reservation-business-service.client';
 import { ReservationDetailModal } from '@/components/business/reservations/reservation-detail-modal';
 import { CalendarMonthView } from '@/components/business/calendar/calendar-month-view';
 import { CalendarYearView } from '@/components/business/calendar/calendar-year-view';
+import { CALENDAR_MIN_HEIGHT, VIEW_LABELS } from '@/lib/constants/calendar';
+import { RESERVATION_STATUS_FILTERS } from '@/lib/constants/reservation-status';
 
 import '@/styles/fullcalendar-override.css';
-
-type ViewType = 'month' | 'timeGridWeek' | 'timeGridDay' | 'year';
-
-const STATUS_FILTERS = [
-  { value: 'CONFIRMED', label: '예약확정', activeClass: 'bg-teal-100 text-teal-700 border-teal-200', eventColor: '#ccfbf1', eventTextColor: '#0f766e' },
-  { value: 'COMPLETED', label: '완료',     activeClass: 'bg-gray-100 text-gray-600 border-gray-200', eventColor: '#f3f4f6', eventTextColor: '#6b7280' },
-  { value: 'PENDING',   label: '승인대기', activeClass: 'bg-amber-100 text-amber-700 border-amber-200', eventColor: '#fef3c7', eventTextColor: '#92400e' },
-  { value: 'CANCELLED', label: '취소',     activeClass: 'bg-red-100 text-red-600 border-red-200', eventColor: '#fee2e2', eventTextColor: '#991b1b' },
-  { value: 'NO_SHOW',   label: '노쇼',     activeClass: 'bg-rose-100 text-rose-700 border-rose-200', eventColor: '#ffe4e6', eventTextColor: '#9f1239' },
-];
-
-const VIEW_LABELS: Record<ViewType, string> = {
-  month: '월', timeGridWeek: '주', timeGridDay: '일', year: '연',
-};
-
-// 월 뷰: 요일헤더(34px) + 6행 × 100px = 634px + 툴바/필터 ~90px = 최소 724px
-const CALENDAR_MIN_HEIGHT = 760;
 
 interface CalendarClientProps {
   initialReservations: BusinessReservationItem[];
@@ -46,8 +32,9 @@ export function CalendarClient({ initialReservations, businessId }: CalendarClie
   const [yearViewYear, setYearViewYear] = useState(dayjs().year());
   const [allReservations, setAllReservations] = useState<BusinessReservationItem[]>(initialReservations);
   const [activeStatuses, setActiveStatuses] = useState<Set<string>>(new Set(['CONFIRMED', 'COMPLETED']));
-  const [detailModal, setDetailModal] = useState<{ isOpen: boolean; detail: BusinessReservationDetail | null }>
-  ({ isOpen: false, detail: null });
+  const [detailModal, setDetailModal] = useState<{ isOpen: boolean; detail: BusinessReservationDetail | null }>(
+    { isOpen: false, detail: null }
+  );
 
   // 510px 이하에서 비율 축소
   const containerRef = useRef<HTMLDivElement>(null);
@@ -172,7 +159,7 @@ export function CalendarClient({ initialReservations, businessId }: CalendarClie
   const fcEvents: EventInput[] = allReservations
     .filter(r => activeStatuses.has(r.status))
     .map(r => {
-      const filter = STATUS_FILTERS.find(f => f.value === r.status);
+      const filter = RESERVATION_STATUS_FILTERS.find(f => f.value === r.status);
       return {
         id: r.reservationId,
         title: `${r.customerName} · ${r.reservationDuration}분`,
@@ -226,7 +213,7 @@ export function CalendarClient({ initialReservations, businessId }: CalendarClie
         </div>
 
         <div className="flex items-center gap-2">
-          {STATUS_FILTERS.map(f => (
+          {RESERVATION_STATUS_FILTERS.map(f => (
             <button key={f.value} onClick={() => toggleStatus(f.value)}
                     className={`px-3 py-1 text-xs rounded-full border transition-colors
                 ${activeStatuses.has(f.value) ? f.activeClass : 'bg-background text-muted-foreground border-border'}`}>

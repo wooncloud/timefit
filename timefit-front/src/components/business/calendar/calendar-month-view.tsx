@@ -3,17 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 
-import type { BusinessReservationItem } from '@/types/business/reservation';
+import type { BusinessReservationItem, ReservationStatus } from '@/types/business/reservation';
+import { RESERVATION_STATUS_COLOR } from '@/lib/constants/reservation-status';
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
-
-const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
-  CONFIRMED: { bg: 'bg-teal-100',  text: 'text-teal-700'  },
-  COMPLETED: { bg: 'bg-gray-100',  text: 'text-gray-500'  },
-  PENDING:   { bg: 'bg-amber-100', text: 'text-amber-700' },
-  CANCELLED: { bg: 'bg-red-100',   text: 'text-red-600'   },
-  NO_SHOW:   { bg: 'bg-rose-100',  text: 'text-rose-700'  },
-};
 
 interface CalendarMonthViewProps {
   year: number;
@@ -134,7 +127,8 @@ export function CalendarMonthView({
 
               {/* 이벤트 */}
               {visibleEvents.map(r => {
-                const color = STATUS_COLOR[r.status] ?? { bg: 'bg-gray-100', text: 'text-gray-500' };
+                const color = RESERVATION_STATUS_COLOR[r.status as ReservationStatus]
+                  ?? { bg: 'bg-gray-100', text: 'text-gray-500' };
                 return (
                   <button
                     key={r.reservationId}
