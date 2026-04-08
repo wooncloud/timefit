@@ -15,6 +15,7 @@ import { businessReservationService } from '@/services/reservation/reservation-b
 import { ReservationDetailModal } from '@/components/business/reservations/reservation-detail-modal';
 import { CalendarMonthView } from '@/components/business/calendar/calendar-month-view';
 import { CalendarYearView } from '@/components/business/calendar/calendar-year-view';
+import { Button } from '@/components/ui/button';
 import { CALENDAR_MIN_HEIGHT, VIEW_LABELS } from '@/lib/constants/calendar';
 import { RESERVATION_STATUS_FILTERS } from '@/lib/constants/reservation-status';
 
@@ -196,29 +197,38 @@ export function CalendarClient({ initialReservations, businessId }: CalendarClie
           <div className="flex items-center gap-2">
             <span className="text-lg font-medium min-w-[180px]">{titleText}</span>
             <div className="flex border border-border rounded-md overflow-hidden">
-              <button className="px-3 py-1.5 text-sm hover:bg-muted border-r border-border transition-colors" onClick={() => handleNavigate(-1)}>‹</button>
-              <button className="px-3 py-1.5 text-sm hover:bg-muted transition-colors" onClick={() => handleNavigate(1)}>›</button>
+              <Button variant="ghost" size="sm" className="rounded-none border-r border-border" onClick={() => handleNavigate(-1)}>‹</Button>
+              <Button variant="ghost" size="sm" className="rounded-none" onClick={() => handleNavigate(1)}>›</Button>
             </div>
-            <button className="px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted transition-colors" onClick={handleToday}>오늘</button>
+            <Button variant="outline" size="sm" onClick={handleToday}>오늘</Button>
           </div>
           <div className="flex border border-border rounded-md overflow-hidden">
             {(Object.keys(VIEW_LABELS) as ViewType[]).map(v => (
-              <button key={v} onClick={() => handleViewChange(v)}
-                      className={`px-3 py-1.5 text-sm border-r last:border-r-0 border-border transition-colors
-                  ${currentView === v ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+              <Button
+                key={v}
+                variant={currentView === v ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-none border-r last:border-r-0 border-border"
+                onClick={() => handleViewChange(v)}
+              >
                 {VIEW_LABELS[v]}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {RESERVATION_STATUS_FILTERS.map(f => (
-            <button key={f.value} onClick={() => toggleStatus(f.value)}
-                    className={`px-3 py-1 text-xs rounded-full border transition-colors
-                ${activeStatuses.has(f.value) ? f.activeClass : 'bg-background text-muted-foreground border-border'}`}>
+            <Button
+              key={f.value}
+              variant="outline"
+              size="sm"
+              className={`rounded-full text-xs transition-colors
+                ${activeStatuses.has(f.value) ? f.activeClass : 'bg-background text-muted-foreground border-border'}`}
+              onClick={() => toggleStatus(f.value)}
+            >
               {activeStatuses.has(f.value) ? '● ' : '○ '}{f.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
