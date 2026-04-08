@@ -6,6 +6,7 @@ import { Pencil, X } from 'lucide-react';
 import type { BusinessCustomerDetail } from '@/types/business/customer-business';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DetailRow } from '@/components/ui/detail-row';
 import { RESERVATION_STATUS_LABEL } from '@/lib/constants/reservation-status';
 
 interface CustomerDetailModalProps {
@@ -13,16 +14,6 @@ interface CustomerDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onMemo: (customerId: string, currentMemo: string | null) => void;
-}
-
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex justify-between py-2 border-b last:border-0">
-      <span className="text-sm text-muted-foreground w-24 shrink-0">{label}</span>
-      <span className="text-sm text-right">{value ?? '-'}</span>
-    </div>
-  );
 }
 
 export function CustomerDetailModal({
@@ -54,11 +45,11 @@ export function CustomerDetailModal({
           {/* 고객 정보 */}
           <section>
             <h3 className="text-sm font-semibold mb-2">고객 정보</h3>
-            <Row label="연락처" value={detail.customerPhone} />
-            {detail.customerEmail && <Row label="이메일" value={detail.customerEmail} />}
-            <Row label="첫 방문일" value={dayjs(detail.firstVisitDate).format('YYYY.MM.DD')} />
-            <Row label="최근 방문일" value={dayjs(detail.lastVisitDate).format('YYYY.MM.DD')} />
-            <Row label="총 방문 횟수" value={`${detail.totalVisits}회`} />
+            <DetailRow label="연락처" value={detail.customerPhone} />
+            {detail.customerEmail && <DetailRow label="이메일" value={detail.customerEmail} />}
+            <DetailRow label="첫 방문일" value={dayjs(detail.firstVisitDate).format('YYYY.MM.DD')} />
+            <DetailRow label="최근 방문일" value={dayjs(detail.lastVisitDate).format('YYYY.MM.DD')} />
+            <DetailRow label="총 방문 횟수" value={`${detail.totalVisits}회`} />
           </section>
 
           {/* 메모 */}
