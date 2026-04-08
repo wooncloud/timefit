@@ -18,6 +18,7 @@ import { CustomerTableHeader } from '@/components/business/customers/customer-ta
 import { CustomerTableRow } from '@/components/business/customers/customer-table-row';
 import { CustomerPagination } from '@/components/business/customers/customer-pagination';
 import { Table, TableBody } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface PaginationInfo {
   currentPage: number;
@@ -149,25 +150,27 @@ export function CustomersClient({
         isLoading={isLoading}
       />
 
-      <div className="rounded-md border">
-        <Table>
-          <CustomerTableHeader />
-          <TableBody>
-            {customers.length === 0 ? (
-              <CustomerTableEmpty />
-            ) : (
-              customers.map(customer => (
-                <CustomerTableRow
-                  key={customer.customerId}
-                  customer={customer}
-                  onDetail={handleDetail}
-                  onMemo={handleMemo}
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <Card>
+        <CardContent className="p-4">
+          <Table>
+            <CustomerTableHeader />
+            <TableBody>
+              {customers.length === 0 ? (
+                <CustomerTableEmpty />
+              ) : (
+                customers.map(customer => (
+                  <CustomerTableRow
+                    key={customer.customerId}
+                    customer={customer}
+                    onDetail={handleDetail}
+                    onMemo={handleMemo}
+                  />
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       <div className="flex items-center justify-between">
         <CustomerCountDisplay count={pagination.totalElements} />
