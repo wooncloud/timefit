@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────
 
 export type CustomerSortType = 'LAST_VISIT' | 'FIRST_VISIT' | 'TOTAL_VISITS' | 'NAME';
+import type { ReservationStatus } from '@/types/business/reservation';
 
 export interface BusinessCustomerItem {
   customerId: string;
@@ -37,7 +38,7 @@ export interface ReservationHistoryItem {
   reservationDate: string;   // YYYY-MM-DD
   reservationTime: string;   // HH:mm:ss
   menuServiceName: string;
-  status: string;
+  status: ReservationStatus;
   reservationPrice: number;
 }
 

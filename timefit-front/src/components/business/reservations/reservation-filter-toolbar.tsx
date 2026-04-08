@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { DatePicker } from './date-picker';
+import { DatePicker } from '../../ui/date-picker';
 
 export interface FilterValues {
   status?: string;

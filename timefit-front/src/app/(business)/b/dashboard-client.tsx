@@ -7,6 +7,7 @@ import type { BusinessReservationItem } from '@/types/business/reservation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { RESERVATION_STATUS_LABEL } from '@/lib/constants/reservation-status';
 
 interface WeeklyData {
   label: string;
@@ -146,9 +147,7 @@ export function DashboardClient({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-medium truncate">{r.customerName}</span>
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
-                          승인대기
-                        </Badge>
+                        <Badge variant="secondary">{RESERVATION_STATUS_LABEL['PENDING']}</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {r.reservationDuration}분
