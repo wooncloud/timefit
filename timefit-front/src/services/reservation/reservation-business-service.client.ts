@@ -1,6 +1,8 @@
 import type {
   BusinessReservationActionHandlerResponse,
   GetBusinessReservationDetailHandlerResponse,
+  GetBusinessReservationListHandlerResponse,
+  GetReservationStatsHandlerResponse,
 } from '@/types/business/reservation';
 
 /**
@@ -94,6 +96,60 @@ class BusinessReservationService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes }),
       }
+    );
+    return response.json();
+  }
+
+  /**
+   * 예약 목록 조회
+   */
+  async getReservations(
+    businessId: string,
+    filters: {
+      status?: string;
+      startDate?: string;
+      endDate?: string;
+      customerName?: string;
+      page?: number;
+      size?: number;
+    }
+  ): Promise<GetBusinessReservationListHandlerResponse> {
+    const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+    if (filters.customerName) params.append('customerName', filters.customerName);
+    if (filters.page !== undefined) params.append('page', filters.page.toString());
+    if (filters.size !== undefined) params.append('size', filters.size.toString());
+
+    const response = await fetch(
+      `/api/business/${businessId}/reservations?${params.toString()}`,
+      { method: 'GET' }
+    );
+    return response.json();
+  }
+
+  /**
+   * 예약 통계 조회
+   */
+  async getReservationStats(
+    businessId: string,
+    filters: {
+      status?: string;
+      customerName?: string;
+      startDate?: string;
+      endDate?: string;
+    }
+  ): Promise<GetReservationStatsHandlerResponse> {
+    const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.customerName) params.append('customerName', filters.customerName);
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+
+    const response = await fetch(
+      `/api/business/${businessId}/reservations/stats?${params.toString()}`,
+      { method: 'GET' }
     );
     return response.json();
   }

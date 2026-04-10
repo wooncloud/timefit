@@ -54,38 +54,6 @@ export function ReservationsClient({
     endDate: today.add(15, 'day').format('YYYY-MM-DD'),
   });
 
-  // 예약 목록 fetch
-  const fetchReservations = async (filters: FilterValues, page: number) => {
-    const params = new URLSearchParams();
-    if (filters.status) params.append('status', filters.status);
-    if (filters.startDate) params.append('startDate', filters.startDate);
-    if (filters.endDate) params.append('endDate', filters.endDate);
-    if (filters.customerName) params.append('customerName', filters.customerName);
-    params.append('page', page.toString());
-    params.append('size', '20');
-
-    const response = await fetch(
-      `/api/business/${businessId}/reservations?${params.toString()}`
-    );
-    return response.json();
-  };
-
-  // 통계 fetch — 필터 조건 전체 동기화 (status, customerName 포함)
-  const fetchStats = async (filters: FilterValues) => {
-    const params = new URLSearchParams();
-    if (filters.status) params.append('status', filters.status);
-    if (filters.customerName) params.append('customerName', filters.customerName);
-    if (filters.startDate) params.append('startDate', filters.startDate);
-    if (filters.endDate) params.append('endDate', filters.endDate);
-
-    const queryString = params.toString();
-    const response = await fetch(
-      `/api/business/${businessId}/reservations/stats${queryString ? `?${queryString}` : ''}`
-    );
-    const result = await response.json();
-    if (result.success && result.data) setStats(result.data);
-  };
-
   // 상세 보기
   const handleDetail = async (reservationId: string) => {
     const result = await businessReservationService.getReservationDetail(businessId, reservationId);
@@ -96,18 +64,19 @@ export function ReservationsClient({
     setDetailModal({ isOpen: true, detail: result.data });
   };
 
-  // 필터 검색 — 목록 + 통계 동시 갱신 (전체 필터 동기화)
+  // 필터 검색 — 목록 + 통계 동시 갱신
   const handleSearch = async (filters: FilterValues) => {
     try {
       setIsLoading(true);
-      const [result] = await Promise.all([
-        fetchReservations(filters, 0),
-        fetchStats(filters),
+      const [listResult, statsResult] = await Promise.all([
+        businessReservationService.getReservations(businessId, { ...filters, page: 0, size: 20 }),
+        businessReservationService.getReservationStats(businessId, filters),
       ]);
-      if (!result.success) { toast.error('조회에 실패했습니다.'); return; }
+      if (!listResult.success) { toast.error('조회에 실패했습니다.'); return; }
       setCurrentFilters(filters);
-      setReservations(result.data.reservations);
-      setPagination(result.data.pagination);
+      setReservations(listResult.data!.reservations);
+      setPagination(listResult.data!.pagination);
+      if (statsResult.success && statsResult.data) setStats(statsResult.data);
     } catch {
       toast.error('조회 중 오류가 발생했습니다.');
     } finally {
@@ -115,14 +84,16 @@ export function ReservationsClient({
     }
   };
 
-  // 페이지 이동 (통계 재조회 불필요)
+  // 페이지 이동
   const handlePageChange = async (page: number) => {
     try {
       setIsLoading(true);
-      const result = await fetchReservations(currentFilters, page);
+      const result = await businessReservationService.getReservations(
+        businessId, { ...currentFilters, page, size: 20 }
+      );
       if (!result.success) { toast.error('페이지 로드에 실패했습니다.'); return; }
-      setReservations(result.data.reservations);
-      setPagination(result.data.pagination);
+      setReservations(result.data!.reservations);
+      setPagination(result.data!.pagination);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
       toast.error('페이지 로드 중 오류가 발생했습니다.');
@@ -131,7 +102,13 @@ export function ReservationsClient({
     }
   };
 
-  // 액션 핸들러 — 현재 필터 기준으로 통계 재조회
+  // 통계 갱신
+  const refreshStats = async () => {
+    const result = await businessReservationService.getReservationStats(businessId, currentFilters);
+    if (result.success && result.data) setStats(result.data);
+  };
+
+  // 액션 핸들러
   const handleApprove = async (reservationId: string) => {
     const result = await businessReservationService.approveReservation(businessId, reservationId);
     if (!result.success) { toast.error(result.message || '승인에 실패했습니다.'); return; }
@@ -139,7 +116,7 @@ export function ReservationsClient({
       r.reservationId === reservationId ? { ...r, status: 'CONFIRMED' as const, requiresAction: false } : r
     ));
     toast.success('예약을 승인했습니다.');
-    await fetchStats(currentFilters);
+    await refreshStats();
   };
 
   const handleReject = async (reservationId: string) => {
@@ -149,7 +126,7 @@ export function ReservationsClient({
       r.reservationId === reservationId ? { ...r, status: 'REJECTED' as const, requiresAction: false } : r
     ));
     toast.success('예약을 거절했습니다.');
-    await fetchStats(currentFilters);
+    await refreshStats();
   };
 
   const handleComplete = async (reservationId: string) => {
@@ -159,7 +136,7 @@ export function ReservationsClient({
       r.reservationId === reservationId ? { ...r, status: 'COMPLETED' as const, requiresAction: false } : r
     ));
     toast.success('예약을 완료 처리했습니다.');
-    await fetchStats(currentFilters);
+    await refreshStats();
   };
 
   const handleNoShow = async (reservationId: string) => {
@@ -169,7 +146,7 @@ export function ReservationsClient({
       r.reservationId === reservationId ? { ...r, status: 'NO_SHOW' as const, requiresAction: false } : r
     ));
     toast.success('노쇼 처리했습니다.');
-    await fetchStats(currentFilters);
+    await refreshStats();
   };
 
   return (
