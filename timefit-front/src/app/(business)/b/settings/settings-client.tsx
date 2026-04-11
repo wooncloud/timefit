@@ -9,7 +9,7 @@ import type {
   UpdateBusinessRequest,
 } from '@/types/business/business-detail';
 import { useUpdateBusiness } from '@/hooks/business/mutations/use-update-business';
-import { validateBusinessContactPhone } from '@/lib/validators/business-validators';
+import { validateBusinessProfileForm } from '@/lib/validators/business-validators';
 import { validateScriptInjection } from '@/lib/validators/input-validators';
 import { AddressSearch } from '@/components/business/settings/address-search';
 import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
@@ -58,28 +58,9 @@ export function SettingsClient({
       typeof value === 'string' &&
       !validateScriptInjection(value)
     ) {
-      return; // 스크립트 입력 무시
+      return;
     }
-
     setFormData(prev => ({ ...prev, [field]: value }));
-
-    // 연락처 유효성 검사
-    if (field === 'contactPhone' && typeof value === 'string') {
-      if (value && !validateBusinessContactPhone(value)) {
-        setPhoneError('올바른 전화번호 형식으로 입력해주세요 (예: 02-1234-5678)');
-      } else {
-        setPhoneError('');
-      }
-    }
-
-    // 이메일 유효성 검사
-    if (field === 'contactEmail' && typeof value === 'string') {
-      if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        setEmailError('올바른 이메일 형식으로 입력해주세요');
-      } else {
-        setEmailError('');
-      }
-    }
   };
 
   // 카카오 주소 검색
@@ -97,16 +78,19 @@ export function SettingsClient({
 
   // 저장 핸들러
   const handleSave = async () => {
-    if (phoneError || emailError) return;
+    const { isValid, errors } = validateBusinessProfileForm(formData);
+    setPhoneError(errors.contactPhone ?? '');
+    setEmailError(errors.contactEmail ?? '');
+    if (!isValid) return;
 
     const success = await updateBusiness(formData);
     if (success) {
       setFormData({});
-      router.refresh(); // window.location.reload() 대신 Next.js 방식
+      router.refresh();
     }
   };
 
-  const isDisabled = updating || !hasChanges || !!phoneError || !!emailError;
+  const isDisabled = updating || !hasChanges;
 
   return (
     <>
