@@ -63,3 +63,13 @@ export function validateBusinessSignupForm(
     errors,
   };
 }
+
+/**
+ * 업체 연락처 유효성 검사 (일반 전화 + 휴대폰)
+ * 예: 02-1234-5678, 010-1234-5678
+ * 고객 휴대폰 번호 검증은 auth-validators.ts 참고
+ * @returns true면 유효한 형식
+ */
+export function validateBusinessContactPhone(value: string): boolean {
+  return contactPhonePattern.test(value);
+}

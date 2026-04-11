@@ -9,6 +9,8 @@ import type {
   UpdateBusinessRequest,
 } from '@/types/business/business-detail';
 import { useUpdateBusiness } from '@/hooks/business/mutations/use-update-business';
+import { validateBusinessContactPhone } from '@/lib/validators/business-validators';
+import { hasScriptInjection } from '@/lib/validators/input-validators';
 import { AddressSearch } from '@/components/business/settings/address-search';
 import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
 import { FormLabel } from '@/components/business/settings/form-label';
@@ -21,12 +23,6 @@ interface SettingsClientProps {
   initialBusiness: BusinessProfileDetail;
   businessId: string;
 }
-
-// 한국 전화번호 정규식 (02-XXXX-XXXX, 010-XXXX-XXXX 등)
-const PHONE_REGEX = /^(0[2-9]\d?)-\d{3,4}-\d{4}$|^01[016789]-\d{3,4}-\d{4}$/;
-
-// 스크립트 인젝션 패턴 차단
-const SCRIPT_PATTERN = /<script|javascript:|on\w+\s*=/i;
 
 export function SettingsClient({
                                  initialBusiness,
@@ -60,7 +56,7 @@ export function SettingsClient({
     if (
       (field === 'description' || field === 'businessNotice') &&
       typeof value === 'string' &&
-      SCRIPT_PATTERN.test(value)
+      hasScriptInjection(value)
     ) {
       return; // 스크립트 입력 무시
     }
@@ -69,7 +65,7 @@ export function SettingsClient({
 
     // 연락처 유효성 검사
     if (field === 'contactPhone' && typeof value === 'string') {
-      if (value && !PHONE_REGEX.test(value)) {
+      if (value && !validateBusinessContactPhone(value)) {
         setPhoneError('올바른 전화번호 형식으로 입력해주세요 (예: 02-1234-5678)');
       } else {
         setPhoneError('');
@@ -92,8 +88,8 @@ export function SettingsClient({
       oncomplete: (data: any) => {
         const addr =
           data.userSelectedType === 'R'
-            ? data.roadAddress
-            : data.jibunAddress;
+              ? data.roadAddress
+              : data.jibunAddress;
         handleChange('address', addr);
       },
     }).open();
