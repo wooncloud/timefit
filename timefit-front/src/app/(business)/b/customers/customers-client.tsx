@@ -8,6 +8,8 @@ import type {
   BusinessCustomerItem,
   CustomerSortType,
 } from '@/types/business/customer-business';
+import type { PaginationInfo } from '@/types/business/reservation';
+
 import { businessCustomerService } from '@/services/business/customer-business-service.client';
 import { CustomerCountDisplay } from '@/components/business/customers/customer-count-display';
 import { CustomerDetailModal } from '@/components/business/customers/customer-detail-modal';
@@ -19,15 +21,6 @@ import { CustomerTableRow } from '@/components/business/customers/customer-table
 import { CustomerPagination } from '@/components/business/customers/customer-pagination';
 import { Table, TableBody } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-
-interface PaginationInfo {
-  currentPage: number;
-  totalPages: number;
-  totalElements: number;
-  size: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
-}
 
 interface CustomersClientProps {
   initialCustomers: BusinessCustomerItem[];
