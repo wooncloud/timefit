@@ -8,7 +8,7 @@
  * description, notice 등 자유 입력 필드에 적용
  * @returns true면 위험한 입력 (차단 대상)
  */
-export function hasScriptInjection(value: string): boolean {
+export function validateScriptInjection(value: string): boolean {
     const SCRIPT_PATTERN = /<script|javascript:|on\w+\s*=/i;
     return SCRIPT_PATTERN.test(value);
 }

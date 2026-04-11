@@ -10,7 +10,7 @@ import type {
 } from '@/types/business/business-detail';
 import { useUpdateBusiness } from '@/hooks/business/mutations/use-update-business';
 import { validateBusinessContactPhone } from '@/lib/validators/business-validators';
-import { hasScriptInjection } from '@/lib/validators/input-validators';
+import { validateScriptInjection } from '@/lib/validators/input-validators';
 import { AddressSearch } from '@/components/business/settings/address-search';
 import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
 import { FormLabel } from '@/components/business/settings/form-label';
@@ -56,7 +56,7 @@ export function SettingsClient({
     if (
       (field === 'description' || field === 'businessNotice') &&
       typeof value === 'string' &&
-      hasScriptInjection(value)
+      !validateScriptInjection(value)
     ) {
       return; // 스크립트 입력 무시
     }
