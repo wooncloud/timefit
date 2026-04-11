@@ -1,6 +1,8 @@
 import type {
   GetBusinessCustomerDetailHandlerResponse,
+  GetBusinessCustomerListHandlerResponse,
   UpsertCustomerMemoHandlerResponse,
+  CustomerSortType,
 } from '@/types/business/customer-business';
 
 /**
@@ -37,6 +39,28 @@ class BusinessCustomerService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ memo }),
       }
+    );
+    return response.json();
+  }
+
+  async getCustomers(
+    businessId: string,
+    params: {
+      keyword?: string;
+      sortBy?: CustomerSortType;
+      page?: number;
+      size?: number;
+    }
+  ): Promise<GetBusinessCustomerListHandlerResponse> {
+    const searchParams = new URLSearchParams();
+    if (params.keyword) searchParams.append('keyword', params.keyword);
+    if (params.sortBy) searchParams.append('sortBy', params.sortBy);
+    if (params.page !== undefined) searchParams.append('page', params.page.toString());
+    if (params.size !== undefined) searchParams.append('size', params.size.toString());
+
+    const response = await fetch(
+      `/api/business/${businessId}/customers?${searchParams.toString()}`,
+      { method: 'GET' }
     );
     return response.json();
   }

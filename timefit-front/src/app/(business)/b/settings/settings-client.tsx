@@ -1,14 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 
-import type {
-  BusinessProfileDetail,
-  UpdateBusinessRequest,
-} from '@/types/business/business-detail';
+import type { BusinessProfileDetail } from '@/types/business/business-detail';
 import { useUpdateBusiness } from '@/hooks/business/mutations/use-update-business';
+import { useBusinessProfileForm } from '@/hooks/business/use-business-profile-form';
 import { AddressSearch } from '@/components/business/settings/address-search';
 import { BusinessTypeSelect } from '@/components/business/settings/business-type-select';
 import { FormLabel } from '@/components/business/settings/form-label';
@@ -22,95 +19,21 @@ interface SettingsClientProps {
   businessId: string;
 }
 
-// 한국 전화번호 정규식 (02-XXXX-XXXX, 010-XXXX-XXXX 등)
-const PHONE_REGEX = /^(0[2-9]\d?)-\d{3,4}-\d{4}$|^01[016789]-\d{3,4}-\d{4}$/;
-
-// 스크립트 인젝션 패턴 차단
-const SCRIPT_PATTERN = /<script|javascript:|on\w+\s*=/i;
-
 export function SettingsClient({
                                  initialBusiness,
                                  businessId,
                                }: SettingsClientProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState<UpdateBusinessRequest>({});
-  const [phoneError, setPhoneError] = useState('');
-  const [emailError, setEmailError] = useState('');
   const { updateBusiness, updating } = useUpdateBusiness(businessId);
+  const {
+    currentValues, hasChanges,
+    phoneError, emailError,
+    handleChange, handleAddressSearch, handleSave,
+  } = useBusinessProfileForm({
+    initialBusiness, updateBusiness, onSaveSuccess: () => router.refresh(),
+  });
 
-  // 현재 각 필드 값 (formData 우선, 없으면 initialBusiness)
-  const currentValues = useMemo(() => ({
-    businessName: formData.businessName ?? initialBusiness.businessName,
-    businessTypes: formData.businessTypes ?? initialBusiness.businessTypes,
-    address: formData.address ?? initialBusiness.address,
-    contactPhone: formData.contactPhone ?? initialBusiness.contactPhone,
-    contactEmail: formData.contactEmail ?? (initialBusiness.contactEmail ?? ''),
-    description: formData.description ?? initialBusiness.description,
-  }), [formData, initialBusiness]);
-
-  // 변경사항 감지 — formData에 하나라도 있으면 변경된 것
-  const hasChanges = Object.keys(formData).length > 0;
-
-  // 폼 입력 핸들러
-  const handleChange = (
-    field: keyof UpdateBusinessRequest,
-    value: string | string[]
-  ) => {
-    // 스크립트 차단 (description, businessNotice만 적용)
-    if (
-      (field === 'description' || field === 'businessNotice') &&
-      typeof value === 'string' &&
-      SCRIPT_PATTERN.test(value)
-    ) {
-      return; // 스크립트 입력 무시
-    }
-
-    setFormData(prev => ({ ...prev, [field]: value }));
-
-    // 연락처 유효성 검사
-    if (field === 'contactPhone' && typeof value === 'string') {
-      if (value && !PHONE_REGEX.test(value)) {
-        setPhoneError('올바른 전화번호 형식으로 입력해주세요 (예: 02-1234-5678)');
-      } else {
-        setPhoneError('');
-      }
-    }
-
-    // 이메일 유효성 검사
-    if (field === 'contactEmail' && typeof value === 'string') {
-      if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        setEmailError('올바른 이메일 형식으로 입력해주세요');
-      } else {
-        setEmailError('');
-      }
-    }
-  };
-
-  // 카카오 주소 검색
-  const handleAddressSearch = () => {
-    new (window as any).kakao.Postcode({
-      oncomplete: (data: any) => {
-        const addr =
-          data.userSelectedType === 'R'
-            ? data.roadAddress
-            : data.jibunAddress;
-        handleChange('address', addr);
-      },
-    }).open();
-  };
-
-  // 저장 핸들러
-  const handleSave = async () => {
-    if (phoneError || emailError) return;
-
-    const success = await updateBusiness(formData);
-    if (success) {
-      setFormData({});
-      router.refresh(); // window.location.reload() 대신 Next.js 방식
-    }
-  };
-
-  const isDisabled = updating || !hasChanges || !!phoneError || !!emailError;
+  const isDisabled = updating || !hasChanges;
 
   return (
     <>
